@@ -1,0 +1,616 @@
+{
+    "GraphData": {
+        "node": [
+            {
+                "id": "svg/line_1",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/line",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_11",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_17",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_10",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_16",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_15",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_9",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_14",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_8",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_13",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_12",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_7",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_11",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_6",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_10",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_9",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_5",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_8",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_4",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_7",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_6",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_3",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_5",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_2",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_4",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_3",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect_1",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_2",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/rect",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text_1",
+                "propertyValue": 1
+            },
+            {
+                "id": "svg/text",
+                "propertyValue": 1
+            }
+        ],
+        "links": [
+            {
+                "source": "svg/text_5",
+                "target": "svg/text_4",
+                "value": 1
+            },
+            {
+                "source": "svg/text_5",
+                "target": "svg/text_2",
+                "value": 1
+            },
+            {
+                "source": "svg/text_5",
+                "target": "svg/text_1",
+                "value": 1
+            },
+            {
+                "source": "svg/line",
+                "target": "svg/rect_9",
+                "value": 1
+            },
+            {
+                "source": "svg/line",
+                "target": "svg/rect_7",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_10",
+                "target": "svg/rect_8",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_11",
+                "target": "svg/text_15",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_11",
+                "target": "svg/text_12",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_11",
+                "target": "svg/text_9",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_11",
+                "target": "svg/text_6",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/rect_5",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/rect_4",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/rect_3",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/rect_2",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/text_3",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/rect_1",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/rect",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/text",
+                "value": 1
+            },
+            {
+                "source": "svg/text_17",
+                "target": "svg/text_16",
+                "value": 1
+            },
+            {
+                "source": "svg/text_17",
+                "target": "svg/text_14",
+                "value": 1
+            },
+            {
+                "source": "svg/text_17",
+                "target": "svg/text_13",
+                "value": 1
+            },
+            {
+                "source": "svg/text_17",
+                "target": "svg/text_11",
+                "value": 1
+            },
+            {
+                "source": "svg/text_17",
+                "target": "svg/text_10",
+                "value": 1
+            },
+            {
+                "source": "svg/text_17",
+                "target": "svg/text_8",
+                "value": 1
+            },
+            {
+                "source": "svg/text_17",
+                "target": "svg/text_7",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/rect_5",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/rect_3",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/rect_1",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_6",
+                "target": "svg/rect",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_11",
+                "target": "svg/rect_9",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_11",
+                "target": "svg/rect_4",
+                "value": 1
+            },
+            {
+                "source": "svg/text_10",
+                "target": "svg/text_8",
+                "value": 1
+            },
+            {
+                "source": "svg/text_10",
+                "target": "svg/text_7",
+                "value": 1
+            },
+            {
+                "source": "svg/text_10",
+                "target": "svg/text_2",
+                "value": 1
+            },
+            {
+                "source": "svg/text_10",
+                "target": "svg/text_1",
+                "value": 1
+            },
+            {
+                "source": "svg/text_15",
+                "target": "svg/text_12",
+                "value": 1
+            },
+            {
+                "source": "svg/text_15",
+                "target": "svg/text_9",
+                "value": 1
+            },
+            {
+                "source": "svg/line_1",
+                "target": "svg/line",
+                "value": 1
+            },
+            {
+                "source": "svg/text_17",
+                "target": "svg/text_16",
+                "value": 1
+            },
+            {
+                "source": "svg/text_14",
+                "target": "svg/text_13",
+                "value": 1
+            },
+            {
+                "source": "svg/text_3",
+                "target": "svg/text",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_7",
+                "target": "svg/text_6",
+                "value": 1
+            },
+            {
+                "source": "svg/text_5",
+                "target": "svg/text_4",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_10",
+                "target": "svg/rect_8",
+                "value": 1
+            },
+            {
+                "source": "svg/text_10",
+                "target": "svg/text_8",
+                "value": 1
+            },
+            {
+                "source": "svg/text_10",
+                "target": "svg/text_7",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_8",
+                "target": "svg/rect_2",
+                "value": 1
+            },
+            {
+                "source": "svg/line",
+                "target": "svg/rect_7",
+                "value": 1
+            },
+            {
+                "source": "svg/line",
+                "target": "svg/rect_6",
+                "value": 1
+            },
+            {
+                "source": "svg/text_14",
+                "target": "svg/text_11",
+                "value": 1
+            },
+            {
+                "source": "svg/text_14",
+                "target": "svg/text_5",
+                "value": 1
+            },
+            {
+                "source": "svg/text_14",
+                "target": "svg/text_4",
+                "value": 1
+            },
+            {
+                "source": "svg/text_6",
+                "target": "svg/text_3",
+                "value": 1
+            },
+            {
+                "source": "svg/text_15",
+                "target": "svg/text_12",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_5",
+                "target": "svg/rect_4",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_5",
+                "target": "svg/rect_3",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_5",
+                "target": "svg/rect_1",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_5",
+                "target": "svg/rect",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_10",
+                "target": "svg/text_16",
+                "value": 1
+            },
+            {
+                "source": "svg/rect_10",
+                "target": "svg/rect_9",
+                "value": 1
+            },
+            {
+                "source": "svg/text_2",
+                "target": "svg/text_1",
+                "value": 1
+            },
+            {
+                "source": "svg/text_13",
+                "target": "svg/text",
+                "value": 1
+            }
+        ],
+        "group": [
+            [
+                "svg/text_4",
+                "svg/text_2",
+                "svg/text_1",
+                "svg/text_5"
+            ],
+            [
+                "svg/line",
+                "svg/rect_7",
+                "svg/rect_9"
+            ],
+            [
+                "svg/rect_8",
+                "svg/rect_10"
+            ],
+            [
+                "svg/rect_11",
+                "svg/text_12",
+                "svg/text_6",
+                "svg/text_15",
+                "svg/text_9"
+            ],
+            [
+                "svg/text",
+                "svg/text_3",
+                "svg/rect",
+                "svg/rect_6",
+                "svg/rect_4",
+                "svg/rect_1",
+                "svg/rect_3",
+                "svg/rect_2",
+                "svg/rect_5"
+            ],
+            [
+                "svg/text_7",
+                "svg/text_10",
+                "svg/text_11",
+                "svg/text_14",
+                "svg/text_8",
+                "svg/text_17",
+                "svg/text_13",
+                "svg/text_16"
+            ],
+            [
+                "svg/line_1"
+            ]
+        ],
+        "subgroups": [
+            [
+                "svg/text_11"
+            ],
+            [
+                "svg/rect",
+                "svg/rect_6",
+                "svg/rect_1",
+                "svg/rect_3",
+                "svg/rect_5"
+            ],
+            [
+                "svg/rect_11",
+                "svg/rect_4",
+                "svg/rect_9"
+            ],
+            [
+                "svg/text_1",
+                "svg/text_7",
+                "svg/text_10",
+                "svg/text_2",
+                "svg/text_8"
+            ],
+            [
+                "svg/text_12",
+                "svg/text_9",
+                "svg/text_15"
+            ],
+            [
+                "svg/line",
+                "svg/line_1"
+            ],
+            [
+                "svg/text_17",
+                "svg/text_16"
+            ],
+            [
+                "svg/text_13",
+                "svg/text_14"
+            ],
+            [
+                "svg/rect_2"
+            ],
+            [
+                "svg/text",
+                "svg/text_3"
+            ],
+            [
+                "svg/rect_7",
+                "svg/text_6"
+            ],
+            [
+                "svg/text_4",
+                "svg/text_5"
+            ],
+            [
+                "svg/rect_8",
+                "svg/rect_10"
+            ]
+        ],
+        "subsubgroups": [
+            [
+                "svg/text_8",
+                "svg/text_7",
+                "svg/text_10"
+            ],
+            [
+                "svg/rect_2",
+                "svg/rect_8"
+            ],
+            [
+                "svg/line",
+                "svg/rect_6",
+                "svg/rect_7"
+            ],
+            [
+                "svg/text_4",
+                "svg/text_5",
+                "svg/text_11",
+                "svg/text_14"
+            ],
+            [
+                "svg/text_3",
+                "svg/text_6"
+            ],
+            [
+                "svg/text_12",
+                "svg/text_15"
+            ],
+            [
+                "svg/text_17"
+            ],
+            [
+                "svg/rect",
+                "svg/rect_4",
+                "svg/rect_1",
+                "svg/rect_3",
+                "svg/rect_5"
+            ],
+            [
+                "svg/rect_10",
+                "svg/rect_9",
+                "svg/text_16"
+            ],
+            [
+                "svg/text_9"
+            ],
+            [
+                "svg/text_1",
+                "svg/text_2"
+            ],
+            [
+                "svg/rect_11"
+            ],
+            [
+                "svg/text",
+                "svg/text_13"
+            ],
+            [
+                "svg/line_1"
+            ]
+        ]
+    }
+}
