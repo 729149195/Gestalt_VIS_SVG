@@ -30,11 +30,11 @@ onMounted(async () => {
 const render = (data) => {
     if (!chartContainer.value) return;
 
-    const width = 580;
-    const height = 335;
+    const width = 600;
+    const height = 250;
     const marginTop = 20;
     const marginRight = 10;
-    const marginBottom = 80;
+    const marginBottom = 75;
     const marginLeft = 70;
 
     const x = d3.scaleBand()
@@ -107,8 +107,8 @@ const render = (data) => {
     svg.append("text")
         .attr("transform", `translate(${width / 2},${height - 5})`)
         .style("text-anchor", "middle")
-        .style("font-size", "20px")
-        .attr("dx", "11.5em")
+        .style("font-size", "14px")
+        .attr("dx", "18.5em")
         .attr("dy", "0em")
         .text("Attributes");
 
@@ -118,9 +118,9 @@ const render = (data) => {
         .attr("y", 25)
         .attr("x", 0 - (height / 2))
         .style("text-anchor", "middle")
-        .style("font-size", "20px")
-        .attr("dx", "5.3em")
-        .attr("dy", "-.2em")
+        .style("font-size", "14px")
+        .attr("dx", "6.0em")
+        .attr("dy", ".2em")
         .text("Number");
 
     zoom(svg);

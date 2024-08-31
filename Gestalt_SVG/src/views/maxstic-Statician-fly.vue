@@ -10,7 +10,7 @@ import { useStore } from 'vuex';
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 
-const eleURL = "http://localhost:5000/cluster_probabilities";
+const eleURL = "http://localhost:5000/fourier_file_path";
 const chartContainer = ref(null);
 const margin = { top: 20, right: 20, bottom: 100, left: 30 };
 const width = 1180 + margin.left + margin.right;
@@ -68,7 +68,7 @@ onMounted(async () => {
 const processData = (rawData) => {
     let processedData = [];
     rawData.forEach((node, nodeIndex) => {
-        node.probabilities.forEach((probability, groupIndex) => {
+        node.fourier_features.forEach((probability, groupIndex) => {
             processedData.push({
                 node: node.id,
                 group: groupIndex,
@@ -92,7 +92,7 @@ const render = (data) => {
 
     // 获取所有唯一的 id 后缀
     const ids = [...new Set(data.map(d => d.node.split('/').pop()))];
-    const groups = d3.range(1, 31);
+    const groups = d3.range(1, 16);
 
     // 创建比例尺
     xScale = d3.scaleBand().domain(ids).range([0, width - margin.left - margin.right]).padding(0.05);

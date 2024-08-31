@@ -1,6 +1,6 @@
 <template>
-    <span style="color: #666">right-position</span>
-    <div ref="chartContainer" style="width: 410px; height: 250px;"></div>
+    <span style="color: #666">top-position</span>
+    <div ref="chartContainer" style="width: 550px; height: 280px;"></div>
 </template>
 
 <script setup>
@@ -33,8 +33,8 @@ onMounted(async () => {
 });
 
 const renderChart = (dataset) => {
-    const svgWidth = 650, svgHeight = 350;
-    const margin = { top: 20, right: 25, bottom: 50, left: 85 };
+    const svgWidth = 700, svgHeight = 350;
+    const margin = { top: 20, right: 25, bottom: 60, left: 85 };
     const width = svgWidth - margin.left - margin.right;
     const height = svgHeight - margin.top - margin.bottom;
 
@@ -61,7 +61,7 @@ const renderChart = (dataset) => {
         .style("background", "white")
         .style("border", "1px solid #ddd")
         .style("padding", "10px")
-        .style("border-radius", "5px")
+        .style("border-radius", "2px")
         .style("pointer-events", "none")
         .style("box-shadow", "0px 0px 10px rgba(0,0,0,0.1)")
         .style("white-space", "nowrap");

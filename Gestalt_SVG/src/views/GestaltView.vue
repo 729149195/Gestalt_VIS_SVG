@@ -23,6 +23,10 @@
                                  Maxistic
                             </label>
                             <label>
+                                <input type="radio" value="FFT" v-model="selectedView" />
+                                 FFT
+                            </label>
+                            <label>
                                 <input type="radio" value="position" v-model="selectedView" />
                                  Position
                             </label>
@@ -49,6 +53,9 @@
                         </div>
                         <div class="maxtistic" v-if="selectedView === 'maxtistic'">
                             <maxsticStatician :key="componentKey"/>
+                        </div>
+                        <div class="maxtistic2" v-if="selectedView === 'FFT'">
+                            <maxsticStaticianfly :key="componentKey"/>
                         </div>
                         <div class="layer" v-if="selectedView === 'layer'">
                             <layerStatistician/>
@@ -92,6 +99,7 @@ import leftStatistician from './left-Statistician.vue';
 import rightStatistician from './right-Statistician.vue';
 import layerStatistician from './layer-Statistician.vue';
 import maxsticStatician from './maxstic-Statician.vue';
+import maxsticStaticianfly from './maxstic-Statician-fly.vue';
 
 const file = ref(null)
 const processedSvgContent = ref('')
@@ -224,8 +232,8 @@ const refresh = () => {
 }
 
 .svg-container {
-    max-width: 870px;
-    max-height: 340px;
+    max-width: 1200px;
+    max-height: 400px;
     width: 100%;
     overflow: hidden;
     display: flex;

@@ -54,7 +54,8 @@ def upload_file():
         # 调用 cluster.py 进行聚类
         community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
         probabilities_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_probabilities.json')
-        run_clustering(normalized_csv_path, community_data_path, probabilities_data_path)
+        fourier_file_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
+        run_clustering(normalized_csv_path, community_data_path, probabilities_data_path, fourier_file_path)
 
         return jsonify({
             'success': 'File uploaded and processed successfully',
@@ -68,6 +69,51 @@ def upload_file():
     else:
         return jsonify({'error': 'Invalid file type'}), 400
 
+@app.route('/run_clustering', methods=['POST'])
+def run_clustering_with_params():
+    # Retrieve eps and min_samples from request data
+    eps = request.json.get('eps', 0.4)  # Default eps = 0.4
+    min_samples = request.json.get('min_samples', 3)  # Default min_samples = 3
+    distance_threshold_ratio = request.json.get('distance_threshold_ratio', 0.5)
+
+    try:
+        # Ensure eps and min_samples are valid
+        eps = float(eps)
+        min_samples = int(min_samples)
+        distance_threshold_ratio = float(distance_threshold_ratio)
+
+        if eps <= 0:
+            raise ValueError("eps must be greater than 0")
+
+        if min_samples <= 0:
+            raise ValueError("min_samples must be greater than 0")
+
+        if distance_threshold_ratio <= 0 or distance_threshold_ratio >= 1:
+            raise ValueError("distance_threshold_ratio must be between 0 and 1")
+
+        # Define paths for input and output files (assuming they are already created)
+        normalized_csv_path = os.path.join(app.config['DATA_FOLDER'], 'normalized_features.csv')
+        community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
+        probabilities_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_probabilities.json')
+        fourier_file_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
+
+        # Run clustering with the specified eps and min_samples
+        run_clustering(normalized_csv_path, community_data_path, probabilities_data_path, fourier_file_path, eps, min_samples, distance_threshold_ratio)
+
+        return jsonify({
+            'success': 'Clustering executed with specified parameters',
+            'eps': eps,
+            'min_samples': min_samples,
+            'distance_threshold_ratio':distance_threshold_ratio,
+            'normalized_csv_file': normalized_csv_path,
+            'community_data_mult': community_data_path,
+            'cluster_probabilities': probabilities_data_path
+        }), 200
+
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': 'An error occurred while running clustering', 'details': str(e)}), 500
 
 # 获取生成的 SVG 文件内容
 @app.route('/get_svg', methods=['GET'])
@@ -157,6 +203,17 @@ def cluster_probabilities():
             return json_file.read(), 200, {'Content-Type': 'application/json'}
     else:
         return jsonify({'error': 'community_data_mult.json file not found'}), 404
+
+
+@app.route('/fourier_file_path', methods=['GET'])
+def fourier_file():
+    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
+
+    if os.path.exists(community_data_path):
+        with open(community_data_path, 'r', encoding='utf-8') as json_file:
+            return json_file.read(), 200, {'Content-Type': 'application/json'}
+    else:
+        return jsonify({'error': 'fourier_file_path.json file not found'}), 404
 
 
 @app.route('/fill_num', methods=['GET'])

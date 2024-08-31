@@ -1,49 +1,11 @@
 <template>
     <div class="hull-select">
-        <v-switch
-            v-model="groupHull"
-            inset
-            color="#FFC000"
-            class="switch"
-            :label="groupHull ? 'Hull ON' : 'Hull OFF'" 
-        />
-        <div class="input-group">
-            <v-text-field
-                v-model="eps"
-                :min="0.1"
-                :max="1.0"
-                step="0.1"
-                label="DBSCAN Eps"
-                type="number"
-                class="input-box"
-            />
-        </div>
-        <div class="input-group">
-            <v-text-field
-                v-model="min"
-                :min="1"
-                :max="20"
-                step="1"
-                label="Min_Samples"
-                type="number"
-                class="input-box"
-            />
-        </div>
-        <div class="input-group">
-            <v-text-field
-                v-model="link"
-                :min="0.0"
-                :max="1.0"
-                step="0.1"
-                label="link_threshold_ratio"
-                type="number"
-                class="input-box"
-            />
-        </div>
+        <v-switch v-model="subsubgroupHull" inset color="#9ecae1" class="switch" label="DBSCAN_3" />
+        <v-switch v-model="subgroupHull" inset color="#ff9896" class="switch" label="DBSCAN_2" />
+        <v-switch v-model="groupHull" inset color="#FFC000" class="switch" label="DBSCAN_1" />
     </div>
     <svg :width="width" :height="height" ref="svg"></svg>
 </template>
-
 
 
 <script setup>
@@ -52,48 +14,13 @@ import * as d3 from 'd3';
 import { useStore } from 'vuex';
 const store = useStore();
 
-const width = 1250;
-const height = 1300;
+const width = 1270;
+const height = 1250;
 const svg = ref(null);
-const apiUrl = 'http://localhost:5000/community_data_mult'; 
-const runClusteringUrl = 'http://localhost:5000/run_clustering';
+const apiUrl = 'http://localhost:5000/community_data_mult'; // 修改端口号为5000
+const subsubgroupHull = ref(false);
+const subgroupHull = ref(false);
 const groupHull = ref(true);
-const eps = ref(0.4); 
-const min = ref(1); 
-const link = ref(0.5); 
-
-watch([eps, min, link], () => {
-    runClusteringWithParams();
-});
-
-function runClusteringWithParams() {
-    fetch(runClusteringUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            eps: eps.value,
-            min_samples: min.value,
-            distance_threshold_ratio: link.value
-        })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Clustering response:', data);
-        d3.select(svg.value).selectAll('*')
-        .remove();
-        fetchData(); 
-    })
-    .catch(error => {
-        console.error('Error running clustering:', error);
-    });
-}
 
 const customColorMap = {
     "circle": "#FFE119", // 鲜黄
@@ -133,13 +60,17 @@ const customColorMap = {
 const graphData = ref({
     nodes: [],
     links: [],
-    groups: []
+    groups: [],
+    subgroups: [],
+    subsubgroups: []
 });
 
 let simulation;
 
 const color = d3.scaleLinear().domain([-2, 4]).range(["#252525", "#cccccc"]);
 const groupHullColor = "#9ecae1";
+const subgroupHullColor = "#ff9896";
+const subsubgroupHullColor = "#9ecae1";
 
 async function fetchData() {
     try {
@@ -151,6 +82,8 @@ async function fetchData() {
         graphData.value.nodes = data.GraphData.node;
         graphData.value.links = data.GraphData.links;
         graphData.value.groups = data.GraphData.group;
+        graphData.value.subgroups = data.GraphData.subgroups;
+        graphData.value.subsubgroups = data.GraphData.subsubgroups;
         submitAllNodes();
         initializeGraph();
     } catch (error) {
@@ -158,15 +91,20 @@ async function fetchData() {
     }
 }
 
+
 onMounted(fetchData);
-watch([groupHull], () => {
-    const svgElement = d3.select(svg.value);
+watch([groupHull, subgroupHull, subsubgroupHull], () => {
+    const svgElement = d3.select(svg.value); // 选择SVG元素
     svgElement.selectAll('.group-hull').style('display', groupHull.value ? null : 'none');
+    svgElement.selectAll('.subgroup-hull').style('display', subgroupHull.value ? null : 'none');
+    svgElement.selectAll('.subsubgroup-hull').style('display', subsubgroupHull.value ? null : 'none');
 });
 
 function updatahull() {
-    const svgElement = d3.select(svg.value);
+    const svgElement = d3.select(svg.value); // 选择SVG元素
     svgElement.selectAll('.group-hull').style('display', groupHull.value ? null : 'none');
+    svgElement.selectAll('.subgroup-hull').style('display', subgroupHull.value ? null : 'none');
+    svgElement.selectAll('.subsubgroup-hull').style('display', subsubgroupHull.value ? null : 'none');
 }
 
 function submitAllNodes() {
@@ -175,7 +113,7 @@ function submitAllNodes() {
         return parts[parts.length - 1]; // 假设节点的唯一标识位于id的最后一部分
     });
 
-    console.log(nodeIds); 
+    console.log(nodeIds); // Optional: For debugging purposes
     store.commit('SET_ALL_VISIBLE_NODES', nodeIds); // 假设这是你的mutation
 }
 
@@ -185,11 +123,15 @@ function hullClicked(event, d) {
     let groupName;
 
     // 检查所有的开关是否都关闭
-    const isAllHullsOff = !groupHull.value;
+    const isAllHullsOff = !groupHull.value && !subgroupHull.value && !subsubgroupHull.value;
 
     if (!isAllHullsOff) {
         if (groupHull.value) {
             activeHullLevel = graphData.value.groups;
+        } else if (subgroupHull.value) {
+            activeHullLevel = graphData.value.subgroups;
+        } else if (subsubgroupHull.value) {
+            activeHullLevel = graphData.value.subsubgroups;
         }
 
         // 找出点击的节点属于哪个组
@@ -207,12 +149,17 @@ function hullClicked(event, d) {
             return parts[parts.length - 1];
         });
 
+        // console.log(typeof(nodeIds));
+        // 向Vuex提交这些节点的ID和组名
+        // console.log(nodeIds)
         store.commit('UPDATE_SELECTED_NODES', { nodeIds, group: null });
     } else {
         // 如果所有的开关都关闭，则只提交被点击的节点
         const parts = d.id.split("/");
         const nodeId = parts[parts.length - 1];
 
+        // console.log([nodeId]);
+        // 向Vuex提交被点击的节点ID
         store.commit('UPDATE_SELECTED_NODES', { nodeIds: [nodeId], group: null });
     }
 }
@@ -239,8 +186,8 @@ function initializeGraph() {
     const nodeGroup = contentGroup.append('g').attr('class', 'nodes');
 
     simulation = d3.forceSimulation(graphData.value.nodes)
-        .force('link', d3.forceLink(graphData.value.links).id(d => d.id).distance(100))
-        .force('charge', d3.forceManyBody().strength(-80))
+        .force('link', d3.forceLink(graphData.value.links).id(d => d.id).distance(30))
+        .force('charge', d3.forceManyBody().strength(-100))
         .force('center', d3.forceCenter(width / 2, height / 2));
 
     // 创建连线
@@ -262,12 +209,12 @@ function initializeGraph() {
         })
         .attr("style", "cursor: pointer;")
         .attr("fill", d => {
-            const svgTag = d.id.split('/'); 
+            const svgTag = d.id.split('/'); // 获取 SVG 标签
             const parts = svgTag[svgTag.length - 1];
             const index = parts.split('_')[0];
             return customColorMap[index] || color(d.propertyValue * 1); // 使用自定义颜色或默认颜色
         })
-        .on('click', hullClicked) 
+        .on('click', hullClicked) // 绑定点击事件
         .call(drag(simulation));
 
     node.append('title')
@@ -281,6 +228,8 @@ function initializeGraph() {
     simulation.on('tick', () => {
         hullGroup.selectAll('path').remove();
         drawHulls(hullGroup, graphData.value.groups, groupHullColor, 'group-hull');
+        drawHulls(hullGroup, graphData.value.subgroups, subgroupHullColor, 'subgroup-hull');
+        drawHulls(hullGroup, graphData.value.subsubgroups, subsubgroupHullColor, 'subsubgroup-hull');
         updatahull();
 
         link
@@ -315,7 +264,7 @@ function initializeGraph() {
             .attr("transform", `translate(0, ${index * 30})`); // 每个图例项向下偏移，适当调整间距以适合视图
 
         legendItem.append("circle")
-            .attr("r", 6)
+            .attr("r", 4.5)
             .attr("cx", 0)
             .attr("cy", -1)
             .attr("fill", customColorMap[tag]);
@@ -324,14 +273,17 @@ function initializeGraph() {
             .attr("x", 10)
             .attr("y", 1.6)
             .text(tag)
-            .attr("font-size", "14px")
-            .attr("fill", "#000"); 
+            .attr("font-size", "10px") // 文本大小
+            .attr("fill", "#000"); // 文本颜色
     });
 
+    // 设置初始缩放级别
     const initialZoom = d3.zoomIdentity.translate(width / 2, height / 2).scale(0.5).translate(-width / 2, -height / 2);
     svgEl.call(zoom.transform, initialZoom);
 }
 
+
+// Drag behavior
 const drag = (simulation) => {
     function start(event, d) {
         if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -359,14 +311,16 @@ const drag = (simulation) => {
 function drawHulls(hullGroup, groups, fillColor, className) {
     const hullsData = groups.map(group => {
         const points = group.map(member => graphData.value.nodes.find(n => n.id === member)).map(n => [n.x, n.y]);
+        // 对于只有一个节点的情况，创建虚拟点以构成凸包
         if (points.length === 1) {
             const [x, y] = points[0];
             return [
                 [x, y],
-                [x + 0.1, y + 0.1],
+                [x + 0.1, y + 0.1], // 添加一些微小的偏移创建虚拟点
                 [x - 0.1, y - 0.1]
             ];
         }
+        // 对于有两个节点的情况，同样添加虚拟点
         if (points.length === 2) {
             const [p1, p2] = points;
             const midX = (p1[0] + p2[0]) / 2;
@@ -374,7 +328,7 @@ function drawHulls(hullGroup, groups, fillColor, className) {
             return [
                 p1,
                 p2,
-                [midX + 0.1, midY + 0.1], 
+                [midX + 0.1, midY + 0.1], // 添加一个位于中点附近的虚拟点
             ];
         }
         return points;
@@ -387,10 +341,12 @@ function drawHulls(hullGroup, groups, fillColor, className) {
         .attr('d', d => `M${d.join('L')}Z`)
         .style('fill', fillColor)
         .style('stroke', fillColor)
-        .style('stroke-width', 50)
+        .style('stroke-width', className === 'group-hull' ? 50 : className === 'subgroup-hull' ? 40 : 35)
         .style('stroke-linejoin', 'round')
-        .style('opacity', 0.15);
+        .style('opacity', className === 'group-hull' ? 0.15 : 0.5);
 }
+
+
 </script>
 
 <style lang="scss">
@@ -412,15 +368,11 @@ function drawHulls(hullGroup, groups, fillColor, className) {
 .hull-select {
     position: absolute;
     display: flex;
-    flex-direction: column;
-    left: 20px;
-    width: 150px;
+    flex-direction: row;
 }
 
 .switch {
     margin-left: 8px;
-    display: flex;
-    align-items: center;
+    bottom: 100px;
 }
-
 </style>

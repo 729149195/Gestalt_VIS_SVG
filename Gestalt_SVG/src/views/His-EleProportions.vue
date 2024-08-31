@@ -30,8 +30,8 @@ onMounted(async () => {
 const render = (data) => {
     if (!chartContainer.value) return;
 
-    const width = 400;
-    const height = 240;
+    const width = 600;
+    const height = 250;
     const marginTop = 20;
     const marginRight = 10;
     const marginBottom = 75;
@@ -105,7 +105,7 @@ const render = (data) => {
         .attr("transform", `translate(${width / 2},${height - 5})`)
         .style("text-anchor", "middle")
         .style("font-size", "14px")
-        .attr("dx", "10.5em")
+        .attr("dx", "17.5em")
         .attr("dy", "0em")
         .text("Element Tag");
 
@@ -116,7 +116,7 @@ const render = (data) => {
         .attr("x", 0 - (height / 2))
         .style("text-anchor", "middle")
         .style("font-size", "14px")
-        .attr("dx", "3.50em")
+        .attr("dx", "4.00em")
         .attr("dy", ".2em")
         .text("Element Number");
 

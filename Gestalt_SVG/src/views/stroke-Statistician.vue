@@ -1,5 +1,5 @@
 <template>
-    <span style="color: #666">Stroke color Statiction</span>
+    <span style="color: #666">Fill color Statiction</span>
     <div ref="chartContainer"></div>
 </template>
 
@@ -38,11 +38,11 @@ const render = (data) => {
     if (!chartContainer.value) return;
 
     const width = 600;
-    const height = 350;
+    const height = 300;
     const marginTop = 20;
     const marginRight = 20;
-    const marginBottom = 80;
-    const marginLeft = 75;
+    const marginBottom = 60;
+    const marginLeft = 55;
 
     const x = d3.scaleBand()
         .domain(data.map(d => d.tag))
@@ -100,9 +100,9 @@ const render = (data) => {
     svg.append("text")
         .attr("transform", `translate(${width / 2},${height - 5})`)
         .style("text-anchor", "middle")
-        .style("font-size", "20px")
-        .attr("dx", "11.8em")
-        .attr("dy", "0em")
+        .style("font-size", "14px")
+        .attr("dx", "17.8em")
+        .attr("dy", "-1em")
         .text("Fill_Color");
 
     // 添加 y 轴图例
@@ -111,8 +111,8 @@ const render = (data) => {
         .attr("y", 15)
         .attr("x", 0 - (height / 2))
         .style("text-anchor", "middle")
-        .style("font-size", "20px")
-        .attr("dx", "6.20em")
+        .style("font-size", "14px")
+        .attr("dx", "8.00em")
         .attr("dy", "0.2em")
         .text("Number");
 

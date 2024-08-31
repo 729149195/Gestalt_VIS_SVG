@@ -1,5 +1,5 @@
 <template>
-  <div ref="chartContainer" style="width: 870px; height: 550px;"></div>
+  <div ref="chartContainer" style="width: 1230px; height: 650px;"></div>
 </template>
 
 <script setup>
@@ -60,8 +60,8 @@ onMounted(async () => {
 });
 
 const renderTree = (data) => {
-  const width = 870;
-  const height = 550;
+  const width = 1230;
+  const height = 650;
 
   // 清除先前的 SVG 元素（如果存在）
   d3.select(chartContainer.value).select('svg').remove();
