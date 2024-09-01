@@ -7,7 +7,7 @@
         <v-switch v-model="checkbox" inset color="#55C000" class="switch"
             :label="checkbox ? 'Checkbox ON' : 'Checkbox OFF'" />
         <div class="input-group">
-            <v-text-field v-model="eps" :min="0.1" :max="1.0" step="0.01" label="DBSCAN Eps" type="number"
+            <v-text-field v-model="eps" :min="0.1" :max="50.0" step="0.01" label="DBSCAN Eps" type="number"
                 class="input-box" />
         </div>
         <div class="input-group">
@@ -37,7 +37,7 @@ const groupHull = ref(true);
 const checkbox = ref(false); // This checkbox will control the selection box mode
 const eps = ref(0.4);
 const min = ref(1);
-const link = ref(0.9);
+const link = ref(0.1);
 
 let simulation;
 let isSelecting = false; // Track if the user is currently selecting

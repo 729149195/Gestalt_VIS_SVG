@@ -10,6 +10,7 @@ from scipy.fft import fft, fftfreq
 from scipy.spatial.distance import pdist, squareform
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import find_peaks
 
 
 class ModifiedNetwork(nn.Module):
@@ -64,7 +65,7 @@ class FeatureVectorDataset(Dataset):
 
 class ClusterPredictor:
     def __init__(self, model_save_path, dataset_path, output_file_mult_path, probabilities_file_path, fourier_file_path,
-                 input_dim=20, feature_dim=20, class_num=30, eps=0.4, min_samples=3, distance_threshold_ratio=0.9):
+                 input_dim=20, feature_dim=20, class_num=30, eps=0.4, min_samples=3, distance_threshold_ratio=0.1):
         self.model_save_path = model_save_path
         self.dataset_path = dataset_path
         self.output_file_mult_path = output_file_mult_path
@@ -136,10 +137,82 @@ class ClusterPredictor:
         graph_data = self.generate_graph_data_v2(identifiers, features)
         self.save_graph_data_to_json(graph_data)
 
+        # 计算3-distance并绘制图表
+        # k = 1  # 定义k的值
+        #         # k_distances = self.calculate_k_distance(features, k=k)
+        #         # self.plot_k_distance(k_distances, k=k)
+
+        # 计算1到5的k-distance并绘制图表
+        k_distances_dict = {}
+        for k in range(3, 4):
+            k_distances = self.calculate_k_distance(features, k=k)
+            k_distances_dict[k] = k_distances
+
+        # 绘制k-distance图表
+        # self.plot_k_distances(k_distances_dict)
+        self.plot_g_distances(k_distances_dict)
+
+    def plot_g_distances(self, k_distances_dict, prominence_factor=0.02, min_distance_diff=0.05):
+        plt.figure(figsize=(10, 6))
+
+        for k, k_distances in k_distances_dict.items():
+            sorted_k_distances = np.sort(k_distances)[::-1]  # 从大到小排序
+            plt.plot(sorted_k_distances, label=f'{k}-Distance')
+
+            # 计算一阶差分
+            first_diff = np.diff(sorted_k_distances)
+
+            # 使用 find_peaks 来检测曲率较大的点，并计算峰值的显著性(prominence)
+            peaks, properties = find_peaks(-first_diff, prominence=np.max(-first_diff) * prominence_factor)
+
+            filtered_peaks = []
+            max_prominence_peak = None
+            max_prominence = -np.inf
+
+            for i, peak in enumerate(peaks):
+                elbow_index = peak + 1  # +1 是因为我们取的是差分后的数组
+                elbow_distance = sorted_k_distances[elbow_index]
+
+                # 检查当前拐点与前一个拐点的 distance 差值
+                if i > 0:
+                    prev_elbow_index = peaks[i - 1] + 1
+                    prev_elbow_distance = sorted_k_distances[prev_elbow_index]
+                    if abs(elbow_distance - prev_elbow_distance) <= min_distance_diff:
+                        # 只保留显著性更高的拐点
+                        if properties['prominences'][i] > properties['prominences'][i - 1]:
+                            filtered_peaks[-1] = peak  # 替换为显著性更高的拐点
+                        continue
+
+                filtered_peaks.append(peak)
+
+                # 更新最大显著性的拐点（曲率最大）
+                if properties['prominences'][i] > max_prominence:
+                    max_prominence = properties['prominences'][i]
+                    max_prominence_peak = peak
+
+            # 遍历并标记过滤后的拐点
+            for peak in filtered_peaks:
+                elbow_index = peak + 1  # +1 是因为我们取的是差分后的数组
+                elbow_distance = sorted_k_distances[elbow_index]
+
+                # 在图中标记拐点
+                color = 'b' if peak == max_prominence_peak else 'r'  # 曲率最大的拐点用蓝色标注，其余用红色
+                plt.axvline(x=elbow_index, color=color, linestyle='--')
+                plt.text(elbow_index, elbow_distance, f'({elbow_index}, {elbow_distance:.2f})',
+                         verticalalignment='bottom', color=color)
+
+        plt.xlabel('Points sorted by distance')
+        plt.ylabel('Distance')
+        plt.title('K-Distance Plots with Filtered Elbow Points')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
     def run_with_varying_eps(self):
         eps_values = np.arange(0.01, 0.99, 0.01)
         intra_class_distances = []
         inter_class_distances = []
+        cluster_counts = []  # 用于记录每个 eps 下的分类数目
 
         for eps in eps_values:
             self.eps = eps  # Update eps value for each iteration
@@ -151,31 +224,57 @@ class ClusterPredictor:
             identifiers, _, _ = self.predict()
             avg_intra_distance, avg_inter_distance = self.generate_graph_data_v3(identifiers, features)
 
+            # 使用 DBSCAN 获取分类数目
+            dbscan_groups = DBSCAN(eps=self.eps, min_samples=self.min_samples)
+            group_labels = dbscan_groups.fit_predict(features)
+            unique_clusters = len(set(group_labels)) - (1 if -1 in group_labels else 0)  # 排除噪声点
+            cluster_counts.append(unique_clusters)
+
             # Record the distances
             intra_class_distances.append(avg_intra_distance)
             inter_class_distances.append(avg_inter_distance)
 
         # After looping through all eps values, plot the results
-        self.plot_distances_vs_eps(eps_values, intra_class_distances, inter_class_distances)
+        self.plot_distances_vs_clusters(cluster_counts, intra_class_distances, inter_class_distances)
 
-    def plot_distances_vs_eps(self, eps_values, intra_class_distances, inter_class_distances):
+    def plot_distances_vs_clusters(self, cluster_counts, intra_class_distances, inter_class_distances):
         plt.figure(figsize=(10, 6))
 
-        # Plotting Intra-class Distance
-        plt.plot(eps_values, intra_class_distances, label='Average Intra-class Distance', color='blue')
+        # Plotting Intra-class Distance vs Number of Clusters
+        plt.plot(cluster_counts, intra_class_distances, label='Average Intra-class Distance', color='blue')
 
-        # Plotting Inter-class Distance
-        plt.plot(eps_values, inter_class_distances, label='Average Inter-class Distance', color='red')
+        # Plotting Inter-class Distance vs Number of Clusters
+        plt.plot(cluster_counts, inter_class_distances, label='Average Inter-class Distance', color='red')
 
         # Adding labels and title
-        plt.xlabel('Epsilon (eps)')
+        plt.xlabel('Number of Clusters')
         plt.ylabel('Distance')
-        plt.title('Intra-class and Inter-class Distances vs. Epsilon (eps)')
+        plt.title('Intra-class and Inter-class Distances vs. Number of Clusters')
         plt.legend()
 
         # Show the plot
         plt.grid(True)
         plt.show()
+
+    def calculate_k_distance(self, features, k=3):
+        # 计算每个点到距离它最近的第 k 个点的距离
+        dist_matrix = squareform(pdist(features, metric='euclidean'))
+        k_distances = np.sort(dist_matrix, axis=1)[:, k]  # 排序后取第k个值
+        return k_distances
+
+
+    def plot_k_distances(self, k_distances_dict):
+        plt.figure(figsize=(10, 6))
+        for k, k_distances in k_distances_dict.items():
+            sorted_k_distances = np.sort(k_distances)[::-1]  # 从大到小排序
+            plt.plot(sorted_k_distances, label=f'{k}-Distance')
+        plt.xlabel('Points sorted by distance')
+        plt.ylabel('Distance')
+        plt.title('K-Distance Plots')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
 
     def generate_graph_data_v2(self, identifiers, features):
         graph_data = {
@@ -312,7 +411,7 @@ class ClusterPredictor:
 
 # 运行时指定路径
 def main(normalized_csv_path, output_file_mult_path, probabilities_file_path, fourier_file_path, eps=0.4, min_samples=3,
-         distance_threshold_ratio=0.9):
+         distance_threshold_ratio=0.1):
     # 创建ClusterPredictor实例
     predictor = ClusterPredictor(
         model_save_path="./static/modules/model_checkpoint_class30.tar",
