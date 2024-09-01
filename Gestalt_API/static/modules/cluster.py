@@ -9,7 +9,8 @@ from sklearn.cluster import DBSCAN
 from scipy.fft import fft, fftfreq
 from scipy.spatial.distance import pdist, squareform
 import numpy as np
-from itertools import combinations
+import matplotlib.pyplot as plt
+
 
 class ModifiedNetwork(nn.Module):
     def __init__(self, input_dim, feature_dim, class_num):
@@ -63,7 +64,7 @@ class FeatureVectorDataset(Dataset):
 
 class ClusterPredictor:
     def __init__(self, model_save_path, dataset_path, output_file_mult_path, probabilities_file_path, fourier_file_path,
-                 input_dim=20, feature_dim=20, class_num=30, eps=0.4, min_samples=3, distance_threshold_ratio=0.5):
+                 input_dim=20, feature_dim=20, class_num=30, eps=0.4, min_samples=3, distance_threshold_ratio=0.9):
         self.model_save_path = model_save_path
         self.dataset_path = dataset_path
         self.output_file_mult_path = output_file_mult_path
@@ -114,9 +115,67 @@ class ClusterPredictor:
         return np.array(fourier_features)
 
     def save_fourier_features_to_json(self, identifiers, fourier_features):
-        data = [{"id": identifier, "fourier_features": feature.tolist()} for identifier, feature in zip(identifiers, fourier_features)]
+        data = [{"id": identifier, "fourier_features": feature.tolist()} for identifier, feature in
+                zip(identifiers, fourier_features)]
         with open(self.fourier_file_path, 'w') as f:
             json.dump(data, f, indent=4)
+
+    def run(self):
+        # 获取数据集
+        dataset = FeatureVectorDataset(self.dataset_path)
+        features = [f.numpy() for _, f in dataset]  # 提取最新的特征向量
+
+        # 使用当前数据进行聚类预测
+        identifiers, predicted_clusters, probabilities = self.predict()
+
+        # 打印当前聚类标签和特征
+        print(f"Current group labels: {predicted_clusters}")
+
+        # 保存概率和图数据
+        self.save_probabilities_to_json(identifiers, probabilities)
+        graph_data = self.generate_graph_data_v2(identifiers, features)
+        self.save_graph_data_to_json(graph_data)
+
+    def run_with_varying_eps(self):
+        eps_values = np.arange(0.01, 0.99, 0.01)
+        intra_class_distances = []
+        inter_class_distances = []
+
+        for eps in eps_values:
+            self.eps = eps  # Update eps value for each iteration
+            print(f"Running with eps = {eps}")
+
+            # 运行 generate_graph_data_v3 来获取距离数据
+            dataset = FeatureVectorDataset(self.dataset_path)
+            features = [f.numpy() for _, f in dataset]  # 提取最新的特征向量
+            identifiers, _, _ = self.predict()
+            avg_intra_distance, avg_inter_distance = self.generate_graph_data_v3(identifiers, features)
+
+            # Record the distances
+            intra_class_distances.append(avg_intra_distance)
+            inter_class_distances.append(avg_inter_distance)
+
+        # After looping through all eps values, plot the results
+        self.plot_distances_vs_eps(eps_values, intra_class_distances, inter_class_distances)
+
+    def plot_distances_vs_eps(self, eps_values, intra_class_distances, inter_class_distances):
+        plt.figure(figsize=(10, 6))
+
+        # Plotting Intra-class Distance
+        plt.plot(eps_values, intra_class_distances, label='Average Intra-class Distance', color='blue')
+
+        # Plotting Inter-class Distance
+        plt.plot(eps_values, inter_class_distances, label='Average Inter-class Distance', color='red')
+
+        # Adding labels and title
+        plt.xlabel('Epsilon (eps)')
+        plt.ylabel('Distance')
+        plt.title('Intra-class and Inter-class Distances vs. Epsilon (eps)')
+        plt.legend()
+
+        # Show the plot
+        plt.grid(True)
+        plt.show()
 
     def generate_graph_data_v2(self, identifiers, features):
         graph_data = {
@@ -129,16 +188,18 @@ class ClusterPredictor:
 
         # 使用傅里叶变换提取特征
         fourier_features = self.compute_fourier_features(features)
-        # print("fourier_features", fourier_features)
 
         # 保存傅里叶特征到JSON文件
         self.save_fourier_features_to_json(identifiers, fourier_features)
 
+        # 使用DBSCAN进行聚类
         dbscan_groups = DBSCAN(eps=self.eps, min_samples=self.min_samples)
         group_labels = dbscan_groups.fit_predict(features)
-        print("group_labels : ", group_labels)
-        group_dict = {}
 
+        # 打印group_labels用于调试
+        print("group_labels : ", group_labels)
+
+        group_dict = {}
         for identifier, group_label in zip(identifiers, group_labels):
             if group_label not in group_dict:
                 group_dict[group_label] = []
@@ -166,7 +227,7 @@ class ClusterPredictor:
                     for j in range(i + 1, len(group)):
                         dist = dist_matrix[i, j]
                         if dist < distance_threshold:
-                            if (i, j) not in added_edges:
+                            if ((i, j) not in added_edges):
                                 graph_data["GraphData"]["links"].append({
                                     "source": group[i],
                                     "target": group[j],
@@ -181,7 +242,27 @@ class ClusterPredictor:
             if len(group_features) > 1:  # 仅在组内节点数大于1时生成连线
                 generate_links(group, group_features)
 
+        # 计算类内距离和类间距离
+        avg_intra_distance, avg_inter_distance = self.calculate_intra_inter_class_distances(features, group_labels)
+        print(f"Average Intra-class Distance: {avg_intra_distance}")
+        print(f"Average Inter-class Distance: {avg_inter_distance}")
+
         return graph_data
+
+    def generate_graph_data_v3(self, identifiers, features):
+        # 使用DBSCAN进行聚类
+        dbscan_groups = DBSCAN(eps=self.eps, min_samples=self.min_samples)
+        group_labels = dbscan_groups.fit_predict(features)
+
+        # 打印group_labels用于调试
+        print("group_labels : ", group_labels)
+
+        # 计算类内距离和类间距离
+        avg_intra_distance, avg_inter_distance = self.calculate_intra_inter_class_distances(features, group_labels)
+        print(f"Average Intra-class Distance (v3): {avg_intra_distance}")
+        print(f"Average Inter-class Distance (v3): {avg_inter_distance}")
+
+        return avg_intra_distance, avg_inter_distance
 
     def save_graph_data_to_json(self, graph_data):
         if not os.path.exists(os.path.dirname(self.output_file_mult_path)):
@@ -196,16 +277,10 @@ class ClusterPredictor:
             json.dump(data, f, indent=4)
 
     def calculate_intra_inter_class_distances(self, features, labels):
-        """
-        计算类内距离和类间距离。
-        :param features: 特征向量列表
-        :param labels: 聚类标签列表
-        :return: 类内距离的平均值，类间距离的平均值
-        """
         intra_distances = []
         inter_distances = []
 
-        # 创建标签到特征向量的映射
+        # 将特征和标签分组
         label_to_features = {}
         for feature, label in zip(features, labels):
             if label not in label_to_features:
@@ -215,56 +290,30 @@ class ClusterPredictor:
         # 计算类内距离
         for label, group_features in label_to_features.items():
             if len(group_features) > 1:
+                group_features = np.array(group_features)
                 dist_matrix = squareform(pdist(group_features, metric='euclidean'))
                 intra_distances.extend(dist_matrix[np.triu_indices(len(group_features), k=1)])
 
         # 计算类间距离
-        label_pairs = combinations(label_to_features.keys(), 2)
-        for label1, label2 in label_pairs:
-            group1 = label_to_features[label1]
-            group2 = label_to_features[label2]
-            for f1 in group1:
-                for f2 in group2:
-                    f1 = np.array(f1)
-                    f2 = np.array(f2)
-                    inter_distances.append(np.linalg.norm(f1 - f2))
+        labels_list = list(label_to_features.keys())
+        for i in range(len(labels_list)):
+            for j in range(i + 1, len(labels_list)):
+                group1 = np.array(label_to_features[labels_list[i]])
+                group2 = np.array(label_to_features[labels_list[j]])
+                for f1 in group1:
+                    for f2 in group2:
+                        inter_distances.append(np.linalg.norm(f1 - f2))
 
         avg_intra_distance = np.mean(intra_distances) if intra_distances else 0
         avg_inter_distance = np.mean(inter_distances) if inter_distances else 0
 
         return avg_intra_distance, avg_inter_distance
 
-    def run(self):
-        # 获取数据集
-        dataset = FeatureVectorDataset(self.dataset_path)
-        features = [f.numpy() for _, f in dataset]  # 提取最新的特征向量
-
-        # 使用当前数据进行聚类预测
-        identifiers, predicted_clusters, probabilities = self.predict()
-
-        # 打印当前聚类标签和特征
-        print(f"Current group labels: {predicted_clusters}")
-
-        # 保存概率和图数据
-        self.save_probabilities_to_json(identifiers, probabilities)
-        graph_data = self.generate_graph_data_v2(identifiers, features)
-        self.save_graph_data_to_json(graph_data)
-
-        # 计算类内距离和类间距离
-        avg_intra_distance, avg_inter_distance = self.calculate_intra_inter_class_distances(features, predicted_clusters)
-        print(f"Average Intra-class Distance: {avg_intra_distance}")
-        print(f"Average Inter-class Distance: {avg_inter_distance}")
-
-        # 打印调试信息
-        unique_labels = set(predicted_clusters)
-        for label in unique_labels:
-            if label != -1:  # -1 通常表示噪声点
-                print(f"Label {label} contains {predicted_clusters.count(label)} nodes.")
-
-
 
 # 运行时指定路径
-def main(normalized_csv_path, output_file_mult_path, probabilities_file_path, fourier_file_path, eps=0.4, min_samples=3, distance_threshold_ratio=0.5):
+def main(normalized_csv_path, output_file_mult_path, probabilities_file_path, fourier_file_path, eps=0.4, min_samples=3,
+         distance_threshold_ratio=0.9):
+    # 创建ClusterPredictor实例
     predictor = ClusterPredictor(
         model_save_path="./static/modules/model_checkpoint_class30.tar",
         dataset_path=normalized_csv_path,
@@ -275,16 +324,20 @@ def main(normalized_csv_path, output_file_mult_path, probabilities_file_path, fo
         min_samples=min_samples,
         distance_threshold_ratio=distance_threshold_ratio
     )
+
+    # 首先进行正式的聚类预测和数据保存
     predictor.run()
 
+    # 然后运行eps范围内的测试，计算和绘制图表
+    # predictor.run_with_varying_eps()
 
-if __name__ == "__main__":
-    main(
-        normalized_csv_path="../../static/data/normalized_features.csv",
-        output_file_mult_path='../../static/data/community_data_mult.json',
-        probabilities_file_path='../../static/data/cluster_probabilities.json',
-        fourier_file_path='../../static/data/fourier_features.json',
-        eps=0.4,
-        min_samples=3,
-        distance_threshold_ratio = 0.5
-    )
+# if __name__ == "__main__":
+#     main(
+#         normalized_csv_path="../../static/data/normalized_features.csv",
+#         output_file_mult_path='../../static/data/community_data_mult.json',
+#         probabilities_file_path='../../static/data/cluster_probabilities.json',
+#         fourier_file_path='../../static/data/fourier_features.json',
+#         eps=0.4,
+#         min_samples=3,
+#         distance_threshold_ratio = 0.5
+#     )
