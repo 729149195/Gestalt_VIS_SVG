@@ -41,6 +41,7 @@ const eps_list = ref(null)
 const min = ref(1);
 const link = ref(0.5);
 
+
 let simulation;
 let isSelecting = false; // Track if the user is currently selecting
 let selectionStart = { x: 0, y: 0 }; // Start coordinates of selection
@@ -90,6 +91,7 @@ const customColorMap = {
 };
 
 onMounted(async () => {
+    count.value = 1;
     try {
         const response = await fetch(epsUrl);
         if (!response.ok) {
@@ -134,10 +136,13 @@ function handleKeyDown(event) {
     }
 }
 
+const count = ref(0);
 watch([eps, min, link], debounce(() => {
-    if (eps.value !== null) {
+    if (count.value !== 1) {
         runClusteringWithParams();
+        console.log(count)
     }
+    count.value ++;
 }, 200));
 
 
