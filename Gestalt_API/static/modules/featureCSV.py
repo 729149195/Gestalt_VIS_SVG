@@ -155,6 +155,36 @@ def get_color_features(color, current_color='black'):
     h, l, s = colorsys.rgb_to_hls(*rgb)
     return h * 360.0, s * 100.0, l * 100.0
 
+# def get_color_features(color, current_color='black'):
+#     if color is None:
+#         return 0.0, 0.0, 0.0
+#     if color == 'currentColor':
+#         color = current_color
+#     if color.lower() == 'none':
+#         return -1.0, -1.0, -1.0
+#
+#     try:
+#         if color.startswith('#'):
+#             color = color.lstrip('#')
+#             lv = len(color)
+#             rgb = tuple(int(color[i:i + lv // 3], 16) / 255.0 for i in range(0, lv, lv // 3))
+#         elif color.startswith('rgb'):
+#             rgb = tuple(int(x) / 255.0 for x in re.findall(r'\d+', color))
+#         elif color.startswith('hsl'):
+#             h, s, l = map(float, re.findall(r'[\d.]+', color))
+#             s /= 100.0
+#             l /= 100.0
+#             rgb = colorsys.hls_to_rgb(h / 360.0, l, s)
+#         else:
+#             rgb = mcolors.to_rgb(color)
+#     except ValueError:
+#         rgb = (0.0, 0.0, 0.0)
+#
+#     if rgb == (0.0, 0.0, 0.0) and color != 'black':
+#         return 0.0, 0.0, 0.0
+#
+#     return tuple(x * 255.0 for x in rgb)
+
 
 def get_inherited_attribute(element, attribute_name):
     current_element = element
@@ -404,17 +434,6 @@ def save_features(features, output_path):
 
 def save_svg_with_ids(svg_input_path, svg_output_path):
     svgid(svg_input_path, svg_output_path)
-
-
-# 示例使用
-# file_path = './svg/1.svg'
-# output_path = './data/features.csv'
-# features = process_svg(file_path)
-# save_features(features, output_path)
-#
-# # 选择性保存添加了ID的SVG文件
-# output_svg_with_ids_path = './svg_with_ids.svg'
-# save_svg_with_ids(file_path, output_svg_with_ids_path)
 
 
 def process_and_save_features(svg_input_path, output_csv_path, output_svg_with_ids_path):

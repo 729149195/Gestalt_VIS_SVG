@@ -63,9 +63,10 @@ class FeatureVectorDataset(Dataset):
         return self.identifiers[idx], torch.tensor(self.features[idx], dtype=torch.float32)
 
 
+
 class ClusterPredictor:
     def __init__(self, model_save_path, dataset_path, output_file_mult_path, probabilities_file_path, fourier_file_path,
-                 input_dim=20, feature_dim=20, class_num=30, eps=0.4, min_samples=3, distance_threshold_ratio=0.1):
+                 eps, min_samples, distance_threshold_ratio, input_dim=20, feature_dim=20, class_num=30):
         self.model_save_path = model_save_path
         self.dataset_path = dataset_path
         self.output_file_mult_path = output_file_mult_path
@@ -130,17 +131,23 @@ class ClusterPredictor:
         identifiers, predicted_clusters, probabilities = self.predict()
 
         # 打印当前聚类标签和特征
-        print(f"Current group labels: {predicted_clusters}")
+        # print(f"Current group labels: {predicted_clusters}")
 
         # 保存概率和图数据
         self.save_probabilities_to_json(identifiers, probabilities)
         graph_data = self.generate_graph_data_v2(identifiers, features)
         self.save_graph_data_to_json(graph_data)
 
-        # 计算3-distance并绘制图表
-        # k = 1  # 定义k的值
-        #         # k_distances = self.calculate_k_distance(features, k=k)
-        #         # self.plot_k_distance(k_distances, k=k)
+
+    def run_distance(self):
+        # 获取数据集
+        dataset = FeatureVectorDataset(self.dataset_path)
+        features = [f.numpy() for _, f in dataset]  # 提取最新的特征向量
+        # 使用当前数据进行聚类预测
+        identifiers, predicted_clusters, probabilities = self.predict()
+
+        # # 打印当前聚类标签和特征
+        # print(f"Current group labels: {predicted_clusters}")
 
         # 计算1到5的k-distance并绘制图表
         k_distances_dict = {}
@@ -150,10 +157,18 @@ class ClusterPredictor:
 
         # 绘制k-distance图表
         # self.plot_k_distances(k_distances_dict)
-        self.plot_g_distances(k_distances_dict)
+        return self.plot_g_distances(k_distances_dict)
 
-    def plot_g_distances(self, k_distances_dict, prominence_factor=0.02, min_distance_diff=0.05):
-        plt.figure(figsize=(10, 6))
+
+    def plot_g_distances(self, k_distances_dict, prominence_factor=0.03, min_distance_diff=0.025):
+        # plt.figure(figsize=(10, 6))
+
+        all_elbow_distances = []
+        max_prominence_elbow_distance = None
+        max_prominence_peak = None  # 定义用于存储最大显著性拐点的变量
+
+        filtered_peaks = []
+        max_prominence = -np.inf
 
         for k, k_distances in k_distances_dict.items():
             sorted_k_distances = np.sort(k_distances)[::-1]  # 从大到小排序
@@ -165,9 +180,8 @@ class ClusterPredictor:
             # 使用 find_peaks 来检测曲率较大的点，并计算峰值的显著性(prominence)
             peaks, properties = find_peaks(-first_diff, prominence=np.max(-first_diff) * prominence_factor)
 
-            filtered_peaks = []
-            max_prominence_peak = None
-            max_prominence = -np.inf
+            # print(f"Detected peaks for k={k}: {peaks}")
+            # print(f"Prominences for k={k}: {properties['prominences']}")
 
             for i, peak in enumerate(peaks):
                 elbow_index = peak + 1  # +1 是因为我们取的是差分后的数组
@@ -185,28 +199,38 @@ class ClusterPredictor:
 
                 filtered_peaks.append(peak)
 
-                # 更新最大显著性的拐点（曲率最大）
-                if properties['prominences'][i] > max_prominence:
-                    max_prominence = properties['prominences'][i]
-                    max_prominence_peak = peak
-
-            # 遍历并标记过滤后的拐点
+            # 遍历并标记最终过滤后的拐点
             for peak in filtered_peaks:
                 elbow_index = peak + 1  # +1 是因为我们取的是差分后的数组
                 elbow_distance = sorted_k_distances[elbow_index]
+                all_elbow_distances.append(elbow_distance)
 
-                # 在图中标记拐点
-                color = 'b' if peak == max_prominence_peak else 'r'  # 曲率最大的拐点用蓝色标注，其余用红色
-                plt.axvline(x=elbow_index, color=color, linestyle='--')
-                plt.text(elbow_index, elbow_distance, f'({elbow_index}, {elbow_distance:.2f})',
-                         verticalalignment='bottom', color=color)
+                # 更新最大显著性的拐点（曲率最大）
+                if properties['prominences'][filtered_peaks.index(peak)] > max_prominence:
+                    max_prominence = properties['prominences'][filtered_peaks.index(peak)]
+                    max_prominence_elbow_distance = elbow_distance
+                    max_prominence_peak = peak  # 更新最大显著性拐点的索引
 
-        plt.xlabel('Points sorted by distance')
-        plt.ylabel('Distance')
-        plt.title('K-Distance Plots with Filtered Elbow Points')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+                # # 在图中标记拐点
+                # color = 'b' if peak == max_prominence_peak else 'r'  # 曲率最大的拐点用蓝色标注，其余用红色
+                # plt.axvline(x=elbow_index, color=color, linestyle='--')
+                # plt.text(elbow_index, elbow_distance, f'({elbow_index}, {elbow_distance:.2f})',
+                #          verticalalignment='bottom', color=color)
+
+        # plt.xlabel('Points sorted by distance')
+        # plt.ylabel('Distance')
+        # plt.title('K-Distance Plots with Filtered Elbow Points')
+        # plt.legend()
+        # plt.grid(True)
+        # plt.show()
+
+        # 输出所有过滤后的拐点的 distance 值
+        # print("All filtered elbow distances:", all_elbow_distances)
+
+        # 输出过滤后曲率最大的拐点的 distance 值
+        # print("Max prominence elbow distance:", max_prominence_elbow_distance)
+
+        return all_elbow_distances, max_prominence_elbow_distance
 
     def run_with_varying_eps(self):
         eps_values = np.arange(0.01, 0.99, 0.01)
@@ -216,7 +240,7 @@ class ClusterPredictor:
 
         for eps in eps_values:
             self.eps = eps  # Update eps value for each iteration
-            print(f"Running with eps = {eps}")
+            # print(f"Running with eps = {eps}")
 
             # 运行 generate_graph_data_v3 来获取距离数据
             dataset = FeatureVectorDataset(self.dataset_path)
@@ -259,22 +283,18 @@ class ClusterPredictor:
     def calculate_k_distance(self, features, k=3):
         # 计算每个点到距离它最近的第 k 个点的距离
         dist_matrix = squareform(pdist(features, metric='euclidean'))
-        k_distances = np.sort(dist_matrix, axis=1)[:, k]  # 排序后取第k个值
-        return k_distances
 
+        # 对每一行进行排序，并确保只获取有效的距离
+        k_distances = []
+        for row in dist_matrix:
+            sorted_distances = np.sort(row)
+            if len(sorted_distances) >= k + 1:
+                k_distances.append(sorted_distances[k])
+            else:
+                # 如果某行距离不足 k+1 个，只取最后一个有效的距离
+                k_distances.append(sorted_distances[-1])
 
-    def plot_k_distances(self, k_distances_dict):
-        plt.figure(figsize=(10, 6))
-        for k, k_distances in k_distances_dict.items():
-            sorted_k_distances = np.sort(k_distances)[::-1]  # 从大到小排序
-            plt.plot(sorted_k_distances, label=f'{k}-Distance')
-        plt.xlabel('Points sorted by distance')
-        plt.ylabel('Distance')
-        plt.title('K-Distance Plots')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
-
+        return np.array(k_distances)
 
     def generate_graph_data_v2(self, identifiers, features):
         graph_data = {
@@ -296,7 +316,7 @@ class ClusterPredictor:
         group_labels = dbscan_groups.fit_predict(features)
 
         # 打印group_labels用于调试
-        print("group_labels : ", group_labels)
+        # print("group_labels : ", group_labels)
 
         group_dict = {}
         for identifier, group_label in zip(identifiers, group_labels):
@@ -343,8 +363,8 @@ class ClusterPredictor:
 
         # 计算类内距离和类间距离
         avg_intra_distance, avg_inter_distance = self.calculate_intra_inter_class_distances(features, group_labels)
-        print(f"Average Intra-class Distance: {avg_intra_distance}")
-        print(f"Average Inter-class Distance: {avg_inter_distance}")
+        # print(f"Average Intra-class Distance: {avg_intra_distance}")
+        # print(f"Average Inter-class Distance: {avg_inter_distance}")
 
         return graph_data
 
@@ -354,7 +374,7 @@ class ClusterPredictor:
         group_labels = dbscan_groups.fit_predict(features)
 
         # 打印group_labels用于调试
-        print("group_labels : ", group_labels)
+        # print("group_labels : ", group_labels)
 
         # 计算类内距离和类间距离
         avg_intra_distance, avg_inter_distance = self.calculate_intra_inter_class_distances(features, group_labels)
@@ -410,8 +430,8 @@ class ClusterPredictor:
 
 
 # 运行时指定路径
-def main(normalized_csv_path, output_file_mult_path, probabilities_file_path, fourier_file_path, eps=0.4, min_samples=3,
-         distance_threshold_ratio=0.1):
+def main(normalized_csv_path, output_file_mult_path, probabilities_file_path, fourier_file_path, eps=0.4, min_samples=1,
+         distance_threshold_ratio=0.5):
     # 创建ClusterPredictor实例
     predictor = ClusterPredictor(
         model_save_path="./static/modules/model_checkpoint_class30.tar",
@@ -427,16 +447,21 @@ def main(normalized_csv_path, output_file_mult_path, probabilities_file_path, fo
     # 首先进行正式的聚类预测和数据保存
     predictor.run()
 
+
+
+def get_eps(normalized_csv_path, output_file_mult_path, probabilities_file_path, fourier_file_path, eps=0.4, min_samples=1,
+         distance_threshold_ratio=0.5):
+    predictor = ClusterPredictor(model_save_path="./static/modules/model_checkpoint_class30.tar",
+        dataset_path=normalized_csv_path,
+        output_file_mult_path=output_file_mult_path,
+        probabilities_file_path=probabilities_file_path,
+        fourier_file_path=fourier_file_path,
+        eps=eps,
+        min_samples=min_samples,
+        distance_threshold_ratio=distance_threshold_ratio
+    )
+
+    return predictor.run_distance()
+
     # 然后运行eps范围内的测试，计算和绘制图表
     # predictor.run_with_varying_eps()
-
-# if __name__ == "__main__":
-#     main(
-#         normalized_csv_path="../../static/data/normalized_features.csv",
-#         output_file_mult_path='../../static/data/community_data_mult.json',
-#         probabilities_file_path='../../static/data/cluster_probabilities.json',
-#         fourier_file_path='../../static/data/fourier_features.json',
-#         eps=0.4,
-#         min_samples=3,
-#         distance_threshold_ratio = 0.5
-#     )

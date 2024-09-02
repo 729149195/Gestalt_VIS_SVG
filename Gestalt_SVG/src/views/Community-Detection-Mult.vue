@@ -7,8 +7,7 @@
         <v-switch v-model="checkbox" inset color="#55C000" class="switch"
             :label="checkbox ? 'Checkbox ON' : 'Checkbox OFF'" />
         <div class="input-group">
-            <v-text-field v-model="eps" :min="0.1" :max="50.0" step="0.01" label="DBSCAN Eps" type="number"
-                class="input-box" />
+            <v-combobox v-model="eps" :items="eps_list || []" label="DBSCAN Eps" class="input-box"/>
         </div>
         <div class="input-group">
             <v-text-field v-model="min" :min="1" :max="20" step="1" label="Min_Samples" type="number"
@@ -23,7 +22,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, onUnmounted  } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
+import { debounce } from 'lodash';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
 const store = useStore();
@@ -33,11 +33,13 @@ const height = 1300;
 const svg = ref(null);
 const apiUrl = 'http://localhost:5000/community_data_mult';
 const runClusteringUrl = 'http://localhost:5000/run_clustering';
+const epsUrl = 'http://127.0.0.1:5000/get_eps_list';
 const groupHull = ref(true);
 const checkbox = ref(false); // This checkbox will control the selection box mode
-const eps = ref(0.4);
+const eps = ref(null); // Initialize eps as null
+const eps_list = ref(null)
 const min = ref(1);
-const link = ref(0.1);
+const link = ref(0.5);
 
 let simulation;
 let isSelecting = false; // Track if the user is currently selecting
@@ -87,7 +89,24 @@ const customColorMap = {
     "unknown": "#696969" // 暗灰色
 };
 
-onMounted(() => {
+onMounted(async () => {
+    try {
+        const response = await fetch(epsUrl);
+        if (!response.ok) {
+            throw new Error('Failed to fetch initial EPS value');
+        }
+        const data = await response.json();
+        if (data && typeof data.max_eps === 'number') {
+            eps.value = parseFloat(data.max_eps.toFixed(4));
+            eps_list.value = data.epss.map(eps => Number(parseFloat(eps).toFixed(4)));
+            // console.log(eps_list.value)
+        } else {
+            console.error('Unexpected data format received:', data);
+        }
+    } catch (error) {
+        console.error('Error fetching initial EPS value:', error);
+    }
+
     fetchData();
     window.addEventListener('keydown', handleKeyDown);
 });
@@ -115,10 +134,11 @@ function handleKeyDown(event) {
     }
 }
 
-
-watch([eps, min, link], () => {
-    runClusteringWithParams();
-});
+watch([eps, min, link], debounce(() => {
+    if (eps.value !== null) {
+        runClusteringWithParams();
+    }
+}, 200));
 
 
 // 添加监听器以确保 groupHull 和 checkbox 之间的一开一关逻辑
@@ -151,25 +171,24 @@ function runClusteringWithParams() {
             distance_threshold_ratio: link.value
         })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Clustering response:', data);
-        d3.select(svg.value).selectAll('*').remove();
-        fetchData();
-    })
-    .then(() => {
-        if (checkbox.value) {
-            disableZoom();  // 重新禁用缩放和拖拉
-        }
-    })
-    .catch(error => {
-        console.error('Error running clustering:', error);
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            d3.select(svg.value).selectAll('*').remove();
+            fetchData();
+        })
+        .then(() => {
+            if (checkbox.value) {
+                disableZoom();  // 重新禁用缩放和拖拉
+            }
+        })
+        .catch(error => {
+            console.error('Error running clustering:', error);
+        });
 }
 
 
@@ -196,7 +215,7 @@ function submitAllNodes() {
         return parts[parts.length - 1]; // 假设节点的唯一标识位于id的最后一部分
     });
 
-    console.log(nodeIds);
+    // console.log(nodeIds);
     store.commit('SET_ALL_VISIBLE_NODES', nodeIds); // 假设这是你的mutation
 }
 
@@ -293,16 +312,16 @@ function initializeGraph() {
     Array.from(renderedTags).forEach((tag, index) => {
         const legendItem = legendGroup.append("g")
             .attr("class", "legend-item")
-            .attr("transform", `translate(0, ${index * 30})`); // Offset each legend item to fit view
+            .attr("transform", `translate(0, ${index * 25})`); // Offset each legend item to fit view
 
         legendItem.append("circle")
             .attr("r", 6)
-            .attr("cx", 0)
+            .attr("cx", -10)
             .attr("cy", -1)
             .attr("fill", customColorMap[tag]);
 
         legendItem.append("text")
-            .attr("x", 10)
+            .attr("x", 0)
             .attr("y", 1.6)
             .text(tag)
             .attr("font-size", "14px")
@@ -312,7 +331,7 @@ function initializeGraph() {
     const initialZoom = d3.zoomIdentity.translate(width / 2, height / 2).scale(0.5).translate(-width / 2, -height / 2);
     svgEl.call(zoom.transform, initialZoom);
 
-     if (checkbox.value) {
+    if (checkbox.value) {
         disableZoom();
     }
 }
@@ -323,10 +342,14 @@ function disableZoom() {
 }
 
 function enableZoom() {
-    d3.select(svg.value).call(d3.zoom().on("zoom", (event) => {
-        d3.select(svg.value).select('.content').attr("transform", event.transform);
-    })); // Reapply zoom events
-    d3.select(svg.value).style('cursor', 'default'); // Change cursor back to default
+    const zoomHandler = d3.zoom().on("zoom", (event) => {
+        window.requestAnimationFrame(() => {
+            d3.select(svg.value).select('.content').attr("transform", event.transform);
+        });
+    });
+
+    d3.select(svg.value).call(zoomHandler);
+    d3.select(svg.value).style('cursor', 'default');
 }
 
 function onMouseDown(event) {
@@ -400,7 +423,7 @@ function selectNodesInBox(selectionBox) {
     });
 
     const nodeIds = selectedNodes.map(node => node.id.split('/').pop());
-    console.log(nodeIds);
+    // console.log(nodeIds);
     store.commit('UPDATE_SELECTED_NODES', { nodeIds, group: null });
 }
 
@@ -534,5 +557,4 @@ function drawHulls(hullGroup, groups, fillColor, className) {
     left: 20px;
     width: 180px;
 }
-
 </style>

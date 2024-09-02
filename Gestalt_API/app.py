@@ -5,7 +5,7 @@ import os
 from static.modules import featureCSV
 from static.modules import normalized_features
 from static.modules.cluster import main as run_clustering
-
+from static.modules.cluster import get_eps
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")  # 允许跨域
@@ -55,7 +55,11 @@ def upload_file():
         community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
         probabilities_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_probabilities.json')
         fourier_file_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
-        run_clustering(normalized_csv_path, community_data_path, probabilities_data_path, fourier_file_path)
+
+        epss, max_eps= get_eps(normalized_csv_path, community_data_path, probabilities_data_path, fourier_file_path)
+        print(max_eps, epss)
+
+        run_clustering(normalized_csv_path, community_data_path, probabilities_data_path, fourier_file_path,max_eps)
 
         return jsonify({
             'success': 'File uploaded and processed successfully',
@@ -69,11 +73,22 @@ def upload_file():
     else:
         return jsonify({'error': 'Invalid file type'}), 400
 
+
+@app.route('/get_eps_list', methods=['GET'])
+def get_eps_list():
+    normalized_csv_path = os.path.join(app.config['DATA_FOLDER'], 'normalized_features.csv')
+    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
+    probabilities_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_probabilities.json')
+    fourier_file_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
+
+    epss, max_eps = get_eps(normalized_csv_path, community_data_path, probabilities_data_path, fourier_file_path)
+
+    return jsonify({"max_eps":max_eps, "epss":epss}),200
+
 @app.route('/run_clustering', methods=['POST'])
 def run_clustering_with_params():
-    # Retrieve eps and min_samples from request data
-    eps = request.json.get('eps', 0.4)  # Default eps = 0.4
-    min_samples = request.json.get('min_samples', 3)  # Default min_samples = 3
+    eps = request.json.get('eps', 0.4)
+    min_samples = request.json.get('min_samples', 1)
     distance_threshold_ratio = request.json.get('distance_threshold_ratio', 0.5)
 
     try:

@@ -55,7 +55,7 @@
                             <maxsticStatician :key="componentKey"/>
                         </div>
                         <div class="maxtistic2" v-if="selectedView === 'FFT'">
-                            <maxsticStaticianfly :key="componentKey"/>
+                            <maxsticStaticianfly :key="componentKey2"/>
                         </div>
                         <div class="layer" v-if="selectedView === 'layer'">
                             <layerStatistician/>
@@ -78,7 +78,7 @@
             <v-card class="fill-height">
                 <span style="font-size:1.1em; font-weight: 700; padding-left: 8px">interactivity SVG and Hulls
                     result: </span><v-btn density="compact" icon="mdi-refresh" variant="plain" @click="refresh" v-if="file"></v-btn>
-                <CommunityDetectionMult v-if="file" :key="componentKey" />
+                <CommunityDetectionMult v-if="file" :key="componentKey3" />
             </v-card>
         </div>
     </div>
@@ -104,6 +104,8 @@ import maxsticStaticianfly from './maxstic-Statician-fly.vue';
 const file = ref(null)
 const processedSvgContent = ref('')
 const componentKey = ref(0)
+const componentKey2 = ref(0)
+const componentKey3 = ref(0)
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 const allVisiableNodes = computed(() => store.state.AllVisiableNodes);
@@ -122,9 +124,11 @@ const uploadFile = () => {
         },
     })
         .then(response => {
-            console.log('File uploaded successfully:', response.data)
+            // console.log('File uploaded successfully:', response.data)
             fetchProcessedSvg();
             componentKey.value += 1;
+            componentKey2.value += 1;
+            componentKey3.value += 1;
         })
         .catch(error => {
             console.error('Error uploading file:', error)

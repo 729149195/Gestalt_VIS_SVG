@@ -20,6 +20,7 @@ def normalize_features(input_path, output_path):
         return opacity / 10
 
     def normalize_color(value):
+        # return value / 360.0
         return value / 360.0
 
     def normalize_stroke_width(stroke_width, min_val, max_val):
