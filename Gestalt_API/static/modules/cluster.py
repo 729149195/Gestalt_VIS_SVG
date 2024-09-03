@@ -160,7 +160,7 @@ class ClusterPredictor:
         return self.plot_g_distances(k_distances_dict)
 
 
-    def plot_g_distances(self, k_distances_dict, prominence_factor=0.03, min_distance_diff=0.025):
+    def plot_g_distances(self, k_distances_dict, prominence_factor=0.02, min_distance_diff=0.02):
         # plt.figure(figsize=(10, 6))
 
         all_elbow_distances = []
@@ -211,26 +211,28 @@ class ClusterPredictor:
                     max_prominence_elbow_distance = elbow_distance
                     max_prominence_peak = peak  # 更新最大显著性拐点的索引
 
-                # # 在图中标记拐点
-                # color = 'b' if peak == max_prominence_peak else 'r'  # 曲率最大的拐点用蓝色标注，其余用红色
-                # plt.axvline(x=elbow_index, color=color, linestyle='--')
-                # plt.text(elbow_index, elbow_distance, f'({elbow_index}, {elbow_distance:.2f})',
-                #          verticalalignment='bottom', color=color)
+                # 在图中标记拐点
+                color = 'b' if peak == max_prominence_peak else 'r'  # 曲率最大的拐点用蓝色标注，其余用红色
+                plt.axvline(x=elbow_index, color=color, linestyle='--')
+                plt.text(elbow_index, elbow_distance, f'({elbow_index}, {elbow_distance:.2f})',
+                         verticalalignment='bottom', color=color)
 
-        # plt.xlabel('Points sorted by distance')
-        # plt.ylabel('Distance')
-        # plt.title('K-Distance Plots with Filtered Elbow Points')
-        # plt.legend()
-        # plt.grid(True)
-        # plt.show()
+        plt.xlabel('Points sorted by distance')
+        plt.ylabel('Distance')
+        plt.title('K-Distance Plots with Filtered Elbow Points')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
         # 输出所有过滤后的拐点的 distance 值
         # print("All filtered elbow distances:", all_elbow_distances)
 
         # 输出过滤后曲率最大的拐点的 distance 值
         # print("Max prominence elbow distance:", max_prominence_elbow_distance)
-
-        return all_elbow_distances, max_prominence_elbow_distance
+        if max_prominence_elbow_distance is not None:
+            return all_elbow_distances, max_prominence_elbow_distance
+        else:
+            return [0.4], 0.4
 
     def run_with_varying_eps(self):
         eps_values = np.arange(0.01, 0.99, 0.01)

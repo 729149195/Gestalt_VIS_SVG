@@ -7,7 +7,7 @@
         <v-switch v-model="checkbox" inset color="#55C000" class="switch"
             :label="checkbox ? 'Checkbox ON' : 'Checkbox OFF'" />
         <div class="input-group">
-            <v-combobox v-model="eps" :items="eps_list || []" label="DBSCAN Eps" class="input-box"/>
+            <v-combobox v-model="eps" :items="eps_list || []" label="DBSCAN Eps" class="input-box" />
         </div>
         <div class="input-group">
             <v-text-field v-model="min" :min="1" :max="20" step="1" label="Min_Samples" type="number"
@@ -35,17 +35,16 @@ const apiUrl = 'http://localhost:5000/community_data_mult';
 const runClusteringUrl = 'http://localhost:5000/run_clustering';
 const epsUrl = 'http://127.0.0.1:5000/get_eps_list';
 const groupHull = ref(true);
-const checkbox = ref(false); // This checkbox will control the selection box mode
-const eps = ref(null); // Initialize eps as null
+const checkbox = ref(false);
+const eps = ref(null);
 const eps_list = ref(null)
 const min = ref(1);
 const link = ref(0.5);
 
-
 let simulation;
-let isSelecting = false; // Track if the user is currently selecting
-let selectionStart = { x: 0, y: 0 }; // Start coordinates of selection
-let selectionRect = null; // D3 element for the selection rectangle
+let isSelecting = false;
+let selectionStart = { x: 0, y: 0 };
+let selectionRect = null;
 
 const graphData = ref({
     nodes: [],
@@ -101,7 +100,6 @@ onMounted(async () => {
         if (data && typeof data.max_eps === 'number') {
             eps.value = parseFloat(data.max_eps.toFixed(4));
             eps_list.value = data.epss.map(eps => Number(parseFloat(eps).toFixed(4)));
-            // console.log(eps_list.value)
         } else {
             console.error('Unexpected data format received:', data);
         }
@@ -140,13 +138,10 @@ const count = ref(0);
 watch([eps, min, link], debounce(() => {
     if (count.value !== 1) {
         runClusteringWithParams();
-        console.log(count)
     }
-    count.value ++;
+    count.value++;
 }, 200));
 
-
-// 添加监听器以确保 groupHull 和 checkbox 之间的一开一关逻辑
 watch(groupHull, (newValue) => {
     if (newValue) {
         checkbox.value = false; // 自动关闭 checkbox
@@ -188,7 +183,7 @@ function runClusteringWithParams() {
         })
         .then(() => {
             if (checkbox.value) {
-                disableZoom();  // 重新禁用缩放和拖拉
+                disableZoom();
             }
         })
         .catch(error => {
@@ -217,22 +212,21 @@ async function fetchData() {
 function submitAllNodes() {
     const nodeIds = graphData.value.nodes.map(node => {
         const parts = node.id.split("/");
-        return parts[parts.length - 1]; // 假设节点的唯一标识位于id的最后一部分
+        return parts[parts.length - 1];
     });
 
-    // console.log(nodeIds);
-    store.commit('SET_ALL_VISIBLE_NODES', nodeIds); // 假设这是你的mutation
+    store.commit('SET_ALL_VISIBLE_NODES', nodeIds);
 }
+
 
 function initializeGraph() {
     const svgEl = d3.select(svg.value)
         .attr('width', width)
         .attr('height', height)
-        .on('mousedown', onMouseDown) // Add mouse events for selection
+        .on('mousedown', onMouseDown)
         .on('mousemove', onMouseMove)
         .on('mouseup', onMouseUp);
 
-    // Define zoom behavior
     const zoom = d3.zoom()
         .on("zoom", (event) => {
             contentGroup.attr("transform", event.transform);
@@ -246,19 +240,35 @@ function initializeGraph() {
     const linkGroup = contentGroup.append('g').attr('class', 'links');
     const nodeGroup = contentGroup.append('g').attr('class', 'nodes');
 
-    simulation = d3.forceSimulation(graphData.value.nodes)
-        .force('link', d3.forceLink(graphData.value.links).id(d => d.id).distance(100))
-        .force('charge', d3.forceManyBody().strength(-80))
-        .force('center', d3.forceCenter(width / 2, height / 2));
+    // First stage: Force-directed layout for groups
+    const groupCenters = computeGroupCenters();
+    const groupSimulation = d3.forceSimulation(groupCenters)
+        .force('charge', d3.forceManyBody().strength(-3000)) // Increased repulsion between groups
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(d => d.radius * 1.5)) // Increased collision radius
+        .force('x', d3.forceX(width / 2).strength(0.1))
+        .force('y', d3.forceY(height / 2).strength(0.1))
+        .stop();
 
-    // Create links
+    // Run the group simulation
+    for (let i = 0; i < 100; ++i) groupSimulation.tick();
+
+    // Assign group centers to nodes
+    assignGroupCentersToNodes(groupCenters);
+
+    // Second stage: Force-directed layout for nodes within groups
+    const simulation = d3.forceSimulation(graphData.value.nodes)
+        .force('link', d3.forceLink(graphData.value.links).id(d => d.id).distance(d => 280 - d.value * 600))
+        .force('charge', d3.forceManyBody().strength(-200))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('group', forceGroup().strength(0.05));
+
     const link = linkGroup.selectAll('line')
         .data(graphData.value.links)
         .enter().append('line')
         .attr('class', 'link')
-        .style('stroke-width', d => Math.sqrt(d.value * 35));
+        .style('stroke-width', d => Math.sqrt(d.value * 60));
 
-    // Create nodes
     const node = nodeGroup.selectAll('circle')
         .data(graphData.value.nodes)
         .enter().append('circle')
@@ -273,16 +283,16 @@ function initializeGraph() {
             const svgTag = d.id.split('/');
             const parts = svgTag[svgTag.length - 1];
             const index = parts.split('_')[0];
-            return customColorMap[index] || color(d.propertyValue * 1); // Use custom color or default color
+            return customColorMap[index] || color(d.propertyValue * 1);
         })
         .on('click', hullClicked)
         .call(drag(simulation));
 
     node.append('title')
         .text(d => {
-            const idParts = d.id.split('/'); // Use '/' to separate id
-            const lastPart = idParts.pop(); // Get the last part
-            return `${lastPart}`; // Return processed text
+            const idParts = d.id.split('/');
+            const lastPart = idParts.pop();
+            return `${lastPart}`;
         });
 
     simulation.on('tick', () => {
@@ -312,12 +322,12 @@ function initializeGraph() {
 
     const legendGroup = svgEl.append("g")
         .attr("class", "legend-group")
-        .attr("transform", `translate(${width - 57}, 7)`); // Place legend in top right corner of SVG
+        .attr("transform", `translate(${width - 57}, 7)`);
 
     Array.from(renderedTags).forEach((tag, index) => {
         const legendItem = legendGroup.append("g")
             .attr("class", "legend-item")
-            .attr("transform", `translate(0, ${index * 25})`); // Offset each legend item to fit view
+            .attr("transform", `translate(0, ${index * 25})`);
 
         legendItem.append("circle")
             .attr("r", 6)
@@ -333,7 +343,7 @@ function initializeGraph() {
             .attr("fill", "#000");
     });
 
-    const initialZoom = d3.zoomIdentity.translate(width / 2, height / 2).scale(0.5).translate(-width / 2, -height / 2);
+    const initialZoom = d3.zoomIdentity.translate(width / 2, height / 2).scale(0.4).translate(-width / 2, -height / 2);
     svgEl.call(zoom.transform, initialZoom);
 
     if (checkbox.value) {
@@ -341,9 +351,56 @@ function initializeGraph() {
     }
 }
 
+function computeGroupCenters() {
+    const groupCenters = graphData.value.groups.map(group => {
+        const nodes = group.map(id => graphData.value.nodes.find(node => node.id === id));
+        const x = d3.mean(nodes, d => d.x);
+        const y = d3.mean(nodes, d => d.y);
+        const radius = Math.sqrt(nodes.length) * 30; // Adjust this multiplier as needed
+        return { x, y, radius, group };
+    });
+    return groupCenters;
+}
+
+function assignGroupCentersToNodes(groupCenters) {
+    graphData.value.nodes.forEach(node => {
+        const group = graphData.value.groups.find(g => g.includes(node.id));
+        if (group) {
+            const groupCenter = groupCenters.find(gc => gc.group === group);
+            node.groupX = groupCenter.x;
+            node.groupY = groupCenter.y;
+        }
+    });
+}
+
+function forceGroup() {
+    let nodes;
+    let strength = 0.1;
+
+    function force(alpha) {
+        for (let i = 0, n = nodes.length, node; i < n; ++i) {
+            node = nodes[i];
+            if (node.groupX != null && node.groupY != null) {
+                node.vx += (node.groupX - node.x) * strength * alpha;
+                node.vy += (node.groupY - node.y) * strength * alpha;
+            }
+        }
+    }
+
+    force.initialize = function(_) {
+        nodes = _;
+    };
+
+    force.strength = function(_) {
+        return arguments.length ? (strength = +_, force) : strength;
+    };
+
+    return force;
+}
+
 function disableZoom() {
-    d3.select(svg.value).on('.zoom', null); // Remove zoom events
-    d3.select(svg.value).style('cursor', 'crosshair'); // Change cursor to crosshair
+    d3.select(svg.value).on('.zoom', null);
+    d3.select(svg.value).style('cursor', 'crosshair');
 }
 
 function enableZoom() {
@@ -358,10 +415,10 @@ function enableZoom() {
 }
 
 function onMouseDown(event) {
-    if (!checkbox.value) return; // Exit if not in selection mode
+    if (!checkbox.value) return;
 
     isSelecting = true;
-    selectionStart = d3.pointer(event); // Get starting coordinates
+    selectionStart = d3.pointer(event);
     if (!selectionRect) {
         selectionRect = d3.select(svg.value).append('rect')
             .attr('class', 'selection')
@@ -377,7 +434,7 @@ function onMouseDown(event) {
 }
 
 function onMouseMove(event) {
-    if (!isSelecting) return; // Exit if not selecting
+    if (!isSelecting) return;
 
     const currentPos = d3.pointer(event);
     const x = Math.min(selectionStart[0], currentPos[0]);
@@ -393,7 +450,7 @@ function onMouseMove(event) {
 }
 
 function onMouseUp() {
-    if (!isSelecting) return; // Exit if not selecting
+    if (!isSelecting) return;
 
     isSelecting = false;
     const selectionBox = selectionRect.node().getBBox();
@@ -406,8 +463,6 @@ function selectNodesInBox(selectionBox) {
     const selectedNodes = [];
     const svgElement = d3.select(svg.value);
     const transform = d3.zoomTransform(svgElement.node());
-
-    // Adjust selection box coordinates to account for zoom and pan transformations
     const adjustedSelectionBox = {
         x: (selectionBox.x - transform.x) / transform.k,
         y: (selectionBox.y - transform.y) / transform.k,
@@ -415,20 +470,19 @@ function selectNodesInBox(selectionBox) {
         height: selectionBox.height / transform.k,
     };
 
-    // Access nodes directly from the graphData
-    svgElement.selectAll('.node').each(function (d) {
-        const cx = d.x; // Directly access x-coordinate from the data bound to the node
-        const cy = d.y; // Directly access y-coordinate from the data bound to the node
 
-        // Check if the node's center is within the adjusted selection box
+    svgElement.selectAll('.node').each(function (d) {
+        const cx = d.x;
+        const cy = d.y;
+
+
         if (cx >= adjustedSelectionBox.x && cx <= adjustedSelectionBox.x + adjustedSelectionBox.width &&
             cy >= adjustedSelectionBox.y && cy <= adjustedSelectionBox.y + adjustedSelectionBox.height) {
-            selectedNodes.push(d); // Add node to selectedNodes if it falls within the selection box
+            selectedNodes.push(d);
         }
     });
 
     const nodeIds = selectedNodes.map(node => node.id.split('/').pop());
-    // console.log(nodeIds);
     store.commit('UPDATE_SELECTED_NODES', { nodeIds, group: null });
 }
 
@@ -526,9 +580,9 @@ function drawHulls(hullGroup, groups, fillColor, className) {
         .attr('d', d => `M${d.join('L')}Z`)
         .style('fill', fillColor)
         .style('stroke', fillColor)
-        .style('stroke-width', 50)
+        .style('stroke-width', 60)
         .style('stroke-linejoin', 'round')
-        .style('opacity', 0.15);
+        .style('opacity', 0.25);
 }
 </script>
 
