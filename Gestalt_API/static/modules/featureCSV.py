@@ -1,3 +1,4 @@
+import json
 import lxml.etree as ET
 import colorsys
 from svgpath2mpl import parse_path as mpl_parse_path
@@ -64,6 +65,7 @@ class SVGParser:
         return full_tag, attributes, element.text
 
     def add_element_to_graph(self, element, parent_path='0', level=0, layer="0"):
+
         tag, attributes, text_content = self.extract_element_info(element)
         node_id = tag
 
@@ -155,37 +157,6 @@ def get_color_features(color, current_color='black'):
     h, l, s = colorsys.rgb_to_hls(*rgb)
     return h * 360.0, s * 100.0, l * 100.0
 
-# def get_color_features(color, current_color='black'):
-#     if color is None:
-#         return 0.0, 0.0, 0.0
-#     if color == 'currentColor':
-#         color = current_color
-#     if color.lower() == 'none':
-#         return -1.0, -1.0, -1.0
-#
-#     try:
-#         if color.startswith('#'):
-#             color = color.lstrip('#')
-#             lv = len(color)
-#             rgb = tuple(int(color[i:i + lv // 3], 16) / 255.0 for i in range(0, lv, lv // 3))
-#         elif color.startswith('rgb'):
-#             rgb = tuple(int(x) / 255.0 for x in re.findall(r'\d+', color))
-#         elif color.startswith('hsl'):
-#             h, s, l = map(float, re.findall(r'[\d.]+', color))
-#             s /= 100.0
-#             l /= 100.0
-#             rgb = colorsys.hls_to_rgb(h / 360.0, l, s)
-#         else:
-#             rgb = mcolors.to_rgb(color)
-#     except ValueError:
-#         rgb = (0.0, 0.0, 0.0)
-#
-#     if rgb == (0.0, 0.0, 0.0) and color != 'black':
-#         return 0.0, 0.0, 0.0
-#
-#     return tuple(x * 255.0 for x in rgb)
-
-
 def get_inherited_attribute(element, attribute_name):
     current_element = element
     while current_element is not None:
@@ -193,7 +164,6 @@ def get_inherited_attribute(element, attribute_name):
             return current_element.attrib[attribute_name]
         current_element = current_element.getparent()
     return None
-
 
 def apply_transform(transform_str, points):
     if transform_str is None:
@@ -302,7 +272,7 @@ def get_transformed_bbox(element, current_transform=''):
             try:
                 if path.codes is not None and np.all(path.codes == 1):
                     fill_area = path.to_polygons()[0].area
-                    print(fill_area)
+                    # print(fill_area)
                 stroke_area = calculate_path_length(path) * stroke_width
             except AssertionError:
                 stroke_area = calculate_path_length(path) * stroke_width
@@ -349,6 +319,13 @@ def is_visible(element):
 
 
 def extract_features(element, layer_extractor, current_transform='', current_color='black'):
+    #元素过滤
+    filter_tags = {'g', 'defs','',''}  # 你可以根据需要调整这个列表
+    tag_without_namespace = element.tag.split('}')[-1]
+    # 如果元素的标签在过滤列表中，视为不可见元素
+    if tag_without_namespace in filter_tags:
+        return None
+
     if not is_visible(element):
         return None
 
@@ -393,6 +370,8 @@ def extract_features(element, layer_extractor, current_transform='', current_col
 
     layer = layer_extractor.get_node_layers().get(element_id, ['0'])
     layer = [int(part.split('_')[-1]) if part != '0' else 0 for part in layer]
+    # print(layer)
+    # layer = 1
 
     tag_name = element.attrib.get('tag_name', '')
 
@@ -431,6 +410,32 @@ def save_features(features, output_path):
     df = pd.DataFrame(features, columns=columns)
     df.to_csv(output_path, index=False)
 
+
+def process_csv_to_json(input_csv_path, output_json_path):
+    # Load the CSV file into a DataFrame
+    df = pd.read_csv(input_csv_path)
+
+    # Initialize the list to store the JSON data
+    json_data = []
+
+    # Iterate through each row in the DataFrame
+    for index, row in df.iterrows():
+        # Extract the 'id' from the 'tag_name' column
+        element_id = row['tag_name']
+
+        # Extract the last 20 columns as Fourier features
+        fourier_features = row[-20:].tolist()
+
+        # print(fourier_features[9])
+        # Append the formatted data to the list
+        json_data.append({
+            "id": element_id,
+            "fourier_features": fourier_features
+        })
+
+    # Write the result to a JSON file
+    with open(output_json_path, 'w') as json_file:
+        json.dump(json_data, json_file, indent=4)
 
 def save_svg_with_ids(svg_input_path, svg_output_path):
     svgid(svg_input_path, svg_output_path)

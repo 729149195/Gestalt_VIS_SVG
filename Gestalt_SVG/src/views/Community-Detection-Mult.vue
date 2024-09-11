@@ -1,20 +1,20 @@
 <template>
     <div class="hull-select">
-        <span>“<v-icon icon="mdi-alpha-h-box"></v-icon>”↴</span>
+        <span>“press key <v-icon icon="mdi-alpha-h-box"></v-icon>”↴</span>
         <v-switch v-model="groupHull" inset color="#FFC000" class="switch"
             :label="groupHull ? 'Hull ON' : 'Hull OFF'" />
-        <span>“<v-icon icon="mdi-alpha-c-box"></v-icon>”↴</span>
+        <span>“press key <v-icon icon="mdi-alpha-c-box"></v-icon>”↴</span>
         <v-switch v-model="checkbox" inset color="#55C000" class="switch"
-            :label="checkbox ? 'Checkbox ON' : 'Checkbox OFF'" />
+            :label="checkbox ? 'Checkbox ON disable zoom' : 'Checkbox OFF enable zoom'" />
         <div class="input-group">
-            <v-combobox v-model="eps" :items="eps_list || []" label="DBSCAN Eps" class="input-box" />
+            <v-combobox v-model="eps" :items="eps_list || []" label="Eps（control Cluster Number）" class="input-box" />
         </div>
         <div class="input-group">
-            <v-text-field v-model="min" :min="1" :max="20" step="1" label="Min_Samples" type="number"
+            <v-text-field v-model="min" :min="1" :max="20" step="1" label="Minimum_nodes in a Cluster" type="number"
                 class="input-box" />
         </div>
         <div class="input-group">
-            <v-text-field v-model="link" :min="0.0" :max="1.0" step="0.1" label="link_threshold_ratio" type="number"
+            <v-text-field v-model="link" :min="0.0" :max="1.0" step="0.1" label="Link Density" type="number"
                 class="input-box" />
         </div>
     </div>
@@ -39,7 +39,7 @@ const checkbox = ref(false);
 const eps = ref(null);
 const eps_list = ref(null)
 const min = ref(1);
-const link = ref(0.5);
+const link = ref(0.3);
 
 let simulation;
 let isSelecting = false;
@@ -118,14 +118,14 @@ onUnmounted(() => {
 function handleKeyDown(event) {
     if (event.key === 'h' || event.key === 'H') {
         groupHull.value = !groupHull.value;
-        if (groupHull.value) {
-            checkbox.value = false;
-        }
+        // if (groupHull.value) {
+        //     checkbox.value = false;
+        // }
         updatahull();
     } else if (event.key === 'c' || event.key === 'C') {
         checkbox.value = !checkbox.value;
         if (checkbox.value) {
-            groupHull.value = false;
+            // groupHull.value = false;
             disableZoom();
         } else {
             enableZoom();
@@ -144,14 +144,14 @@ watch([eps, min, link], debounce(() => {
 
 watch(groupHull, (newValue) => {
     if (newValue) {
-        checkbox.value = false; // 自动关闭 checkbox
+        // checkbox.value = false; // 自动关闭 checkbox
     }
     updatahull(); // 重新渲染 hull
 });
 
 watch(checkbox, (newValue) => {
     if (newValue) {
-        groupHull.value = false; // 自动关闭 groupHull
+        // groupHull.value = false; // 自动关闭 groupHull
         disableZoom(); // 禁用缩放
     } else {
         enableZoom(); // 启用缩放
@@ -243,25 +243,25 @@ function initializeGraph() {
     // First stage: Force-directed layout for groups
     const groupCenters = computeGroupCenters();
     const groupSimulation = d3.forceSimulation(groupCenters)
-        .force('charge', d3.forceManyBody().strength(-3000)) // Increased repulsion between groups
-        .force('center', d3.forceCenter(width / 2, height / 2))
-        .force('collision', d3.forceCollide().radius(d => d.radius * 1.5)) // Increased collision radius
+        .force('charge', d3.forceManyBody().strength(-4000)) // Increased repulsion between groups
+        .force('center', d3.forceCenter(width / 3, height / 3))
+        .force('collision', d3.forceCollide().radius(d => d.radius * 2.0)) // Increased collision radius
         .force('x', d3.forceX(width / 2).strength(0.1))
         .force('y', d3.forceY(height / 2).strength(0.1))
         .stop();
 
     // Run the group simulation
-    for (let i = 0; i < 100; ++i) groupSimulation.tick();
+    for (let i = 0; i < 10; ++i) groupSimulation.tick();
 
     // Assign group centers to nodes
     assignGroupCentersToNodes(groupCenters);
 
     // Second stage: Force-directed layout for nodes within groups
     const simulation = d3.forceSimulation(graphData.value.nodes)
-        .force('link', d3.forceLink(graphData.value.links).id(d => d.id).distance(d => 280 - d.value * 600))
-        .force('charge', d3.forceManyBody().strength(-200))
-        .force('center', d3.forceCenter(width / 2, height / 2))
-        .force('group', forceGroup().strength(0.05));
+        .force('link', d3.forceLink(graphData.value.links).id(d => d.id).distance(d => 350 - d.value * 500))
+        .force('charge', d3.forceManyBody().strength(-1100))
+        .force('center', d3.forceCenter(width / 1.7, height / 2.3))
+        .force('group', forceGroup().strength(0.08));
 
     const link = linkGroup.selectAll('line')
         .data(graphData.value.links)
@@ -273,7 +273,7 @@ function initializeGraph() {
         .data(graphData.value.nodes)
         .enter().append('circle')
         .attr('class', 'node')
-        .attr('r', 12)
+        .attr('r', 20)
         .attr("id", d => {
             const parts = d.id.split("/");
             return parts[parts.length - 1];
@@ -343,7 +343,7 @@ function initializeGraph() {
             .attr("fill", "#000");
     });
 
-    const initialZoom = d3.zoomIdentity.translate(width / 2, height / 2).scale(0.4).translate(-width / 2, -height / 2);
+    const initialZoom = d3.zoomIdentity.translate(width / 2, height / 2).scale(0.3).translate(-width / 2, -height / 2);
     svgEl.call(zoom.transform, initialZoom);
 
     if (checkbox.value) {
@@ -419,6 +419,7 @@ function onMouseDown(event) {
 
     isSelecting = true;
     selectionStart = d3.pointer(event);
+
     if (!selectionRect) {
         selectionRect = d3.select(svg.value).append('rect')
             .attr('class', 'selection')
@@ -594,7 +595,7 @@ function drawHulls(hullGroup, groups, fillColor, className) {
 
 .nodes {
     stroke: #fff;
-    stroke-width: 1.5px;
+    stroke-width: 6px;
 }
 
 .hulls {
@@ -614,6 +615,6 @@ function drawHulls(hullGroup, groups, fillColor, className) {
     display: flex;
     flex-direction: column;
     left: 20px;
-    width: 180px;
+    width: 210px;
 }
 </style>

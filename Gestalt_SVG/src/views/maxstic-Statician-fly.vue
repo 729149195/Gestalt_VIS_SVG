@@ -10,10 +10,10 @@ import { useStore } from 'vuex';
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 
-const eleURL = "http://localhost:5000/fourier_file_path";
+const eleURL = "http://localhost:5000/init_json";
 const chartContainer = ref(null);
-const margin = { top: 20, right: 20, bottom: 100, left: 30 };
-const width = 1180 + margin.left + margin.right;
+const margin = { top: 20, right: 20, bottom: 100, left: 100 };
+const width = 1100 + margin.left + margin.right;
 const height = 520 + margin.top + margin.bottom;
 
 // 将这些变量定义在 setup 中，使得它们在 watch 中也可以访问
@@ -92,15 +92,29 @@ const render = (data) => {
 
     // 获取所有唯一的 id 后缀
     const ids = [...new Set(data.map(d => d.node.split('/').pop()))];
-    const groups = d3.range(1, 16);
+    const groups = d3.range(0, 20);
+    const groupname = ["tag", "opacity", "fill_h", "fill_s", "fill_l", "stroke_h", "stroke_s", "stroke_l", "stroke_width", "layer", "bbox_top", "bbox_bottom", "bbox_left", "bbox_right", "center_x", "center_y", "width", "height", "fill_area", "stroke_area"];
 
     // 创建比例尺
     xScale = d3.scaleBand().domain(ids).range([0, width - margin.left - margin.right]).padding(0.05);
     const yScale = d3.scaleBand().domain(groups).range([height - margin.top - margin.bottom, 0]).padding(0.05);
+    const yScalename = d3.scaleBand().domain(groupname).range([height - margin.top - margin.bottom, 0]).padding(0.05);
 
     // 颜色比例尺
     const colorScale = d3.scaleSequential(d3.interpolateInferno)
         .domain([d3.max(data, d => d.probability), 0]);
+
+    // 创建 tooltip 元素
+    const tooltip = d3.select(chartContainer.value)
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('position', 'absolute')
+        .style('background', '#fff')
+        .style('padding', '5px')
+        .style('border', '1px solid #ccc')
+        .style('border-radius', '5px')
+        .style('pointer-events', 'none')
+        .style('visibility', 'hidden');
 
     // 绘制方块
     svg.selectAll('.block')
@@ -111,11 +125,21 @@ const render = (data) => {
         .attr('y', d => yScale(d.group))
         .attr('width', xScale.bandwidth())
         .attr('height', yScale.bandwidth())
-        .style('fill', d => colorScale(d.probability));
+        .style('fill', d => colorScale(d.probability))
+        .on('mouseover', function(event, d) {
+            tooltip.style('visibility', 'visible')
+                .text(`Probability: ${d.probability}`);
+        })
+        .on('mousemove', function(event) {
+            tooltip
+        })
+        .on('mouseout', function() {
+            tooltip.style('visibility', 'hidden');
+        });
 
     // 添加坐标轴
     const xAxis = d3.axisBottom(xScale).tickSizeOuter(0);
-    const yAxis = d3.axisLeft(yScale).tickSizeOuter(0);
+    const yAxis = d3.axisLeft(yScalename).tickSizeOuter(0);
 
     svg.append('g')
         .attr('class', 'x-axis')

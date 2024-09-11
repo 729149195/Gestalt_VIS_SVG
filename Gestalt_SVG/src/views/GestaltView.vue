@@ -20,54 +20,77 @@
                         <div class="radio-group-horizontal" v-if="file">
                             <label>
                                 <input type="radio" value="maxtistic" v-model="selectedView" />
-                                 Maxistic
+                                Maxistic
                             </label>
                             <label>
-                                <input type="radio" value="FFT" v-model="selectedView" />
-                                 FFT
+                                <input type="radio" value="init" v-model="selectedView" />
+                                Init Features
+                            </label>
+                            <label>
+                                <input type="radio" value="normal" v-model="selectedView" />
+                                normal Features
                             </label>
                             <label>
                                 <input type="radio" value="position" v-model="selectedView" />
-                                 Position
+                                Position
                             </label>
                             <label>
                                 <input type="radio" value="layer" v-model="selectedView" />
-                                 Layer
+                                Layer
                             </label>
                             <label>
                                 <input type="radio" value="proportions" v-model="selectedView" />
-                                 Proportions
+                                Proportions
                             </label>
                         </div>
                     </div>
                     <div v-if="file" class="data-cards">
                         <div class="position" v-if="selectedView === 'position'">
                             <div class="main-card margin-right">
-                                <v-card class="position-card card1"><topStatistician/></v-card>
-                                <v-card class="position-card card2"><bottomStatistician/></v-card>
+                                <v-card class="position-card card1">
+                                    <topStatistician />
+                                </v-card>
+                                <v-card class="position-card card2">
+                                    <bottomStatistician />
+                                </v-card>
                             </div>
                             <div class="main-card">
-                                <v-card class="position-card card3"><rightStatistician/></v-card>
-                                <v-card class="position-card card4"><leftStatistician/></v-card>
+                                <v-card class="position-card card3">
+                                    <rightStatistician />
+                                </v-card>
+                                <v-card class="position-card card4">
+                                    <leftStatistician />
+                                </v-card>
                             </div>
                         </div>
                         <div class="maxtistic" v-if="selectedView === 'maxtistic'">
-                            <maxsticStatician :key="componentKey"/>
+                            <maxsticStatician :key="componentKey" />
                         </div>
-                        <div class="maxtistic2" v-if="selectedView === 'FFT'">
-                            <maxsticStaticianfly :key="componentKey2"/>
+                        <div class="maxtistic2" v-if="selectedView === 'init'">
+                            <maxsticStaticianfly :key="componentKey2" />
+                        </div>
+                        <div class="maxtistic2" v-if="selectedView === 'normal'">
+                            <maxsticStaticiannormal :key="componentKey4" />
                         </div>
                         <div class="layer" v-if="selectedView === 'layer'">
-                            <layerStatistician/>
+                            <layerStatistician />
                         </div>
                         <div class="position" v-if="selectedView === 'proportions'">
                             <div class="main-card margin-right">
-                                <v-card class="position-card card1"><HisEleProportions/></v-card>
-                                <v-card class="position-card card2"><FillStatistician/></v-card>
+                                <v-card class="position-card card1">
+                                    <HisEleProportions />
+                                </v-card>
+                                <v-card class="position-card card2">
+                                    <FillStatistician />
+                                </v-card>
                             </div>
                             <div class="main-card">
-                                <v-card class="position-card card3"><HisAttrProportionsVue/></v-card>
-                                <v-card class="position-card card4"><strokeStatistician/></v-card>
+                                <v-card class="position-card card3">
+                                    <HisAttrProportionsVue />
+                                </v-card>
+                                <v-card class="position-card card4">
+                                    <strokeStatistician />
+                                </v-card>
                             </div>
                         </div>
                     </div>
@@ -76,8 +99,8 @@
         </div>
         <div class="right">
             <v-card class="fill-height">
-                <span style="font-size:1.1em; font-weight: 700; padding-left: 8px">interactivity SVG and Hulls
-                    result: </span><v-btn density="compact" icon="mdi-refresh" variant="plain" @click="refresh" v-if="file"></v-btn>
+                <span style="font-size:1.1em; font-weight: 700; padding-left: 8px">interactivity SVG and Hulls result:
+                </span><v-btn density="compact" icon="mdi-refresh" variant="plain" @click="refresh" v-if="file"></v-btn>
                 <CommunityDetectionMult v-if="file" :key="componentKey3" />
             </v-card>
         </div>
@@ -100,11 +123,13 @@ import rightStatistician from './right-Statistician.vue';
 import layerStatistician from './layer-Statistician.vue';
 import maxsticStatician from './maxstic-Statician.vue';
 import maxsticStaticianfly from './maxstic-Statician-fly.vue';
+import maxsticStaticiannormal from './maxstic-Statician-normal.vue';
 
 const file = ref(null)
 const processedSvgContent = ref('')
 const componentKey = ref(0)
 const componentKey2 = ref(0)
+const componentKey4 = ref(0)
 const componentKey3 = ref(0)
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
@@ -129,6 +154,7 @@ const uploadFile = () => {
             componentKey.value += 1;
             componentKey2.value += 1;
             componentKey3.value += 1;
+            componentKey4.value += 1;
         })
         .catch(error => {
             console.error('Error uploading file:', error)
@@ -149,7 +175,7 @@ watch(selectedNodeIds, () => {
     nextTick(() => {
         const svgContainer = document.querySelector('.svg-container');
         if (!svgContainer) return;
-        if(!selectedNodeIds) return;
+        if (!selectedNodeIds) return;
 
         const svg = svgContainer.querySelector('svg');
         if (!svg) return;
@@ -160,14 +186,16 @@ watch(selectedNodeIds, () => {
 
         svg.querySelectorAll('*').forEach(node => {
             if (allVisiableNodes.value.includes(node.id) && !selectedNodeIds.value.includes(node.id)) {
-                node.style.opacity = '0.05';
+                node.style.opacity = '0.1';
             }
         });
     });
 });
 
 const refresh = () => {
-    store.commit('CLEAR_SELECTED_NODES');
+    componentKey.value += 1;
+    componentKey2.value += 1;
+    componentKey4.value += 1;
     const svgContainer = document.querySelector('.svg-container');
     const svg = svgContainer.querySelector('svg');
     svg.querySelectorAll('*').forEach(node => {

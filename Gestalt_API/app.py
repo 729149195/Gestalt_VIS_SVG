@@ -2,8 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO
 import os
-from static.modules import featureCSV
-from static.modules import normalized_features
+from static.modules import featureCSV as featureCSV
+from static.modules import normalized_features as normalized_features
 from static.modules.cluster import main as run_clustering
 from static.modules.cluster import get_eps
 app = Flask(__name__)
@@ -21,7 +21,8 @@ if not os.path.exists(DATA_FOLDER):
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['DATA_FOLDER'] = DATA_FOLDER
 
-
+max_eps = None
+epss = None
 @app.route('/')
 def hello_world():
     return 'Hello World!'
@@ -43,23 +44,35 @@ def upload_file():
         # 处理 SVG 文件
         output_csv_path = os.path.join(app.config['DATA_FOLDER'], 'features.csv')
         output_svg_with_ids_path = os.path.join(app.config['DATA_FOLDER'], 'svg_with_ids.svg')
-
+        init_json = os.path.join(app.config['DATA_FOLDER'], 'init_json.json')
+        normalized_init_json = os.path.join(app.config['DATA_FOLDER'], 'normalized_init_json.json')
         # 调用 featureCSV.py 中的函数
         featureCSV.process_and_save_features(file_path, output_csv_path, output_svg_with_ids_path)
 
+
         # 调用 normalized_features.py 进行归一化处理
         normalized_csv_path = os.path.join(app.config['DATA_FOLDER'], 'normalized_features.csv')
-        normalized_features.normalize_features(output_csv_path, normalized_csv_path)
+        normalized_csv_path_LR = os.path.join(app.config['DATA_FOLDER'], 'normalized_features_LR.csv')
+        normalized_csv_path_TB = os.path.join(app.config['DATA_FOLDER'], 'normalized_features_TB.csv')
+        normalized_features.normalize_features(output_csv_path, normalized_csv_path, normalized_csv_path_LR, normalized_csv_path_TB)
+        #替换normalized_csv_path_Three
+
+        featureCSV.process_csv_to_json(output_csv_path, init_json)
+        featureCSV.process_csv_to_json(normalized_csv_path, normalized_init_json)
 
         # 调用 cluster.py 进行聚类
         community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
         probabilities_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_probabilities.json')
         fourier_file_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
 
-        epss, max_eps= get_eps(normalized_csv_path, community_data_path, probabilities_data_path, fourier_file_path)
-        print(max_eps, epss)
+        global max_eps, epss  # 声明使用全局变量
+        epss, max_eps= get_eps(normalized_csv_path,  normalized_csv_path_LR, normalized_csv_path_TB, community_data_path, probabilities_data_path, fourier_file_path)
+        # print(max_eps, epss)
 
-        run_clustering(normalized_csv_path, community_data_path, probabilities_data_path, fourier_file_path,max_eps)
+
+
+        run_clustering(normalized_csv_path, normalized_csv_path_LR, normalized_csv_path_TB, community_data_path, probabilities_data_path, fourier_file_path, max_eps)
+
 
         return jsonify({
             'success': 'File uploaded and processed successfully',
@@ -73,23 +86,11 @@ def upload_file():
     else:
         return jsonify({'error': 'Invalid file type'}), 400
 
-
-@app.route('/get_eps_list', methods=['GET'])
-def get_eps_list():
-    normalized_csv_path = os.path.join(app.config['DATA_FOLDER'], 'normalized_features.csv')
-    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
-    probabilities_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_probabilities.json')
-    fourier_file_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
-
-    epss, max_eps = get_eps(normalized_csv_path, community_data_path, probabilities_data_path, fourier_file_path)
-
-    return jsonify({"max_eps":max_eps, "epss":epss}),200
-
 @app.route('/run_clustering', methods=['POST'])
 def run_clustering_with_params():
     eps = request.json.get('eps', 0.4)
     min_samples = request.json.get('min_samples', 1)
-    distance_threshold_ratio = request.json.get('distance_threshold_ratio', 0.5)
+    distance_threshold_ratio = request.json.get('distance_threshold_ratio', 0.4)
 
     try:
         # Ensure eps and min_samples are valid
@@ -111,9 +112,11 @@ def run_clustering_with_params():
         community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
         probabilities_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_probabilities.json')
         fourier_file_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
+        normalized_csv_path_LR = os.path.join(app.config['DATA_FOLDER'], 'normalized_features_LR.csv')
+        normalized_csv_path_TB = os.path.join(app.config['DATA_FOLDER'], 'normalized_features_TB.csv')
 
         # Run clustering with the specified eps and min_samples
-        run_clustering(normalized_csv_path, community_data_path, probabilities_data_path, fourier_file_path, eps, min_samples, distance_threshold_ratio)
+        run_clustering(normalized_csv_path, normalized_csv_path_LR, normalized_csv_path_TB, community_data_path, probabilities_data_path, fourier_file_path, eps, min_samples, distance_threshold_ratio)
 
         return jsonify({
             'success': 'Clustering executed with specified parameters',
@@ -124,11 +127,15 @@ def run_clustering_with_params():
             'community_data_mult': community_data_path,
             'cluster_probabilities': probabilities_data_path
         }), 200
-
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': 'An error occurred while running clustering', 'details': str(e)}), 500
+
+
+@app.route('/get_eps_list', methods=['GET'])
+def get_eps_list():
+    global max_eps, epss  # 声明使用全局变量
+    # print(max_eps,epss)
+    return jsonify({"max_eps":max_eps, "epss":epss}),200
 
 # 获取生成的 SVG 文件内容
 @app.route('/get_svg', methods=['GET'])
@@ -152,6 +159,26 @@ def get_community_data_mult():
             return json_file.read(), 200, {'Content-Type': 'application/json'}
     else:
         return jsonify({'error': 'community_data_mult.json file not found'}), 404
+
+@app.route('/init_json', methods=['GET'])
+def get_init_json():
+    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'init_json.json')
+
+    if os.path.exists(community_data_path):
+        with open(community_data_path, 'r', encoding='utf-8') as json_file:
+            return json_file.read(), 200, {'Content-Type': 'application/json'}
+    else:
+        return jsonify({'error': 'init_json.json file not found'}), 404
+
+@app.route('/normalized_init_json', methods=['GET'])
+def get_normalized_init_json():
+    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'normalized_init_json.json')
+
+    if os.path.exists(community_data_path):
+        with open(community_data_path, 'r', encoding='utf-8') as json_file:
+            return json_file.read(), 200, {'Content-Type': 'application/json'}
+    else:
+        return jsonify({'error': 'normalized_init_json.json file not found'}), 404
 
 
 @app.route('/attr_num_data', methods=['GET'])
