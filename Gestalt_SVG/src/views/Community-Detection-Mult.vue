@@ -617,4 +617,5 @@ function drawHulls(hullGroup, groups, fillColor, className) {
     left: 20px;
     width: 210px;
 }
+
 </style>
