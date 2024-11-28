@@ -18,7 +18,9 @@
                 class="input-box" />
         </div>
     </div>
-    <svg :width="width" :height="height" ref="svg"></svg>
+    <div class="svg-container">
+        <svg viewBox="0 0 1200 700" ref="svg"></svg>
+    </div>
 </template>
 
 <script setup>
@@ -28,8 +30,8 @@ import * as d3 from 'd3';
 import { useStore } from 'vuex';
 const store = useStore();
 
-const width = 1250;
-const height = 1300;
+const width = 1200;
+const height = 700;
 const svg = ref(null);
 const apiUrl = 'http://localhost:5000/community_data_mult';
 const runClusteringUrl = 'http://localhost:5000/run_clustering';
@@ -42,7 +44,7 @@ const min = ref(1);
 const link = ref(0.3);
 
 let simulation;
-let isSelecting = false;
+const isSelecting = ref(false);
 let selectionStart = { x: 0, y: 0 };
 let selectionRect = null;
 
@@ -118,14 +120,13 @@ onUnmounted(() => {
 function handleKeyDown(event) {
     if (event.key === 'h' || event.key === 'H') {
         groupHull.value = !groupHull.value;
-        // if (groupHull.value) {
-        //     checkbox.value = false;
-        // }
+
         updatahull();
-    } else if (event.key === 'c' || event.key === 'C') {
+    }
+
+    if (event.key === 'c' || event.key === 'C') {
         checkbox.value = !checkbox.value;
         if (checkbox.value) {
-            // groupHull.value = false;
             disableZoom();
         } else {
             enableZoom();
@@ -143,19 +144,14 @@ watch([eps, min, link], debounce(() => {
 }, 200));
 
 watch(groupHull, (newValue) => {
-    if (newValue) {
-        // checkbox.value = false; // 自动关闭 checkbox
-    }
-    updatahull(); // 重新渲染 hull
+    updatahull();
 });
 
 watch(checkbox, (newValue) => {
     if (newValue) {
-        // groupHull.value = false; // 自动关闭 groupHull
         disableZoom(); // 禁用缩放
     } else {
         enableZoom(); // 启用缩放
-        updatahull(); // 重新渲染 hull
     }
 });
 
@@ -181,11 +177,7 @@ function runClusteringWithParams() {
             d3.select(svg.value).selectAll('*').remove();
             fetchData();
         })
-        .then(() => {
-            if (checkbox.value) {
-                disableZoom();
-            }
-        })
+
         .catch(error => {
             console.error('Error running clustering:', error);
         });
@@ -243,7 +235,7 @@ function initializeGraph() {
     // First stage: Force-directed layout for groups
     const groupCenters = computeGroupCenters();
     const groupSimulation = d3.forceSimulation(groupCenters)
-        .force('charge', d3.forceManyBody().strength(-4000)) // Increased repulsion between groups
+        .force('charge', d3.forceManyBody().strength(-3000)) // Increased repulsion between groups
         .force('center', d3.forceCenter(width / 3, height / 3))
         .force('collision', d3.forceCollide().radius(d => d.radius * 2.0)) // Increased collision radius
         .force('x', d3.forceX(width / 2).strength(0.1))
@@ -343,7 +335,7 @@ function initializeGraph() {
             .attr("fill", "#000");
     });
 
-    const initialZoom = d3.zoomIdentity.translate(width / 2, height / 2).scale(0.3).translate(-width / 2, -height / 2);
+    const initialZoom = d3.zoomIdentity.translate(width / 2, height / 2).scale(0.2).translate(-width / 2, -height / 2);
     svgEl.call(zoom.transform, initialZoom);
 
     if (checkbox.value) {
@@ -387,11 +379,11 @@ function forceGroup() {
         }
     }
 
-    force.initialize = function(_) {
+    force.initialize = function (_) {
         nodes = _;
     };
 
-    force.strength = function(_) {
+    force.strength = function (_) {
         return arguments.length ? (strength = +_, force) : strength;
     };
 
@@ -417,7 +409,7 @@ function enableZoom() {
 function onMouseDown(event) {
     if (!checkbox.value) return;
 
-    isSelecting = true;
+    isSelecting.value = true;
     selectionStart = d3.pointer(event);
 
     if (!selectionRect) {
@@ -435,7 +427,7 @@ function onMouseDown(event) {
 }
 
 function onMouseMove(event) {
-    if (!isSelecting) return;
+    if (!isSelecting.value) return;
 
     const currentPos = d3.pointer(event);
     const x = Math.min(selectionStart[0], currentPos[0]);
@@ -451,9 +443,9 @@ function onMouseMove(event) {
 }
 
 function onMouseUp() {
-    if (!isSelecting) return;
+    if (!isSelecting.value) return;
 
-    isSelecting = false;
+    isSelecting.value = false;
     const selectionBox = selectionRect.node().getBBox();
     selectNodesInBox(selectionBox);
     selectionRect.remove();
@@ -588,6 +580,10 @@ function drawHulls(hullGroup, groups, fillColor, className) {
 </script>
 
 <style lang="scss">
+svg {
+    width: 100%;
+
+}
 .links {
     stroke: #333;
     stroke-opacity: 0.6;
@@ -617,5 +613,4 @@ function drawHulls(hullGroup, groups, fillColor, className) {
     left: 20px;
     width: 210px;
 }
-
 </style>

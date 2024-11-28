@@ -14,94 +14,77 @@
                 </div>
             </div>
             <div class="left-bottom">
-                <v-card class="fill-height datas">
-                    <div style="display: flex; align-items: center;">
-                        <span style="font-size:1.1em; font-weight: 700; padding-left: 8px">Parse SVG data:</span>
-                        <div class="radio-group-horizontal" v-if="file">
-                            <label>
-                                <input type="radio" value="maxtistic" v-model="selectedView" />
-                                Maxistic
-                            </label>
-                            <label>
-                                <input type="radio" value="init" v-model="selectedView" />
-                                Init Features
-                            </label>
-                            <label>
-                                <input type="radio" value="normal" v-model="selectedView" />
-                                normal Features
-                            </label>
-                            <label>
-                                <input type="radio" value="position" v-model="selectedView" />
-                                Position
-                            </label>
-                            <label>
-                                <input type="radio" value="layer" v-model="selectedView" />
-                                Layer
-                            </label>
-                            <label>
-                                <input type="radio" value="proportions" v-model="selectedView" />
-                                Proportions
-                            </label>
-                        </div>
-                    </div>
-                    <div v-if="file" class="data-cards">
-                        <div class="position" v-if="selectedView === 'position'">
-                            <div class="main-card margin-right">
-                                <v-card class="position-card card1">
-                                    <topStatistician />
-                                </v-card>
-                                <v-card class="position-card card2">
-                                    <bottomStatistician />
-                                </v-card>
-                            </div>
-                            <div class="main-card">
-                                <v-card class="position-card card3">
-                                    <rightStatistician />
-                                </v-card>
-                                <v-card class="position-card card4">
-                                    <leftStatistician />
-                                </v-card>
-                            </div>
-                        </div>
-                        <div class="maxtistic" v-if="selectedView === 'maxtistic'">
-                            <maxsticStatician :key="componentKey" />
-                        </div>
-                        <div class="maxtistic2" v-if="selectedView === 'init'">
-                            <maxsticStaticianfly :key="componentKey2" />
-                        </div>
-                        <div class="maxtistic2" v-if="selectedView === 'normal'">
-                            <maxsticStaticiannormal :key="componentKey4" />
-                        </div>
-                        <div class="layer" v-if="selectedView === 'layer'">
-                            <layerStatistician />
-                        </div>
-                        <div class="position" v-if="selectedView === 'proportions'">
-                            <div class="main-card margin-right">
-                                <v-card class="position-card card1">
-                                    <HisEleProportions />
-                                </v-card>
-                                <v-card class="position-card card2">
-                                    <FillStatistician />
-                                </v-card>
-                            </div>
-                            <div class="main-card">
-                                <v-card class="position-card card3">
-                                    <HisAttrProportionsVue />
-                                </v-card>
-                                <v-card class="position-card card4">
-                                    <strokeStatistician />
-                                </v-card>
-                            </div>
-                        </div>
-                    </div>
+                <v-card class="fill-height">
+                    <span style="font-size:1.1em; font-weight: 700; padding-left: 8px">interactivity SVG and Hulls
+                        result:
+                    </span><v-btn density="compact" icon="mdi-refresh" variant="plain" @click="refresh"
+                        v-if="file"></v-btn>
+                    <CommunityDetectionMult v-if="file" :key="componentKey3" />
                 </v-card>
             </div>
         </div>
         <div class="right">
-            <v-card class="fill-height">
-                <span style="font-size:1.1em; font-weight: 700; padding-left: 8px">interactivity SVG and Hulls result:
-                </span><v-btn density="compact" icon="mdi-refresh" variant="plain" @click="refresh" v-if="file"></v-btn>
-                <CommunityDetectionMult v-if="file" :key="componentKey3" />
+
+            <v-card class="fill-height datas">
+                <div style="display: flex; align-items: center;">
+                    <span style="font-size:1.1em; font-weight: 700; padding-left: 8px">Parse SVG data:</span>
+                    <div class="radio-group-horizontal" v-if="file">
+                        <label>
+                            <input type="radio" value="maxtistic" v-model="selectedView" />
+                            Maxistic
+                        </label>
+                        <label>
+                            <input type="radio" value="positionAproportions" v-model="selectedView" />
+                            position and proportions
+                        </label>
+                        <label>
+                            <input type="radio" value="layer" v-model="selectedView" />
+                            Layer
+                        </label>
+                    </div>
+                </div>
+                <div v-if="file" class="data-cards">
+                    <div class="position" v-if="selectedView === 'positionAproportions'">
+                        <div class="main-card margin-right">
+                            <v-card class="position-card card1">
+                                <topStatistician />
+                            </v-card>
+                            <v-card class="position-card card2">
+                                <bottomStatistician />
+                            </v-card>
+                            <v-card class="position-card card3">
+                                <rightStatistician />
+                            </v-card>
+                            <v-card class="position-card card4">
+                                <leftStatistician />
+                            </v-card>
+                        </div>
+                        <div class="main-card margin-right">
+                            <v-card class="position-card card1">
+                                <HisEleProportions />
+                            </v-card>
+                            <v-card class="position-card card2">
+                                <FillStatistician />
+                            </v-card>
+                            <v-card class="position-card card3">
+                                <HisAttrProportionsVue />
+                            </v-card>
+                            <v-card class="position-card card4">
+                                <strokeStatistician />
+                            </v-card>
+                        </div>
+                    </div>
+                    <div class="maxtistic" v-if="selectedView === 'maxtistic'">
+                        <!-- <maxsticStaticiannormal :key="componentKey4" /> -->
+                        <!-- <SankeyStatician :key="componentKey2"/> -->
+                        <!-- <maxsticStatician :key="componentKey" /> -->
+                        <maxstic :key="componentKey" />
+                        <subgroup_test :key="componentKey2" />
+                    </div>
+                    <div class="layer" v-if="selectedView === 'layer'">
+                        <layerStatistician />
+                    </div>
+                </div>
             </v-card>
         </div>
     </div>
@@ -121,16 +104,15 @@ import bottomStatistician from './bottom-Statistician.vue';
 import leftStatistician from './left-Statistician.vue';
 import rightStatistician from './right-Statistician.vue';
 import layerStatistician from './layer-Statistician.vue';
-import maxsticStatician from './maxstic-Statician.vue';
-import maxsticStaticianfly from './maxstic-Statician-fly.vue';
-import maxsticStaticiannormal from './maxstic-Statician-normal.vue';
+import maxstic from './maxstic.vue';
+import subgroup_test from './subgroup_test.vue';
 
 const file = ref(null)
 const processedSvgContent = ref('')
 const componentKey = ref(0)
-const componentKey2 = ref(0)
-const componentKey4 = ref(0)
-const componentKey3 = ref(0)
+const componentKey2 = ref(1)
+const componentKey4 = ref(2)
+const componentKey3 = ref(3)
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 const allVisiableNodes = computed(() => store.state.AllVisiableNodes);
@@ -164,12 +146,54 @@ const uploadFile = () => {
 const fetchProcessedSvg = () => {
     axios.get('http://localhost:5000/get_svg', { responseType: 'text' })
         .then(svgResponse => {
-            processedSvgContent.value = svgResponse.data.replace(/height="auto"/g, 'height="340px"');
+            let svgContent = svgResponse.data;
+
+            // 检查并添加 viewBox 属性，确保 SVG 可以适应容器大小
+            if (!svgContent.includes('viewBox')) {
+                const widthMatch = svgContent.match(/width="(\d+)"/);
+                const heightMatch = svgContent.match(/height="(\d+)"/);
+
+                if (widthMatch && heightMatch) {
+                    const width = widthMatch[1];
+                    const height = heightMatch[1];
+
+                    svgContent = svgContent.replace(
+                        '<svg',
+                        `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet"`
+                    );
+                }
+            }
+
+            processedSvgContent.value = svgContent.replace(/height="auto"/g, 'height="340px"');
+
+            nextTick(() => {
+                const svgContainer = document.querySelector('.svg-container svg');
+                if (svgContainer) {
+                    svgContainer.removeEventListener('click', handleSvgClick); // 移除现有监听器
+                    svgContainer.addEventListener('click', handleSvgClick);
+                }
+            });
         })
         .catch(error => {
             console.error('Error fetching SVG:', error);
         });
-}
+};
+
+// 点击 SVG 节点的处理函数
+const handleSvgClick = (event) => {
+    const nodeId = event.target.id;
+
+    if (!nodeId) return; // 忽略无 ID 的元素
+
+    // 如果节点 ID 已存在于 selectedNodeIds 中，则移除；否则，添加
+    if (selectedNodeIds.value.includes(nodeId)) {
+        store.commit('REMOVE_SELECTED_NODE', nodeId);
+    } else {
+        store.commit('ADD_SELECTED_NODE', nodeId);
+    }
+};
+
+
 
 watch(selectedNodeIds, () => {
     nextTick(() => {
@@ -180,17 +204,26 @@ watch(selectedNodeIds, () => {
         const svg = svgContainer.querySelector('svg');
         if (!svg) return;
 
-        svg.querySelectorAll('*').forEach(node => {
-            node.style.opacity = '';
-        });
+        if (selectedNodeIds.value.length === 0) {
+            // 如果 selectedNodeIds 为空，恢复所有元素的透明度为 1
+            svg.querySelectorAll('*').forEach(node => {
+                node.style.opacity = '1';
+            });
+        } else {
+            // 否则，应用现有的透明度逻辑
+            svg.querySelectorAll('*').forEach(node => {
+                node.style.opacity = '';
+            });
 
-        svg.querySelectorAll('*').forEach(node => {
-            if (allVisiableNodes.value.includes(node.id) && !selectedNodeIds.value.includes(node.id)) {
-                node.style.opacity = '0.1';
-            }
-        });
+            svg.querySelectorAll('*').forEach(node => {
+                if (allVisiableNodes.value.includes(node.id) && !selectedNodeIds.value.includes(node.id)) {
+                    node.style.opacity = '0.1';
+                }
+            });
+        }
     });
 });
+
 
 const refresh = () => {
     componentKey.value += 1;
@@ -211,6 +244,11 @@ const refresh = () => {
     height: 100vh;
     padding: 8px;
     box-sizing: border-box;
+}
+
+.main,
+.main * {
+    user-select: none;
 }
 
 .left {
@@ -264,52 +302,68 @@ const refresh = () => {
 }
 
 .svg-container {
-    max-width: 1200px;
-    max-height: 400px;
-    width: 100%;
+    max-width: 1000px;
+    margin: auto;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 .svg-container svg {
     max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     display: block;
+    margin: auto;
 }
+
+.svg-container svg * {
+    cursor: pointer;
+}
+
 
 .data-cards {
     height: 100%;
     width: 100%;
+    display: flex;
 }
 
 .position {
     height: 100%;
     width: 100%;
     display: flex;
+    justify-content: center;
 }
 
 .position-card {
     width: 100%;
-    height: 50%;
+    height: 24.7%;
     padding: 8px;
 }
 
 .card1 {
     margin-bottom: 8px;
+    margin-right: 8px;
+}
+
+.card2 {
+    margin-bottom: 8px;
+    margin-right: 8px;
 }
 
 .card3 {
     margin-bottom: 8px;
+    margin-right: 8px;
+}
+
+.card4 {
+    margin-bottom: 8px;
+    margin-right: 8px;
 }
 
 .main-card {
     width: 100%;
 }
 
-.datas {
-    padding-bottom: 43px;
-}
 
 .margin-right {
     margin-right: 8px
@@ -326,5 +380,9 @@ const refresh = () => {
     display: flex;
     align-items: center;
     cursor: pointer;
+}
+
+.maxtistic {
+    width: 100%;
 }
 </style>

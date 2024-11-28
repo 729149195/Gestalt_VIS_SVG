@@ -1,5 +1,5 @@
 <template>
-  <div ref="chartContainer" style="width: 1230px; height: 650px;"></div>
+  <div ref="chartContainer" style="width: 1230px; height: 1350px;"></div>
 </template>
 
 <script setup>
@@ -61,7 +61,7 @@ onMounted(async () => {
 
 const renderTree = (data) => {
   const width = 1230;
-  const height = 650;
+  const height = 1350;
 
   // 清除先前的 SVG 元素（如果存在）
   d3.select(chartContainer.value).select('svg').remove();
@@ -107,7 +107,7 @@ const renderTree = (data) => {
     .attr("fill-opacity", 0.6)
     .attr("width", d => d.x1 - d.x0)
     .attr("height", d => d.y1 - d.y0)
-    .attr('stroke-width', 0.3)
+    .attr('stroke-width', 10)
     .attr("style", "cursor: pointer;")
 
     .on("click", function(event, d) {
@@ -129,7 +129,7 @@ const renderTree = (data) => {
 
   function abbreviateText(text, maxWidth, fontSize) {
     // 估算每个字符的平均宽度。注意：这个估算取决于字体的具体类型和大小
-    const avgCharWidth = fontSize * 0.7;
+    const avgCharWidth = fontSize;
     const maxChars = Math.floor(maxWidth / avgCharWidth);
 
     if (text.length > maxChars) {

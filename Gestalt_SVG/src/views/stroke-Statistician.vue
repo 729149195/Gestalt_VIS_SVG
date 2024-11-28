@@ -1,6 +1,6 @@
 <template>
     <span style="color: #666">Fill color Statiction</span>
-    <div ref="chartContainer"></div>
+    <div ref="chartContainer"  style="width: 550px; height: 280px;"></div>
 </template>
 
 <script setup>

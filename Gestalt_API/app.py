@@ -3,9 +3,11 @@ from flask_cors import CORS
 from flask_socketio import SocketIO
 import os
 from static.modules import featureCSV as featureCSV
-from static.modules import normalized_features as normalized_features
+from static.modules import normalized_features_liner as normalized_features
 from static.modules.cluster import main as run_clustering
 from static.modules.cluster import get_eps
+from static.modules.draw_graph import draw_element_nodes_with_lines
+from static.modules.average_equivalent_mapping import EquivalentWeightsCalculator
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")  # 允许跨域
@@ -46,33 +48,28 @@ def upload_file():
         output_svg_with_ids_path = os.path.join(app.config['DATA_FOLDER'], 'svg_with_ids.svg')
         init_json = os.path.join(app.config['DATA_FOLDER'], 'init_json.json')
         normalized_init_json = os.path.join(app.config['DATA_FOLDER'], 'normalized_init_json.json')
-        # 调用 featureCSV.py 中的函数
-        featureCSV.process_and_save_features(file_path, output_csv_path, output_svg_with_ids_path)
-
-
+        # 调用 cluster.py 进行聚类
+        community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
+        features_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_features.json')
         # 调用 normalized_features.py 进行归一化处理
         normalized_csv_path = os.path.join(app.config['DATA_FOLDER'], 'normalized_features.csv')
-        normalized_csv_path_LR = os.path.join(app.config['DATA_FOLDER'], 'normalized_features_LR.csv')
-        normalized_csv_path_TB = os.path.join(app.config['DATA_FOLDER'], 'normalized_features_TB.csv')
-        normalized_features.normalize_features(output_csv_path, normalized_csv_path, normalized_csv_path_LR, normalized_csv_path_TB)
-        #替换normalized_csv_path_Three
+
+
+        global max_eps, epss  # 声明使用全局变量
+
+        featureCSV.process_and_save_features(file_path, output_csv_path, output_svg_with_ids_path)
+        normalized_features.normalize_features(output_csv_path, normalized_csv_path)
 
         featureCSV.process_csv_to_json(output_csv_path, init_json)
         featureCSV.process_csv_to_json(normalized_csv_path, normalized_init_json)
 
-        # 调用 cluster.py 进行聚类
-        community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
-        probabilities_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_probabilities.json')
-        fourier_file_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
+        calculator = EquivalentWeightsCalculator(model_path="static/modules/checkpoint_sort_left.tar")
+        calculator.compute_and_save_equivalent_weights(normalized_csv_path, output_file_avg='static/data/average_equivalent_mapping.json', output_file_all='static/data/equivalent_weights_by_tag.json')
 
-        global max_eps, epss  # 声明使用全局变量
-        epss, max_eps= get_eps(normalized_csv_path,  normalized_csv_path_LR, normalized_csv_path_TB, community_data_path, probabilities_data_path, fourier_file_path)
-        # print(max_eps, epss)
+        epss, max_eps= get_eps(normalized_csv_path, community_data_path, features_data_path)
+        run_clustering(normalized_csv_path, community_data_path, features_data_path, max_eps)
 
-
-
-        run_clustering(normalized_csv_path, normalized_csv_path_LR, normalized_csv_path_TB, community_data_path, probabilities_data_path, fourier_file_path, max_eps)
-
+        # draw_element_nodes_with_lines(init_json, features_data_path)
 
         return jsonify({
             'success': 'File uploaded and processed successfully',
@@ -80,7 +77,7 @@ def upload_file():
             'csv_file': output_csv_path,
             'normalized_csv_file': normalized_csv_path,
             'community_data_mult': community_data_path,
-            'cluster_probabilities': probabilities_data_path,
+            'cluster_features': features_data_path,
             'svg_with_ids_file': f'/{output_svg_with_ids_path}'
         }), 200
     else:
@@ -93,7 +90,6 @@ def run_clustering_with_params():
     distance_threshold_ratio = request.json.get('distance_threshold_ratio', 0.4)
 
     try:
-        # Ensure eps and min_samples are valid
         eps = float(eps)
         min_samples = int(min_samples)
         distance_threshold_ratio = float(distance_threshold_ratio)
@@ -107,16 +103,11 @@ def run_clustering_with_params():
         if distance_threshold_ratio <= 0 or distance_threshold_ratio >= 1:
             raise ValueError("distance_threshold_ratio must be between 0 and 1")
 
-        # Define paths for input and output files (assuming they are already created)
         normalized_csv_path = os.path.join(app.config['DATA_FOLDER'], 'normalized_features.csv')
         community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
-        probabilities_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_probabilities.json')
-        fourier_file_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
-        normalized_csv_path_LR = os.path.join(app.config['DATA_FOLDER'], 'normalized_features_LR.csv')
-        normalized_csv_path_TB = os.path.join(app.config['DATA_FOLDER'], 'normalized_features_TB.csv')
+        features_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_features.json')
 
-        # Run clustering with the specified eps and min_samples
-        run_clustering(normalized_csv_path, normalized_csv_path_LR, normalized_csv_path_TB, community_data_path, probabilities_data_path, fourier_file_path, eps, min_samples, distance_threshold_ratio)
+        run_clustering(normalized_csv_path, community_data_path, features_data_path, eps, min_samples, distance_threshold_ratio)
 
         return jsonify({
             'success': 'Clustering executed with specified parameters',
@@ -125,7 +116,7 @@ def run_clustering_with_params():
             'distance_threshold_ratio':distance_threshold_ratio,
             'normalized_csv_file': normalized_csv_path,
             'community_data_mult': community_data_path,
-            'cluster_probabilities': probabilities_data_path
+            'cluster_features': features_data_path
         }), 200
     except Exception as e:
         return jsonify({'error': 'An error occurred while running clustering', 'details': str(e)}), 500
@@ -236,26 +227,15 @@ def right_data():
         return jsonify({'error': 'community_data_mult.json file not found'}), 404
 
 
-@app.route('/cluster_probabilities', methods=['GET'])
-def cluster_probabilities():
-    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_probabilities.json')
+@app.route('/cluster_features', methods=['GET'])
+def cluster_features():
+    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_features.json')
 
     if os.path.exists(community_data_path):
         with open(community_data_path, 'r', encoding='utf-8') as json_file:
             return json_file.read(), 200, {'Content-Type': 'application/json'}
     else:
         return jsonify({'error': 'community_data_mult.json file not found'}), 404
-
-
-@app.route('/fourier_file_path', methods=['GET'])
-def fourier_file():
-    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'fourier_file_path.json')
-
-    if os.path.exists(community_data_path):
-        with open(community_data_path, 'r', encoding='utf-8') as json_file:
-            return json_file.read(), 200, {'Content-Type': 'application/json'}
-    else:
-        return jsonify({'error': 'fourier_file_path.json file not found'}), 404
 
 
 @app.route('/fill_num', methods=['GET'])
@@ -313,6 +293,29 @@ def stroke_data():
         return jsonify({'error': 'community_data_mult.json file not found'}), 404
 
 
+
+@app.route('/average_equivalent_mapping', methods=['GET'])
+def average_equivalent_mapping():
+    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'average_equivalent_mapping.json')
+
+    if os.path.exists(community_data_path):
+        with open(community_data_path, 'r', encoding='utf-8') as json_file:
+            return json_file.read(), 200, {'Content-Type': 'application/json'}
+    else:
+        return jsonify({'error': 'average_equivalent_mapping.json file not found'}), 404
+
+
+@app.route('/equivalent_weights_by_tag', methods=['GET'])
+def equivalent_weights_by_tag():
+    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'equivalent_weights_by_tag.json')
+
+    if os.path.exists(community_data_path):
+        with open(community_data_path, 'r', encoding='utf-8') as json_file:
+            return json_file.read(), 200, {'Content-Type': 'application/json'}
+    else:
+        return jsonify({'error': 'equivalent_weights_by_tag.json file not found'}), 404
+
+
 @app.route('/top_position', methods=['GET'])
 def top_position():
     community_data_path = os.path.join(app.config['DATA_FOLDER'], 'Top_data.json')
@@ -322,6 +325,23 @@ def top_position():
             return json_file.read(), 200, {'Content-Type': 'application/json'}
     else:
         return jsonify({'error': 'community_data_mult.json file not found'}), 404
+
+
+@app.route('/subgraph/<int:dimension>', methods=['GET'])
+def get_subgraph_data(dimension):
+    # 确保 dimension 参数在有效范围内（假设有4个特征维度，即0到3）
+    if dimension < 0 or dimension > 3:
+        return jsonify({'error': 'Invalid dimension'}), 400
+
+    # 定义子图数据文件的路径
+    subgraph_file_path = os.path.join(app.config['DATA_FOLDER'], f'subgraphs/subgraph_dimension_{dimension}.json')
+
+    # 检查文件是否存在
+    if os.path.exists(subgraph_file_path):
+        with open(subgraph_file_path, 'r', encoding='utf-8') as json_file:
+            return json_file.read(), 200, {'Content-Type': 'application/json'}
+    else:
+        return jsonify({'error': f'subgraph_dimension_{dimension}.json file not found'}), 404
 
 
 if __name__ == '__main__':

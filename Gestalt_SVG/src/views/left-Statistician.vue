@@ -1,6 +1,6 @@
 <template>
     <span style="color: #666">top-position</span>
-    <div ref="chartContainer" style="width: 550px; height: 280px;"></div>
+    <div ref="chartContainer"  style="width: 550px; height: 270px;"></div>
 </template>
 
 <script setup>

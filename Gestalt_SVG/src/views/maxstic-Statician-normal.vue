@@ -1,5 +1,5 @@
 <template>
-    <div ref="chartContainer" class="chart-container"></div>
+    <div ref="normal_chartContainer" class="normal_chart_container"></div>
 </template>
 
 <script setup>
@@ -11,17 +11,15 @@ const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 
 const eleURL = "http://localhost:5000/normalized_init_json";
-const chartContainer = ref(null);
-const margin = { top: 20, right: 20, bottom: 100, left: 100 };
-const width = 1100 + margin.left + margin.right;
-const height = 520 + margin.top + margin.bottom;
+const normal_chartContainer = ref(null);
+const margin = { top: 10, right: 10, bottom: 60, left: 120 };
 
-// 将这些变量定义在 setup 中，使得它们在 watch 中也可以访问
 let svg;
 let xScale;
+let resizeObserver;
 
 onMounted(async () => {
-    if (!chartContainer.value) return;
+    if (!normal_chartContainer.value) return;
 
     try {
         const response = await fetch(eleURL);
@@ -30,33 +28,24 @@ onMounted(async () => {
         }
         const rawData = await response.json();
         const data = processData(rawData);
-        render(data);
+
+        // 使用 ResizeObserver 监听宽度变化
+        resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const newWidth = entry.contentRect.width;
+                render(data, newWidth);
+            }
+        });
+
+        resizeObserver.observe(normal_chartContainer.value);
+
+        // 初始渲染
+        const initialWidth = normal_chartContainer.value.clientWidth;
+        render(data, initialWidth);
 
         // 监控 selectedNodeIds 变化，更新高亮显示
         watch(selectedNodeIds, (newVal) => {
-            // 高亮 X 轴的文本并加粗
-            d3.selectAll('.x-axis text')
-                .style('fill', d => d && newVal.includes(d) ? 'red' : 'black')
-                .style('font-weight', d => d && newVal.includes(d) ? 'bold' : 'normal');
-
-            // 移除已有的红框
-            d3.selectAll('.highlight-rect').remove();
-
-            // 添加红框矩形
-            newVal.forEach(id => {
-                const xPos = xScale(id); // 使用xScale计算x坐标
-                if (xPos !== undefined) {
-                    svg.append('rect')
-                        .attr('class', 'highlight-rect')
-                        .attr('x', xPos)
-                        .attr('y', 0) // 红框从顶部开始
-                        .attr('width', xScale.bandwidth())
-                        .attr('height', height - margin.top - margin.bottom)
-                        .style('fill', 'none')
-                        .style('stroke', 'red')
-                        .style('stroke-width', '2px');
-                }
-            });
+            updateHighlights(newVal);
         });
 
     } catch (error) {
@@ -64,11 +53,36 @@ onMounted(async () => {
     }
 });
 
+const updateHighlights = (selectedIds) => {
+    // 更新 X 轴文本的颜色和加粗
+    d3.selectAll('.x-axis text')
+        .style('fill', d => d && selectedIds.includes(d) ? 'red' : 'black')
+        .style('font-weight', d => d && selectedIds.includes(d) ? 'bold' : 'normal');
+
+    // 移除旧的高亮矩形
+    d3.selectAll('.highlight-rect-normal').remove();
+
+    // 根据 selectedNodeIds 添加新的红框矩形
+    selectedIds.forEach(id => {
+        const xPos = xScale(id);
+        if (xPos !== undefined) {
+            svg.append('rect')
+                .attr('class', 'highlight-rect-normal')
+                .attr('x', xPos)
+                .attr('y', 0)
+                .attr('width', xScale.bandwidth())
+                .attr('height', normal_chartContainer.value.clientHeight - margin.top - margin.bottom)
+                .style('fill', 'none')
+                .style('stroke', 'red')
+                .style('stroke-width', '1.5px');
+        }
+    });
+};
 
 const processData = (rawData) => {
     let processedData = [];
     rawData.forEach((node, nodeIndex) => {
-        node.fourier_features.forEach((probability, groupIndex) => {
+        node.features.forEach((probability, groupIndex) => {
             processedData.push({
                 node: node.id,
                 group: groupIndex,
@@ -79,24 +93,28 @@ const processData = (rawData) => {
     return processedData;
 };
 
-const render = (data) => {
+const render = (data, containerWidth) => {
+    const width = containerWidth - margin.left - margin.right;
+    const height = 250 + margin.top + margin.bottom;
     const textYOffset = 10;
 
+    // 移除旧的 SVG 内容
+    d3.select(normal_chartContainer.value).selectAll('*').remove();
+
     // 设置 SVG 容器
-    svg = d3.select(chartContainer.value)
+    svg = d3.select(normal_chartContainer.value)
         .append('svg')
-        .attr('width', width)
+        .attr('width', containerWidth)
         .attr('height', height)
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // 获取所有唯一的 id 后缀
     const ids = [...new Set(data.map(d => d.node.split('/').pop()))];
-    const groups = d3.range(0, 20);
-    const groupname = ["tag", "opacity", "fill_h", "fill_s", "fill_l", "stroke_h", "stroke_s", "stroke_l", "stroke_width", "layer", "bbox_top", "bbox_bottom", "bbox_left", "bbox_right", "center_x", "center_y", "width", "height", "fill_area", "stroke_area"];
+    const groups = d3.range(0, 22);
+    const groupname = ['tag', 'opacity', 'fill_h', 'fill_s', 'fill_l', 'fill_sal', 'stroke_h', 'stroke_s', 'stroke_l', 'stroke_sal', 'stroke_width', 'layer', 'bbox_left', 'bbox_right', 'bbox_top', 'bbox_bottom', 'bbox_center_x', 'bbox_center_y', 'bbox_width', 'bbox_height', 'bbox_fill_area', 'bbox_stroke_area'];
 
-    // 创建比例尺
-    xScale = d3.scaleBand().domain(ids).range([0, width - margin.left - margin.right]).padding(0.05);
+    // 创建 x 和 y 轴比例尺
+    xScale = d3.scaleBand().domain(ids).range([0, width]).padding(0.05);
     const yScale = d3.scaleBand().domain(groups).range([height - margin.top - margin.bottom, 0]).padding(0.05);
     const yScalename = d3.scaleBand().domain(groupname).range([height - margin.top - margin.bottom, 0]).padding(0.05);
 
@@ -104,10 +122,9 @@ const render = (data) => {
     const colorScale = d3.scaleSequential(d3.interpolateInferno)
         .domain([d3.max(data, d => d.probability), 0]);
 
-    // 创建 tooltip 元素
-    const tooltip = d3.select(chartContainer.value)
+    // 创建悬停提示框
+    const init_tooltip = d3.select(normal_chartContainer.value)
         .append('div')
-        .attr('class', 'tooltip')
         .style('position', 'absolute')
         .style('background', '#fff')
         .style('padding', '5px')
@@ -126,15 +143,17 @@ const render = (data) => {
         .attr('width', xScale.bandwidth())
         .attr('height', yScale.bandwidth())
         .style('fill', d => colorScale(d.probability))
-        .on('mouseover', function(event, d) {
-            tooltip.style('visibility', 'visible')
+        .on('mouseover', function (event, d) {
+            init_tooltip.style('visibility', 'visible')
                 .text(`Probability: ${d.probability}`);
         })
-        .on('mousemove', function(event) {
-            tooltip
+        .on('mousemove', function (event) {
+            const [mouseX, mouseY] = d3.pointer(event);
+            init_tooltip.style('top', `${mouseY - 20}px`)
+                .style('left', `${mouseX - 20}px`);
         })
-        .on('mouseout', function() {
-            tooltip.style('visibility', 'hidden');
+        .on('mouseout', function () {
+            init_tooltip.style('visibility', 'hidden');
         });
 
     // 添加坐标轴
@@ -151,7 +170,16 @@ const render = (data) => {
         .attr('dy', '-0.5em')
         .attr('transform', 'rotate(-90)')
         .style('fill', 'black')
-        .style('font-size', '12px');
+        .style('font-size', '12px')
+        .style('cursor', 'pointer')
+        .on('click', function (event, d) {
+            // 点击事件更新 Vuex 中的 selectedNodeIds
+            if (selectedNodeIds.value.includes(d)) {
+                store.commit('REMOVE_SELECTED_NODE', d);
+            } else {
+                store.commit('ADD_SELECTED_NODE', d);
+            }
+        });
 
     svg.append('g').call(yAxis)
         .selectAll('text')
@@ -165,70 +193,13 @@ const render = (data) => {
     svg.selectAll('.tick line')
         .style('stroke', 'black')
         .style('stroke-width', '1px');
-
-
-    svg.selectAll('.x-axis text')
-        .style('cursor', 'pointer')
-        .on('click', function (event, d) {
-            // 检查当前点击的 ID 是否已经在 selectedNodeIds 中
-            if (selectedNodeIds.value.includes(d)) {
-                // 如果存在，移除该 ID
-                store.commit('REMOVE_SELECTED_NODE', d);
-            } else {
-                // 如果不存在，添加该 ID
-                store.commit('ADD_SELECTED_NODE', d);
-            }
-            // console.log(selectedNodeIds.value);
-        });
-
-
-
-    const legendHeight = 480;
-    const legendWidth = 10;
-    const numSwatches = 50;
-    const legendDomain = colorScale.domain();
-    const legendScale = d3.scaleLinear()
-        .domain([0, numSwatches - 1])
-        .range([legendDomain[1], legendDomain[0]]);
-    const legendData = Array.from(Array(numSwatches).keys());
-
-    const legend = svg.append('g')
-        .attr('transform', `translate(${width - 40}, 10)`);
-
-    legend.selectAll('rect')
-        .data(legendData)
-        .enter()
-        .append('rect')
-        .attr('y', (d, i) => legendHeight - (i + 1) * (legendHeight / numSwatches))
-        .attr('x', 0)
-        .attr('height', legendHeight / numSwatches)
-        .attr('width', legendWidth)
-        .attr('fill', d => colorScale(legendScale(d)));
-
-    legend.append('text')
-        .attr('transform', `translate(${legendWidth + textYOffset}, 0) rotate(90)`)
-        .style('font-size', '10px')
-        .style('fill', 'black')
-        .text(d3.format(".2f")(legendDomain[0]));
-
-    legend.append('text')
-        .attr('transform', `translate(${legendWidth + textYOffset}, ${legendHeight}) rotate(90)`)
-        .style('font-size', '10px')
-        .style('fill', 'black')
-        .text(d3.format(".2f")(legendDomain[1]));
-
-    legend.append('text')
-        .attr('transform', `translate(${legendWidth + 20}, ${legendHeight / 2}) rotate(90)`)
-        .style('font-size', '12px')
-        .style('text-anchor', 'middle')
-        .style('fill', 'black')
-        .text('Probability');
 };
 </script>
 
 <style scoped>
-.chart-container {
+.normal_chart_container {
     max-width: 100%;
     height: auto;
+    position: relative;
 }
 </style>
