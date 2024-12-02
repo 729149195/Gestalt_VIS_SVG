@@ -63,7 +63,7 @@ def upload_file():
         featureCSV.process_csv_to_json(output_csv_path, init_json)
         featureCSV.process_csv_to_json(normalized_csv_path, normalized_init_json)
 
-        calculator = EquivalentWeightsCalculator(model_path="static/modules/checkpoint_sort_left.tar")
+        calculator = EquivalentWeightsCalculator(model_path="static/modules/checkpoint_200.tar")
         calculator.compute_and_save_equivalent_weights(normalized_csv_path, output_file_avg='static/data/average_equivalent_mapping.json', output_file_all='static/data/equivalent_weights_by_tag.json')
 
         epss, max_eps= get_eps(normalized_csv_path, community_data_path, features_data_path)

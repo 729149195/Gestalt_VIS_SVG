@@ -11,7 +11,7 @@ import numpy as np
 from scipy.signal import find_peaks
 
 # 模型路径
-model_path = ("./static/modules/checkpoint_sort_left.tar")
+model_path = ("./static/modules/checkpoint_200.tar")
 
 # 定义模型类
 class ModifiedNetwork(nn.Module):
