@@ -35,14 +35,13 @@ def hello_world():
 
 def process_svg_file(file_path):
     """
-    处理上传的SVG文件的核心��辑
+    处理上传的SVG文件的核心���辑
     """
     try:
         print(f"开始处理SVG文件: {file_path}")
         # 设置输出路径
         output_csv_path = os.path.join(app.config['DATA_FOLDER'], 'features.csv')
         output_svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
-        temp_svg_path = os.path.join(app.config['UPLOAD_FOLDER'], 'temp_processed.svg')
         
         # 检查文件是否存在
         if not os.path.exists(file_path):
@@ -53,16 +52,8 @@ def process_svg_file(file_path):
             raise ValueError(f"输入文件为空: {file_path}")
 
         print("开始提取特征...")
-        # 根据是否是过滤后的文件决定输出路径
-        if 'filtered_' in os.path.basename(file_path):
-            # 处理过滤后的文件时使用临时文件
-            featureCSV.process_and_save_features(file_path, output_csv_path, temp_svg_path)
-            # 处理完成后删除临时文件
-            if os.path.exists(temp_svg_path):
-                os.remove(temp_svg_path)
-        else:
-            # 只有处理原始文件时才更新 svg_with_ids.svg
-            featureCSV.process_and_save_features(file_path, output_csv_path, output_svg_with_ids_path)
+        # 直接处理文件，不再重复添加ID
+        featureCSV.process_and_save_features(file_path, output_csv_path, output_svg_with_ids_path)
         
         init_json = os.path.join(app.config['DATA_FOLDER'], 'init_json.json')
         normalized_init_json = os.path.join(app.config['DATA_FOLDER'], 'normalized_init_json.json')
@@ -117,6 +108,53 @@ def process_svg_file(file_path):
             'error': str(e)
         }
 
+def process_svg_styles(svg_content):
+    """
+    处理SVG中的style标签,将样式直接作为属性应用到对应元素
+    """
+    soup = BeautifulSoup(svg_content, 'xml')
+    
+    # 处理style标签
+    style_tag = soup.find('style')
+    if style_tag:
+        print("发现style标签，开始处理样式...")
+        # 解析CSS样式
+        style_content = style_tag.string
+        style_rules = {}
+        if style_content:
+            # 分割样式规则
+            rules = style_content.split('}')
+            for rule in rules:
+                if '{' in rule:
+                    selector, styles = rule.split('{')
+                    selector = selector.strip()
+                    styles = styles.strip()
+                    if selector.startswith('.'):  # 处理类选择器
+                        class_name = selector[1:]  # 移除点号
+                        # 解析各个样式属性
+                        style_attrs = {}
+                        for style in styles.split(';'):
+                            style = style.strip()
+                            if ':' in style:
+                                prop, value = style.split(':')
+                                prop = prop.strip()
+                                value = value.strip()
+                                style_attrs[prop] = value
+                        style_rules[class_name] = style_attrs
+        
+        # 应用样式到元素
+        for class_name, style_attrs in style_rules.items():
+            elements = soup.find_all(class_=class_name)
+            for element in elements:
+                # 直接将样式作为属性添加到元素
+                for prop, value in style_attrs.items():
+                    element[prop] = value
+                    
+        # 移除style标签
+        style_tag.decompose()
+    
+    return str(soup)
+
 # 文件上传的路由
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -128,9 +166,18 @@ def upload_file():
     if file and file.filename.endswith('.svg'):
         try:
             print(f"开始处理上传文件: {file.filename}")
-            # 保存上传的文件
+            
+            # 读取SVG内容
+            svg_content = file.read().decode('utf-8')
+            
+            # 处理样式
+            processed_svg = process_svg_styles(svg_content)
+            
+            # 保存处理后的文件
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-            file.save(file_path)
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(processed_svg)
+                
             print(f"文件已保存到: {file_path}")
 
             # 立即处理SVG，添加ID
@@ -465,10 +512,13 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
     过滤SVG文件，支持按元素类型和具体元素ID过滤
     """
     try:
+        # 首先处理样式
+        svg_content = process_svg_styles(svg_content)
+        
         soup = BeautifulSoup(svg_content, 'xml')
         svg = soup.find('svg')
         if not svg:
-            print("未找到SVG根元素")
+            print("未找到SVG根���素")
             return svg_content
 
         # 保存svg的原始属性
@@ -502,7 +552,7 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
             if element.name in selected_elements:
                 element_id = element.get('id')
                 # 打印调试信息
-                print(f"检查元素: {element.name}, ID: {element_id}")
+                print(f"��查元素: {element.name}, ID: {element_id}")
                 
                 # 如果有选中的ID列表且不为空
                 if selected_ids and len(selected_ids) > 0:
@@ -671,7 +721,7 @@ def get_visible_elements():
         # 定义可见元素类型
         visible_element_types = [
             'rect', 'circle', 'ellipse', 'line', 
-            'polyline', 'polygon', 'path', 'text', 'image'
+            'polyline', 'polygon', 'path', 'text', 'image' ,'title'
         ]
         
         # 获取所有SVG内部的元素
