@@ -1,7 +1,7 @@
 import './assets/main.css'
 
 import { createApp } from 'vue'
-
+import ElementPlus from 'element-plus'
 // Vuetify
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
@@ -21,6 +21,7 @@ const vuetify = createVuetify({
 const app = createApp(App)
 
 app.use(router)
+app.use(ElementPlus)
 app.use(vuetify)
 app.use(store)
 

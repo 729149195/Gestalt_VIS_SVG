@@ -12,6 +12,7 @@ import { onMounted, ref, computed, watch, onUnmounted, nextTick } from 'vue';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
 
+
 // 获取Vuex store
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
@@ -119,7 +120,7 @@ onMounted(async () => {
     }
 });
 
-// 在组件卸载时移除全局事件监听器
+// 在组件��载时移除全局事件监听器
 onUnmounted(() => {
     window.removeEventListener('mouseup', handleGlobalMouseUp);
 });
@@ -180,7 +181,7 @@ const processDataNormal = (rawData) => {
     let processedData = [];
     rawData.forEach((node) => {
         // 确保 node.features 长度为 21
-        if (node.features.length !== 21) {
+        if (node.features.length !== 20) {
             console.warn(`节点 ${node.id} 的特征数量为 ${node.features.length}，预期为 21`);
         }
         node.features.forEach((probability, groupIndex) => {
@@ -356,7 +357,7 @@ const renderInit = (data, containerWidth, outputDimensions) => {
     xScaleInit = d3.scaleBand().domain(ids).range([0, width]).padding(0.05);
     const yScale = d3.scaleBand().domain(groups).range([height - marginInit.top - marginInit.bottom, 0]).padding(0.05);
 
-    // 修改颜色比例尺为分歧颜色比例尺，固定 domain 为 [-1, 0, 1]
+    // 修��颜色比例尺为分歧颜色比例尺，固定 domain 为 [-1, 0, 1]
     const colorScale = d3.scaleDiverging(d3.interpolateRdBu)
         .domain([1, 0, -1]);
 
@@ -501,7 +502,7 @@ const drawPerSampleLines = (weightsForDimension, clickedRectData, clickedRectNod
         .append('g')
         .attr('class', 'per-sample-lines');
 
-    // 获取输入特征（第一张热力图的 Y 轴上的圆点）
+    // 获取输入特征（第一张热力图的 Y 轴上的圆���）
     const normalCircles = d3.selectAll('.normal_chart_container .y-axis circle');
     const normalData = normalCircles.nodes(); // 21 个输入节点
 

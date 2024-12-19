@@ -1,16 +1,34 @@
 <template>
-    <span style="color: #666">top-position</span>
-    <div ref="chartContainer" style="width: 550px; height: 280px;"></div>
+    <span style="color: #666">{{ title }}</span>
+    <div ref="chartContainer" :style="containerStyle"></div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, defineProps } from 'vue';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
-const store = useStore();
 
+const props = defineProps({
+    position: {
+        type: String,
+        required: true,
+        validator: (value) => ['top', 'bottom', 'left', 'right'].includes(value)
+    },
+    title: {
+        type: String,
+        default: 'Position Statistics'
+    }
+});
+
+const store = useStore();
 const chartContainer = ref(null);
-const eleURL = "http://localhost:5000/bottom_position";
+
+const containerStyle = {
+    width: '550px',
+    height: '280px'
+};
+
+const eleURL = `http://localhost:5000/${props.position}_position`;
 
 onMounted(async () => {
     if (!chartContainer.value) return;
@@ -23,7 +41,7 @@ onMounted(async () => {
         const data = await response.json();
         const dataset = Object.keys(data).map((range) => ({
             range,
-            tags: data[range].tags, // 确保包含tags
+            tags: data[range].tags,
             totals: Object.entries(data[range].total).map(([key, value]) => ({ key, value }))
         }));
         renderChart(dataset);
@@ -80,7 +98,7 @@ const renderChart = (dataset) => {
         .call(g => g.selectAll('.tick line')
             .clone()
             .attr('x2', width)
-            .attr('stroke', '#ddd')); // 设置颜色
+            .attr('stroke', '#ddd'));
 
     const zoom = d3.zoom()
         .scaleExtent([1, 3])
@@ -115,9 +133,24 @@ const renderChart = (dataset) => {
         })
         .on('mouseout', () => {
             tooltip.style("visibility", "hidden");
-        }).on('click', (event, d) => {
+        })
+        .on('click', (event, d) => {
             store.commit('UPDATE_SELECTED_NODES', { nodeIds: d.tags, group: null });
         });
+
+    const customColorMap = {
+        "circle": "#FFE119", "rect": "#E6194B", "line": "#4363D8",
+        "polyline": "#911EB4", "polygon": "#F58231", "path": "#3CB44B",
+        "text": "#46F0F0", "ellipse": "#F032E6", "image": "#BCF60C",
+        "use": "#FFD700", "defs": "#FF4500", "linearGradient": "#1E90FF",
+        "radialGradient": "#FF6347", "stop": "#4682B4", "symbol": "#D2691E",
+        "clipPath": "#FABEBE", "mask": "#8B008B", "pattern": "#A52A2A",
+        "filter": "#5F9EA0", "feGaussianBlur": "#D8BFD8", "feOffset": "#FFDAB9",
+        "feBlend": "#32CD32", "feFlood": "#FFD700", "feImage": "#FF6347",
+        "feComposite": "#FF4500", "feColorMatrix": "#1E90FF", "feMerge": "#FF1493",
+        "feMorphology": "#00FA9A", "feTurbulence": "#8B008B",
+        "feDisplacementMap": "#FFD700", "unknown": "#696969"
+    };
 
     rangeGroup.each(function (d) {
         let yAccumulator = 0;
@@ -132,41 +165,9 @@ const renderChart = (dataset) => {
             })
             .attr('width', xScale.bandwidth())
             .attr('height', t => height - yScale(t.value))
-            .attr('fill', t => ({
-                "circle": "#FFE119", // 鲜黄
-                "rect": "#E6194B", // 猩红
-                "line": "#4363D8", // 宝蓝
-                "polyline": "#911EB4", // 紫色
-                "polygon": "#F58231", // 橙色
-                "path": "#3CB44B", // 明绿
-                "text": "#46F0F0", // 青色
-                "ellipse": "#F032E6", // 紫罗兰
-                "image": "#BCF60C", // 酸橙
-                "use": "#FFD700", // 金色
-                "defs": "#FF4500", // 橙红色
-                "linearGradient": "#1E90FF", // 道奇蓝
-                "radialGradient": "#FF6347", // 番茄
-                "stop": "#4682B4", // 钢蓝
-                "symbol": "#D2691E", // 巧克力
-                "clipPath": "#FABEBE", // 粉红
-                "mask": "#8B008B", // 深紫罗兰红色
-                "pattern": "#A52A2A", // 棕色
-                "filter": "#5F9EA0", // 冰蓝
-                "feGaussianBlur": "#D8BFD8", // 紫丁香
-                "feOffset": "#FFDAB9", // 桃色
-                "feBlend": "#32CD32", // 酸橙绿
-                "feFlood": "#FFD700", // 金色
-                "feImage": "#FF6347", // 番茄
-                "feComposite": "#FF4500", // 橙红色
-                "feColorMatrix": "#1E90FF", // 道奇蓝
-                "feMerge": "#FF1493", // 深粉色
-                "feMorphology": "#00FA9A", // 中春绿色
-                "feTurbulence": "#8B008B", // 深紫罗兰红色
-                "feDisplacementMap": "#FFD700", // 金色
-                "unknown": "#696969" // 暗灰色
-            }[t.key]))
-            .attr('rx', 2)  // 设置x轴方向的圆角半径
-            .attr('ry', 2); // 设置y轴方向的圆角半径
+            .attr('fill', t => customColorMap[t.key] || '#696969')
+            .attr('rx', 2)
+            .attr('ry', 2);
     });
 
     svg.append("text")
@@ -175,7 +176,7 @@ const renderChart = (dataset) => {
         .style("font-size", "23px")
         .attr("dx", "12.5em")
         .attr("dy", "3.5em")
-        .text("Position  zones");
+        .text("Position zones");
 
     svg.append("text")
         .attr("transform", "rotate(-90)")
@@ -192,11 +193,9 @@ const renderChart = (dataset) => {
 <style scoped>
 .tooltip strong {
     color: blue;
-    /* 标题颜色 */
 }
 
 .tooltip span {
     color: black;
-    /* 内容颜色 */
 }
-</style>
+</style> 
