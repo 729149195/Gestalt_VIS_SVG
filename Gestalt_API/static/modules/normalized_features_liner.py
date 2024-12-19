@@ -24,7 +24,7 @@ def normalize_features(input_path, output_path):
     df['tag'] = df['tag'] / 8.0
 
     # 2. 不透明度归一化
-    df['opacity'] = np.sqrt(df['opacity']) * 0.3
+    df['opacity'] = np.sqrt(df['opacity'] * 0.5) 
 
     # 3. 颜色归一化
     # 色相归一化
@@ -34,16 +34,24 @@ def normalize_features(input_path, output_path):
     df['fill_h_cos'] = (np.cos(2 * np.pi * df['fill_h'] / 360) + 1) / 2.0
     df['fill_h_sin'] = (np.sin(2 * np.pi * df['fill_h'] / 360) + 1) / 2.0
 
-    df['stroke_h_cos'] = (np.cos(2 * np.pi * df['stroke_h'] / 360) + 1) / 2.0 * 0.3
-    df['stroke_h_sin'] = (np.sin(2 * np.pi * df['stroke_h'] / 360) + 1) / 2.0 * 0.3
+    df['stroke_h_cos'] = np.where(df['stroke_width'] == 0, 
+                                 0, 
+                                 (np.cos(2 * np.pi * df['stroke_h'] / 360) + 1) / 2.0 * 0.3)
+    df['stroke_h_sin'] = np.where(df['stroke_width'] == 0,
+                                 0,
+                                 (np.sin(2 * np.pi * df['stroke_h'] / 360) + 1) / 2.0 * 0.3)
 
     # 饱和度归一化
     df['fill_s_n'] = df['fill_s'] / 100.0
-    df['stroke_s_n'] = df['stroke_s'] / 100.0
+    df['stroke_s_n'] = np.where(df['stroke_width'] == 0,
+                               0,
+                               df['stroke_s'] / 100.0)
 
     # 亮度归一化
     df['fill_l_n'] = df['fill_l'] / 100.0
-    df['stroke_l_n'] = df['stroke_l'] / 100.0
+    df['stroke_l_n'] = np.where(df['stroke_width'] == 0,
+                               0,
+                               df['stroke_l'] / 100.0)
 
     # 6. 边界框位置和尺寸归一化
     svg_center_x = (svg_min_left + svg_max_right) / 2.0
@@ -66,7 +74,7 @@ def normalize_features(input_path, output_path):
 
     # 4. 描边宽度归一化
     max_stroke_width = df['stroke_width'].max() if df['stroke_width'].max() > 0 else 1.0
-    df['stroke_width'] = np.sqrt(df['stroke_width'] / 10)
+    df['stroke_width'] = np.sqrt(df['stroke_width'] / max_stroke_width) * 0.3
 
     # 5. 图层显著性归一化
     lambda_decay = 0.5  # 衰减系数
@@ -93,7 +101,7 @@ def normalize_features(input_path, output_path):
         'tag_name', 'tag', 'opacity',
         'fill_h_cos', 'fill_h_sin', 'fill_s_n', 'fill_l_n',
         'stroke_h_cos', 'stroke_h_sin', 'stroke_s_n', 'stroke_l_n', 'stroke_width',
-        'layer_sal', 'bbox_left_n', 'bbox_right_n', 'bbox_top_n',
+        'bbox_left_n', 'bbox_right_n', 'bbox_top_n',
         'bbox_bottom_n', 'bbox_center_x_n', 'bbox_center_y_n',
         'bbox_width_n', 'bbox_height_n', 'bbox_fill_area'
     ]

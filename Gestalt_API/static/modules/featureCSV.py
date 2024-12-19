@@ -360,12 +360,15 @@ def extract_features(element, layer_extractor, current_transform='', current_col
     opacity = float(element.attrib.get('opacity', 1.0))
     fill = element.attrib.get('fill', 'currentColor')
     stroke = element.attrib.get('stroke', 'currentColor')
-    stroke_width = float(element.attrib.get('stroke-width', 1.0))
 
     if fill == 'currentColor':
         fill = get_inherited_attribute(element, 'fill') or 'black'
     if stroke == 'currentColor':
         stroke = get_inherited_attribute(element, 'stroke') or 'none'
+        
+    stroke_width = 0.0
+    if stroke.lower() != 'none':
+        stroke_width = float(element.attrib.get('stroke-width', 1.0))
 
     fill_h, fill_s, fill_l = get_color_features(fill, current_color)
     stroke_h, stroke_s, stroke_l = get_color_features(stroke, current_color)
@@ -395,13 +398,26 @@ def get_transformed_bbox(element, current_transform=''):
     bbox = None
     fill_area = 0.0
     stroke_area = 0.0
-    stroke_width = float(element.attrib.get('stroke-width', 1.0))
+    
+    stroke = element.attrib.get('stroke', 'currentColor')
+    if stroke == 'currentColor':
+        stroke = get_inherited_attribute(element, 'stroke') or 'none'
+    
+    stroke_width = 0.0
+    if stroke.lower() != 'none':
+        stroke_width = float(element.attrib.get('stroke-width', 1.0))
 
+    # 修改height属性的处理
+    height_str = element.attrib.get('height', '0')
+    height = 0 if height_str == 'auto' else float(height_str)
+    
+    # 同样处理width属性
+    width_str = element.attrib.get('width', '0')
+    width = 0 if width_str == 'auto' else float(width_str)
+    
     if element.tag.endswith('rect'):
         x = float(element.attrib.get('x', 0))
         y = float(element.attrib.get('y', 0))
-        width = float(element.attrib.get('width', 0))
-        height = float(element.attrib.get('height', 0))
         bbox = [(x, y), (x + width, y), (x, y + height), (x + width, y + height)]
         fill_area = width * height
         stroke_area = 2 * (width + height) * stroke_width

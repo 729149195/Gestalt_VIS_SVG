@@ -38,7 +38,7 @@ class ModifiedNetwork(nn.Module):
 
 
 class EquivalentWeightsCalculator:
-    def __init__(self, model_path, input_dim=21, feature_dim=4):
+    def __init__(self, model_path, input_dim=20, feature_dim=4):
         # Load the model
         self.model = self.load_model(model_path, input_dim, feature_dim)
 
