@@ -346,7 +346,7 @@ const updateNodeOpacity = () => {
             // 基础透明度 - 根据元素类型是否被选中
             let opacity = selectedElements.value.includes(nodeType) ? 1 : 0;
 
-            // 如果有选中的节点，无论是否在路径选择模式下，都使用相同的选���逻辑
+            // 如果有选中的节点，无论是否在路径选择模式下，都使用相同的选中逻辑
             if (opacity === 1 && selectedNodeIds.value.length > 0) {
                 opacity = selectedNodeIds.value.includes(nodeId) ? 1 : 0.3;
             }

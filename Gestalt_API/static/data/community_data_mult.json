@@ -2,58 +2,6 @@
     "GraphData": {
         "node": [
             {
-                "id": "svg/g_14/g_27/polygon_25",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_26/polygon_24",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_25/polygon_23",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_24/polygon_22",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_23/polygon_21",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_22/polygon_20",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_21/polygon_19",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_20/polygon_18",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_19/polygon_17",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_18/polygon_16",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_17/polygon_15",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_16/polygon_14",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/g_14/g_15/polygon_13",
-                "propertyValue": 1
-            },
-            {
                 "id": "svg/g/g_13/polygon_12",
                 "propertyValue": 1
             },
@@ -108,376 +56,152 @@
         ],
         "links": [
             {
-                "source": "svg/g_14/g_27/polygon_25",
-                "target": "svg/g/g_1/polygon",
-                "value": 0.3166315775908352
-            },
-            {
-                "source": "svg/g_14/g_25/polygon_23",
-                "target": "svg/g_14/g_24/polygon_22",
-                "value": 0.10695016370509362
-            },
-            {
-                "source": "svg/g_14/g_25/polygon_23",
-                "target": "svg/g_14/g_23/polygon_21",
-                "value": 0.11537845960690296
-            },
-            {
-                "source": "svg/g_14/g_25/polygon_23",
-                "target": "svg/g_14/g_22/polygon_20",
-                "value": 0.12463985004193233
-            },
-            {
-                "source": "svg/g_14/g_25/polygon_23",
-                "target": "svg/g_14/g_21/polygon_19",
-                "value": 0.10936336202289522
-            },
-            {
-                "source": "svg/g_14/g_25/polygon_23",
-                "target": "svg/g_14/g_20/polygon_18",
-                "value": 0.11602213806118554
-            },
-            {
-                "source": "svg/g_14/g_25/polygon_23",
-                "target": "svg/g_14/g_19/polygon_17",
-                "value": 0.11904776093788708
-            },
-            {
-                "source": "svg/g_14/g_25/polygon_23",
-                "target": "svg/g_14/g_18/polygon_16",
-                "value": 0.1201738008684872
-            },
-            {
-                "source": "svg/g_14/g_25/polygon_23",
-                "target": "svg/g_14/g_16/polygon_14",
-                "value": 0.3023713513849404
-            },
-            {
-                "source": "svg/g_14/g_24/polygon_22",
-                "target": "svg/g_14/g_23/polygon_21",
-                "value": 0.018458907407012313
-            },
-            {
-                "source": "svg/g_14/g_24/polygon_22",
-                "target": "svg/g_14/g_22/polygon_20",
-                "value": 0.036292014227418304
-            },
-            {
-                "source": "svg/g_14/g_24/polygon_22",
-                "target": "svg/g_14/g_21/polygon_19",
-                "value": 0.01340160261855503
-            },
-            {
-                "source": "svg/g_14/g_24/polygon_22",
-                "target": "svg/g_14/g_20/polygon_18",
-                "value": 0.027917968168301506
-            },
-            {
-                "source": "svg/g_14/g_24/polygon_22",
-                "target": "svg/g_14/g_19/polygon_17",
-                "value": 0.03512121991976227
-            },
-            {
-                "source": "svg/g_14/g_24/polygon_22",
-                "target": "svg/g_14/g_18/polygon_16",
-                "value": 0.03415563027554233
-            },
-            {
-                "source": "svg/g_14/g_24/polygon_22",
-                "target": "svg/g_14/g_16/polygon_14",
-                "value": 0.24244847187389001
-            },
-            {
-                "source": "svg/g_14/g_23/polygon_21",
-                "target": "svg/g_14/g_22/polygon_20",
-                "value": 0.018251963722980862
-            },
-            {
-                "source": "svg/g_14/g_23/polygon_21",
-                "target": "svg/g_14/g_21/polygon_19",
-                "value": 0.023078078815298712
-            },
-            {
-                "source": "svg/g_14/g_23/polygon_21",
-                "target": "svg/g_14/g_20/polygon_18",
-                "value": 0.028610952033617933
-            },
-            {
-                "source": "svg/g_14/g_23/polygon_21",
-                "target": "svg/g_14/g_19/polygon_17",
-                "value": 0.03362658187086768
-            },
-            {
-                "source": "svg/g_14/g_23/polygon_21",
-                "target": "svg/g_14/g_18/polygon_16",
-                "value": 0.03287350814561959
-            },
-            {
-                "source": "svg/g_14/g_23/polygon_21",
-                "target": "svg/g_14/g_16/polygon_14",
-                "value": 0.2241527008952321
-            },
-            {
-                "source": "svg/g_14/g_22/polygon_20",
-                "target": "svg/g_14/g_21/polygon_19",
-                "value": 0.04081345049769072
-            },
-            {
-                "source": "svg/g_14/g_22/polygon_20",
-                "target": "svg/g_14/g_20/polygon_18",
-                "value": 0.04241403851429634
-            },
-            {
-                "source": "svg/g_14/g_22/polygon_20",
-                "target": "svg/g_14/g_19/polygon_17",
-                "value": 0.04521338156219677
-            },
-            {
-                "source": "svg/g_14/g_22/polygon_20",
-                "target": "svg/g_14/g_18/polygon_16",
-                "value": 0.04474809398887166
-            },
-            {
-                "source": "svg/g_14/g_22/polygon_20",
-                "target": "svg/g_14/g_16/polygon_14",
-                "value": 0.2066560218458716
-            },
-            {
-                "source": "svg/g_14/g_21/polygon_19",
-                "target": "svg/g_14/g_20/polygon_18",
-                "value": 0.015795853446778058
-            },
-            {
-                "source": "svg/g_14/g_21/polygon_19",
-                "target": "svg/g_14/g_19/polygon_17",
-                "value": 0.023206574859483478
-            },
-            {
-                "source": "svg/g_14/g_21/polygon_19",
-                "target": "svg/g_14/g_18/polygon_16",
-                "value": 0.022196895813793444
-            },
-            {
-                "source": "svg/g_14/g_21/polygon_19",
-                "target": "svg/g_14/g_16/polygon_14",
-                "value": 0.24375223219487
-            },
-            {
-                "source": "svg/g_14/g_20/polygon_18",
-                "target": "svg/g_14/g_19/polygon_17",
-                "value": 0.00744038301622477
-            },
-            {
-                "source": "svg/g_14/g_20/polygon_18",
-                "target": "svg/g_14/g_18/polygon_16",
-                "value": 0.00648002301047688
-            },
-            {
-                "source": "svg/g_14/g_20/polygon_18",
-                "target": "svg/g_14/g_16/polygon_14",
-                "value": 0.23712566983335465
-            },
-            {
-                "source": "svg/g_14/g_19/polygon_17",
-                "target": "svg/g_14/g_18/polygon_16",
-                "value": 0.002229877439612674
-            },
-            {
-                "source": "svg/g_14/g_19/polygon_17",
-                "target": "svg/g_14/g_16/polygon_14",
-                "value": 0.2344915018151138
-            },
-            {
-                "source": "svg/g_14/g_18/polygon_16",
-                "target": "svg/g_14/g_16/polygon_14",
-                "value": 0.2346976734904411
-            },
-            {
                 "source": "svg/g/g_13/polygon_12",
                 "target": "svg/g/g_12/polygon_11",
-                "value": 0.08046213415073883
+                "value": 0.0909193630884476
             },
             {
                 "source": "svg/g/g_13/polygon_12",
                 "target": "svg/g/g_11/polygon_10",
-                "value": 0.14510066340821035
+                "value": 0.14110154881428807
             },
             {
                 "source": "svg/g/g_13/polygon_12",
                 "target": "svg/g/g_10/polygon_9",
-                "value": 0.17944787619632774
-            },
-            {
-                "source": "svg/g/g_13/polygon_12",
-                "target": "svg/g/g_9/polygon_8",
-                "value": 0.2867477359412886
+                "value": 0.17368801030167008
             },
             {
                 "source": "svg/g/g_13/polygon_12",
                 "target": "svg/g/g_7/polygon_6",
-                "value": 0.27410547113605666
+                "value": 0.25410766649093297
             },
             {
                 "source": "svg/g/g_13/polygon_12",
                 "target": "svg/g/g_5/polygon_4",
-                "value": 0.15002291950094127
+                "value": 0.1175714156082752
             },
             {
                 "source": "svg/g/g_12/polygon_11",
                 "target": "svg/g/g_11/polygon_10",
-                "value": 0.07693815489466863
+                "value": 0.07259708226143667
             },
             {
                 "source": "svg/g/g_12/polygon_11",
                 "target": "svg/g/g_10/polygon_9",
-                "value": 0.11353758069537204
+                "value": 0.11013030669577262
             },
             {
                 "source": "svg/g/g_12/polygon_11",
                 "target": "svg/g/g_9/polygon_8",
-                "value": 0.22463094697024738
+                "value": 0.22005999687222283
             },
             {
                 "source": "svg/g/g_12/polygon_11",
                 "target": "svg/g/g_7/polygon_6",
-                "value": 0.21165139849817846
+                "value": 0.19697960916936427
             },
             {
                 "source": "svg/g/g_12/polygon_11",
                 "target": "svg/g/g_5/polygon_4",
-                "value": 0.08204777876841947
+                "value": 0.04642780963727536
             },
             {
                 "source": "svg/g/g_11/polygon_10",
                 "target": "svg/g/g_10/polygon_9",
-                "value": 0.03666437663959391
+                "value": 0.037593361585590984
             },
             {
                 "source": "svg/g/g_11/polygon_10",
                 "target": "svg/g/g_9/polygon_8",
-                "value": 0.1480330615593142
-            },
-            {
-                "source": "svg/g/g_11/polygon_10",
-                "target": "svg/g/g_8/polygon_7",
-                "value": 0.2637619205481426
+                "value": 0.14777872536126113
             },
             {
                 "source": "svg/g/g_11/polygon_10",
                 "target": "svg/g/g_7/polygon_6",
-                "value": 0.13503884780927977
+                "value": 0.12465894919852512
             },
             {
                 "source": "svg/g/g_11/polygon_10",
                 "target": "svg/g/g_6/polygon_5",
-                "value": 0.2731277361462468
+                "value": 0.18702534962777845
             },
             {
                 "source": "svg/g/g_11/polygon_10",
                 "target": "svg/g/g_5/polygon_4",
-                "value": 0.011068406667780485
+                "value": 0.027891845724399983
             },
             {
                 "source": "svg/g/g_10/polygon_9",
                 "target": "svg/g/g_9/polygon_8",
-                "value": 0.11145180564105316
+                "value": 0.11026761802062988
             },
             {
                 "source": "svg/g/g_10/polygon_9",
                 "target": "svg/g/g_8/polygon_7",
-                "value": 0.227383423735982
+                "value": 0.2214393163207221
             },
             {
                 "source": "svg/g/g_10/polygon_9",
                 "target": "svg/g/g_7/polygon_6",
-                "value": 0.09843573811084662
+                "value": 0.08711818327396822
             },
             {
                 "source": "svg/g/g_10/polygon_9",
                 "target": "svg/g/g_6/polygon_5",
-                "value": 0.2367770900520561
+                "value": 0.15004114566555818
             },
             {
                 "source": "svg/g/g_10/polygon_9",
                 "target": "svg/g/g_5/polygon_4",
-                "value": 0.03326483705862065
+                "value": 0.06475294892540195
             },
             {
                 "source": "svg/g/g_9/polygon_8",
                 "target": "svg/g/g_8/polygon_7",
-                "value": 0.11630134063627383
+                "value": 0.11151307526577135
             },
             {
                 "source": "svg/g/g_9/polygon_8",
                 "target": "svg/g/g_7/polygon_6",
-                "value": 0.013293451909965443
+                "value": 0.02336008636314506
             },
             {
                 "source": "svg/g/g_9/polygon_8",
                 "target": "svg/g/g_6/polygon_5",
-                "value": 0.12575655928623694
+                "value": 0.04482177466590783
             },
             {
                 "source": "svg/g/g_9/polygon_8",
                 "target": "svg/g/g_5/polygon_4",
-                "value": 0.14365075649977802
+                "value": 0.17460376512361736
             },
             {
                 "source": "svg/g/g_8/polygon_7",
                 "target": "svg/g/g_7/polygon_6",
-                "value": 0.12937253439252078
+                "value": 0.13471587684580097
             },
             {
                 "source": "svg/g/g_8/polygon_7",
                 "target": "svg/g/g_6/polygon_5",
-                "value": 0.009796339082202725
-            },
-            {
-                "source": "svg/g/g_8/polygon_7",
-                "target": "svg/g/g_5/polygon_4",
-                "value": 0.25929164691513723
+                "value": 0.07724372251170511
             },
             {
                 "source": "svg/g/g_7/polygon_6",
                 "target": "svg/g/g_6/polygon_5",
-                "value": 0.1388331641160386
+                "value": 0.06647099297396122
             },
             {
                 "source": "svg/g/g_7/polygon_6",
                 "target": "svg/g/g_5/polygon_4",
-                "value": 0.13049658469785808
+                "value": 0.15140679932630144
             },
             {
                 "source": "svg/g/g_6/polygon_5",
                 "target": "svg/g/g_5/polygon_4",
-                "value": 0.26868896494228645
+                "value": 0.2139722710157823
             }
         ],
         "group": [
-            [
-                "svg/g_14/g_27/polygon_25",
-                "svg/g_14/g_26/polygon_24",
-                "svg/g/g_3/polygon_2",
-                "svg/g/g_2/polygon_1",
-                "svg/g/g_1/polygon"
-            ],
-            [
-                "svg/g_14/g_25/polygon_23",
-                "svg/g_14/g_24/polygon_22",
-                "svg/g_14/g_23/polygon_21",
-                "svg/g_14/g_22/polygon_20",
-                "svg/g_14/g_21/polygon_19",
-                "svg/g_14/g_20/polygon_18",
-                "svg/g_14/g_19/polygon_17",
-                "svg/g_14/g_18/polygon_16",
-                "svg/g_14/g_16/polygon_14"
-            ],
-            [
-                "svg/g_14/g_17/polygon_15"
-            ],
-            [
-                "svg/g_14/g_15/polygon_13"
-            ],
             [
                 "svg/g/g_13/polygon_12",
                 "svg/g/g_12/polygon_11",
@@ -491,6 +215,13 @@
             ],
             [
                 "svg/g/g_4/polygon_3"
+            ],
+            [
+                "svg/g/g_3/polygon_2"
+            ],
+            [
+                "svg/g/g_2/polygon_1",
+                "svg/g/g_1/polygon"
             ]
         ]
     }

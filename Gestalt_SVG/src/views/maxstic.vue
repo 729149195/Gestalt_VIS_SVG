@@ -120,7 +120,7 @@ onMounted(async () => {
     }
 });
 
-// 在组件��载时移除全局事件监听器
+// 在组件卸载时移除全局事件监听器
 onUnmounted(() => {
     window.removeEventListener('mouseup', handleGlobalMouseUp);
 });
@@ -180,7 +180,7 @@ const updateHighlights = (selectedIds) => {
 const processDataNormal = (rawData) => {
     let processedData = [];
     rawData.forEach((node) => {
-        // 确保 node.features 长度为 21
+        // 确保 node.features 长度为 20
         if (node.features.length !== 20) {
             console.warn(`节点 ${node.id} 的特征数量为 ${node.features.length}，预期为 21`);
         }
@@ -357,7 +357,7 @@ const renderInit = (data, containerWidth, outputDimensions) => {
     xScaleInit = d3.scaleBand().domain(ids).range([0, width]).padding(0.05);
     const yScale = d3.scaleBand().domain(groups).range([height - marginInit.top - marginInit.bottom, 0]).padding(0.05);
 
-    // 修��颜色比例尺为分歧颜色比例尺，固定 domain 为 [-1, 0, 1]
+    // 修改颜色比例尺为分歧颜色比例尺，固定 domain 为 [-1, 0, 1]
     const colorScale = d3.scaleDiverging(d3.interpolateRdBu)
         .domain([1, 0, -1]);
 
@@ -407,7 +407,7 @@ const renderInit = (data, containerWidth, outputDimensions) => {
             }
 
             // 获取点击的输出维度的权重
-            const weightsForDimension = perSampleWeights[d.group]; // 长度为 21 的权重数组
+            const weightsForDimension = perSampleWeights[d.group]; // 长度为 20 的权重数组
 
             // 调用函数绘制按样本的连线
             drawPerSampleLines(weightsForDimension, d, this); // 传递 'this' 以获取被点击的矩形节点
@@ -502,9 +502,9 @@ const drawPerSampleLines = (weightsForDimension, clickedRectData, clickedRectNod
         .append('g')
         .attr('class', 'per-sample-lines');
 
-    // 获取输入特征（第一张热力图的 Y 轴上的圆���）
+    // 获取输入特征（第一张热力图的 Y 轴上的圆点）
     const normalCircles = d3.selectAll('.normal_chart_container .y-axis circle');
-    const normalData = normalCircles.nodes(); // 21 个输入节点
+    const normalData = normalCircles.nodes(); // 20 个输入节点
 
     // 获取被点击矩形的位置
     const clickedRectPos = clickedRectNode.getBoundingClientRect();

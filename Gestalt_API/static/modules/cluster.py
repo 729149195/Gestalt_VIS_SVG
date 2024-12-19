@@ -390,7 +390,7 @@ class ClusterPredictor:
                     dist = dist_matrix[i, j]
                     if dist < distance_threshold:
                         if (i, j) not in added_edges:
-                            # 判断��否是组内连线
+                            # 判断是否是组内连线
                             if group_info[i] == group_info[j]:
                                 link_value = dist  # 组内连线
                             else:

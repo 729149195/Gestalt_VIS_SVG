@@ -6,7 +6,6 @@ from static.modules import featureCSV as featureCSV
 from static.modules import normalized_features_liner as normalized_features
 from static.modules.cluster import main as run_clustering
 from static.modules.cluster import get_eps
-from static.modules.draw_graph import draw_element_nodes_with_lines
 from static.modules.average_equivalent_mapping import EquivalentWeightsCalculator
 from bs4 import BeautifulSoup
 import copy
@@ -35,7 +34,7 @@ def hello_world():
 
 def process_svg_file(file_path):
     """
-    处理上传的SVG文件的核心���辑
+    处理上传的SVG文件的核心逻辑
     """
     try:
         print(f"开始处理SVG文件: {file_path}")
@@ -518,7 +517,7 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
         soup = BeautifulSoup(svg_content, 'xml')
         svg = soup.find('svg')
         if not svg:
-            print("未找到SVG根���素")
+            print("未找到SVG根元素")
             return svg_content
 
         # 保存svg的原始属性
@@ -552,7 +551,7 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
             if element.name in selected_elements:
                 element_id = element.get('id')
                 # 打印调试信息
-                print(f"��查元素: {element.name}, ID: {element_id}")
+                print(f"检查元素: {element.name}, ID: {element_id}")
                 
                 # 如果有选中的ID列表且不为空
                 if selected_ids and len(selected_ids) > 0:
