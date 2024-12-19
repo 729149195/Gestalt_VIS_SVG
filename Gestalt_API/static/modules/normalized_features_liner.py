@@ -76,26 +76,26 @@ def normalize_features(input_path, output_path):
     max_stroke_width = df['stroke_width'].max() if df['stroke_width'].max() > 0 else 1.0
     df['stroke_width'] = np.sqrt(df['stroke_width'] / max_stroke_width) * 0.3
 
-    # 5. 图层显著性归一化
-    lambda_decay = 0.5  # 衰减系数
-    df['layer'] = df['layer'].apply(eval)
-    max_depth = df['layer'].apply(len).max()
-    max_indices_per_level = [0] * max_depth
-    for i in range(max_depth):
-        max_indices_per_level[i] = df['layer'].apply(lambda x: x[i] if i < len(x) else 0).max()
+    # # 5. 图层显著性归一化
+    # lambda_decay = 0.5  # 衰减系数
+    # df['layer'] = df['layer'].apply(eval)
+    # max_depth = df['layer'].apply(len).max()
+    # max_indices_per_level = [0] * max_depth
+    # for i in range(max_depth):
+    #     max_indices_per_level[i] = df['layer'].apply(lambda x: x[i] if i < len(x) else 0).max()
 
-    def compute_layer_sal(layer):
-        sal = 0.0
-        for i, idx in enumerate(layer):
-            max_idx = max_indices_per_level[i]
-            if max_idx > 0:
-                n_idx = 1 - (idx / max_idx)
-                sal += n_idx * (lambda_decay ** i)
-            else:
-                sal += 0
-        return sal
+    # def compute_layer_sal(layer):
+    #     sal = 0.0
+    #     for i, idx in enumerate(layer):
+    #         max_idx = max_indices_per_level[i]
+    #         if max_idx > 0:
+    #             n_idx = 1 - (idx / max_idx)
+    #             sal += n_idx * (lambda_decay ** i)
+    #         else:
+    #             sal += 0
+    #     return sal
 
-    df['layer_sal'] = df['layer'].apply(compute_layer_sal)
+    # df['layer_sal'] = df['layer'].apply(compute_layer_sal)
 
     n_columns = [
         'tag_name', 'tag', 'opacity',

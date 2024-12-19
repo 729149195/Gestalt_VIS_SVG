@@ -58,12 +58,12 @@ class EquivalentWeightsCalculator:
         activation = (z1 > 0).astype(float)  # shape: (batch_size, 64)
 
         #multiply W1 with activation
-        W1_masked = W1 * activation[:, :, np.newaxis]  # shape: (batch_size, 64, 22)
+        W1_masked = W1 * activation[:, :, np.newaxis]  # shape: (batch_size, 64, 20)
 
         # Multiply W2 with masked W1
-        W_eq = np.einsum('jk,bki->bji', W2, W1_masked)  # shape: (batch_size, 4, 22)
+        W_eq = np.einsum('jk,bki->bji', W2, W1_masked)  # shape: (batch_size, 4, 20)
 
-        return W_eq  # shape: (batch_size, 4, 22)
+        return W_eq  # shape: (batch_size, 4, 20)
 
     def compute_and_save_equivalent_weights(self, csv_file, output_file_avg='average_equivalent_mapping.json', output_file_all='equivalent_weights_by_tag.json'):
         # Read CSV data
@@ -73,13 +73,13 @@ class EquivalentWeightsCalculator:
         tag_names = df.iloc[:, 0].astype(str).values  # Ensure they are strings
 
         # Extract features (assuming features start from the second column)
-        input_data = df.iloc[:, 1:].values.astype(np.float32)  # shape: (num_samples, 22)
+        input_data = df.iloc[:, 1:].values.astype(np.float32)  # shape: (num_samples, 20)
 
         # Get model weights and biases
         linear1 = self.model.instance_projector[0]
         linear2 = self.model.instance_projector[2]
 
-        W1 = linear1.weight.detach().numpy()  # (64, 22)
+        W1 = linear1.weight.detach().numpy()  # (64, 20)
         b1 = linear1.bias.detach().numpy()    # (64,)
         W2 = linear2.weight.detach().numpy()  # (4, 64)
         b2 = linear2.bias.detach().numpy()    # (4,)
@@ -88,7 +88,7 @@ class EquivalentWeightsCalculator:
         W_eq_all = self.compute_batch_equivalent_weights(input_data, W1, b1, W2, b2)
 
         # Compute average equivalent weights
-        W_eq_avg = np.mean(W_eq_all, axis=0)  # (4, 22)
+        W_eq_avg = np.mean(W_eq_all, axis=0)  # (4, 20)
 
         # Prepare average equivalent weights for JSON
         output_mapping_avg = {
@@ -105,7 +105,7 @@ class EquivalentWeightsCalculator:
 
         # Prepare equivalent weights for each tag
         # Create a dictionary mapping tag_name to its equivalent weight
-        # Each W_eq is of shape (4, 22), convert it to list for JSON serialization
+        # Each W_eq is of shape (4, 20), convert it to list for JSON serialization
         output_mapping_all = {}
         for tag, W_eq in zip(tag_names, W_eq_all):
             output_mapping_all[tag] = W_eq.tolist()
@@ -123,7 +123,7 @@ class EquivalentWeightsCalculator:
 
         for i in range(num_batches):
             batch_inputs = input_data[i * batch_size:(i + 1) * batch_size]
-            W_eq_batch = self.compute_equivalent_weights(batch_inputs, W1, b1, W2, b2)  # (batch_size, 4, 22)
+            W_eq_batch = self.compute_equivalent_weights(batch_inputs, W1, b1, W2, b2)  # (batch_size, 4, 20)
             W_eq_list.append(W_eq_batch)
 
         # Handle remaining samples
@@ -133,6 +133,6 @@ class EquivalentWeightsCalculator:
             W_eq_list.append(W_eq_batch)
 
         # Concatenate all batches
-        return np.concatenate(W_eq_list, axis=0)  # (num_samples, 4, 22)
+        return np.concatenate(W_eq_list, axis=0)  # (num_samples, 4, 20)
 
 
