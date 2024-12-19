@@ -10,6 +10,7 @@ from static.modules.draw_graph import draw_element_nodes_with_lines
 from static.modules.average_equivalent_mapping import EquivalentWeightsCalculator
 from bs4 import BeautifulSoup
 import copy
+import traceback
 
 app = Flask(__name__)
 CORS(app)
@@ -34,7 +35,7 @@ def hello_world():
 
 def process_svg_file(file_path):
     """
-    处理上传的SVG文件的核心逻辑
+    处理上传的SVG文件的核心��辑
     """
     try:
         print(f"开始处理SVG文件: {file_path}")
@@ -224,7 +225,7 @@ def get_eps_list():
     # print(max_eps,epss)
     return jsonify({"max_eps":max_eps, "epss":epss}),200
 
-# 获取生成的 SVG 文件内容
+# 获取生成 SVG 文件内容
 @app.route('/get_svg', methods=['GET'])
 def get_svg():
     try:
@@ -449,7 +450,7 @@ def get_subgraph_data(dimension):
     if dimension < 0 or dimension > 3:
         return jsonify({'error': 'Invalid dimension'}), 400
 
-    # 定义子图数据文件的路径
+    # 定义子图数文件的路径
     subgraph_file_path = os.path.join(app.config['DATA_FOLDER'], f'subgraphs/subgraph_dimension_{dimension}.json')
 
     # 检查文件是否存在
@@ -462,11 +463,6 @@ def get_subgraph_data(dimension):
 def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
     """
     过滤SVG文件，支持按元素类型和具体元素ID过滤
-    
-    Args:
-        svg_content: SVG文件内容
-        selected_elements: 选中的元素类型列表
-        selected_ids: 选中的具体元素ID列表，如果为None则只按类型过滤
     """
     try:
         soup = BeautifulSoup(svg_content, 'xml')
@@ -475,7 +471,7 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
             print("未找到SVG根元素")
             return svg_content
 
-        # 保存svg的��始属性
+        # 保存svg的原始属性
         svg_attrs = dict(svg.attrs)
         
         # 递归处理元素
@@ -490,22 +486,37 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
                 for attr, value in element.attrs.items():
                     element[attr] = value
                 
-                # 递归处理每个子元素
+                # 递归处理每个子元素并收集结果
+                has_valid_children = False
                 for child in children:
                     if child.name:  # 确保是元素节点
                         result = process_element(child)
                         if result:
                             element.append(result)
+                            has_valid_children = True
                 
-                # 如果组内还有子元素，保留该组
-                return element if len(element.contents) > 0 else None
+                # 如果组内有有效子元素，保留该组
+                return element if has_valid_children else None
             
-            # 如果是选中的元素类型，且（没有指定ID过滤或元素ID在选中列表中），则保留它
-            elif (element.name in selected_elements and 
-                  (selected_ids is None or element.get('id') in selected_ids)):
-                return element
+            # 元素过滤逻辑
+            if element.name in selected_elements:
+                element_id = element.get('id')
+                # 打印调试信息
+                print(f"检查元素: {element.name}, ID: {element_id}")
+                
+                # 如果有选中的ID列表且不为空
+                if selected_ids and len(selected_ids) > 0:
+                    # 确保元素有ID且在选中列表中
+                    if element_id and element_id in selected_ids:
+                        print(f"保留元素: {element_id}")
+                        return element
+                    print(f"过滤掉元素: {element_id}")
+                    return None
+                else:
+                    # 没有选中的ID列表，保留所有选中类型的元素
+                    print(f"保留元素(按类型): {element.name}")
+                    return element
             
-            # 其他元素不保留
             return None
 
         # 创建新的svg元素并保留原始属性
@@ -520,12 +531,17 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
             new_svg['xmlns:xlink'] = "http://www.w3.org/1999/xlink"
 
         # 处理所有顶层元素
+        preserved_elements = []
         for element in svg.children:
             if element.name:  # 确保是元素节点
                 processed = process_element(element)
                 if processed:
+                    preserved_elements.append(processed)
                     new_svg.append(processed)
 
+        # 打印保留的元素数量
+        print(f"保留的元素数量: {len(preserved_elements)}")
+        
         # 替换原始的svg元素
         svg.replace_with(new_svg)
         
@@ -543,6 +559,7 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
         
     except Exception as e:
         print(f"过滤SVG元素时出错: {str(e)}")
+        print(f"错误堆栈: {traceback.format_exc()}")
         raise
 
 @app.route('/filter_and_process', methods=['POST'])
@@ -551,9 +568,11 @@ def filter_and_process():
         data = request.json
         original_filename = data.get('filename')
         selected_elements = data.get('selectedElements', [])
+        selected_node_ids = data.get('selectedNodeIds', [])  # 获取选中的节点ID
         
         print(f"开始处理文件: {original_filename}")
         print(f"选中的元素类型: {selected_elements}")
+        print(f"选中的节点ID: {selected_node_ids}")
         
         if not original_filename or not selected_elements:
             return jsonify({
@@ -570,13 +589,25 @@ def filter_and_process():
                 'error': 'Original file not found'
             }), 404
             
-        print(f"读取原始文件: {original_file_path}")
-        with open(original_file_path, 'r', encoding='utf-8') as f:
+        # 首先处理原始文件生成带ID的SVG
+        output_csv_path = os.path.join(app.config['DATA_FOLDER'], 'temp_features.csv')
+        svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
+        
+        print("生成带ID的SVG文件...")
+        featureCSV.process_and_save_features(original_file_path, output_csv_path, svg_with_ids_path)
+        
+        # 删除临时CSV文件
+        if os.path.exists(output_csv_path):
+            os.remove(output_csv_path)
+            
+        # 读取带ID的SVG文件
+        print(f"读取带ID的SVG文件: {svg_with_ids_path}")
+        with open(svg_with_ids_path, 'r', encoding='utf-8') as f:
             svg_content = f.read()
         
         # 过滤SVG内容
         print("开始过滤SVG内容")
-        filtered_svg = filter_svg_elements(svg_content, selected_elements)
+        filtered_svg = filter_svg_elements(svg_content, selected_elements, selected_node_ids)
         
         # 保存过滤后的SVG文件
         filtered_filename = f'filtered_{original_filename}'
@@ -673,54 +704,6 @@ def get_visible_elements():
         
     except Exception as e:
         print(f"获取可见元素出错: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-# 添加新的路由处理元素ID过滤
-@app.route('/filter_by_ids', methods=['POST'])
-def filter_by_ids():
-    try:
-        data = request.json
-        filename = data.get('filename')
-        selected_elements = data.get('selectedElements', [])
-        selected_ids = data.get('selectedIds', [])
-        
-        if not filename:
-            return jsonify({'error': 'No filename provided'}), 400
-            
-        # 使用原始文件进行过滤
-        original_file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        if not os.path.exists(original_file_path):
-            return jsonify({'error': 'File not found'}), 404
-            
-        # 读取原始SVG文件
-        with open(original_file_path, 'r', encoding='utf-8') as f:
-            svg_content = f.read()
-            
-        # 过滤SVG内容
-        filtered_svg = filter_svg_elements(svg_content, selected_elements, selected_ids)
-        
-        # 保存过滤后的SVG文件
-        filtered_filename = f'filtered_{filename}'
-        filtered_file_path = os.path.join(app.config['UPLOAD_FOLDER'], filtered_filename)
-        with open(filtered_file_path, 'w', encoding='utf-8') as f:
-            f.write(filtered_svg)
-            
-        # 处理过滤后的文件
-        result = process_svg_file(filtered_file_path)
-        if not result['success']:
-            raise Exception(result.get('error', 'Unknown error'))
-            
-        return jsonify({
-            'success': True,
-            'message': 'SVG filtered and processed successfully',
-            'filtered_file': filtered_filename
-        }), 200
-        
-    except Exception as e:
-        print(f"处理过程出错: {str(e)}")
         return jsonify({
             'success': False,
             'error': str(e)

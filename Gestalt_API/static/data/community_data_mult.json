@@ -2,18 +2,6 @@
     "GraphData": {
         "node": [
             {
-                "id": "svg/line_8",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/line_7",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/line_6",
-                "propertyValue": 1
-            },
-            {
                 "id": "svg/rect_5",
                 "propertyValue": 1
             },
@@ -36,106 +24,38 @@
             {
                 "id": "svg/rect",
                 "propertyValue": 1
-            },
-            {
-                "id": "svg/line_5",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/line_4",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/line_3",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/line_2",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/line_1",
-                "propertyValue": 1
-            },
-            {
-                "id": "svg/line",
-                "propertyValue": 1
             }
         ],
         "links": [
             {
                 "source": "svg/rect_5",
                 "target": "svg/rect_4",
-                "value": 0.03440918780684438
-            },
-            {
-                "source": "svg/rect_5",
-                "target": "svg/rect_2",
-                "value": 0.15238633912522986
-            },
-            {
-                "source": "svg/rect_4",
-                "target": "svg/rect_2",
-                "value": 0.12349714033415524
+                "value": 0.07393782619560725
             },
             {
                 "source": "svg/rect_1",
                 "target": "svg/rect",
-                "value": 0.04494114154079844
-            },
-            {
-                "source": "svg/rect_1",
-                "target": "svg/line_3",
-                "value": 0.13224825138447066
-            },
-            {
-                "source": "svg/rect",
-                "target": "svg/line_3",
-                "value": 0.08765174385615024
-            },
-            {
-                "source": "svg/line_5",
-                "target": "svg/line_4",
-                "value": 0.09778570143532385
+                "value": 0.010806685077854754
             }
         ],
         "group": [
             [
-                "svg/line_8"
+                "svg/rect_5"
             ],
             [
-                "svg/line_7"
-            ],
-            [
-                "svg/line_6"
-            ],
-            [
-                "svg/rect_5",
-                "svg/rect_4",
-                "svg/rect_2"
+                "svg/rect_4"
             ],
             [
                 "svg/rect_3"
             ],
             [
-                "svg/rect_1",
-                "svg/rect",
-                "svg/line_3"
+                "svg/rect_2"
             ],
             [
-                "svg/line_5"
+                "svg/rect_1"
             ],
             [
-                "svg/line_4"
-            ],
-            [
-                "svg/line_2"
-            ],
-            [
-                "svg/line_1"
-            ],
-            [
-                "svg/line"
+                "svg/rect"
             ]
         ]
     }
