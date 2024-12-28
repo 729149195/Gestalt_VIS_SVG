@@ -218,6 +218,11 @@ const addZoomEffectToSvg = () => {
             });
 
         svg.call(zoom);
+        
+        // 设置初始缩放为0.8（80%的原始大小）并向右平移10%
+        const width = svg.node().getBoundingClientRect().width;
+        const translateX = width * 0.05; // 向右平移10%
+        svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, 10).scale(0.8));
     }
 };
 
@@ -346,7 +351,7 @@ const updateNodeOpacity = () => {
             // 基础透明度 - 根据元素类型是否被选中
             let opacity = selectedElements.value.includes(nodeType) ? 1 : 0;
 
-            // 如果有选中的节点，无论是否在路径选择模式下，都使用相同的选中逻辑
+            // 如果有选中的节点，无论是否路径选择模式下，都使用相同的选中逻辑
             if (opacity === 1 && selectedNodeIds.value.length > 0) {
                 opacity = selectedNodeIds.value.includes(nodeId) ? 1 : 0.3;
             }

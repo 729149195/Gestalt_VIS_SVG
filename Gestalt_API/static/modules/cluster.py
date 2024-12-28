@@ -10,13 +10,11 @@ from scipy.spatial.distance import pdist, squareform
 import numpy as np
 from scipy.signal import find_peaks
 import community.community_louvain as community_louvain
-import networkx.algorithms.community as nx_comm
-from networkx.algorithms.community import label_propagation_communities
-from networkx.algorithms.community import girvan_newman
-import itertools
+import networkx as nx
+from collections import Counter
 
 # 模型路径
-model_path = ("./static/modules/checkpoint_newData_ZT_200.32.007.tar")
+model_path = ("./static/modules/checkpoint_400.tar")
 
 # 定义模型类
 class ModifiedNetwork(nn.Module):
@@ -75,10 +73,6 @@ class FeatureVectorDataset(Dataset):
             copyLtoR['tag_name'] = f"{row['tag_name']}_YB_l"
             new_rows.append(copyLtoR)
 
-        # 可以选择是否将新行添加到据集中
-        # new_df = pd.DataFrame(new_rows)
-        # self.df = pd.concat([self.df, new_df], ignore_index=True)
-
         self.identifiers = self.df.iloc[:, 0].tolist()  # 第一列为标识符
         self.features = self.df.iloc[:, 1:].astype(float).values.tolist()  # 从第二列开始为特征向量
 
@@ -88,11 +82,10 @@ class FeatureVectorDataset(Dataset):
     def __getitem__(self, idx):
         return self.identifiers[idx], torch.tensor(self.features[idx], dtype=torch.float32)
 
-# 定义聚类预测器类
+# 定义聚类预测类
 class ClusterPredictor:
     def __init__(self, model_save_path, dataset_path, output_file_mult_path, features_file_path,
-                 eps, min_samples, distance_threshold_ratio, input_dim=20, feature_dim=4, 
-                 clustering_method='Louvain'):  # 添加方法选择参数
+                 eps, min_samples, distance_threshold_ratio, input_dim=20, feature_dim=4):  
         self.model_save_path = model_save_path
         self.dataset_path = dataset_path
         self.output_file_mult_path = output_file_mult_path
@@ -104,9 +97,7 @@ class ClusterPredictor:
         self.distance_threshold_ratio = distance_threshold_ratio
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = ModifiedNetwork(self.input_dim, self.feature_dim).to(self.device)
-        self.clustering_method = clustering_method.lower()  # 转换为小写以统一处理
         self.load_model()
-        self.subgraphs = {}
 
     def load_model(self):
         checkpoint = torch.load(self.model_save_path, map_location=self.device, weights_only=False)
@@ -137,7 +128,7 @@ class ClusterPredictor:
                     if base_identifier not in grouped_features:
                         grouped_features[base_identifier] = []
                     grouped_features[base_identifier].append(z[idx].cpu().numpy())
-        # 后处理：合并特征，并保存无后缀的基础标识符
+        # 后处理：合并特征，并保存后缀的基础标识符
         for base_identifier, features_list in grouped_features.items():
             if len(features_list) > 1:
                 max_feature = np.max(features_list, axis=0)
@@ -168,198 +159,6 @@ class ClusterPredictor:
             dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}},
             opset_version=11
         )
-    # 行函数
-    def run(self):
-        identifiers, features = self.predict()
-        self.save_features_to_json(identifiers, features)
-        graph_data = self.generate_graph_data_v2(identifiers, features)
-        self.save_graph_data_to_json(graph_data)
-        # 生成每个特征维度的子图
-        self.generate_subgraph_for_each_dimension(identifiers, features)
-
-
-    # 生成每个维度的子图
-    def generate_subgraph_for_each_dimension(self, identifiers, features):
-        features_array = np.array(features)
-        num_nodes = features_array.shape[0]
-        num_dimensions = features_array.shape[1]
-        
-        # 添加统计数据分析
-        print("\n特征维度统计数据:")
-        for dim in range(num_dimensions):
-            dim_features = features_array[:, dim]
-            stats = {
-                "维度": dim,
-                "最小值": float(np.min(dim_features)),
-                "最大值": float(np.max(dim_features)),
-                "平均值": float(np.mean(dim_features)),
-                "中位数": float(np.median(dim_features)),
-                "标准差": float(np.std(dim_features)),
-                "四分位数": [float(np.percentile(dim_features, q)) for q in [25, 50, 75]]
-            }
-            print(f"\n维度 {dim} 的统计数据:")
-            for key, value in stats.items():
-                print(f"{key}: {value}")
-
-            dim_features_reshaped = dim_features.reshape(-1, 1)
-            
-            if self.clustering_method == 'dbscan':
-                # === DBSCAN方法 ===
-                # 调整DBSCAN参数为适中的值
-                eps = float(np.std(dim_features)) * 0.35
-                min_samples = max(3, int(len(dim_features) * 0.03))
-                
-                # 第一次DBSCAN聚类
-                clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(dim_features_reshaped)
-                labels = clustering.labels_
-                
-                # 对大簇进行二次聚类，但条件更严格
-                refined_labels = labels.copy()
-                next_label = max(labels) + 1
-                
-                for label in set(labels):
-                    if label != -1:
-                        cluster_indices = np.where(labels == label)[0]
-                        if len(cluster_indices) > min_samples * 5:
-                            sub_features = dim_features_reshaped[cluster_indices]
-                            sub_eps = eps * 0.7
-                            sub_min_samples = max(3, int(len(cluster_indices) * 0.15))
-                            sub_clustering = DBSCAN(eps=sub_eps, min_samples=sub_min_samples).fit(sub_features)
-                            
-                            sub_labels_unique = set(sub_clustering.labels_)
-                            if len(sub_labels_unique) > 1 and len(sub_labels_unique) < 5:
-                                for i, sub_label in enumerate(sub_clustering.labels_):
-                                    if sub_label != -1:
-                                        refined_labels[cluster_indices[i]] = next_label + sub_label
-                                next_label += len(sub_labels_unique) - (1 if -1 in sub_labels_unique else 0)
-                
-                communities = {id: label for id, label in zip(identifiers, refined_labels)}
-                
-            elif self.clustering_method == 'louvain':
-                # === Louvain方法 ===
-                import networkx as nx
-                G = nx.Graph()
-                
-                # 添加所有节点
-                for i in range(len(identifiers)):
-                    G.add_node(identifiers[i])
-                
-                # 添加边（基于相似度）
-                for i in range(len(identifiers)):
-                    for j in range(i + 1, len(identifiers)):
-                        feature_diff = abs(dim_features[i] - dim_features[j])
-                        similarity = 1 / (1 + feature_diff)
-                        if similarity > 0.4:
-                            G.add_edge(identifiers[i], identifiers[j], weight=similarity)
-                
-                # 使用Louvain方法进行社区检测
-                communities = community_louvain.best_partition(G)
-                
-                # 将社区标签转换为连续的整数
-                unique_communities = sorted(set(communities.values()))
-                community_map = {old: new for new, old in enumerate(unique_communities)}
-                communities = {node: community_map[com] for node, com in communities.items()}
-            
-            elif self.clustering_method == 'label_propagation':
-                # Label Propagation方法
-                import networkx as nx
-                G = nx.Graph()
-                
-                # 添加节点
-                for i in range(len(identifiers)):
-                    G.add_node(identifiers[i])
-                
-                # 添加边
-                for i in range(len(identifiers)):
-                    for j in range(i + 1, len(identifiers)):
-                        feature_diff = abs(dim_features[i] - dim_features[j])
-                        similarity = 1 / (1 + feature_diff)
-                        if similarity > 0.4:
-                            G.add_edge(identifiers[i], identifiers[j], weight=similarity)
-                
-                # 使用Label Propagation
-                communities_generator = label_propagation_communities(G)
-                communities_list = list(communities_generator)
-                
-                # 将社区标签转换为字典格式
-                communities = {}
-                for i, community in enumerate(communities_list):
-                    for node in community:
-                        communities[node] = i
-                        
-            elif self.clustering_method == 'girvan_newman':
-                # Girvan-Newman方法
-                import networkx as nx
-                G = nx.Graph()
-                
-                # 添加节点和边（与上面相同）
-                for i in range(len(identifiers)):
-                    G.add_node(identifiers[i])
-                
-                for i in range(len(identifiers)):
-                    for j in range(i + 1, len(identifiers)):
-                        feature_diff = abs(dim_features[i] - dim_features[j])
-                        similarity = 1 / (1 + feature_diff)
-                        if similarity > 0.4:
-                            G.add_edge(identifiers[i], identifiers[j], weight=similarity)
-                
-                # 使用Girvan-Newman算法
-                communities_generator = girvan_newman(G)
-                # 取第一个层次的社区划分
-                communities_list = next(communities_generator)
-                
-                # 转换为字典格式
-                communities = {}
-                for i, community in enumerate(communities_list):
-                    for node in community:
-                        communities[node] = i
-                        
-            else:
-                raise ValueError(f"Unknown clustering method: {self.clustering_method}")
-
-            # 构建边列表（根据不同方法调整）
-            edges = []
-            if self.clustering_method == 'dbscan':
-                # DBSCAN的边构建（保持原有代码）
-                for i in range(len(identifiers)):
-                    for j in range(i + 1, len(identifiers)):
-                        if communities[identifiers[i]] == communities[identifiers[j]] and communities[identifiers[i]] != -1:
-                            similarity = 1 / (1 + abs(dim_features[i] - dim_features[j]))
-                            if similarity > 0.4:
-                                edges.append({
-                                    'source': identifiers[i],
-                                    'target': identifiers[j],
-                                    'value': float(similarity),
-                                    'cluster': int(communities[identifiers[i]])
-                                })
-            else:
-                # 其他方法的边构建（通用方式）
-                for i in range(len(identifiers)):
-                    for j in range(i + 1, len(identifiers)):
-                        if communities[identifiers[i]] == communities[identifiers[j]]:
-                            similarity = 1 / (1 + abs(dim_features[i] - dim_features[j]))
-                            if similarity > 0.4:
-                                edges.append({
-                                    'source': identifiers[i],
-                                    'target': identifiers[j],
-                                    'value': float(similarity),
-                                    'cluster': int(communities[identifiers[i]])
-                                })
-
-            # 创建和保存图数据
-            graph_data = {
-                "nodes": [{"id": id, "name": id, "cluster": int(communities[id])} for id in identifiers],
-                "links": edges,
-                "clusters": len(set(communities.values()))
-            }
-            
-            output_dir = os.path.join(os.path.dirname(self.output_file_mult_path), 'subgraphs')
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir)
-            output_file = os.path.join(output_dir, f'subgraph_dimension_{dim}.json')
-            with open(output_file, 'w') as f:
-                json.dump(graph_data, f, indent=4)
-            self.subgraphs[dim] = graph_data
 
     # 生成图数据
     def generate_graph_data_v2(self, identifiers, features):
@@ -401,7 +200,7 @@ class ClusterPredictor:
                                 "value": link_value
                             })
                             added_edges.add((i, j))
-        # 生成所有节点的连线
+        # 成所有节点的连线
         all_nodes = []
         all_features = []
         group_info = []
@@ -416,7 +215,7 @@ class ClusterPredictor:
             generate_links(all_nodes, all_features, group_info)
         return graph_data
 
-    # 保存图数据到 JSON 文件
+    # 保存图数据到 JSON 件
     def save_graph_data_to_json(self, graph_data):
         if not os.path.exists(os.path.dirname(self.output_file_mult_path)):
             os.makedirs(os.path.dirname(self.output_file_mult_path))
@@ -487,9 +286,15 @@ class ClusterPredictor:
                 k_distances.append(sorted_distances[-1])
         return np.array(k_distances)
 
+    def run(self):
+        identifiers, features = self.predict()
+        self.save_features_to_json(identifiers, features)
+        graph_data = self.generate_graph_data_v2(identifiers, features)
+        self.save_graph_data_to_json(graph_data)
+
 # 主函数
 def main(normalized_csv_path, output_file_mult_path, features_file_path, eps=0.4, min_samples=1, 
-         distance_threshold_ratio=0.3, clustering_method='Louvain'):
+         distance_threshold_ratio=0.3):
     predictor = ClusterPredictor(
         model_save_path=model_path,
         dataset_path=normalized_csv_path,
@@ -497,9 +302,9 @@ def main(normalized_csv_path, output_file_mult_path, features_file_path, eps=0.4
         features_file_path=features_file_path,
         eps=eps,
         min_samples=min_samples,
-        distance_threshold_ratio=distance_threshold_ratio,
-        clustering_method=clustering_method
+        distance_threshold_ratio=distance_threshold_ratio
     )
+    
     predictor.run()
     predictor.export_model_to_onnx()
 

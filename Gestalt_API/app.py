@@ -2,106 +2,170 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO
 import os
-from static.modules import featureCSV as featureCSV
-from static.modules import normalized_features_liner as normalized_features
-from static.modules.cluster import main as run_clustering
-from static.modules.cluster import get_eps
-from static.modules.average_equivalent_mapping import EquivalentWeightsCalculator
+import json
 from bs4 import BeautifulSoup
 import copy
 import traceback
 
+# 导入自定义模块
+from static.modules import featureCSV
+from static.modules import normalized_features_liner as normalized_features
+from static.modules.cluster import main as run_clustering
+from static.modules.cluster import get_eps
+from static.modules.average_equivalent_mapping import EquivalentWeightsCalculator
+from static.modules.subgraph_detection import main as run_subgraph_detection
+
+# 初始化Flask应用
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")  # 允许跨域
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-# 确保上传目录存在
+# 配置常量
 UPLOAD_FOLDER = 'static/uploadSvg'
 DATA_FOLDER = 'static/data'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-if not os.path.exists(DATA_FOLDER):
-    os.makedirs(DATA_FOLDER)
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['DATA_FOLDER'] = DATA_FOLDER
+# 确保目录存在
+for folder in [UPLOAD_FOLDER, DATA_FOLDER]:
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
+# 配置应用
+app.config.update(
+    UPLOAD_FOLDER=UPLOAD_FOLDER,
+    DATA_FOLDER=DATA_FOLDER
+)
+
+# 全局变量
 max_eps = None
 epss = None
+
+# 工具函数
+def get_file_path(filename, folder='DATA_FOLDER'):
+    """获取文件完整路径"""
+    base_folder = app.config[folder]
+    return os.path.join(base_folder, filename)
+
+# API路由
 @app.route('/')
 def hello_world():
     return 'Hello World!'
 
 def process_svg_file(file_path):
-    """
-    处理上传的SVG文件的核心逻辑
-    """
+    """处理上传的SVG文件的核心逻辑"""
     try:
         print(f"开始处理SVG文件: {file_path}")
-        # 设置输出路径
-        output_csv_path = os.path.join(app.config['DATA_FOLDER'], 'features.csv')
-        output_svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
         
-        # 检查文件是否存在
+        # 设置输出路径
+        output_paths = {
+            'csv': get_file_path('features.csv'),
+            'svg_with_ids': os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg'),
+            'init_json': get_file_path('init_json.json'),
+            'normalized_init_json': get_file_path('normalized_init_json.json'),
+            'community_data': get_file_path('community_data_mult.json'),
+            'features_data': get_file_path('cluster_features.json'),
+            'normalized_csv': get_file_path('normalized_features.csv')
+        }
+        
+        # 文件检查
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"输入文件不存在: {file_path}")
-
-        # 检查文件是否为空
         if os.path.getsize(file_path) == 0:
             raise ValueError(f"输入文件为空: {file_path}")
 
+        # 处理步骤
         print("开始提取特征...")
-        # 直接处理文件，不再重复添加ID
-        featureCSV.process_and_save_features(file_path, output_csv_path, output_svg_with_ids_path)
+        featureCSV.process_and_save_features(file_path, output_paths['csv'], output_paths['svg_with_ids'])
         
-        init_json = os.path.join(app.config['DATA_FOLDER'], 'init_json.json')
-        normalized_init_json = os.path.join(app.config['DATA_FOLDER'], 'normalized_init_json.json')
-        community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
-        features_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_features.json')
-        normalized_csv_path = os.path.join(app.config['DATA_FOLDER'], 'normalized_features.csv')
-
-        global max_eps, epss
-
         print("开始标准化特征...")
-        normalized_features.normalize_features(output_csv_path, normalized_csv_path)
-
-        print("处理CSV到JSON...")
-        featureCSV.process_csv_to_json(output_csv_path, init_json)
-        featureCSV.process_csv_to_json(normalized_csv_path, normalized_init_json)
-
-        print("计算等价权重...")
-        calculator = EquivalentWeightsCalculator(model_path="static/modules/checkpoint_newData_ZT_200.32.007.tar")
-        calculator.compute_and_save_equivalent_weights(normalized_csv_path, 
-            output_file_avg='static/data/average_equivalent_mapping.json', 
-            output_file_all='static/data/equivalent_weights_by_tag.json')
-
-        print("获取聚类参数...")
-        epss, max_eps = get_eps(normalized_csv_path, community_data_path, features_data_path)
+        normalized_features.normalize_features(output_paths['csv'], output_paths['normalized_csv'])
         
+        print("处理CSV到JSON...")
+        featureCSV.process_csv_to_json(output_paths['csv'], output_paths['init_json'])
+        featureCSV.process_csv_to_json(output_paths['normalized_csv'], output_paths['normalized_init_json'])
+        
+        print("计算等价权重...")
+        calculator = EquivalentWeightsCalculator(model_path="static/modules/checkpoint_400.tar")
+        calculator.compute_and_save_equivalent_weights(
+            output_paths['normalized_csv'],
+            output_file_avg='static/data/average_equivalent_mapping.json',
+            output_file_all='static/data/equivalent_weights_by_tag.json'
+        )
+        
+        # 获取聚类参数
+        global max_eps, epss
+        epss, max_eps = get_eps(output_paths['normalized_csv'], output_paths['community_data'], output_paths['features_data'])
         if not isinstance(max_eps, (int, float)) or max_eps <= 0:
             print(f"警告: max_eps 值无效 ({max_eps})，使用默认值0.4")
             max_eps = 0.4
 
+        # 定义聚类配置
+        clustering_config = {
+            # # 1. 社区检测方法
+            'method': 'louvain',  # Louvain社区检测算法  ✔
+            # 'method': 'dbscan',   # DBSCAN密度聚类算  ✔
+            # 'method': 'label_propagation',  # 标签传播算法
+            # 'method': 'girvan_newman',  # Girvan-Newman算法
+            # 'method': 'infomap',  # Infomap社区检测算法
+            # 'method': 'spectral',  # 谱聚类算法  ✔
+            # 'method': 'fastgreedy',  # FastGreedy算
+            # 'method': 'walktrap',  # Walktrap算
+            # # 2. 网格检测方法
+            # 'method': 'position_grid', # 基于位置的网格检测
+            # 'method': 'hierarchical_grid',  # 基于层次聚类的网格检测
+            # 'method': 'alignment_grid',  # 基于对齐的网格检测
+            # 维度组合配置
+            'dimensions': [
+                [0],       
+                [1],      
+                [2],     
+                [3],
+                [0,1],
+                [0,2],
+                [0,3],
+                [1,2],
+                [1,3],
+                [2,3],
+                [0,1,2],
+                [0,1,3],
+                [0,2,3],
+                [1,2,3],
+                [0,1,2,3]
+            ]
+        }
+
         print(f"运行聚类算法，max_eps={max_eps}...")
-        run_clustering(normalized_csv_path, community_data_path, features_data_path, max_eps)
+        print(f"选择的聚类方法: {clustering_config['method']}")
+        print(f"维度组合: {clustering_config['dimensions']}")
+
+        # 运行聚类
+        run_clustering(
+            output_paths['normalized_csv'],
+            output_paths['community_data'],
+            output_paths['features_data'],
+            max_eps
+        )
+
+        # 运行子图检测
+        print("开始运行子图检测...")
+        run_subgraph_detection(
+            features_json_path=output_paths['features_data'],
+            output_dir=os.path.dirname(output_paths['features_data']),
+            clustering_method=clustering_config['method'],
+            subgraph_dimensions=clustering_config['dimensions']
+        )
 
         print("处理完成")
         return {
             'success': True,
             'data': {
                 'svg_file': file_path,
-                'csv_file': output_csv_path,
-                'normalized_csv_file': normalized_csv_path,
-                'community_data_mult': community_data_path,
-                'cluster_features': features_data_path,
-                'svg_with_ids_file': f'/{output_svg_with_ids_path}'
+                **output_paths,
+                'svg_with_ids_file': f"/{output_paths['svg_with_ids']}"
             }
         }
     except Exception as e:
-        import traceback
-        error_trace = traceback.format_exc()
         print(f"处理SVG文件时出错: {str(e)}")
-        print(f"错误堆栈: {error_trace}")
+        print(f"错误堆栈: {traceback.format_exc()}")
         return {
             'success': False,
             'error': str(e)
@@ -116,7 +180,7 @@ def process_svg_styles(svg_content):
     # 处理style标签
     style_tag = soup.find('style')
     if style_tag:
-        print("发现style标签，开始处理样式...")
+        print("style标签，开始理样式...")
         # 解析CSS样式
         style_content = style_tag.string
         style_rules = {}
@@ -182,7 +246,7 @@ def upload_file():
             # 立即处理SVG，添加ID
             output_svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
             
-            # 使用featureCSV模块处理SVG，添加ID
+            # 使用featureCSV块理SVG，添加ID
             temp_csv_path = os.path.join(app.config['DATA_FOLDER'], 'temp_features.csv')
             featureCSV.process_and_save_features(file_path, temp_csv_path, output_svg_with_ids_path)
             
@@ -535,7 +599,7 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
                 for attr, value in element.attrs.items():
                     element[attr] = value
                 
-                # 递归处理每个子元素并收集结果
+                # 递归处理每个子元素收集结果
                 has_valid_children = False
                 for child in children:
                     if child.name:  # 确保是元素节点
@@ -550,12 +614,12 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
             # 元素过滤逻辑
             if element.name in selected_elements:
                 element_id = element.get('id')
-                # 打印调试信息
+                # 印调试信息
                 print(f"检查元素: {element.name}, ID: {element_id}")
                 
-                # 如果有选中的ID列表且不为空
+                # 如果有选中的ID列���且不为空
                 if selected_ids and len(selected_ids) > 0:
-                    # 确保元素有ID且在选中列表中
+                    # 保元素有ID且在选中列表中
                     if element_id and element_id in selected_ids:
                         print(f"保留元素: {element_id}")
                         return element
@@ -757,6 +821,27 @@ def get_visible_elements():
             'success': False,
             'error': str(e)
         }), 500
+
+# 添加新的路由来获取网格识别结果
+@app.route('/grid_structures/<int:dimension>', methods=['GET'])
+def get_grid_structures(dimension):
+    """
+    获取指定维度的网格结构检测结果
+    """
+    grid_file_path = os.path.join(app.config['DATA_FOLDER'], 
+                                 f'grid_structures/grid_detection_dimension_{dimension}.json')
+    
+    if os.path.exists(grid_file_path):
+        with open(grid_file_path, 'r', encoding='utf-8') as f:
+            return jsonify({
+                'success': True,
+                'data': json.load(f)
+            }), 200
+    else:
+        return jsonify({
+            'success': False,
+            'error': f'Grid structure file not found for dimension {dimension}'
+        }), 404
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
