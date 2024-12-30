@@ -33,32 +33,32 @@
         {
             "id": "svg/rect_5",
             "name": "svg/rect_5",
-            "cluster": 0
+            "cluster": 1
         },
         {
             "id": "svg/rect_4",
             "name": "svg/rect_4",
-            "cluster": 1
+            "cluster": 0
         },
         {
             "id": "svg/rect_3",
             "name": "svg/rect_3",
-            "cluster": 0
+            "cluster": 1
         },
         {
             "id": "svg/rect_2",
             "name": "svg/rect_2",
-            "cluster": 1
+            "cluster": 0
         },
         {
             "id": "svg/rect_1",
             "name": "svg/rect_1",
-            "cluster": 0
+            "cluster": 1
         },
         {
             "id": "svg/rect",
             "name": "svg/rect",
-            "cluster": 1
+            "cluster": 0
         }
     ],
     "links": [
@@ -156,37 +156,37 @@
             "source": "svg/rect_5",
             "target": "svg/rect_3",
             "value": 0.8175246773316738,
-            "cluster": 0
+            "cluster": 1
         },
         {
             "source": "svg/rect_5",
             "target": "svg/rect_1",
             "value": 0.7337104091240423,
-            "cluster": 0
+            "cluster": 1
         },
         {
             "source": "svg/rect_4",
             "target": "svg/rect_2",
             "value": 0.7132718583126587,
-            "cluster": 1
+            "cluster": 0
         },
         {
             "source": "svg/rect_4",
             "target": "svg/rect",
             "value": 0.5868051690186346,
-            "cluster": 1
+            "cluster": 0
         },
         {
             "source": "svg/rect_3",
             "target": "svg/rect_1",
             "value": 0.8707254423333639,
-            "cluster": 0
+            "cluster": 1
         },
         {
             "source": "svg/rect_2",
             "target": "svg/rect",
             "value": 0.7516075950312733,
-            "cluster": 1
+            "cluster": 0
         }
     ],
     "clusters": 3,

@@ -47,6 +47,12 @@ onMounted(async () => {
 });
 
 const renderChart = (dataset) => {
+    dataset.sort((a, b) => {
+        const aStart = parseInt(a.range.split('-')[0]);
+        const bStart = parseInt(b.range.split('-')[0]);
+        return aStart - bStart;
+    });
+
     const container = chartContainer.value;
     const svgWidth = container.clientWidth;
     const svgHeight = container.clientHeight;
