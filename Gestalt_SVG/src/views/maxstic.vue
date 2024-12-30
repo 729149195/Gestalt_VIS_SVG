@@ -58,6 +58,109 @@ const handleGlobalMouseUp = () => {
         .style('display', null); // 显示所有连线
 };
 
+// 在 onMounted 之前添加相关性矩阵渲染函数
+function renderCorrelationMatrix(correlationData, svg, width) {
+    if (!svg) return;
+
+    const matrixWidth = 200;
+    const matrixHeight = 200;
+    const cellSize = matrixWidth / 4;
+
+    // 移除旧的相关性矩阵
+    svg.selectAll('.correlation-matrix').remove();
+    svg.selectAll('.dimension-stats').remove();
+
+    const correlationGroup = svg.append('g')
+        .attr('class', 'correlation-matrix')
+        .attr('transform', `translate(${width + 50}, 20)`);
+
+    // 添加标题
+    correlationGroup.append('text')
+        .attr('x', matrixWidth / 2)
+        .attr('y', -10)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '14px')
+        .style('font-weight', 'bold')
+        .text('维度相关性矩阵');
+
+    // 创建颜色比例尺
+    const colorScale = d3.scaleSequential(d3.interpolateRdBu)
+        .domain([1, -1]);
+
+    // 绘制相关性矩阵
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+            const cell = correlationGroup.append('g')
+                .attr('transform', `translate(${j * cellSize}, ${i * cellSize})`);
+
+            // 添加背景矩形
+            cell.append('rect')
+                .attr('width', cellSize)
+                .attr('height', cellSize)
+                .style('fill', colorScale(correlationData.correlations[i][j]))
+                .style('stroke', 'white');
+
+            // 添加相关系数文本
+            cell.append('text')
+                .attr('x', cellSize / 2)
+                .attr('y', cellSize / 2)
+                .attr('dy', '0.35em')
+                .attr('text-anchor', 'middle')
+                .style('font-size', '12px')
+                .style('fill', Math.abs(correlationData.correlations[i][j]) > 0.5 ? 'white' : 'black')
+                .text(correlationData.correlations[i][j].toFixed(2));
+        }
+    }
+
+    // 添加维度标签
+    for (let i = 0; i < 4; i++) {
+        // Y轴标签
+        correlationGroup.append('text')
+            .attr('x', -10)
+            .attr('y', i * cellSize + cellSize / 2)
+            .attr('dy', '0.35em')
+            .attr('text-anchor', 'end')
+            .style('font-size', '12px')
+            .text(`Z_${i + 1}`);
+
+        // X轴标签
+        correlationGroup.append('text')
+            .attr('x', i * cellSize + cellSize / 2)
+            .attr('y', matrixHeight + 20)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '12px')
+            .text(`Z_${i + 1}`);
+    }
+
+    // 添加维度统计信息
+    const statsGroup = svg.append('g')
+        .attr('class', 'dimension-stats')
+        .attr('transform', `translate(${width + 50}, ${matrixHeight + 100})`);
+
+    statsGroup.append('text')
+        .attr('x', 0)
+        .attr('y', -20)
+        .style('font-size', '14px')
+        .style('font-weight', 'bold')
+        .text('维度统计特征');
+
+    correlationData.dimensionStats.forEach((stats, i) => {
+        const statText = statsGroup.append('g')
+            .attr('transform', `translate(0, ${i * 60})`);
+
+        statText.append('text')
+            .attr('x', 0)
+            .attr('y', 0)
+            .style('font-weight', 'bold')
+            .text(`Z_${i + 1}:`);
+
+        statText.append('text')
+            .attr('x', 0)
+            .attr('y', 20)
+            .text(`偏度: ${stats.skewness.toFixed(2)}, 峰度: ${stats.kurtosis.toFixed(2)}`);
+    });
+}
+
 // 在组件挂载后执行
 onMounted(async () => {
     if (!parentContainer.value) return;
@@ -108,7 +211,9 @@ onMounted(async () => {
 
         // 计算并渲染相关性矩阵
         const correlationData = calculateDimensionCorrelations(rawDataInit);
-        renderCorrelationMatrix(correlationData);
+        // 在这里使用 axisContainer 的 svg 和宽度
+        const axisSvg = d3.select(axisContainer.value).select('svg');
+        renderCorrelationMatrix(correlationData, axisSvg, initialWidth);
 
         window.addEventListener('mouseup', handleGlobalMouseUp);
 
@@ -764,7 +869,7 @@ const renderDimensionAxes = (data, containerWidth) => {
     // 清空旧的轴
     d3.select(axisContainer.value).selectAll('*').remove();
 
-    const margin = { top: 20, right:15, bottom: 20, left: 480 };
+    const margin = { top: 20, right:15, bottom: 20, left: 420 };
     const width = containerWidth - margin.left - margin.right;
     const height = 60; // 增加每个轴的高度以容纳GMM曲线
     const gmmHeight = 30; // GMM曲线的高度
@@ -799,7 +904,7 @@ const renderDimensionAxes = (data, containerWidth) => {
         const q3 = d3.quantile(values.sort(d3.ascending), 0.75);
         const dispersionDegree = ((q3 - q1) / (max - min)).toFixed(4);
         
-        // 计算局���聚集性（使用GMM组件的方差加权平均）
+        // 计算局部聚集性（使用GMM组件的方差加权平均）
         const localClusteringDegree = calculateLocalClustering(gmm.components).toFixed(4);
         
         const stats = {
@@ -857,7 +962,7 @@ const renderDimensionAxes = (data, containerWidth) => {
                 // 更新轴
                 dimensionGroup.select('.x-axis').call(d3.axisBottom(newXScale));
                 
-                // 更新数据��
+                // 更新数据
                 dimensionGroup.selectAll(`.dimension-${dim}-nodes`)
                     .attr('cx', d => newXScale(d.features[dim]));
 
@@ -993,12 +1098,30 @@ const renderDimensionAxes = (data, containerWidth) => {
             .call(axis);
 
         // 添加维度标签
-        dimensionGroup.append('text')
+        const tagGroup = dimensionGroup.append('g')
+            .attr('class', 'dimension-tag')
+            .attr('transform', `translate(-10, ${height/2})`);
+
+        // 添加tag背景
+        tagGroup.append('rect')
+            .attr('x', -30)
+            .attr('y', -12)
+            .attr('width', 40)
+            .attr('height', 24)
+            .attr('rx', 8)
+            .attr('ry', 4)
+            .style('fill', '#f0f2f5')
+            .style('stroke', '#e4e7ed')
+            .style('z-index', 3)
+            .style('stroke-width', 1);
+
+        // 添加文本
+        tagGroup.append('text')
             .attr('x', -10)
-            .attr('y', height/2)
-            .attr('dy', '0.32em')
-            .style('text-anchor', 'end')
-            .style('font-size', '16px')
+            .attr('y', 4)
+            .style('text-anchor', 'middle')
+            .style('font-size', '14px')
+            .style('fill', '#909399')
             .text(`Z_${dim + 1}`);
 
         // 创建节点组
@@ -1200,7 +1323,7 @@ watch(selectedNodeIds, (newSelectedIds) => {
 
 // 添加GMM拟合函数
 function fitGMM(data) {
-    // 简单的GMM实��，使用k-means作为初始聚类
+    // 简单的GMM实现，使用k-means作为初始聚类
     const components = [];
     
     // 计算数据的整体范围

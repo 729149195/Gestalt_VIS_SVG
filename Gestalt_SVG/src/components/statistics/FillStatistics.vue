@@ -1,6 +1,6 @@
 <template>
     <span style="color: #666">Fill color Statiction</span>
-    <div ref="chartContainer"></div>
+    <div ref="chartContainer" style="width: 100%; height: calc(70%);"></div>
 </template>
 
 <script setup>
@@ -37,12 +37,13 @@ onMounted(async () => {
 const render = (data) => {
     if (!chartContainer.value) return;
 
-    const width = 600;
-    const height = 300;
-    const marginTop = 20;
-    const marginRight = 20;
-    const marginBottom = 60;
-    const marginLeft = 55;
+    const container = chartContainer.value;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const marginTop = height * 0.08;
+    const marginRight = width * 0.02;
+    const marginBottom = height * 0.3;
+    const marginLeft = width * 0.12;
 
     const x = d3.scaleBand()
         .domain(data.map(d => d.tag))
@@ -101,7 +102,7 @@ const render = (data) => {
         .attr("transform", `translate(${width / 2},${height - 5})`)
         .style("text-anchor", "middle")
         .style("font-size", "14px")
-        .attr("dx", "17.8em")
+        .attr("dx", "10em")
         .attr("dy", "-1em")
         .text("Fill_Color");
 
@@ -112,8 +113,8 @@ const render = (data) => {
         .attr("x", 0 - (height / 2))
         .style("text-anchor", "middle")
         .style("font-size", "14px")
-        .attr("dx", "8.00em")
-        .attr("dy", "0.2em")
+        .attr("dx", "4.00em")
+        .attr("dy", ".2em")
         .text("Number");
 
 }

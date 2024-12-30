@@ -1,184 +1,56 @@
 {
-    "0.0-114.4": {
+    "144.0-222.8": {
         "tags": [
-            "a",
-            "text",
-            "text_1",
-            "line_8",
-            "path"
-        ],
-        "total": {
-            "a": 1,
-            "text": 2,
-            "line": 1,
-            "path": 1
-        }
-    },
-    "114.4-228.8": {
-        "tags": [
-            "line_7",
-            "text_10",
-            "line_22",
-            "text_27",
-            "line_23",
-            "text_28",
-            "line_24",
-            "rect_35"
-        ],
-        "total": {
-            "line": 4,
-            "text": 3,
-            "rect": 1
-        }
-    },
-    "228.8-343.1": {
-        "tags": [
-            "line_4",
-            "text_7",
-            "line_5",
-            "text_8",
-            "line_6",
-            "text_9",
-            "line_20",
-            "text_25",
-            "line_21",
-            "text_26",
-            "rect_33",
-            "rect_39",
-            "rect_42"
-        ],
-        "total": {
-            "line": 5,
-            "text": 5,
-            "rect": 3
-        }
-    },
-    "343.1-457.5": {
-        "tags": [
-            "text_2",
-            "line",
-            "text_3",
-            "line_1",
-            "text_4",
-            "line_2",
-            "text_5",
-            "line_3",
-            "text_6",
-            "line_18",
-            "text_23",
-            "line_19",
-            "text_24",
-            "rect_36",
-            "rect_37",
-            "rect_38",
-            "rect_40",
-            "rect_41",
-            "rect_43",
-            "rect_44"
-        ],
-        "total": {
-            "text": 7,
-            "line": 6,
-            "rect": 7
-        }
-    },
-    "457.5-571.9": {
-        "tags": [
-            "text_11",
-            "text_12",
-            "text_20",
-            "line_16",
-            "text_21",
-            "line_17",
-            "text_22",
-            "rect_4",
-            "rect_17",
-            "rect_19",
-            "rect_22",
-            "rect_24",
-            "rect_26",
-            "rect_27",
-            "rect_28",
-            "rect_29",
-            "rect_30",
-            "rect_31",
-            "rect_32",
-            "rect_34",
-            "rect_45",
-            "rect_46",
-            "rect_47",
-            "rect_48",
-            "rect_49",
-            "rect_50",
-            "rect_51",
-            "rect_52",
-            "rect_53"
-        ],
-        "total": {
-            "text": 5,
-            "line": 2,
-            "rect": 22
-        }
-    },
-    "571.9-686.2": {
-        "tags": [
-            "line_13",
-            "text_18",
-            "line_14",
-            "text_19",
-            "line_15",
-            "rect_8",
-            "rect_12",
-            "rect_15",
-            "rect_18",
-            "rect_20",
-            "rect_21",
-            "rect_23",
-            "rect_25"
-        ],
-        "total": {
-            "line": 3,
-            "text": 2,
-            "rect": 8
-        }
-    },
-    "686.2-800.6": {
-        "tags": [
-            "line_11",
-            "text_16",
-            "line_12",
-            "text_17",
-            "rect_3",
-            "rect_6",
-            "rect_9",
-            "rect_10",
             "rect_11",
-            "rect_13",
-            "rect_14"
+            "rect_10"
         ],
         "total": {
-            "line": 2,
-            "text": 2,
-            "rect": 7
+            "rect": 2
         }
     },
-    "800.6-915.0": {
+    "222.8-301.5": {
         "tags": [
-            "line_9",
-            "text_14",
-            "line_10",
-            "text_15",
-            "rect",
-            "rect_1",
-            "rect_2",
-            "rect_5",
-            "rect_7",
-            "rect_16"
+            "rect_9",
+            "rect_8"
         ],
         "total": {
-            "line": 2,
-            "text": 2,
-            "rect": 6
+            "rect": 2
+        }
+    },
+    "380.2-459.0": {
+        "tags": [
+            "rect_7",
+            "rect_6"
+        ],
+        "total": {
+            "rect": 2
+        }
+    },
+    "459.0-537.8": {
+        "tags": [
+            "rect_5",
+            "rect_4"
+        ],
+        "total": {
+            "rect": 2
+        }
+    },
+    "616.5-695.2": {
+        "tags": [
+            "rect_3",
+            "rect_2"
+        ],
+        "total": {
+            "rect": 2
+        }
+    },
+    "695.2-774.0": {
+        "tags": [
+            "rect_1",
+            "rect"
+        ],
+        "total": {
+            "rect": 2
         }
     }
 }

@@ -76,15 +76,18 @@ const uploadFile = () => {
                 filename: file.value.name
             })
         })
-        .then(response => {
+        .then(async response => {
             if (response.data.success) {
                 visibleElements.value = response.data.elements;
                 selectedElements.value = response.data.elements.map(el => el.id);
+                
                 // 确保DOM更新后再设置交互
-                return nextTick(() => {
-                    setupSvgInteractions();
-                    updateNodeOpacity();
-                });
+                await nextTick();
+                setupSvgInteractions();
+                updateNodeOpacity();
+                
+                // 不再在这里触发file-uploaded事件
+                // 而是等待用户点击分析按钮后触发
             }
         })
         .catch(error => {
@@ -101,7 +104,7 @@ const analyzeSvg = () => {
     // 确保 selectedNodeIds 是数组格式
     const nodeIds = Array.isArray(selectedNodeIds.value) ? selectedNodeIds.value : [];
     
-    console.log('选中的节点ID:', nodeIds); // 添加调试日志
+    console.log('选中的节点ID:', nodeIds);
 
     axios.post('http://localhost:5000/filter_and_process', {
         filename: file.value.name,
@@ -118,6 +121,7 @@ const analyzeSvg = () => {
         })
         .then(() => {
             console.log('SVG更新完成');
+            // 只在分析完成后触发file-uploaded事件
             emit('file-uploaded');
         })
         .catch(error => {
@@ -281,7 +285,9 @@ const enableTrackMode = () => {
             const svgPoint = point.matrixTransform(svg.getScreenCTM().inverse());
 
             const node = document.elementFromPoint(event.clientX, event.clientY);
-            if (node && allVisiableNodes.value.includes(node.id) && !clickedElements.has(node)) {
+            if (node && node.id && !clickedElements.has(node) && 
+                node.tagName && node.tagName.toLowerCase() !== 'svg' && 
+                node.tagName.toLowerCase() !== 'g') {
                 clickedElements.add(node);
                 node.dispatchEvent(new Event('click', { bubbles: true }));
             }
@@ -316,10 +322,16 @@ const setupSvgInteractions = () => {
     }
 
     // 移除现有的事件监听器
-    svgContainer.removeEventListener('click', handleSvgClick);
+    const oldClickHandler = svgContainer._clickHandler;
+    if (oldClickHandler) {
+        svgContainer.removeEventListener('click', oldClickHandler);
+    }
 
+    // 保存新的事件处理器引用
+    svgContainer._clickHandler = handleSvgClick;
+    
     // 添加新的事件监听器
-    svgContainer.addEventListener('click', handleSvgClick);
+    svgContainer.addEventListener('click', svgContainer._clickHandler);
 
     // 更新节点透明度
     updateNodeOpacity();
@@ -367,7 +379,7 @@ const updateNodeOpacity = () => {
 // 点击 SVG 节点的处理函数
 const handleSvgClick = (event) => {
     const nodeId = event.target.id;
-    if (!nodeId || !allVisiableNodes.value.includes(nodeId)) return;
+    if (!nodeId) return;
 
     console.log('点击节点:', nodeId);
 

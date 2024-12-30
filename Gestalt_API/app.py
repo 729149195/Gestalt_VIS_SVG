@@ -4,16 +4,15 @@ from flask_socketio import SocketIO
 import os
 import json
 from bs4 import BeautifulSoup
-import copy
 import traceback
 
 # 导入自定义模块
 from static.modules import featureCSV
 from static.modules import normalized_features_liner as normalized_features
 from static.modules.cluster import main as run_clustering
-from static.modules.cluster import get_eps
 from static.modules.average_equivalent_mapping import EquivalentWeightsCalculator
 from static.modules.subgraph_detection import main as run_subgraph_detection
+from static.modules import posandprop
 
 # 初始化Flask应用
 app = Flask(__name__)
@@ -34,10 +33,6 @@ app.config.update(
     UPLOAD_FOLDER=UPLOAD_FOLDER,
     DATA_FOLDER=DATA_FOLDER
 )
-
-# 全局变量
-max_eps = None
-epss = None
 
 # 工具函数
 def get_file_path(filename, folder='DATA_FOLDER'):
@@ -83,36 +78,26 @@ def process_svg_file(file_path):
         featureCSV.process_csv_to_json(output_paths['csv'], output_paths['init_json'])
         featureCSV.process_csv_to_json(output_paths['normalized_csv'], output_paths['normalized_init_json'])
         
+        # 处理位置和属性信息
+        print("开始处理位置和属性信息...")
+        posandprop.process_position_and_properties(
+            output_paths['init_json'],
+            file_path,
+            app.config['DATA_FOLDER']
+        )
+        
         print("计算等价权重...")
-        calculator = EquivalentWeightsCalculator(model_path="static/modules/checkpoint_400.tar")
+        calculator = EquivalentWeightsCalculator(model_path="static/modules/best_model.tar")
         calculator.compute_and_save_equivalent_weights(
             output_paths['normalized_csv'],
             output_file_avg='static/data/average_equivalent_mapping.json',
             output_file_all='static/data/equivalent_weights_by_tag.json'
         )
-        
-        # 获取聚类参数
-        global max_eps, epss
-        epss, max_eps = get_eps(output_paths['normalized_csv'], output_paths['community_data'], output_paths['features_data'])
-        if not isinstance(max_eps, (int, float)) or max_eps <= 0:
-            print(f"警告: max_eps 值无效 ({max_eps})，使用默认值0.4")
-            max_eps = 0.4
 
         # 定义聚类配置
         clustering_config = {
-            # # 1. 社区检测方法
+            # #社区检测方法
             'method': 'louvain',  # Louvain社区检测算法  ✔
-            # 'method': 'dbscan',   # DBSCAN密度聚类算  ✔
-            # 'method': 'label_propagation',  # 标签传播算法
-            # 'method': 'girvan_newman',  # Girvan-Newman算法
-            # 'method': 'infomap',  # Infomap社区检测算法
-            # 'method': 'spectral',  # 谱聚类算法  ✔
-            # 'method': 'fastgreedy',  # FastGreedy算
-            # 'method': 'walktrap',  # Walktrap算
-            # # 2. 网格检测方法
-            # 'method': 'position_grid', # 基于位置的网格检测
-            # 'method': 'hierarchical_grid',  # 基于层次聚类的网格检测
-            # 'method': 'alignment_grid',  # 基于对齐的网格检测
             # 维度组合配置
             'dimensions': [
                 [0],       
@@ -133,16 +118,15 @@ def process_svg_file(file_path):
             ]
         }
 
-        print(f"运行聚类算法，max_eps={max_eps}...")
         print(f"选择的聚类方法: {clustering_config['method']}")
         print(f"维度组合: {clustering_config['dimensions']}")
 
         # 运行聚类
+        print("开始运行对比学习模型，输出特征表示...")
         run_clustering(
             output_paths['normalized_csv'],
             output_paths['community_data'],
             output_paths['features_data'],
-            max_eps
         )
 
         # 运行子图检测
@@ -290,51 +274,6 @@ def process_file():
     except Exception as e:
         return jsonify({'error': f'Error processing file: {str(e)}'}), 500
 
-@app.route('/run_clustering', methods=['POST'])
-def run_clustering_with_params():
-    eps = request.json.get('eps', 0.4)
-    min_samples = request.json.get('min_samples', 1)
-    distance_threshold_ratio = request.json.get('distance_threshold_ratio', 0.4)
-
-    try:
-        eps = float(eps)
-        min_samples = int(min_samples)
-        distance_threshold_ratio = float(distance_threshold_ratio)
-
-        if eps <= 0:
-            raise ValueError("eps must be greater than 0")
-
-        if min_samples <= 0:
-            raise ValueError("min_samples must be greater than 0")
-
-        if distance_threshold_ratio <= 0 or distance_threshold_ratio >= 1:
-            raise ValueError("distance_threshold_ratio must be between 0 and 1")
-
-        normalized_csv_path = os.path.join(app.config['DATA_FOLDER'], 'normalized_features.csv')
-        community_data_path = os.path.join(app.config['DATA_FOLDER'], 'community_data_mult.json')
-        features_data_path = os.path.join(app.config['DATA_FOLDER'], 'cluster_features.json')
-
-        run_clustering(normalized_csv_path, community_data_path, features_data_path, eps, min_samples, distance_threshold_ratio)
-
-        return jsonify({
-            'success': 'Clustering executed with specified parameters',
-            'eps': eps,
-            'min_samples': min_samples,
-            'distance_threshold_ratio':distance_threshold_ratio,
-            'normalized_csv_file': normalized_csv_path,
-            'community_data_mult': community_data_path,
-            'cluster_features': features_data_path
-        }), 200
-    except Exception as e:
-        return jsonify({'error': 'An error occurred while running clustering', 'details': str(e)}), 500
-
-
-@app.route('/get_eps_list', methods=['GET'])
-def get_eps_list():
-    global max_eps, epss  # 声明使用全局变量
-    # print(max_eps,epss)
-    return jsonify({"max_eps":max_eps, "epss":epss}),200
-
 # 获取生成 SVG 文件内容
 @app.route('/get_svg', methods=['GET'])
 def get_svg():
@@ -421,16 +360,6 @@ def histogram_ele_data():
         return jsonify({'error': 'community_data_mult.json file not found'}), 404
 
 
-@app.route('/bbox_num_data', methods=['GET'])
-def histogram_bbox_data():
-    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'bbox_points_count.json')
-
-    if os.path.exists(community_data_path):
-        with open(community_data_path, 'r', encoding='utf-8') as json_file:
-            return json_file.read(), 200, {'Content-Type': 'application/json'}
-    else:
-        return jsonify({'error': 'community_data_mult.json file not found'}), 404
-
 
 @app.route('/bottom_position', methods=['GET'])
 def bottom_position():
@@ -475,16 +404,6 @@ def fill_data():
     else:
         return jsonify({'error': 'community_data_mult.json file not found'}), 404
 
-
-@app.route('/group_data', methods=['GET'])
-def histogram_group_data():
-    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'group_data.json')
-
-    if os.path.exists(community_data_path):
-        with open(community_data_path, 'r', encoding='utf-8') as json_file:
-            return json_file.read(), 200, {'Content-Type': 'application/json'}
-    else:
-        return jsonify({'error': 'community_data_mult.json file not found'}), 404
 
 
 @app.route('/layer_data', methods=['GET'])
@@ -617,7 +536,7 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
                 # 印调试信息
                 print(f"检查元素: {element.name}, ID: {element_id}")
                 
-                # 如果有选中的ID列���且不为空
+                # 如果有选中的ID列表且不为空
                 if selected_ids and len(selected_ids) > 0:
                     # 保元素有ID且在选中列表中
                     if element_id and element_id in selected_ids:

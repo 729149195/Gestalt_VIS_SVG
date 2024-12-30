@@ -1,6 +1,6 @@
 <template>
     <span style="color: #666">{{ title }}</span>
-    <div ref="chartContainer" :style="containerStyle"></div>
+    <div ref="chartContainer" style="width: 100%; height: calc(70%);"></div>
 </template>
 
 <script setup>
@@ -23,10 +23,6 @@ const props = defineProps({
 const store = useStore();
 const chartContainer = ref(null);
 
-const containerStyle = {
-    width: '550px',
-    height: '280px'
-};
 
 const eleURL = `http://localhost:5000/${props.position}_position`;
 
@@ -51,8 +47,15 @@ onMounted(async () => {
 });
 
 const renderChart = (dataset) => {
-    const svgWidth = 700, svgHeight = 350;
-    const margin = { top: 20, right: 25, bottom: 60, left: 85 };
+    const container = chartContainer.value;
+    const svgWidth = container.clientWidth;
+    const svgHeight = container.clientHeight;
+    const margin = { 
+        top: svgHeight * 0.08, 
+        right: svgWidth * 0.02, 
+        bottom: svgHeight * 0.35, 
+        left: svgWidth * 0.12 
+    };
     const width = svgWidth - margin.left - margin.right;
     const height = svgHeight - margin.top - margin.bottom;
 
@@ -66,9 +69,10 @@ const renderChart = (dataset) => {
         .domain([0, d3.max(dataset, d => d3.sum(d.totals, t => t.value))]).nice();
 
     const svg = d3.select(chartContainer.value).append('svg')
-        .attr('width', '100%')
-        .attr('height', '100%')
         .attr('viewBox', `0 0 ${svgWidth} ${svgHeight}`)
+        .attr('width', svgWidth)
+        .attr('height', svgHeight)
+        .attr('style', 'max-width: 100%; height: auto;')
         .style("position", "relative");
 
     const tooltip = d3.select(chartContainer.value)
@@ -90,7 +94,14 @@ const renderChart = (dataset) => {
     g.append('g')
         .attr('class', 'x-axis')
         .attr('transform', `translate(0,${height})`)
-        .call(d3.axisBottom(xScale));
+        .call(d3.axisBottom(xScale))
+        .selectAll("text")
+        .style("text-anchor", "end")
+        .style("pointer-events", "none")
+        .style("font-size", "12px")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-45)");
 
     const yAxis = g.append('g')
         .attr('class', 'y-axis')
@@ -173,18 +184,19 @@ const renderChart = (dataset) => {
     svg.append("text")
         .attr("transform", `translate(${width / 2},${height - 5})`)
         .style("text-anchor", "middle")
-        .style("font-size", "23px")
-        .attr("dx", "12.5em")
-        .attr("dy", "3.5em")
+        .style("font-size", "14px")
+        .attr("dx", "10em")
+        .attr("dy", "8em")
+        .text("Attributes")
         .text("Position zones");
 
-    svg.append("text")
+        svg.append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", 45)
-        .attr("x", 0 - (height / 2))
+        .attr("y", 15)
+        .attr("x", 0 - (height))
         .style("text-anchor", "middle")
-        .style("font-size", "23px")
-        .attr("dx", ".5em")
+        .style("font-size", "14px")
+        .attr("dx", "4.0em")
         .attr("dy", "0em")
         .text("Position Number");
 };

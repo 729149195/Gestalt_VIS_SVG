@@ -12,7 +12,7 @@
                         result:
                     </span><v-btn density="compact" icon="mdi-refresh" variant="plain" @click="refresh"
                         v-if="file"></v-btn>
-                    <CommunityDetectionMult v-if="file" :key="componentKey3" />
+                    <SubgroupVisualization v-if="file" :key="componentKey2" />
                 </v-card>
             </div>
         </div>
@@ -20,58 +20,38 @@
             <v-card class="fill-height datas">
                 <div style="display: flex; align-items: center;">
                     <span style="font-size:1.1em; font-weight: 700; padding-left: 8px">Parse SVG data:</span>
-                    <div class="radio-group-horizontal" v-if="file">
-                        <label>
-                            <input type="radio" value="maxtistic" v-model="selectedView" />
-                            Maxistic
-                        </label>
-                        <label>
-                            <input type="radio" value="positionAproportions" v-model="selectedView" />
-                            position and proportions
-                        </label>
-                        <label>
-                            <input type="radio" value="layer" v-model="selectedView" />
-                            Layer
-                        </label>
-                    </div>
                 </div>
                 <div v-if="file" class="data-cards">
-                    <div class="position" v-if="selectedView === 'positionAproportions'">
-                        <div class="main-card margin-right">
-                            <v-card class="position-card card1">
-                                <PositionStatistics position="top" title="Top Position" />
-                            </v-card>
-                            <v-card class="position-card card2">
-                                <PositionStatistics position="bottom" title="Bottom Position" />
-                            </v-card>
-                            <v-card class="position-card card3">
-                                <PositionStatistics position="right" title="Right Position" />
-                            </v-card>
-                            <v-card class="position-card card4">
-                                <PositionStatistics position="left" title="Left Position" />
-                            </v-card>
-                        </div>
-                        <div class="main-card margin-right">
-                            <v-card class="position-card card1">
-                                <HisEleProportions />
-                            </v-card>
-                            <v-card class="position-card card2">
-                                <FillStatistician />
-                            </v-card>
-                            <v-card class="position-card card3">
-                                <HisAttrProportionsVue />
-                            </v-card>
-                            <v-card class="position-card card4">
-                                <strokeStatistician />
-                            </v-card>
-                        </div>
-                    </div>
-                    <div class="maxtistic" v-if="selectedView === 'maxtistic'">
+                    <div class="maxtistic">
                         <maxstic :key="componentKey" />
-                        <SubgroupVisualization :key="componentKey2" />
-                    </div>
-                    <div class="layer" v-if="selectedView === 'layer'">
-                        <layerStatistician />
+                        <div class="main-card margin-right">
+                            <v-card class="position-card card1">
+                                <PositionStatistics position="top" title="Top Position" :key="componentKey4" />
+                            </v-card>
+                            <v-card class="position-card card2">
+                                <PositionStatistics position="bottom" title="Bottom Position" :key="componentKey4 + 1" />
+                            </v-card>
+                            <v-card class="position-card card3">
+                                <PositionStatistics position="right" title="Right Position" :key="componentKey4 + 2" />
+                            </v-card>
+                            <v-card class="position-card card4">
+                                <PositionStatistics position="left" title="Left Position" :key="componentKey4 + 3" />
+                            </v-card>
+                        </div>
+                        <div class="main-card margin-right">
+                            <v-card class="position-card card2">
+                                <FillStatistician :key="componentKey4 + 5" />
+                            </v-card>
+                            <v-card class="position-card card4">
+                                <strokeStatistician :key="componentKey4 + 7" />
+                            </v-card>
+                            <v-card class="position-card card1">
+                                <HisEleProportions :key="componentKey4 + 4" />
+                            </v-card>
+                            <v-card class="position-card card3">
+                                <HisAttrProportionsVue :key="componentKey4 + 6" />
+                            </v-card>
+                        </div>
                     </div>
                 </div>
             </v-card>
@@ -80,15 +60,12 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, nextTick } from 'vue'
-import { useStore } from 'vuex';
-import CommunityDetectionMult from '../components/visualization/CommunityDetection.vue';
+import { ref } from 'vue'
 import HisEleProportions from '../components/statistics/ElementStatistics.vue';
 import HisAttrProportionsVue from '../components/statistics/AttributeStatistics.vue';
 import FillStatistician from '../components/statistics/FillStatistics.vue';
 import strokeStatistician from '../components/statistics/StrokeStatistics.vue';
 import PositionStatistics from '../components/statistics/PositionStatistics.vue';
-import layerStatistician from '../components/visualization/LayerVisualization.vue';
 import maxstic from './maxstic.vue';
 import SubgroupVisualization from '../components/visualization/SubgroupVisualization.vue';
 import SvgUploader from '../components/SvgUploader.vue';
@@ -98,8 +75,6 @@ const componentKey = ref(0)
 const componentKey2 = ref(1)
 const componentKey4 = ref(2)
 const componentKey3 = ref(3)
-const store = useStore();
-const selectedView = ref('maxtistic');
 
 const handleFileUploaded = () => {
     componentKey.value += 1;
@@ -115,8 +90,6 @@ const refresh = () => {
     componentKey4.value += 1;
 }
 
-const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
-const allVisiableNodes = computed(() => store.state.AllVisiableNodes);
 </script>
 
 <style scoped>
@@ -269,5 +242,26 @@ const allVisiableNodes = computed(() => store.state.AllVisiableNodes);
 
 .maxtistic {
     width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.maxtistic > maxstic {
+    height: 40%;
+}
+
+.main-card {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    margin-top: 8px;
+    height: 30%;
+}
+
+.position-card {
+    flex: 1;
+    margin-right: 8px;
+    height: 100%;
 }
 </style>

@@ -136,7 +136,7 @@ async function loadAndRenderAllGraphs() {
     }
 }
 
-// 在renderGraph函数之前添加新的处理函数
+// 在processGraphData函数之前添加新的处理函数
 function processGraphData(graphData) {
     // 深拷贝输入数据以避免修改原始数据
     const data = JSON.parse(JSON.stringify(graphData));
@@ -185,7 +185,7 @@ function processGraphData(graphData) {
     const nodeMapping = new Map(); // 用于记录原始节点到新节点的映射
     
     groups.forEach((nodes, root) => {
-        if (nodes.length > 5) {
+        if (nodes.length > 2) {
             // 创建一个大节点
             const groupNode = {
                 id: `group_${root}`,
@@ -257,7 +257,7 @@ function createContextMenu(svg, x, y, node, simulation) {
     // 添加菜单背景
     menu.append('rect')
         .attr('width', 100)
-        .attr('height', node.isGroup ? 30 : 60)  // 根据节点类型调整高度
+        .attr('height', 30)  // 统一高度
         .attr('fill', 'white')
         .attr('stroke', '#ccc')
         .attr('rx', 5)
@@ -275,7 +275,7 @@ function createContextMenu(svg, x, y, node, simulation) {
                 expandNode(node, simulation);
                 menu.remove();
             });
-    } else {
+    } else if (node.groupId) {  // 检查节点是否属于某个组
         // 重新聚合选项
         menu.append('text')
             .attr('x', 10)
@@ -296,71 +296,7 @@ function createContextMenu(svg, x, y, node, simulation) {
     });
 }
 
-// 添加重新聚合函数
-function remergeNodes(node, simulation) {
-    const currentNodes = simulation.nodes();
-    const currentLinks = simulation.force('link').links();
-    
-    // 找到同组的所有点
-    const groupNodes = currentNodes.filter(n => n.groupId === node.groupId);
-    if (groupNodes.length <= 20) return; // 如果节点数量不够，不进行合并
-    
-    // 创建新的组节点
-    const groupNode = {
-        id: `group_${node.groupId}`,
-        name: `Group (${groupNodes.length} nodes)`,
-        originalNodes: groupNodes,
-        originalLinks: currentLinks.filter(link => 
-            groupNodes.some(n => n.id === link.source.id) &&
-            groupNodes.some(n => n.id === link.target.id)
-        ),
-        isGroup: true,
-        groupId: node.groupId,
-        size: Math.sqrt(groupNodes.length) * 8,
-        x: d3.mean(groupNodes, d => d.x),
-        y: d3.mean(groupNodes, d => d.y)
-    };
-
-    // 移除原有节点
-    groupNodes.forEach(n => {
-        const index = currentNodes.indexOf(n);
-        if (index > -1) {
-            currentNodes.splice(index, 1);
-        }
-    });
-
-    // 添加新的组节点
-    currentNodes.push(groupNode);
-
-    // 更新连接
-    const newLinks = currentLinks.filter(link => 
-        !groupNodes.some(n => n.id === link.source.id || n.id === link.target.id)
-    );
-
-    // 添加组节点的外部连接
-    currentLinks.forEach(link => {
-        const sourceInGroup = groupNodes.some(n => n.id === link.source.id);
-        const targetInGroup = groupNodes.some(n => n.id === link.target.id);
-
-        if (sourceInGroup !== targetInGroup) {
-            newLinks.push({
-                source: sourceInGroup ? groupNode.id : link.source.id,
-                target: targetInGroup ? groupNode.id : link.target.id,
-                value: 1
-            });
-        }
-    });
-
-    // 更新仿真器
-    simulation.nodes(currentNodes);
-    simulation.force('link').links(newLinks);
-    simulation.alpha(1).restart();
-
-    // 重新渲染
-    updateVisualization(simulation);
-}
-
-// 修改expandNode函数，确保保留所有连接
+// 修改expandNode函数，确保保留组信息
 function expandNode(groupNode, simulation) {
     if (!groupNode.isGroup) return;
 
@@ -379,6 +315,7 @@ function expandNode(groupNode, simulation) {
         node.y = groupNode.y + (Math.random() - 0.5) * 50;
         node.size = 8;
         node.groupId = groupNode.groupId;  // 保持组信息
+        node.isExpanded = true;  // 标记为展开的节点
         currentNodes.push(node);
     });
 
@@ -428,6 +365,70 @@ function expandNode(groupNode, simulation) {
     updateVisualization(simulation);
 }
 
+// 修改remergeNodes函数
+function remergeNodes(node, simulation) {
+    const currentNodes = simulation.nodes();
+    const currentLinks = simulation.force('link').links();
+    
+    // 找到同组的所有点
+    const groupNodes = currentNodes.filter(n => n.groupId === node.groupId);
+    if (groupNodes.length <= 5) return; // 如果节点数量不够，不进行合并
+    
+    // 创建新的组节点
+    const groupNode = {
+        id: `group_${node.groupId}`,
+        name: `Group (${groupNodes.length} nodes)`,
+        originalNodes: groupNodes,
+        originalLinks: currentLinks.filter(link => 
+            groupNodes.some(n => n.id === link.source.id) &&
+            groupNodes.some(n => n.id === link.target.id)
+        ),
+        isGroup: true,
+        groupId: node.groupId,
+        size: Math.sqrt(groupNodes.length) * 8,
+        x: d3.mean(groupNodes, d => d.x),
+        y: d3.mean(groupNodes, d => d.y)
+    };
+
+    // 移除原有节点
+    groupNodes.forEach(n => {
+        const index = currentNodes.indexOf(n);
+        if (index > -1) {
+            currentNodes.splice(index, 1);
+        }
+    });
+
+    // 添加新的组节点
+    currentNodes.push(groupNode);
+
+    // 更新连接
+    const newLinks = currentLinks.filter(link => 
+        !groupNodes.some(n => n.id === link.source.id || n.id === link.target.id)
+    );
+
+    // 添加组节点的外部连接
+    currentLinks.forEach(link => {
+        const sourceInGroup = groupNodes.some(n => n.id === link.source.id);
+        const targetInGroup = groupNodes.some(n => n.id === link.target.id);
+
+        if (sourceInGroup !== targetInGroup) {
+            newLinks.push({
+                source: sourceInGroup ? groupNode : link.source,
+                target: targetInGroup ? groupNode : link.target,
+                value: 1
+            });
+        }
+    });
+
+    // 更新仿真器
+    simulation.nodes(currentNodes);
+    simulation.force('link').links(newLinks);
+    simulation.alpha(1).restart();
+
+    // 重新渲染
+    updateVisualization(simulation);
+}
+
 function updateVisualization(simulation) {
     const svg = d3.select(simulation.container);
     const g = svg.select('g');
@@ -448,12 +449,10 @@ function updateVisualization(simulation) {
         .attr('r', d => d.size || 8)
         .attr('fill', d => {
             if (d.isGroup) {
-                // 如果是组节点，检查其所有原始节点是否都被选中
                 return d.originalNodes.every(originalNode => 
                     selectedNodeIds.value.includes(originalNode.name.split('/').pop())
                 ) ? '#ff6347' : '#69b3a2';
             } else {
-                // 如果是普通节点，直接检查是否被选中
                 return selectedNodeIds.value.includes(d.name.split('/').pop()) ? '#ff6347' : '#69b3a2';
             }
         })
@@ -483,6 +482,7 @@ function updateVisualization(simulation) {
         })
         .on('contextmenu', function(event, d) {
             event.preventDefault();
+            event.stopPropagation();
             const [x, y] = d3.pointer(event, svg.node());
             createContextMenu(svg, x, y, d, simulation);
         })
@@ -492,16 +492,16 @@ function updateVisualization(simulation) {
             .on('end', dragended)
         );
 
-    // 节点标签
-    g.append('g')
-        .attr('class', 'labels')
+    // 更新标签
+    const labels = g.select('.labels')
         .selectAll('text')
         .data(simulation.nodes())
         .join('text')
         .attr('dy', -10)
         .attr('text-anchor', 'middle')
         .text((d) => d.name.split('/').pop())
-        .style('font-size', '14px');
+        .style('font-size', '14px')
+        .style('pointer-events', 'none'); // 确保标签不会干扰鼠标事件
 
     simulation.on('tick', () => {
         link
@@ -512,7 +512,7 @@ function updateVisualization(simulation) {
 
         node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
 
-        g.selectAll('.labels text')
+        labels
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y);
     });
@@ -549,8 +549,8 @@ function renderGraph(container, graphData) {
     }
 
     // 确保容器有有效的尺寸
-    const width = container.clientWidth || 600; // 提供默认值
-    const height = container.clientHeight || 400; // 提供默认值
+    const width = container.clientWidth || 600;
+    const height = container.clientHeight || 400;
 
     if (width <= 0 || height <= 0) {
         console.error('Invalid container dimensions:', container);
@@ -578,7 +578,6 @@ function renderGraph(container, graphData) {
         .on('zoom', (event) => {
             g.attr('transform', event.transform);
         });
-
 
     // 如果不在框选模式下,启用缩放
     if (!checkbox.value) {
@@ -621,12 +620,10 @@ function renderGraph(container, graphData) {
         .attr('r', d => d.size || 8)
         .attr('fill', d => {
             if (d.isGroup) {
-                // 如果是组节点，检查其所有原始节点是否都被选中
                 return d.originalNodes.every(originalNode => 
                     selectedNodeIds.value.includes(originalNode.name.split('/').pop())
                 ) ? '#ff6347' : '#69b3a2';
             } else {
-                // 如果是普通节点，直接检查是否被选中
                 return selectedNodeIds.value.includes(d.name.split('/').pop()) ? '#ff6347' : '#69b3a2';
             }
         })
@@ -656,6 +653,7 @@ function renderGraph(container, graphData) {
         })
         .on('contextmenu', function(event, d) {
             event.preventDefault();
+            event.stopPropagation();
             const [x, y] = d3.pointer(event, svg.node());
             createContextMenu(svg, x, y, d, simulation);
         })
@@ -666,7 +664,7 @@ function renderGraph(container, graphData) {
         );
 
     // 节点标签
-    g.append('g')
+    const labels = g.append('g')
         .attr('class', 'labels')
         .selectAll('text')
         .data(processedData.nodes)
@@ -674,7 +672,8 @@ function renderGraph(container, graphData) {
         .attr('dy', -10)
         .attr('text-anchor', 'middle')
         .text((d) => d.name.split('/').pop())
-        .style('font-size', '14px');
+        .style('font-size', '14px')
+        .style('pointer-events', 'none'); // 确保标签不会干扰鼠标事件
 
     simulation.on('tick', () => {
         link
@@ -685,7 +684,7 @@ function renderGraph(container, graphData) {
 
         node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
 
-        g.selectAll('.labels text')
+        labels
             .attr('x', (d) => d.x)
             .attr('y', (d) => d.y);
     });
@@ -887,10 +886,26 @@ onUnmounted(() => {
 
 .controls {
     position: absolute;
-    top: 530px;
+    top: 0px;
+    right: 15px;
     z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-direction: row-reverse; /* 让按钮在右侧 */
 }
 
+/* 调整开关组件的样式 */
+:deep(.v-switch) {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    margin: 0;
+}
+
+:deep(.v-switch__label) {
+    margin-right: 8px;
+}
 
 .clear-button {
     padding: 8px 20px;
