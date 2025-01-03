@@ -1,6 +1,8 @@
 <template>
-    <span style="color: #666">AttrProportions</span>
-    <div ref="chartContainer" style="width: 100%; height: calc(70%);"></div>
+    <div class="statistics-container">
+        <span style="color: #666">AttrProportions</span>
+        <div ref="chartContainer" class="chart-container"></div>
+    </div>
 </template>
 
 <script setup>
@@ -35,8 +37,8 @@ const render = (data) => {
     const height = container.clientHeight;
     const marginTop = height * 0.08;
     const marginRight = width * 0.02;
-    const marginBottom = height * 0.4;
-    const marginLeft = width * 0.12;
+    const marginBottom = height * 0.25;
+    const marginLeft = width * 0.15;
 
     const x = d3.scaleBand()
         .domain(data.map(d => d.attribute))
@@ -94,8 +96,8 @@ const render = (data) => {
         .selectAll("text")
         .style("text-anchor", "end")
         .style("pointer-events", "none")
-        .style("font-size", "14px") // 设置字体大小为10px
-        .attr("dx", "-.4em")
+        .style("font-size", "12px")
+        .attr("dx", "-.8em")
         .attr("dy", ".15em")
         .attr("transform", "rotate(-45)");
 
@@ -105,23 +107,18 @@ const render = (data) => {
         .attr('transform', `translate(${marginLeft},0)`)
         .call(d3.axisLeft(y));
 
-        svg.append("text")
-        .attr("transform", `translate(${width / 2},${height - 5})`)
+    svg.append("text")
+        .attr("transform", `translate(${width / 2},${height - marginBottom / 10})`)
         .style("text-anchor", "middle")
-        .style("font-size", "14px")
-        .attr("dx", "10em")
-        .attr("dy", "-1em")
+        .style("font-size", "12px")
         .text("Attributes");
 
-    // 添加 y 轴图例
     svg.append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", 15)
-        .attr("x", 0 - (height / 2))
+        .attr("y", marginLeft / 3)
+        .attr("x", 0 - (height - marginBottom) / 2)
         .style("text-anchor", "middle")
-        .style("font-size", "14px")
-        .attr("dx", "4.00em")
-        .attr("dy", ".2em")
+        .style("font-size", "12px")
         .text("Number");
 
     zoom(svg);
@@ -144,4 +141,17 @@ const roundedRectPath = (d, x, y) => {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.statistics-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-container {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+}
+</style>

@@ -21,5 +21,18 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  optimizeDeps: {
+    exclude: ['monaco-editor']
+  },
+  build: {
+    target: 'esnext',
+    minify: false,
+    rollupOptions: {
+      output: {
+        format: 'esm',
+        inlineDynamicImports: true
+      }
+    }
   }
 })

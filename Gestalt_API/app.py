@@ -5,10 +5,20 @@ import os
 import json
 from bs4 import BeautifulSoup
 import traceback
+import io
+import base64
+import matplotlib
+matplotlib.use('Agg')  # 在导入 pyplot 之前设置后端
+import matplotlib.pyplot as plt
+import numpy as np
+
+# 设置中文字体
+matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'KaiTi', 'FangSong']
+matplotlib.rcParams['axes.unicode_minus'] = False
 
 # 导入自定义模块
 from static.modules import featureCSV
-from static.modules import normalized_features_liner as normalized_features
+from static.modules import normalized_features_liner_mds_2 as normalized_features
 from static.modules.cluster import main as run_clustering
 from static.modules.average_equivalent_mapping import EquivalentWeightsCalculator
 from static.modules.subgraph_detection import main as run_subgraph_detection
@@ -87,7 +97,7 @@ def process_svg_file(file_path):
         )
         
         print("计算等价权重...")
-        calculator = EquivalentWeightsCalculator(model_path="static/modules/best_model.tar")
+        calculator = EquivalentWeightsCalculator(model_path="static/modules/best_mds_model.tar")
         calculator.compute_and_save_equivalent_weights(
             output_paths['normalized_csv'],
             output_file_avg='static/data/average_equivalent_mapping.json',
@@ -254,6 +264,10 @@ def process_file():
     filename = request.json.get('filename')
     if not filename:
         return jsonify({'error': 'No filename provided'}), 400
+
+    # 确保文件名有 uploaded_ 前缀
+    if not filename.startswith('uploaded_'):
+        filename = f'uploaded_{filename}'
 
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if not os.path.exists(file_path):
@@ -612,6 +626,10 @@ def filter_and_process():
                 'error': 'Missing filename or selected elements'
             }), 400
         
+        # 确保文件名有 uploaded_ 前缀
+        if not original_filename.startswith('uploaded_'):
+            original_filename = f'uploaded_{original_filename}'
+        
         # 读取原始SVG文件
         original_file_path = os.path.join(app.config['UPLOAD_FOLDER'], original_filename)
         if not os.path.exists(original_file_path):
@@ -687,6 +705,10 @@ def get_visible_elements():
         if not filename:
             return jsonify({'error': 'No filename provided'}), 400
             
+        # 确保文件名有 uploaded_ 前缀
+        if not filename.startswith('uploaded_'):
+            filename = f'uploaded_{filename}'
+            
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         print(f"查找文件路径: {file_path}")
         
@@ -761,6 +783,64 @@ def get_grid_structures(dimension):
             'success': False,
             'error': f'Grid structure file not found for dimension {dimension}'
         }), 404
+
+@app.route('/api/matplotlib', methods=['POST'])
+def handle_matplotlib():
+    try:
+        # 获取请求数据
+        data = request.get_json()
+        if not data or 'code' not in data:
+            return jsonify({'error': 'Missing code in request'}), 400
+
+        # 创建一个内存缓冲区来保存SVG
+        buffer = io.StringIO()
+
+        try:
+            # 清理之前的图形
+            plt.close('all')
+            
+            # 重置matplotlib的样式设置
+            plt.style.use('default')
+            
+            # 重新设置字体配置
+            plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'KaiTi', 'FangSong']
+            plt.rcParams['axes.unicode_minus'] = False
+
+            # 创建新的图形
+            plt.figure(figsize=(10, 6))
+
+            # 执行代码
+            exec(data['code'], {'plt': plt, 'np': np})
+            
+            # 获取当前图形
+            fig = plt.gcf()
+            
+            # 将图形保存为SVG格式到缓冲区
+            fig.savefig(buffer, format='svg', bbox_inches='tight', dpi=300)
+            
+            # 获取SVG内容
+            svg_content = buffer.getvalue()
+            
+            # 清理资源
+            plt.close(fig)
+            buffer.close()
+            
+            return svg_content, 200, {'Content-Type': 'image/svg+xml'}
+            
+        except Exception as e:
+            plt.close('all')  # 确保清理所有图形
+            raise e
+            
+    except Exception as e:
+        print(f"Matplotlib错误: {str(e)}")
+        print(f"错误堆栈: {traceback.format_exc()}")
+        return jsonify({'error': f'Matplotlib error: {str(e)}'}), 500
+    finally:
+        try:
+            buffer.close()
+        except:
+            pass
+        plt.close('all')  # 确保清理所有图形
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

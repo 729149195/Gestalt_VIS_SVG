@@ -8,7 +8,7 @@ from torch.nn.functional import normalize
 import numpy as np
 
 # 模型路径
-model_path = ("./static/modules/best_model.tar")
+model_path = ("./static/modules/best_mds_model.tar")
 
 # 定义模型类
 class ModifiedNetwork(nn.Module):
@@ -58,7 +58,7 @@ class FeatureVectorDataset(Dataset):
 # 定义聚类预测类
 class ClusterPredictor:
     def __init__(self, model_save_path, dataset_path, output_file_mult_path, features_file_path,
-                 distance_threshold_ratio, input_dim=20, feature_dim=4):  
+                 distance_threshold_ratio, input_dim=22, feature_dim=4):  
         self.model_save_path = model_save_path
         self.dataset_path = dataset_path
         self.output_file_mult_path = output_file_mult_path
@@ -77,7 +77,7 @@ class ClusterPredictor:
     # 预测函数
     def predict(self):
         dataset = FeatureVectorDataset(self.dataset_path)
-        loader = DataLoader(dataset, batch_size=2048, shuffle=False)
+        loader = DataLoader(dataset, batch_size=128, shuffle=False)
         all_identifiers = []
         all_features = []
         self.model.eval()

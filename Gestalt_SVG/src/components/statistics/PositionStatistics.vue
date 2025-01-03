@@ -1,6 +1,8 @@
 <template>
-    <span style="color: #666">{{ title }}</span>
-    <div ref="chartContainer" style="width: 100%; height: calc(70%);"></div>
+    <div class="statistics-container">
+        <span style="color: #666">{{ title }}</span>
+        <div ref="chartContainer" class="chart-container"></div>
+    </div>
 </template>
 
 <script setup>
@@ -57,10 +59,10 @@ const renderChart = (dataset) => {
     const svgWidth = container.clientWidth;
     const svgHeight = container.clientHeight;
     const margin = { 
-        top: svgHeight * 0.08, 
-        right: svgWidth * 0.02, 
-        bottom: svgHeight * 0.35, 
-        left: svgWidth * 0.12 
+        top: svgHeight * 0.05, 
+        right: svgWidth * 0.05, 
+        bottom: svgHeight * 0.40,
+        left: svgWidth * 0.15 
     };
     const width = svgWidth - margin.left - margin.right;
     const height = svgHeight - margin.top - margin.bottom;
@@ -104,7 +106,7 @@ const renderChart = (dataset) => {
         .selectAll("text")
         .style("text-anchor", "end")
         .style("pointer-events", "none")
-        .style("font-size", "12px")
+        .style("font-size", "10px")
         .attr("dx", "-.8em")
         .attr("dy", ".15em")
         .attr("transform", "rotate(-45)");
@@ -188,27 +190,35 @@ const renderChart = (dataset) => {
     });
 
     svg.append("text")
-        .attr("transform", `translate(${width / 2},${height - 5})`)
+        .attr("transform", `translate(${width / 2 + margin.left},${svgHeight - margin.bottom / 100})`)
         .style("text-anchor", "middle")
-        .style("font-size", "14px")
-        .attr("dx", "10em")
-        .attr("dy", "8em")
-        .text("Attributes")
+        .style("font-size", "12px")
         .text("Position zones");
 
-        svg.append("text")
+    svg.append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", 15)
-        .attr("x", 0 - (height))
+        .attr("y", margin.left / 3)
+        .attr("x", 0 - (height + margin.top + margin.bottom) / 2)
         .style("text-anchor", "middle")
-        .style("font-size", "14px")
-        .attr("dx", "4.0em")
-        .attr("dy", "0em")
+        .style("font-size", "12px")
         .text("Position Number");
 };
 </script>
 
 <style scoped>
+.statistics-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-container {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+}
+
 .tooltip strong {
     color: blue;
 }

@@ -1,25 +1,38 @@
 <template>
     <div class="force-graph-container">
         <div class="controls">
-            <el-button class="clear-button" @click="clearSelectedNodes">清空并高亮所有节点</el-button>
-            <v-switch v-model="checkbox" inset color="#55C000"
-                :label="checkbox ? '框选模式开启(缩放已禁用)' : '框选模式关闭(缩放已启用)'" />
-            
+            <el-button class="control-button" type="primary" @click="clearSelectedNodes">Restore node selection status</el-button>
         </div>
-        <div class="graph-grid">
+
+        <!-- 显示核心聚类视图 -->
+        <div v-if="currentPage === 1" class="core-view-container">
+            <CoreSubgroupVisualization />
+        </div>
+
+        <!-- 显示维度组合视图 -->
+        <div v-else class="graph-grid">
             <div v-for="(dims, index) in currentDimensions" :key="getDimensionKey(dims)" class="graph-item">
                 <div class="graph-title">{{ formatDimensions(dims) }}</div>
                 <div :ref="el => { if (el) graphContainers[index] = el }" class="graph-container"></div>
             </div>
         </div>
-        <div class="pagination-wrapper">
-            <v-pagination
-                v-model="currentPage"
-                :length="Math.ceil(allDimensions.length / 6)"
-                :total-visible="7"
-                color="#55C000"
-                @update:model-value="handlePageChange"
-            ></v-pagination>
+
+        <!-- 侧边书签导航 -->
+        <div class="side-pagination">
+            <div class="pagination-dots">
+                <div v-for="page in Math.ceil(allDimensions.length / 6) + 1" 
+                     :key="page" 
+                     class="pagination-dot"
+                     :class="{ active: currentPage === page }"
+                     @click="handlePageChange(page)"
+                     @mouseenter="showPageTooltip($event, page)"
+                     @mouseleave="hidePageTooltip">
+                </div>
+            </div>
+            <!-- 页面提示工具提示 -->
+            <div class="page-tooltip" ref="pageTooltip" :style="tooltipStyle">
+                {{ tooltipText }}
+            </div>
         </div>
     </div>
 </template>
@@ -28,7 +41,8 @@
 import { ref, onMounted, nextTick, watch, onUnmounted, computed } from 'vue';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
-import { ElButton } from 'element-plus'
+import { ElButton } from 'element-plus';
+import CoreSubgroupVisualization from './core_SubgroupVisualization.vue';
 
 // 添加延迟函数
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -41,22 +55,66 @@ const graphContainers = ref([]);
 const isSelecting = ref(false);
 let selectionRect = null;
 let selectionStart = { x: 0, y: 0 };
+const originalSvgContent = ref(''); // 添加存储原始SVG内容的ref
+
+// 添加获取原始SVG内容的函数
+async function fetchOriginalSvg() {
+    try {
+        const response = await fetch('http://localhost:5000/get_svg');
+        const svgContent = await response.text();
+        originalSvgContent.value = svgContent;
+    } catch (error) {
+        console.error('Error fetching original SVG:', error);
+    }
+}
+
+// 添加创建缩略图的函数
+function createThumbnail(nodeData) {
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(originalSvgContent.value, 'image/svg+xml');
+    const svgElement = svgDoc.querySelector('svg');
+
+    // 设置所有元素透明度为0.02
+    svgElement.querySelectorAll('*').forEach(el => {
+        if (el.tagName !== 'svg' && el.tagName !== 'g') {
+            el.style.opacity = '0.02';
+        }
+    });
+
+    // 高亮当前节点包含的元素
+    const nodeIds = nodeData.isGroup ?
+        nodeData.originalNodes.map(n => n.name.split('/').pop()) :
+        [nodeData.name.split('/').pop()];
+
+    nodeIds.forEach(nodeId => {
+        const element = svgDoc.getElementById(nodeId);
+        if (element) {
+            element.style.opacity = '1';
+        }
+    });
+
+    // 调整SVG大小为缩略图大小
+    svgElement.setAttribute('width', '100%');
+    svgElement.setAttribute('height', '100%');
+
+    return svgElement.outerHTML;
+}
 
 // 生成所有可能的维度组合
 const allDimensions = computed(() => {
     const baseDimensions = [0, 1, 2, 3];
     let combinations = [];
-    
+
     // 添加单维度组合
     combinations.push(...baseDimensions.map(d => [d]));
-    
+
     // 添加双维度组合
     for (let i = 0; i < baseDimensions.length; i++) {
         for (let j = i + 1; j < baseDimensions.length; j++) {
             combinations.push([baseDimensions[i], baseDimensions[j]]);
         }
     }
-    
+
     // 添加三维度组合
     for (let i = 0; i < baseDimensions.length; i++) {
         for (let j = i + 1; j < baseDimensions.length; j++) {
@@ -65,16 +123,17 @@ const allDimensions = computed(() => {
             }
         }
     }
-    
+
     // 添加四维度组合
     combinations.push(baseDimensions);
-    
+
     return combinations;
 });
 
 // 计算当前页面显示的维度组合
 const currentDimensions = computed(() => {
-    const startIndex = (currentPage.value - 1) * 6;
+    if (currentPage.value === 1) return [];
+    const startIndex = (currentPage.value - 2) * 6;
     return allDimensions.value.slice(startIndex, startIndex + 6);
 });
 
@@ -91,6 +150,8 @@ function getDimensionKey(dims) {
 // 处理页面变化
 async function handlePageChange(page) {
     currentPage.value = page;
+    if (page === 1) return;
+
     // 清空现有的图表容器
     graphContainers.value = [];
     // 等待 DOM 更新
@@ -140,10 +201,10 @@ async function loadAndRenderAllGraphs() {
 function processGraphData(graphData) {
     // 深拷贝输入数据以避免修改原始数据
     const data = JSON.parse(JSON.stringify(graphData));
-    
+
     // 使用并查集来找到连通分量
     const uf = new Map();
-    
+
     // 并查集的查找函数
     function find(x) {
         if (!uf.has(x)) {
@@ -154,22 +215,22 @@ function processGraphData(graphData) {
         }
         return uf.get(x);
     }
-    
+
     // 并查集的合并函数
     function union(x, y) {
         uf.set(find(x), find(y));
     }
-    
+
     // 初始化并查集
     data.nodes.forEach(node => {
         uf.set(node.id, node.id);
     });
-    
+
     // 根据边来合并节点
     data.links.forEach(link => {
         union(link.source, link.target);
     });
-    
+
     // 收集每个组的节点
     const groups = new Map();
     data.nodes.forEach(node => {
@@ -179,11 +240,11 @@ function processGraphData(graphData) {
         }
         groups.get(root).push(node);
     });
-    
+
     // 处理大于20个节点的组
     const newNodes = [];
     const nodeMapping = new Map(); // 用于记录原始节点到新节点的映射
-    
+
     groups.forEach((nodes, root) => {
         if (nodes.length > 2) {
             // 创建一个大节点
@@ -191,7 +252,7 @@ function processGraphData(graphData) {
                 id: `group_${root}`,
                 name: `Group (${nodes.length} nodes)`,
                 originalNodes: nodes,
-                originalLinks: data.links.filter(link => 
+                originalLinks: data.links.filter(link =>
                     nodes.some(n => n.id === link.source || n.id === link.source.id) &&
                     nodes.some(n => n.id === link.target || n.id === link.target.id)
                 ),
@@ -216,15 +277,15 @@ function processGraphData(graphData) {
             });
         }
     });
-    
+
     // 处理边
     const newLinks = [];
     const linkSet = new Set(); // 用于去重
-    
+
     data.links.forEach(link => {
         const sourceGroup = nodeMapping.get(link.source);
         const targetGroup = nodeMapping.get(link.target);
-        
+
         if (sourceGroup !== targetGroup) {
             const linkKey = `${sourceGroup}-${targetGroup}`;
             if (!linkSet.has(linkKey)) {
@@ -237,17 +298,20 @@ function processGraphData(graphData) {
             }
         }
     });
-    
+
     return {
         nodes: newNodes,
         links: newLinks
     };
 }
 
-// 在renderGraph函数开始前添加新的函数
+// 修改createContextMenu函数，移除展开功能
 function createContextMenu(svg, x, y, node, simulation) {
     // 移除可能存在的旧菜单
     d3.selectAll('.context-menu').remove();
+
+    // 如果是组节点，不显示上下文菜单
+    if (node.isGroup) return;
 
     // 创建菜单容器
     const menu = svg.append('g')
@@ -263,19 +327,7 @@ function createContextMenu(svg, x, y, node, simulation) {
         .attr('rx', 5)
         .attr('ry', 5);
 
-    if (node.isGroup) {
-        // 展开节点选项
-        menu.append('text')
-            .attr('x', 10)
-            .attr('y', 20)
-            .text('展开节点')
-            .style('font-size', '14px')
-            .style('cursor', 'pointer')
-            .on('click', () => {
-                expandNode(node, simulation);
-                menu.remove();
-            });
-    } else if (node.groupId) {  // 检查节点是否属于某个组
+    if (node.groupId) {  // 检查节点是否属于某个组
         // 重新聚合选项
         menu.append('text')
             .attr('x', 10)
@@ -296,90 +348,21 @@ function createContextMenu(svg, x, y, node, simulation) {
     });
 }
 
-// 修改expandNode函数，确保保留组信息
-function expandNode(groupNode, simulation) {
-    if (!groupNode.isGroup) return;
-
-    const currentNodes = simulation.nodes();
-    const currentLinks = simulation.force('link').links();
-
-    // 移除组节点
-    const nodeIndex = currentNodes.indexOf(groupNode);
-    if (nodeIndex > -1) {
-        currentNodes.splice(nodeIndex, 1);
-    }
-
-    // 添加原始节点，保持组信息
-    groupNode.originalNodes.forEach(node => {
-        node.x = groupNode.x + (Math.random() - 0.5) * 50;
-        node.y = groupNode.y + (Math.random() - 0.5) * 50;
-        node.size = 8;
-        node.groupId = groupNode.groupId;  // 保持组信息
-        node.isExpanded = true;  // 标记为展开的节点
-        currentNodes.push(node);
-    });
-
-    // 更新连接
-    const newLinks = currentLinks.filter(link => 
-        link.source.id !== groupNode.id && link.target.id !== groupNode.id
-    );
-
-    // 添加组内原始连接
-    if (groupNode.originalLinks) {
-        groupNode.originalLinks.forEach(link => {
-            newLinks.push({
-                source: link.source.id || link.source,
-                target: link.target.id || link.target,
-                value: link.value || 1
-            });
-        });
-    }
-
-    // 重建与其他节点的连接
-    currentLinks.forEach(link => {
-        if (link.source.id === groupNode.id) {
-            groupNode.originalNodes.forEach(node => {
-                newLinks.push({
-                    source: node.id,
-                    target: link.target.id,
-                    value: 1
-                });
-            });
-        } else if (link.target.id === groupNode.id) {
-            groupNode.originalNodes.forEach(node => {
-                newLinks.push({
-                    source: link.source.id,
-                    target: node.id,
-                    value: 1
-                });
-            });
-        }
-    });
-
-    // 更新仿真器
-    simulation.nodes(currentNodes);
-    simulation.force('link').links(newLinks);
-    simulation.alpha(1).restart();
-
-    // 重新渲染
-    updateVisualization(simulation);
-}
-
 // 修改remergeNodes函数
 function remergeNodes(node, simulation) {
     const currentNodes = simulation.nodes();
     const currentLinks = simulation.force('link').links();
-    
+
     // 找到同组的所有点
     const groupNodes = currentNodes.filter(n => n.groupId === node.groupId);
     if (groupNodes.length <= 5) return; // 如果节点数量不够，不进行合并
-    
+
     // 创建新的组节点
     const groupNode = {
         id: `group_${node.groupId}`,
         name: `Group (${groupNodes.length} nodes)`,
         originalNodes: groupNodes,
-        originalLinks: currentLinks.filter(link => 
+        originalLinks: currentLinks.filter(link =>
             groupNodes.some(n => n.id === link.source.id) &&
             groupNodes.some(n => n.id === link.target.id)
         ),
@@ -402,7 +385,7 @@ function remergeNodes(node, simulation) {
     currentNodes.push(groupNode);
 
     // 更新连接
-    const newLinks = currentLinks.filter(link => 
+    const newLinks = currentLinks.filter(link =>
         !groupNodes.some(n => n.id === link.source.id || n.id === link.target.id)
     );
 
@@ -449,7 +432,7 @@ function updateVisualization(simulation) {
         .attr('r', d => d.size || 8)
         .attr('fill', d => {
             if (d.isGroup) {
-                return d.originalNodes.every(originalNode => 
+                return d.originalNodes.every(originalNode =>
                     selectedNodeIds.value.includes(originalNode.name.split('/').pop())
                 ) ? '#ff6347' : '#69b3a2';
             } else {
@@ -460,7 +443,7 @@ function updateVisualization(simulation) {
         .style('cursor', 'pointer')
         .on('click', function (event, d) {
             if (checkbox.value) return;
-            
+
             if (d.isGroup) {
                 d.originalNodes.forEach(originalNode => {
                     const nodeName = originalNode.name.split('/').pop();
@@ -480,7 +463,7 @@ function updateVisualization(simulation) {
                 }
             }
         })
-        .on('contextmenu', function(event, d) {
+        .on('contextmenu', function (event, d) {
             event.preventDefault();
             event.stopPropagation();
             const [x, y] = d3.pointer(event, svg.node());
@@ -541,7 +524,7 @@ function updateVisualization(simulation) {
 function renderGraph(container, graphData) {
     // 理图数据
     const processedData = processGraphData(graphData);
-    
+
     // 确保容器和数据都存在
     if (!container || !processedData || !processedData.nodes || !processedData.links) {
         console.error('Invalid container or graph data');
@@ -597,7 +580,7 @@ function renderGraph(container, graphData) {
         .force('link', d3.forceLink(processedData.links).id((d) => d.id).distance(100))
         .force('charge', d3.forceManyBody().strength(-50))
         .force('center', d3.forceCenter(0, 0));
-    
+
     simulation.container = container;
 
     // 绘制连线
@@ -610,83 +593,106 @@ function renderGraph(container, graphData) {
         .attr('stroke', '#aaa')
         .attr('stroke-width', (d) => Math.sqrt(d.value));
 
-    // 绘制节点
-    const node = g
+    // 修改节点组的渲染
+    const nodeGroup = g
         .append('g')
         .attr('class', 'nodes')
-        .selectAll('circle')
+        .selectAll('g')
         .data(processedData.nodes)
-        .join('circle')
-        .attr('r', d => d.size || 8)
-        .attr('fill', d => {
-            if (d.isGroup) {
-                return d.originalNodes.every(originalNode => 
-                    selectedNodeIds.value.includes(originalNode.name.split('/').pop())
-                ) ? '#ff6347' : '#69b3a2';
-            } else {
-                return selectedNodeIds.value.includes(d.name.split('/').pop()) ? '#ff6347' : '#69b3a2';
-            }
-        })
-        .attr('stroke-width', '1')
-        .style('cursor', 'pointer')
-        .on('click', function (event, d) {
-            if (checkbox.value) return;
-            
-            if (d.isGroup) {
-                d.originalNodes.forEach(originalNode => {
-                    const nodeName = originalNode.name.split('/').pop();
-                    if (!selectedNodeIds.value.includes(nodeName)) {
-                        store.commit('ADD_SELECTED_NODE', nodeName);
-                    }
-                });
-                d3.select(this).attr('fill', '#ff6347');
-            } else {
-                const nodeName = d.name.split('/').pop();
-                if (selectedNodeIds.value.includes(nodeName)) {
-                    store.commit('REMOVE_SELECTED_NODE', nodeName);
-                    d3.select(this).attr('fill', '#69b3a2');
-                } else {
-                    store.commit('ADD_SELECTED_NODE', nodeName);
-                    d3.select(this).attr('fill', '#ff6347');
-                }
-            }
-        })
-        .on('contextmenu', function(event, d) {
-            event.preventDefault();
-            event.stopPropagation();
-            const [x, y] = d3.pointer(event, svg.node());
-            createContextMenu(svg, x, y, d, simulation);
-        })
+        .join('g')
+        .attr('class', 'node-group')
         .call(d3.drag()
             .on('start', dragstarted)
             .on('drag', dragged)
             .on('end', dragended)
         );
 
-    // 节点标签
-    const labels = g.append('g')
-        .attr('class', 'labels')
-        .selectAll('text')
-        .data(processedData.nodes)
-        .join('text')
-        .attr('dy', -10)
-        .attr('text-anchor', 'middle')
-        .text((d) => d.name.split('/').pop())
-        .style('font-size', '14px')
-        .style('pointer-events', 'none'); // 确保标签不会干扰鼠标事件
+    // 添加矩形框
+    nodeGroup.append('rect')
+        .attr('width', d => d.isGroup ? 240 : 120)
+        .attr('height', d => d.isGroup ? 160 : 80)
+        .attr('x', d => d.isGroup ? -120 : -60)
+        .attr('y', d => d.isGroup ? -80 : -40)
+        .attr('fill', 'white')
+        .attr('stroke', d => {
+            if (d.isGroup) {
+                return d.originalNodes.every(originalNode =>
+                    selectedNodeIds.value.includes(originalNode.name.split('/').pop())
+                ) ? '#ff6347' : '#69b3a2';
+            } else {
+                return selectedNodeIds.value.includes(d.name.split('/').pop()) ? '#ff6347' : '#69b3a2';
+            }
+        })
+        .attr('stroke-width', 2)
+        .attr('rx', 8)
+        .attr('ry', 8)
+        .style('cursor', 'pointer');
 
+    // 添加SVG缩略图容器
+    const foreignObjects = nodeGroup.append('foreignObject')
+        .attr('width', d => d.isGroup ? 230 : 110)
+        .attr('height', d => d.isGroup ? 150 : 70)
+        .attr('x', d => d.isGroup ? -115 : -55)
+        .attr('y', d => d.isGroup ? -75 : -35);
+
+    // 添加缩略图div容器
+    const thumbnailContainers = foreignObjects.append('xhtml:div')
+        .style('width', '100%')
+        .style('height', '100%')
+        .style('overflow', 'hidden');
+
+    // 添加缩略图
+    thumbnailContainers.each(function (d) {
+        this.innerHTML = createThumbnail(d);
+    });
+
+    // 修改事件处理
+    nodeGroup.on('click', function (event, d) {
+        if (checkbox.value) return;
+
+        if (d.isGroup) {
+            d.originalNodes.forEach(originalNode => {
+                const nodeName = originalNode.name.split('/').pop();
+                if (!selectedNodeIds.value.includes(nodeName)) {
+                    store.commit('ADD_SELECTED_NODE', nodeName);
+                }
+            });
+            d3.select(this).select('rect').attr('stroke', '#ff6347');
+        } else {
+            const nodeName = d.name.split('/').pop();
+            if (selectedNodeIds.value.includes(nodeName)) {
+                store.commit('REMOVE_SELECTED_NODE', nodeName);
+                d3.select(this).select('rect').attr('stroke', '#69b3a2');
+            } else {
+                store.commit('ADD_SELECTED_NODE', nodeName);
+                d3.select(this).select('rect').attr('stroke', '#ff6347');
+            }
+        }
+    })
+        .on('contextmenu', function (event, d) {
+            event.preventDefault();
+            event.stopPropagation();
+            const [x, y] = d3.pointer(event, svg.node());
+            createContextMenu(svg, x, y, d, simulation);
+        });
+
+    // 修改标签位置
+    const labels = nodeGroup.append('text')
+        .attr('dy', d => d.isGroup ? 100 : 60)
+        .attr('text-anchor', 'middle')
+        .text(d => d.name.split('/').pop())
+        .style('font-size', '14px')
+        .style('pointer-events', 'none');
+
+    // 修改tick函数
     simulation.on('tick', () => {
         link
-            .attr('x1', (d) => d.source.x)
-            .attr('y1', (d) => d.source.y)
-            .attr('x2', (d) => d.target.x)
-            .attr('y2', (d) => d.target.y);
+            .attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y);
 
-        node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
-
-        labels
-            .attr('x', (d) => d.x)
-            .attr('y', (d) => d.y);
+        nodeGroup.attr('transform', d => `translate(${d.x},${d.y})`);
     });
 
     function dragstarted(event, d) {
@@ -715,8 +721,8 @@ function clearSelectedNodes() {
 
     graphContainers.value.forEach((container) => {
         d3.select(container)
-            .selectAll('circle')
-            .attr('fill', '#69b3a2');
+            .selectAll('.node-group rect')
+            .attr('stroke', '#69b3a2');
     });
 }
 
@@ -724,10 +730,17 @@ watch(selectedNodeIds, () => {
     nextTick(() => {
         graphContainers.value.forEach((container) => {
             const svg = d3.select(container).select('svg');
-            svg.selectAll('circle')
-                .attr('fill', (d) => {
-                    const nodeName = d.name.split('/').pop();
-                    return selectedNodeIds.value.includes(nodeName) ? '#ff6347' : '#69b3a2';
+            svg.selectAll('.node-group')
+                .select('rect')
+                .attr('stroke', (d) => {
+                    if (d.isGroup) {
+                        return d.originalNodes.every(originalNode =>
+                            selectedNodeIds.value.includes(originalNode.name.split('/').pop())
+                        ) ? '#ff6347' : '#69b3a2';
+                    } else {
+                        const nodeName = d.name.split('/').pop();
+                        return selectedNodeIds.value.includes(nodeName) ? '#ff6347' : '#69b3a2';
+                    }
                 });
         });
     });
@@ -830,12 +843,36 @@ function enableZoom(svg) {
     svg.style('cursor', 'default');
 }
 
+// 添加工具提示相关的响应式变量
+const tooltipStyle = ref({
+    opacity: 0,
+    top: '0px',
+    left: '0px'
+});
+const tooltipText = ref('');
+const pageTooltip = ref(null);
+
+// 添加工具提示显示函数
+function showPageTooltip(event, page) {
+    const text = page === 1 ? '核心聚类视图' : `第 ${page-1} 页维度组合`;
+    tooltipText.value = text;
+    tooltipStyle.value = {
+        opacity: 1,
+        top: `${event.clientY}px`,
+        left: `${event.clientX - 100}px`
+    };
+}
+
+// 添加工具提示隐藏函数
+function hidePageTooltip() {
+    tooltipStyle.value.opacity = 0;
+}
+
 // 修改onMounted钩子
 onMounted(async () => {
     try {
-        // 等待DOM完全渲染
+        await fetchOriginalSvg(); // 首先获取原始SVG内容
         await nextTick();
-        // 等待一小段时间确保布局计算完成
         await delay(100);
         await loadAndRenderAllGraphs();
         window.addEventListener('keydown', handleKeyDown);
@@ -849,24 +886,82 @@ onUnmounted(() => {
 });
 </script>
 <style scoped>
+.force-graph-container {
+    position: relative;
+    width: 100%;
+    height: 1000px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(200, 200, 200, 0.3);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.force-graph-container:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+    border: 1px solid rgba(180, 180, 180, 0.4);
+}
+
+.controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+.control-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #55C000 !important;
+    border-color: #55C000 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.control-button:hover {
+    background-color: #4CAF00 !important;
+    border-color: #4CAF00 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
 .graph-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    width: 100%;
     padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+    height: calc(100% - 60px);
 }
 
 .graph-item {
     display: flex;
     flex-direction: column;
-    width: 100%;
-    height: 400px;
-    border: 1px solid #dcdfe6;
+    border: 1px solid rgba(200, 200, 200, 0.3);
     border-radius: 8px;
     background: #ffffff;
     overflow: hidden;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    height: 350px;
+}
+
+.graph-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+    border: 1px solid rgba(180, 180, 180, 0.4);
 }
 
 .graph-title {
@@ -874,84 +969,82 @@ onUnmounted(() => {
     font-weight: bold;
     background-color: #f5f7fa;
     color: #303133;
-    border-bottom: 1px solid #dcdfe6;
+    border-bottom: 1px solid rgba(200, 200, 200, 0.3);
 }
 
 .graph-container {
     flex: 1;
-    width: 100%;
-    height: calc(100% - 40px);
+    min-height: 300px;
     position: relative;
 }
 
-.controls {
-    position: absolute;
-    top: 0px;
-    right: 15px;
-    z-index: 1000;
+.core-view-container {
+    flex: 1;
+    padding: 20px;
+    overflow: hidden;
+    height: calc(100% - 60px);
+}
+
+.pagination-wrapper {
+    display: none;
+}
+
+/* 添加侧边书签导航样式 */
+.side-pagination {
+    position: fixed;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 16px;
-    flex-direction: row-reverse; /* 让按钮在右侧 */
 }
 
-/* 调整开关组件的样式 */
-:deep(.v-switch) {
+.pagination-dots {
     display: flex;
-    flex-direction: row-reverse;
-    align-items: center;
-    margin: 0;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(200, 200, 200, 0.3);
 }
 
-:deep(.v-switch__label) {
-    margin-right: 8px;
-}
-
-.clear-button {
-    padding: 8px 20px;
-    background-color: #ff6347;
-    color: #ffffff;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
+.pagination-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.2);
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.clear-button:hover {
-    background-color: #ff4f2b;
-    transform: translateY(-1px);
+.pagination-dot:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+    transform: scale(1.2);
 }
 
-.selection {
-    fill: #55C000;
-    fill-opacity: 0.2;
-    stroke: #55C000;
-    stroke-width: 1px;
+.pagination-dot.active {
+    background-color: #55C000;
+    width: 6px;
+    height: 6px;
 }
 
-.checkbox-control span {
-    color: #606266;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.pagination-wrapper {
-    display: flex;
-    justify-content: center;
-    padding: 20px;
-    margin: 20px;
-}
-
-:deep(.v-pagination__item--active) {
-    background-color: #55C000 !important;
-}
-
-:deep(.v-pagination__item:hover) {
-    color: #55C000;
-}
-
-:deep(.v-pagination__navigation:hover) {
-    color: #55C000;
+/* 页面提示工具提示样式 */
+.page-tooltip {
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
 }
 </style>

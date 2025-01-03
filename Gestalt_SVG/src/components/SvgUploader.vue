@@ -1,37 +1,67 @@
 <template>
-    <v-card class="fill-height">
-        <h2 class="title">
-            Parse SVG by Gestalt
-        </h2>
-        <v-file-input v-model="file" prepend-icon="mdi-paperclip" label="Select Svg File" density="compact"
-            accept=".svg" show-size @change="uploadFile"></v-file-input>
+    <v-card class="fill-height mac-style-card">
+        <div class="mac-upload-zone">
+            <div class="mac-upload-container" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleDrop">
+                <input
+                    type="file"
+                    ref="fileInput"
+                    accept=".svg"
+                    class="hidden-input"
+                    @change="handleFileChange"
+                >
+                <div class="upload-content">
+                    <v-icon size="32" class="upload-icon">mdi-cloud-upload-outline</v-icon>
+                    <div class="upload-text">
+                        <span class="primary-text">Drag and drop the SVG file here</span>
+                        <span class="secondary-text">Or click to select a file</span>
+                    </div>
+                    <div v-if="file" class="file-info">
+                        <span class="file-name">{{ file.name }}</span>
+                        <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- 添加元素类型选择列表 -->
-        <div v-if="visibleElements.length > 0" class="element-selector">
-            <h3>选择要分析的元素类型：</h3>
-            <v-list density="compact">
-                <v-list-item v-for="element in visibleElements" :key="element.id">
-                    <v-checkbox v-model="selectedElements" :label="`${element.tag} (${element.count}个)`"
-                        :value="element.id" hide-details></v-checkbox>
+        <div v-if="visibleElements.length > 0" class="element-selector mac-style-selector">
+            <h3 class="mac-style-title">Select the type of element:</h3>
+            <v-list density="compact" class="mac-style-list">
+                <v-list-item v-for="element in visibleElements" :key="element.id" class="mac-style-list-item">
+                    <v-checkbox 
+                        v-model="selectedElements" 
+                        :label="`${element.tag} (${element.count}个)`"
+                        :value="element.id" 
+                        hide-details
+                        class="mac-style-checkbox"
+                    ></v-checkbox>
                 </v-list-item>
             </v-list>
-            <v-btn color="primary" class="mt-4" @click="analyzeSvg" :disabled="selectedElements.length === 0">
-                分析选中元素类型
+            <v-btn 
+                color="primary" 
+                class="mt-4 mac-style-button" 
+                @click="analyzeSvg" 
+                :disabled="selectedElements.length === 0"
+            >
+            Analysing selected element types
             </v-btn>
         </div>
 
-        <div v-if="file" class="svg-container" ref="svgContainer">
+        <div v-if="file" class="svg-container mac-style-container" ref="svgContainer">
             <div v-html="processedSvgContent"></div>
-            <v-btn @click="toggleTrackMode" class="track" :class="{ 'active-mode': isTracking }">
+            <v-btn 
+                @click="toggleTrackMode" 
+                class="track mac-style-track-button"
+                :class="{ 'active-mode': isTracking }"
+            >
                 <v-icon>mdi-cursor-pointer</v-icon>
             </v-btn>
         </div>
-     
     </v-card>
 </template>
 
 <script setup>
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import { useStore } from 'vuex';
 import * as d3 from 'd3';
@@ -50,12 +80,102 @@ const selectedElements = ref([]);
 
 const emit = defineEmits(['file-uploaded'])
 
+// 添加新的方法
+const fileInput = ref(null);
+
+const triggerFileInput = () => {
+    fileInput.value.click();
+};
+
+const handleFileChange = (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+        file.value = selectedFile;
+        uploadFile();
+    }
+};
+
+const handleDrop = (event) => {
+    event.preventDefault();
+    const droppedFile = event.dataTransfer.files[0];
+    if (droppedFile && droppedFile.type === 'image/svg+xml') {
+        file.value = droppedFile;
+        uploadFile();
+    }
+};
+
+const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// 添加事件监听
+onMounted(() => {
+    window.addEventListener('svg-uploaded', handleSvgUploaded)
+})
+
+// 在组件卸载时移除事件监听
+onUnmounted(() => {
+    window.removeEventListener('svg-uploaded', handleSvgUploaded)
+})
+
+// 处理从CodeToSvg组件触发的上传事件
+const handleSvgUploaded = async (event) => {
+    const filename = event.detail.filename
+    console.log('接收到SVG上传事件:', filename)
+
+    try {
+        // 设置file值，这样可以触发界面更新
+        const response = await fetch('http://localhost:5000/get_svg', {
+            responseType: 'text',
+            headers: {
+                'Accept': 'image/svg+xml'
+            }
+        })
+        
+        const svgContent = await response.text()
+        
+        // 创建File对象
+        const blob = new Blob([svgContent], { type: 'image/svg+xml' })
+        const fileObj = new File([blob], filename, { type: 'image/svg+xml' })
+        
+        // 更新file引用，这会触发界面更新
+        file.value = fileObj
+        
+        // 获取并显示SVG内容
+        await fetchProcessedSvg()
+        
+        // 获取可见元素列表
+        const elementsResponse = await axios.post('http://localhost:5000/get_visible_elements', {
+            filename: filename
+        })
+
+        if (elementsResponse.data.success) {
+            visibleElements.value = elementsResponse.data.elements
+            selectedElements.value = elementsResponse.data.elements.map(el => el.id)
+            
+            // 确保DOM更新后再设置交互
+            await nextTick()
+            setupSvgInteractions()
+            updateNodeOpacity()
+        }
+    } catch (error) {
+        console.error('处理上传事件时出错:', error)
+    }
+}
+
 const uploadFile = () => {
     if (!file.value) return
 
     console.log('开始上传文件:', file.value.name)
     const formData = new FormData()
-    formData.append('file', file.value)
+    
+    // 创建新的File对象，添加uploaded_前缀
+    const newFile = new File([file.value], `uploaded_${file.value.name}`, { type: file.value.type })
+    formData.append('file', newFile)
 
     // 先上传文件
     axios.post('http://localhost:5000/upload', formData, {
@@ -66,6 +186,10 @@ const uploadFile = () => {
         .then(response => {
             console.log('文件上传成功:', response.data)
             if (response.data.success) {
+                // 触发事件通知CodeToSvg组件
+                window.dispatchEvent(new CustomEvent('svg-content-updated', {
+                    detail: { filename: newFile.name }
+                }))
                 // 立即获取并显示SVG内容
                 return fetchProcessedSvg()
             }
@@ -73,7 +197,7 @@ const uploadFile = () => {
         .then(() => {
             // 获取可见元素列表
             return axios.post('http://localhost:5000/get_visible_elements', {
-                filename: file.value.name
+                filename: newFile.name
             })
         })
         .then(async response => {
@@ -121,7 +245,14 @@ const analyzeSvg = () => {
         })
         .then(() => {
             console.log('SVG更新完成');
-            // 只在分析完成后触发file-uploaded事件
+            // 触发事件通知CodeToSvg组件更新内容
+            window.dispatchEvent(new CustomEvent('svg-content-updated', {
+                detail: { 
+                    filename: file.value.name,
+                    type: 'analysis'
+                }
+            }));
+            // 触发file-uploaded事件
             emit('file-uploaded');
         })
         .catch(error => {
@@ -412,35 +543,116 @@ watch(selectedElements, () => {
 </script>
 
 <style scoped>
-.title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    letter-spacing: 2px;
-    text-align: left;
-    color: black;
-    margin-left: 8px;
-    margin-bottom: 8px
-}
-
-.fill-height {
+.mac-style-card {
     height: 100%;
     width: 100%;
-    padding: 8px;
+    padding: 16px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(200, 200, 200, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+}
+
+.mac-style-input {
+    margin-bottom: 16px;
+}
+
+.mac-style-input :deep(.v-field) {
+    border-radius: 8px;
+    background: rgba(240, 240, 240, 0.6);
+    border: 1px solid rgba(200, 200, 200, 0.3);
+    transition: all 0.3s ease;
+}
+
+.mac-style-input :deep(.v-field:hover) {
+    background: rgba(235, 235, 235, 0.8);
+}
+
+.mac-style-input :deep(.v-field--focused) {
+    border-color: #55C000;
+    box-shadow: 0 0 0 2px rgba(85, 192, 0, 0.2);
+}
+
+.mac-style-selector {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(200, 200, 200, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    max-width: 300px;
+    max-height: 400px;
+}
+
+.mac-style-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1d1d1f;
+    margin-bottom: 12px;
+}
+
+.mac-style-list {
+    border-radius: 8px;
+    background: rgba(250, 250, 250, 0.6);
+    border: 1px solid rgba(200, 200, 200, 0.2);
     overflow: hidden;
 }
 
-.svg-container {
+.mac-style-list-item {
+    transition: background-color 0.2s ease;
+}
+
+.mac-style-list-item:hover {
+    background-color: rgba(85, 192, 0, 0.05);
+}
+
+.mac-style-checkbox :deep(.v-selection-control) {
+    color: #55C000;
+}
+
+.mac-style-button {
+    background: #55C000 !important;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(85, 192, 0, 0.2);
+    transition: all 0.3s ease;
+    text-transform: none;
+    height: 36px;
     width: 100%;
-    height: calc(100% - 70px);
-    margin: auto;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+}
+
+.mac-style-button:hover {
+    background: #4CAF00 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(85, 192, 0, 0.3);
+}
+
+.mac-style-button:disabled {
+    background: rgba(85, 192, 0, 0.5) !important;
+    box-shadow: none;
+}
+
+.mac-style-container {
+    flex: 1 1 auto;
+    width: 100%;
     position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
 }
 
-.svg-container>div {
+.mac-style-container > div {
+    position: absolute;
     width: 100%;
     height: 100%;
     display: flex;
@@ -448,9 +660,48 @@ watch(selectedElements, () => {
     justify-content: center;
 }
 
+.mac-style-track-button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(200, 200, 200, 0.3);
+    transition: all 0.3s ease;
+}
+
+.mac-style-track-button:hover {
+    background: rgba(250, 250, 250, 0.95) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.mac-style-track-button.active-mode {
+    background: #55C000 !important;
+    border-color: #55C000;
+    color: white;
+}
+
+.copy-cursor {
+    cursor: copy !important;
+}
+
+.element-selector {
+    flex: 0 0 auto;
+    overflow-y: auto;
+    margin: 10px 0;
+    position: absolute;
+    left: 16px;
+    bottom: 6px;
+    z-index: 1000;
+    max-height: 400px;
+}
+
+/* SVG 相关样式 */
 .svg-container svg {
-    width: 100%;
-    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
 }
 
@@ -458,26 +709,91 @@ watch(selectedElements, () => {
     cursor: pointer;
 }
 
-.track {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+.mac-upload-zone {
+    flex: 0 0 auto;
+    position: relative;
+    margin-top: 16px;
+    margin-left: 16px;
+    margin-right: 16px;
+    z-index: 10;
 }
 
-.copy-cursor {
-    cursor: copy !important;
+.mac-upload-container {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px dashed rgba(85, 192, 0, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.active-mode {
-    background-color: var(--v-theme-primary) !important;
+.mac-upload-container:hover {
+    border-color: rgba(85, 192, 0, 0.6);
+    background: rgba(255, 255, 255, 0.98);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.element-selector {
-    overflow-y: auto;
-    margin: 16px 0;
-    position: absolute;
-    left: 30px;
-    bottom: 10px;
-    z-index: 1000;
+.hidden-input {
+    display: none;
+}
+
+.upload-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.upload-icon {
+    color: #55C000;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+    font-size: 20px !important;
+}
+
+.upload-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0px;
+}
+
+.primary-text {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1d1d1f;
+}
+
+.secondary-text {
+    font-size: 11px;
+    color: #86868b;
+}
+
+.file-info {
+    margin-left: auto;
+    padding: 4px 8px;
+    background: rgba(85, 192, 0, 0.1);
+    border-radius: 4px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.file-name {
+    font-weight: 500;
+    color: #1d1d1f;
+    font-size: 12px;
+}
+
+.file-size {
+    color: #86868b;
+    font-size: 11px;
 }
 </style>
