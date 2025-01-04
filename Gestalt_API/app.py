@@ -860,5 +860,41 @@ def handle_matplotlib():
             pass
         plt.close('all')  # 确保清理所有图形
 
+@app.route('/clear_upload_folder', methods=['POST'])
+def clear_upload_folder():
+    """清空上传文件夹的接口"""
+    try:
+        # 获取上传文件夹路径
+        upload_folder = app.config['UPLOAD_FOLDER']
+        
+        # 确保文件夹存在
+        if not os.path.exists(upload_folder):
+            return jsonify({
+                'success': True,
+                'message': 'Upload folder does not exist'
+            }), 200
+            
+        # 删除文件夹中的所有文件
+        for filename in os.listdir(upload_folder):
+            file_path = os.path.join(upload_folder, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+                    print(f"已删除文件: {filename}")
+            except Exception as e:
+                print(f"删除文件 {filename} 时出错: {str(e)}")
+                
+        return jsonify({
+            'success': True,
+            'message': 'Upload folder cleared successfully'
+        }), 200
+        
+    except Exception as e:
+        print(f"清空上传文件夹时出错: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

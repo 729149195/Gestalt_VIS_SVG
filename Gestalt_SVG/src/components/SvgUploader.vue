@@ -60,7 +60,7 @@
                 @click="analyzeSvg" 
                 :disabled="selectedElements.length === 0 || analyzing"
             >
-                {{ analyzing ? '分析中...' : '分析' }}
+                {{ analyzing ? 'analysising...' : 'analyse' }}
             </v-btn>
         </div>
 

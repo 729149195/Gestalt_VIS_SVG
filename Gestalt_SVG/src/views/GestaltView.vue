@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import HisEleProportions from '../components/statistics/ElementStatistics.vue';
 import HisAttrProportionsVue from '../components/statistics/AttributeStatistics.vue';
 import FillStatistician from '../components/statistics/FillStatistics.vue';
@@ -79,6 +79,20 @@ const handleFileUploaded = () => {
     componentKey4.value += 1;
     file.value = true;
 };
+
+// 组件加时清空 uploadSvg 目录
+onMounted(async () => {
+    try {
+        const response = await fetch('http://localhost:5000/clear_upload_folder', {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            console.error('清空上传文件夹失败');
+        }
+    } catch (error) {
+        console.error('清空上传文件夹出错:', error);
+    }
+});
 </script>
 
 <style scoped>
