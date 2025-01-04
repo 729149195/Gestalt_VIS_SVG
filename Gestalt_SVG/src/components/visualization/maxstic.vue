@@ -96,6 +96,115 @@ const generateAnalysis = (dataMapping, dataEquivalentWeights) => {
     return analysis;
 };
 
+// 添加相关性矩阵的渲染函数
+const renderCorrelationMatrix = (correlationData, svg, width) => {
+    const matrixWidth = 200;
+    const matrixHeight = 200;
+    const cellSize = matrixWidth / 4;
+
+    // 移除旧的相关性矩阵
+    svg.selectAll('.correlation-matrix').remove();
+    svg.selectAll('.dimension-stats').remove();
+
+    const correlationGroup = svg.append('g')
+        .attr('class', 'correlation-matrix')
+        .attr('transform', `translate(${width + 50}, 20)`);
+
+    // 添加标题
+    correlationGroup.append('text')
+        .attr('x', matrixWidth / 2)
+        .attr('y', -10)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '14px')
+        .style('font-weight', 'bold')
+        .text('维度相关性矩阵');
+
+    // 创建颜色比例尺
+    const colorScale = d3.scaleSequential(d3.interpolateRdBu)
+        .domain([1, -1]);
+
+    // 绘制相关性矩阵
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+            const cell = correlationGroup.append('g')
+                .attr('transform', `translate(${j * cellSize}, ${i * cellSize})`);
+
+            // 添加背景矩形
+            cell.append('rect')
+                .attr('width', cellSize)
+                .attr('height', cellSize)
+                .style('fill', colorScale(correlationData.correlations[i][j]))
+                .style('stroke', 'white');
+
+            // 添加相关系数文本
+            cell.append('text')
+                .attr('x', cellSize / 2)
+                .attr('y', cellSize / 2)
+                .attr('dy', '0.35em')
+                .attr('text-anchor', 'middle')
+                .style('font-size', '12px')
+                .style('fill', Math.abs(correlationData.correlations[i][j]) > 0.5 ? 'white' : 'black')
+                .text(correlationData.correlations[i][j].toFixed(2));
+        }
+    }
+
+    // 添加维度标签
+    for (let i = 0; i < 4; i++) {
+        // Y轴标签
+        correlationGroup.append('text')
+            .attr('x', -10)
+            .attr('y', i * cellSize + cellSize / 2)
+            .attr('dy', '0.35em')
+            .attr('text-anchor', 'end')
+            .style('font-size', '12px')
+            .text(`Z_${i + 1}`);
+
+        // X轴标签
+        correlationGroup.append('text')
+            .attr('x', i * cellSize + cellSize / 2)
+            .attr('y', matrixHeight + 20)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '12px')
+            .text(`Z_${i + 1}`);
+    }
+
+    // 添加维度统计信息
+    const statsGroup = svg.append('g')
+        .attr('class', 'dimension-stats')
+        .attr('transform', `translate(${width + 50}, ${matrixHeight + 100})`);
+
+    statsGroup.append('text')
+        .attr('x', 0)
+        .attr('y', -20)
+        .style('font-size', '14px')
+        .style('font-weight', 'bold')
+        .text('维度统计特征');
+
+    correlationData.dimensionStats.forEach((stats, i) => {
+        const statText = statsGroup.append('g')
+            .attr('transform', `translate(0, ${i * 60})`);
+
+        statText.append('text')
+            .attr('x', 0)
+            .attr('y', 0)
+            .style('font-weight', 'bold')
+            .text(`Z_${i + 1}:`);
+
+        statText.append('text')
+            .attr('x', 0)
+            .attr('y', 20)
+            .text(`偏度: ${stats.skewness.toFixed(2)}, 峰度: ${stats.kurtosis.toFixed(2)}`);
+    });
+};
+
+// 更新相关性矩阵的位置
+const updateCorrelationMatrix = () => {
+    const correlationMatrix = d3.select(axisContainer.value).select('.correlation-matrix');
+    if (!correlationMatrix.empty()) {
+        correlationMatrix.attr('transform', `translate(${width + 50}, 20)`);
+    }
+};
+
 // 在组件挂载后执行
 onMounted(async () => {
     if (!parentContainer.value) return;
@@ -129,11 +238,33 @@ onMounted(async () => {
 
         const groupNames = dataMapping.input_dimensions;
 
-        resizeObserver = new ResizeObserver(entries => {
+        // 初始渲染
+        const initialWidth = parentContainer.value.clientWidth;
+        
+        // 按顺序渲染各个组件
+        await renderNormal(dataNormal, initialWidth, groupNames);
+        await renderInit(dataInit, initialWidth, dataMapping.output_dimensions);
+        await nextTick();
+        
+        // 确保比例尺已经初始化
+        if (xScaleNormal && xScaleInit) {
+            updateHighlights(selectedNodeIds.value);
+        }
+        
+        // 渲染其他组件
+        drawLines(dataMapping, initialWidth, groupNames);
+        renderDimensionAxes(rawDataInit, initialWidth);
+
+        // 设置 ResizeObserver
+        resizeObserver = new ResizeObserver(async entries => {
             for (let entry of entries) {
                 const newWidth = entry.contentRect.width;
-                renderNormal(dataNormal, newWidth, groupNames);
-                renderInit(dataInit, newWidth, dataMapping.output_dimensions);
+                await renderNormal(dataNormal, newWidth, groupNames);
+                await renderInit(dataInit, newWidth, dataMapping.output_dimensions);
+                await nextTick();
+                if (xScaleNormal && xScaleInit) {
+                    updateHighlights(selectedNodeIds.value);
+                }
                 drawLines(dataMapping, newWidth, groupNames);
                 renderDimensionAxes(rawDataInit, newWidth);
             }
@@ -141,24 +272,19 @@ onMounted(async () => {
 
         resizeObserver.observe(parentContainer.value);
 
-        const initialWidth = parentContainer.value.clientWidth;
-        renderNormal(dataNormal, initialWidth, groupNames);
-        renderInit(dataInit, initialWidth, dataMapping.output_dimensions);
-        await nextTick();
-        drawLines(dataMapping, initialWidth, groupNames);
-        renderDimensionAxes(rawDataInit, initialWidth);
-
         // 计算并渲染相关性矩阵
         const correlationData = calculateDimensionCorrelations(rawDataInit);
-        // 在这里使用 axisContainer 的 svg 和宽度
         const axisSvg = d3.select(axisContainer.value).select('svg');
         renderCorrelationMatrix(correlationData, axisSvg, initialWidth);
 
         window.addEventListener('mouseup', handleGlobalMouseUp);
 
+        // 监听 selectedNodeIds 的变化
         watch(selectedNodeIds, (newVal) => {
-            updateHighlights(newVal);
-        });
+            if (xScaleNormal && xScaleInit) {
+                updateHighlights(newVal);
+            }
+        }, { immediate: true });
 
         // 添加点击空白处的事件监听
         d3.select(initChartContainer.value).on('click', function(event) {
@@ -187,8 +313,8 @@ onUnmounted(() => {
 const updateHighlights = (selectedIds) => {
     // 更新第一张热力图的高亮
     d3.selectAll('.normal_chart_container .x-axis text')
-        .style('fill', d => d && selectedIds.includes(d) ? 'red' : 'black')
-        .style('font-weight', d => d && selectedIds.includes(d) ? 'bold' : 'normal');
+        .style('fill', d => selectedIds.includes(d) ? 'red' : 'black')
+        .style('font-weight', d => selectedIds.includes(d) ? 'bold' : 'normal');
 
     // 移除旧的高亮矩形
     d3.selectAll('.normal_chart_container .highlight-rect-normal').remove();
@@ -211,8 +337,8 @@ const updateHighlights = (selectedIds) => {
 
     // 更新第二张热力图的高亮
     d3.selectAll('.init_chart_container .x-axis text')
-        .style('fill', d => d && selectedNodeIds.value.includes(d) ? 'red' : 'black')
-        .style('font-weight', d => d && selectedNodeIds.value.includes(d) ? 'bold' : 'normal');
+        .style('fill', d => selectedIds.includes(d) ? 'red' : 'black')
+        .style('font-weight', d => selectedIds.includes(d) ? 'bold' : 'normal');
 
     // 移除旧的高亮矩形
     d3.selectAll('.init_chart_container .highlight-rect-cc').remove();
@@ -273,286 +399,296 @@ const processDataInit = (rawData) => {
 };
 
 // 渲染第一张热力图
-const renderNormal = (data, containerWidth, groupNames) => {
-    const width = containerWidth - marginNormal.left - marginNormal.right;
-    const height = 350 + marginNormal.top + marginNormal.bottom;
+const renderNormal = async (data, containerWidth, groupNames) => {
+    return new Promise((resolve) => {
+        const width = containerWidth - marginNormal.left - marginNormal.right;
+        const height = 350 + marginNormal.top + marginNormal.bottom;
 
-    // 清空旧的SVG
-    d3.select(normalChartContainer.value).selectAll('*').remove();
+        // 清空旧的SVG
+        d3.select(normalChartContainer.value).selectAll('*').remove();
 
-    // 创建SVG
-    svgNormal = d3.select(normalChartContainer.value)
-        .append('svg')
-        .attr('width', containerWidth)
-        .attr('height', height)
-        .append('g')
-        .attr('transform', `translate(${marginNormal.left},${marginNormal.top})`);
+        // 创建SVG
+        svgNormal = d3.select(normalChartContainer.value)
+            .append('svg')
+            .attr('width', containerWidth)
+            .attr('height', height)
+            .append('g')
+            .attr('transform', `translate(${marginNormal.left},${marginNormal.top})`);
 
-    // 获取唯一的节点ID
-    const ids = [...new Set(data.map(d => d.node.split('/').pop()))];
-    const groups = d3.range(0, groupNames.length);
+        // 获取唯一的节点ID
+        const ids = [...new Set(data.map(d => d.node.split('/').pop()))];
+        const groups = d3.range(0, groupNames.length);
 
-    // 创建比例尺
-    xScaleNormal = d3.scaleBand().domain(ids).range([0, width]).padding(0.05);
-    const yScale = d3.scaleBand().domain(groups).range([height - marginNormal.top - marginNormal.bottom, 0]).padding(0.05);
-    const yScaleName = d3.scaleBand().domain(groupNames).range([height - marginNormal.top - marginNormal.bottom, 0]).padding(0.05);
+        // 创建比例尺
+        xScaleNormal = d3.scaleBand().domain(ids).range([0, width]).padding(0.05);
+        const yScale = d3.scaleBand().domain(groups).range([height - marginNormal.top - marginNormal.bottom, 0]).padding(0.05);
+        const yScaleName = d3.scaleBand().domain(groupNames).range([height - marginNormal.top - marginNormal.bottom, 0]).padding(0.05);
 
-    // 修改颜色比例尺为分歧颜色比例尺，定 domain 为 [-1, 0, 1]
-    const colorScale = d3.scaleDiverging(d3.interpolateRdBu)
-        .domain([1, 0, -1]);
+        // 修改颜色比例尺为分歧颜色比例尺，定 domain 为 [-1, 0, 1]
+        const colorScale = d3.scaleDiverging(d3.interpolateRdBu)
+            .domain([1, 0, -1]);
 
-    // 创建悬停提示框
-    const tooltip = d3.select(normalChartContainer.value)
-        .append('div')
-        .attr('class', 'tooltip')
-        .style('position', 'absolute')
-        .style('background', '#fff')
-        .style('padding', '5px')
-        .style('border', '1px solid #ccc')
-        .style('border-radius', '5px')
-        .style('pointer-events', 'none')
-        .style('visibility', 'hidden');
+        // 创建悬停提示框
+        const tooltip = d3.select(normalChartContainer.value)
+            .append('div')
+            .attr('class', 'tooltip')
+            .style('position', 'absolute')
+            .style('background', '#fff')
+            .style('padding', '5px')
+            .style('border', '1px solid #ccc')
+            .style('border-radius', '5px')
+            .style('pointer-events', 'none')
+            .style('visibility', 'hidden');
 
-    // 绘制方块
-    svgNormal.selectAll('.block')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('x', d => xScaleNormal(d.node.split('/').pop()))
-        .attr('y', d => yScale(d.group))
-        .attr('width', xScaleNormal.bandwidth())
-        .attr('height', yScale.bandwidth())
-        .style('fill', d => colorScale(d.probability))
-        .on('mouseover', function (event, d) {
-            tooltip.style('visibility', 'visible')
-                .text(`Probability: ${d.probability}`);
-        })
-        .on('mousemove', function (event) {
-            const [mouseX, mouseY] = d3.pointer(event);
-            tooltip.style('top', `${mouseY - 30}px`)
-                .style('left', `${mouseX + 10}px`);
-        })
-        .on('mouseout', function () {
-            tooltip.style('visibility', 'hidden');
-        });
+        // 绘制方块
+        svgNormal.selectAll('.block')
+            .data(data)
+            .enter()
+            .append('rect')
+            .attr('x', d => xScaleNormal(d.node.split('/').pop()))
+            .attr('y', d => yScale(d.group))
+            .attr('width', xScaleNormal.bandwidth())
+            .attr('height', yScale.bandwidth())
+            .style('fill', d => colorScale(d.probability))
+            .on('mouseover', function (event, d) {
+                tooltip.style('visibility', 'visible')
+                    .text(`Probability: ${d.probability}`);
+            })
+            .on('mousemove', function (event) {
+                const [mouseX, mouseY] = d3.pointer(event);
+                tooltip.style('top', `${mouseY - 30}px`)
+                    .style('left', `${mouseX + 10}px`);
+            })
+            .on('mouseout', function () {
+                tooltip.style('visibility', 'hidden');
+            });
 
-    // 添加X轴
-    const xAxis = d3.axisBottom(xScaleNormal).tickSizeOuter(0);
+        // 添加X轴
+        const xAxis = d3.axisBottom(xScaleNormal).tickSizeOuter(0);
 
-    svgNormal.append('g')
-        .attr('class', 'x-axis')
-        .attr('transform', `translate(0,${height - marginNormal.top - marginNormal.bottom})`)
-        .call(xAxis)
-        .selectAll('text')
-        .style('text-anchor', 'end')
-        .attr('dx', '-1em')
-        .attr('dy', '-0.5em')
-        .attr('transform', 'rotate(-90)')
-        .style('fill', 'black')
-        .style('font-size', '12px')
-        .style('cursor', 'pointer')
-        .on('click', function (event, d) {
-            // 点击事件更新Vuex中的 selectedNodeIds
-            if (selectedNodeIds.value.includes(d)) {
-                store.commit('REMOVE_SELECTED_NODE', d);
-            } else {
-                store.commit('ADD_SELECTED_NODE', d);
-            }
-        });
+        svgNormal.append('g')
+            .attr('class', 'x-axis')
+            .attr('transform', `translate(0,${height - marginNormal.top - marginNormal.bottom})`)
+            .call(xAxis)
+            .selectAll('text')
+            .style('text-anchor', 'end')
+            .attr('dx', '-1em')
+            .attr('dy', '-0.5em')
+            .attr('transform', 'rotate(-90)')
+            .style('fill', 'black')
+            .style('font-size', '12px')
+            .style('cursor', 'pointer')
+            .on('click', function (event, d) {
+                // 点击事件更新Vuex中的 selectedNodeIds
+                if (selectedNodeIds.value.includes(d)) {
+                    store.commit('REMOVE_SELECTED_NODE', d);
+                } else {
+                    store.commit('ADD_SELECTED_NODE', d);
+                }
+            });
 
-    // 创建Y轴
-    const yAxis = d3.axisLeft(yScaleName).tickSizeOuter(0);
+        // 创建Y轴
+        const yAxis = d3.axisLeft(yScaleName).tickSizeOuter(0);
 
-    // 添加Y轴圆点并绑定事件监听器
-    svgNormal.append('g')
-        .attr('class', 'y-axis')
-        .call(yAxis)
-        .selectAll('.tick')
-        .each(function (d) {
-            const tick = d3.select(this);
-            tick.insert('circle', 'text')
-                .attr('cx', -120)
-                .attr('cy', 0)
-                .attr('r', circleRadius)
-                .style('fill', '#666');
-        })
-        .selectAll('text')
-        .style('fill', 'black')
-        .style('font-size', '12px');
+        // 添加Y轴圆点并绑定事件监听器
+        svgNormal.append('g')
+            .attr('class', 'y-axis')
+            .call(yAxis)
+            .selectAll('.tick')
+            .each(function (d) {
+                const tick = d3.select(this);
+                tick.insert('circle', 'text')
+                    .attr('cx', -120)
+                    .attr('cy', 0)
+                    .attr('r', circleRadius)
+                    .style('fill', '#666');
+            })
+            .selectAll('text')
+            .style('fill', 'black')
+            .style('font-size', '12px');
 
-    // 美化坐标轴
-    svgNormal.selectAll('.domain')
-        .style('stroke', 'black')
-        .style('stroke-width', '1px');
+        // 美化坐标轴
+        svgNormal.selectAll('.domain')
+            .style('stroke', 'black')
+            .style('stroke-width', '1px');
 
-    svgNormal.selectAll('.tick line')
-        .style('stroke', 'black')
-        .style('stroke-width', '1px');
+        svgNormal.selectAll('.tick line')
+            .style('stroke', 'black')
+            .style('stroke-width', '1px');
+
+        // 在渲染完成后解析 Promise
+        resolve();
+    });
 };
 
 // 渲染第二张热力图
-const renderInit = (data, containerWidth, outputDimensions) => {
-    const width = containerWidth - marginInit.left - marginInit.right;
-    const height = 60 + marginInit.top + marginInit.bottom;
+const renderInit = async (data, containerWidth, outputDimensions) => {
+    return new Promise((resolve) => {
+        const width = containerWidth - marginInit.left - marginInit.right;
+        const height = 60 + marginInit.top + marginInit.bottom;
 
-    // 清空旧的SVG
-    d3.select(initChartContainer.value).selectAll('*').remove();
+        // 清空旧的SVG
+        d3.select(initChartContainer.value).selectAll('*').remove();
 
-    // 创建SVG
-    svgInit = d3.select(initChartContainer.value)
-        .append('svg')
-        .attr('width', containerWidth)
-        .attr('height', height)
-        .append('g')
-        .attr('transform', `translate(${marginInit.left},${marginInit.top})`);
+        // 创建SVG
+        svgInit = d3.select(initChartContainer.value)
+            .append('svg')
+            .attr('width', containerWidth)
+            .attr('height', height)
+            .append('g')
+            .attr('transform', `translate(${marginInit.left},${marginInit.top})`);
 
-    // 获取唯一的节点ID
-    const ids = [...new Set(data.map(d => d.node.split('/').pop()))];
-    const groups = d3.range(0, outputDimensions.length);
-    const groupNames = outputDimensions; // 使用 output_dimensions 作为 groupNames
+        // 获取唯一的节点ID
+        const ids = [...new Set(data.map(d => d.node.split('/').pop()))];
+        const groups = d3.range(0, outputDimensions.length);
+        const groupNames = outputDimensions; // 使用 output_dimensions 作为 groupNames
 
-    // 创建比例尺
-    xScaleInit = d3.scaleBand().domain(ids).range([0, width]).padding(0.05);
-    const yScale = d3.scaleBand().domain(groups).range([height - marginInit.top - marginInit.bottom, 0]).padding(0.05);
+        // 创建比例尺
+        xScaleInit = d3.scaleBand().domain(ids).range([0, width]).padding(0.05);
+        const yScale = d3.scaleBand().domain(groups).range([height - marginInit.top - marginInit.bottom, 0]).padding(0.05);
 
-    // 修改颜色比例尺为分歧颜色比例尺，固定 domain 为 [-1, 0, 1]
-    const colorScale = d3.scaleDiverging(d3.interpolateRdBu)
-        .domain([1, 0, -1]);
+        // 修改颜色比例尺为分歧颜色比例尺，固定 domain 为 [-1, 0, 1]
+        const colorScale = d3.scaleDiverging(d3.interpolateRdBu)
+            .domain([1, 0, -1]);
 
-    // 创建悬停提示框
-    const tooltip = d3.select(initChartContainer.value)
-        .append('div')
-        .attr('class', 'tooltip')
-        .style('position', 'absolute')
-        .style('background', '#fff')
-        .style('padding', '5px')
-        .style('border', '1px solid #ccc')
-        .style('border-radius', '5px')
-        .style('pointer-events', 'none')
-        .style('visibility', 'hidden');
+        // 创建悬停提示框
+        const tooltip = d3.select(initChartContainer.value)
+            .append('div')
+            .attr('class', 'tooltip')
+            .style('position', 'absolute')
+            .style('background', '#fff')
+            .style('padding', '5px')
+            .style('border', '1px solid #ccc')
+            .style('border-radius', '5px')
+            .style('pointer-events', 'none')
+            .style('visibility', 'hidden');
 
-    // 绘制方块
-    svgInit.selectAll('.block')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('x', d => xScaleInit(d.node.split('/').pop()))
-        .attr('y', d => yScale(d.group))
-        .attr('width', xScaleInit.bandwidth())
-        .attr('height', yScale.bandwidth())
-        .style('fill', d => colorScale(d.featureValue))
-        .on('mouseover', function (event, d) {
-            tooltip.style('visibility', 'visible')
-                .text(`Value: ${d.featureValue}`);
-        })
-        .on('mousemove', function (event) {
-            const [mouseX, mouseY] = d3.pointer(event);
-            tooltip.style('top', `${mouseY - 40}px`)
-                .style('left', `${mouseX + 10}px`);
-        })
-        .on('mouseout', function () {
-            tooltip.style('visibility', 'hidden');
-        })
-        .on('click', function (event, d) {
-            event.stopPropagation(); // 防止立即清除
+        // 绘制方块
+        svgInit.selectAll('.block')
+            .data(data)
+            .enter()
+            .append('rect')
+            .attr('x', d => xScaleInit(d.node.split('/').pop()))
+            .attr('y', d => yScale(d.group))
+            .attr('width', xScaleInit.bandwidth())
+            .attr('height', yScale.bandwidth())
+            .style('fill', d => colorScale(d.featureValue))
+            .on('mouseover', function (event, d) {
+                tooltip.style('visibility', 'visible')
+                    .text(`Value: ${d.featureValue}`);
+            })
+            .on('mousemove', function (event) {
+                const [mouseX, mouseY] = d3.pointer(event);
+                tooltip.style('top', `${mouseY - 40}px`)
+                    .style('left', `${mouseX + 10}px`);
+            })
+            .on('mouseout', function () {
+                tooltip.style('visibility', 'hidden');
+            })
+            .on('click', function (event, d) {
+                event.stopPropagation(); // 防止立即清除
 
-            const nodeId = d.node;
+                const nodeId = d.node;
 
-            const perSampleWeights = dataEquivalentWeights[nodeId];
-            if (!perSampleWeights) {
-                console.warn(`未找到节点 ${nodeId} 的等效权重`);
-                return;
-            }
+                const perSampleWeights = dataEquivalentWeights[nodeId];
+                if (!perSampleWeights) {
+                    console.warn(`未找到节点 ${nodeId} 的等效权重`);
+                    return;
+                }
 
-            // 获取点击的输出维度的权重
-            const weightsForDimension = perSampleWeights[d.group]; // 长度为 20 的权重数组
+                // 获取点击的输出维度的权重
+                const weightsForDimension = perSampleWeights[d.group]; // 长度为 20 的权重数组
 
-            // 调用函数绘制按样本的连线
-            drawPerSampleLines(weightsForDimension, d, this); // 传递 'this' 以获取被点击的矩形节点
-        });
+                // 调用函数绘制按样本的连线
+                drawPerSampleLines(weightsForDimension, d, this); // 传递 'this' 以获取被点击的矩形节点
+            });
 
-    // 添加X轴
-    const xAxis = d3.axisBottom(xScaleInit).tickSizeOuter(0);
+        // 添加X轴
+        const xAxis = d3.axisBottom(xScaleInit).tickSizeOuter(0);
 
-    svgInit.append('g')
-        .attr('class', 'x-axis')
-        .attr('transform', `translate(0,${height - marginInit.top - marginInit.bottom})`)
-        .call(xAxis)
-        .selectAll('text')
-        .style('text-anchor', 'end')
-        .attr('dx', '-1em')
-        .attr('dy', '-0.5em')
-        .attr('transform', 'rotate(-90)')
-        .style('fill', 'black')
-        .style('font-size', '12px')
-        .style('cursor', 'pointer')
-        .on('click', function (event, d) {
-            // 点击事件更新Vuex中的 selectedNodeIds
-            if (selectedNodeIds.value.includes(d)) {
-                store.commit('REMOVE_SELECTED_NODE', d);
-            } else {
-                store.commit('ADD_SELECTED_NODE', d);
-            }
-        });
+        svgInit.append('g')
+            .attr('class', 'x-axis')
+            .attr('transform', `translate(0,${height - marginInit.top - marginInit.bottom})`)
+            .call(xAxis)
+            .selectAll('text')
+            .style('text-anchor', 'end')
+            .attr('dx', '-1em')
+            .attr('dy', '-0.5em')
+            .attr('transform', 'rotate(-90)')
+            .style('fill', 'black')
+            .style('font-size', '12px')
+            .style('cursor', 'pointer')
+            .on('click', function (event, d) {
+                // 点击事件更新Vuex中的 selectedNodeIds
+                if (selectedNodeIds.value.includes(d)) {
+                    store.commit('REMOVE_SELECTED_NODE', d);
+                } else {
+                    store.commit('ADD_SELECTED_NODE', d);
+                }
+            });
 
-    // 创建Y轴
-    const yAxis = d3.axisLeft(yScale).tickSizeOuter(0)
-        .tickFormat(d => groupNames[d]);
+        // 创建Y轴
+        const yAxis = d3.axisLeft(yScale).tickSizeOuter(0)
+            .tickFormat(d => groupNames[d]);
 
-    // 添加Y轴圆点并绑定事件监听器
-    svgInit.append('g')
-        .attr('class', 'y-axis')
-        .call(yAxis)
-        .selectAll('.tick')
-        .each(function (d) {
-            const tick = d3.select(this);
-            tick.insert('circle', 'text')
-                .attr('cx', -40)
-                .attr('cy', 0)
-                .attr('r', circleRadius)
-                .style('fill', '#999')
-                .style('z-index', 999)
-                .attr('data-init-index', d) // 添加数据属性
-                .style('cursor', 'pointer') // 指示可交互
-                .on('click', function (event, d) {
-                    event.stopPropagation(); // 阻止事件冒泡
-                    const circle = d3.select(this);
-                    const isHighlighted = circle.classed('highlighted');
-                    
-                    // 如果当前圆点已经高亮，则取消高亮并显示所有连线
-                    if (isHighlighted) {
-                        circle.classed('highlighted', false)
-                            .style('fill', '#999');
-                        d3.selectAll('.lines_container path')
-                            .style('display', null);
-                    } else {
-                        // 取消其他圆点的高亮
-                        d3.selectAll('.y-axis circle')
-                            .classed('highlighted', false)
-                            .style('fill', '#999');
+        // 添加Y轴圆点并绑定事件监听器
+        svgInit.append('g')
+            .attr('class', 'y-axis')
+            .call(yAxis)
+            .selectAll('.tick')
+            .each(function (d) {
+                const tick = d3.select(this);
+                tick.insert('circle', 'text')
+                    .attr('cx', -40)
+                    .attr('cy', 0)
+                    .attr('r', circleRadius)
+                    .style('fill', '#999')
+                    .style('z-index', 999)
+                    .attr('data-init-index', d) // 添加数据属性
+                    .style('cursor', 'pointer') // 指示可交互
+                    .on('click', function (event, d) {
+                        event.stopPropagation(); // 阻止事件冒泡
+                        const circle = d3.select(this);
+                        const isHighlighted = circle.classed('highlighted');
                         
-                        // 高亮当前圆点并只显示相关连线
-                        circle.classed('highlighted', true)
-                            .style('fill', '#ff6347');
-                        d3.selectAll('.lines_container path')
-                            .style('display', function () {
-                                return this.getAttribute('data-init-index') == d ? null : 'none';
-                            });
-                    }
-                });
-        })
-        .selectAll('text')
-        .style('fill', 'black')
-        .style('font-size', '12px');
+                        // 如果当前圆点已经高亮，则取消高亮并显示所有连线
+                        if (isHighlighted) {
+                            circle.classed('highlighted', false)
+                                .style('fill', '#999');
+                            d3.selectAll('.lines_container path')
+                                .style('display', null);
+                        } else {
+                            // 取消其他圆点的高亮
+                            d3.selectAll('.y-axis circle')
+                                .classed('highlighted', false)
+                                .style('fill', '#999');
+                            
+                            // 高亮当前圆点并只显示相关连线
+                            circle.classed('highlighted', true)
+                                .style('fill', '#ff6347');
+                            d3.selectAll('.lines_container path')
+                                .style('display', function () {
+                                    return this.getAttribute('data-init-index') == d ? null : 'none';
+                                });
+                        }
+                    });
+            })
+            .selectAll('text')
+            .style('fill', 'black')
+            .style('font-size', '12px');
 
-    // 美化坐标轴
-    svgInit.selectAll('.domain')
-        .style('stroke', 'black')
-        .style('stroke-width', '1px');
+        // 美化坐标轴
+        svgInit.selectAll('.domain')
+            .style('stroke', 'black')
+            .style('stroke-width', '1px');
 
-    svgInit.selectAll('.tick line')
-        .style('stroke', 'black')
-        .style('stroke-width', '1px');
+        svgInit.selectAll('.tick line')
+            .style('stroke', 'black')
+            .style('stroke-width', '1px');
+
+        // 在渲染完成后解析 Promise
+        resolve();
+    });
 };
 
 // 当第二张热力图中的矩形被点击时，绘制按样本的连线

@@ -1,16 +1,32 @@
 <template>
   <div class="analysis-words-container">
-    <!-- <div class="analysis-header">
-      <h3>{{ props.title }}</h3>
-    </div> -->
+    <!-- 添加苹果风格按钮到右上角 -->
+    <button class="apple-button-corner" @click="showDialog = true">
+      <span class="button-icon">↗</span>
+    </button>
+    
     <div class="analysis-content" @scroll="handleScroll" v-html="analysisContent">
     </div>
+
+    <!-- 使用 Teleport 将对话框传送到 body -->
+    <Teleport to="body">
+      <div class="fullscreen-dialog" v-if="showDialog">
+        <div class="dialog-header">
+          <h3>维度分析详情</h3>
+          <button class="close-button" @click="showDialog = false">×</button>
+        </div>
+        <div class="dialog-body">
+          <maxstic />
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
+import maxstic from '../visualization/maxstic.vue'
 
 // 数据源URL
 const MAPPING_DATA_URL = "http://localhost:5000/average_equivalent_mapping";
@@ -53,6 +69,9 @@ const props = defineProps({
 const emit = defineEmits(['scroll'])
 
 const analysisContent = ref('等待分析...')
+
+// 添加对话框控制变量
+const showDialog = ref(false)
 
 // 生成分析文字的函数
 const generateAnalysis = (dataMapping, dataEquivalentWeights) => {
@@ -149,6 +168,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  position: relative;
 }
 
 .analysis-words-container:hover {
@@ -192,5 +212,112 @@ onUnmounted(() => {
 
 :deep(.dimension-analysis:last-child) {
   margin-bottom: 0;
+}
+
+/* 右上角按钮样式 */
+.apple-button-corner {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 122, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #007AFF;
+  font-size: 16px;
+  z-index: 10;
+}
+
+.apple-button-corner:hover {
+  background: rgba(0, 122, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.apple-button-corner .button-icon {
+  line-height: 1;
+}
+
+/* 全屏对话框样式 */
+.fullscreen-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #fff;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.dialog-header {
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #1d1d1f;
+  font-weight: 500;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #86868b;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1d1d1f;
+}
+
+.dialog-body {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  height: calc(100vh - 70px);
+}
+
+/* 移除旧的对话框样式 */
+.dialog-overlay,
+.dialog-content {
+  display: none;
 }
 </style>
