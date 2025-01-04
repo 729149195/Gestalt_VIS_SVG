@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from flask_socketio import SocketIO
 import os
@@ -8,6 +8,9 @@ import traceback
 import io
 import base64
 import matplotlib
+import queue
+import threading
+import time
 matplotlib.use('Agg')  # 在导入 pyplot 之前设置后端
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,6 +26,9 @@ from static.modules.cluster import main as run_clustering
 from static.modules.average_equivalent_mapping import EquivalentWeightsCalculator
 from static.modules.subgraph_detection import main as run_subgraph_detection
 from static.modules import posandprop
+
+# 创建一个全局的进度队列
+progress_queue = queue.Queue()
 
 # 初始化Flask应用
 app = Flask(__name__)
@@ -55,10 +61,38 @@ def get_file_path(filename, folder='DATA_FOLDER'):
 def hello_world():
     return 'Hello World!'
 
+def send_progress_update(progress, step):
+    """
+    发送进度更新到队列
+    """
+    progress_queue.put({
+        'progress': progress,
+        'step': step
+    })
+
+@app.route('/progress')
+def progress_stream():
+    """
+    Server-Sent Events 端点，用于发送进度更新
+    """
+    def generate():
+        while True:
+            try:
+                # 非阻塞方式获取进度更新
+                data = progress_queue.get_nowait()
+                yield f"data: {json.dumps(data)}\n\n"
+            except queue.Empty:
+                # 如果队列为空，等待一小段时间
+                time.sleep(0.1)
+                continue
+
+    return Response(generate(), mimetype='text/event-stream')
+
 def process_svg_file(file_path):
     """处理上传的SVG文件的核心逻辑"""
     try:
         print(f"开始处理SVG文件: {file_path}")
+        send_progress_update(5, "开始处理SVG文件...")
         
         # 设置输出路径
         output_paths = {
@@ -79,17 +113,21 @@ def process_svg_file(file_path):
 
         # 处理步骤
         print("开始提取特征...")
+        send_progress_update(10, "正在提取特征...")
         featureCSV.process_and_save_features(file_path, output_paths['csv'], output_paths['svg_with_ids'])
         
         print("开始标准化特征...")
+        send_progress_update(25, "正在标准化特征...")
         normalized_features.normalize_features(output_paths['csv'], output_paths['normalized_csv'])
         
         print("处理CSV到JSON...")
+        send_progress_update(35, "正在处理数据格式...")
         featureCSV.process_csv_to_json(output_paths['csv'], output_paths['init_json'])
         featureCSV.process_csv_to_json(output_paths['normalized_csv'], output_paths['normalized_init_json'])
         
         # 处理位置和属性信息
         print("开始处理位置和属性信息...")
+        send_progress_update(45, "正在处理位置和属性信息...")
         posandprop.process_position_and_properties(
             output_paths['init_json'],
             file_path,
@@ -97,6 +135,7 @@ def process_svg_file(file_path):
         )
         
         print("计算等价权重...")
+        send_progress_update(60, "正在计算等价权重...")
         calculator = EquivalentWeightsCalculator(model_path="static/modules/best_mds_model.tar")
         calculator.compute_and_save_equivalent_weights(
             output_paths['normalized_csv'],
@@ -104,35 +143,9 @@ def process_svg_file(file_path):
             output_file_all='static/data/equivalent_weights_by_tag.json'
         )
 
-        # 定义聚类配置
-        clustering_config = {
-            # #社区检测方法
-            'method': 'louvain',  # Louvain社区检测算法  ✔
-            # 维度组合配置
-            'dimensions': [
-                [0],       
-                [1],      
-                [2],     
-                [3],
-                [0,1],
-                [0,2],
-                [0,3],
-                [1,2],
-                [1,3],
-                [2,3],
-                [0,1,2],
-                [0,1,3],
-                [0,2,3],
-                [1,2,3],
-                [0,1,2,3]
-            ]
-        }
-
-        print(f"选择的聚类方法: {clustering_config['method']}")
-        print(f"维度组合: {clustering_config['dimensions']}")
-
         # 运行聚类
         print("开始运行对比学习模型，输出特征表示...")
+        send_progress_update(75, "正在运行对比学习模型...")
         run_clustering(
             output_paths['normalized_csv'],
             output_paths['community_data'],
@@ -141,13 +154,17 @@ def process_svg_file(file_path):
 
         # 运行子图检测
         print("开始运行子图检测...")
+        send_progress_update(85, "正在进行子图检测...")
         run_subgraph_detection(
             features_json_path=output_paths['features_data'],
             output_dir=os.path.dirname(output_paths['features_data']),
-            clustering_method=clustering_config['method'],
-            subgraph_dimensions=clustering_config['dimensions']
+            clustering_method='louvain',
+            subgraph_dimensions=[[0], [1], [2], [3], [0,1], [0,2], [0,3], [1,2], [1,3], [2,3],
+                               [0,1,2], [0,1,3], [0,2,3], [1,2,3], [0,1,2,3]],
+            progress_callback=send_progress_update
         )
 
+        send_progress_update(100, "处理完成")
         print("处理完成")
         return {
             'success': True,
@@ -160,6 +177,7 @@ def process_svg_file(file_path):
     except Exception as e:
         print(f"处理SVG文件时出错: {str(e)}")
         print(f"错误堆栈: {traceback.format_exc()}")
+        send_progress_update(0, f"处理出错: {str(e)}")
         return {
             'success': False,
             'error': str(e)
@@ -265,8 +283,8 @@ def process_file():
     if not filename:
         return jsonify({'error': 'No filename provided'}), 400
 
-    # 确保文件名有 uploaded_ 前缀
-    if not filename.startswith('uploaded_'):
+    # 只有不是以 generated_ 开头的文件才添加 uploaded_ 前缀
+    if not filename.startswith('generated_') and not filename.startswith('uploaded_'):
         filename = f'uploaded_{filename}'
 
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -626,8 +644,8 @@ def filter_and_process():
                 'error': 'Missing filename or selected elements'
             }), 400
         
-        # 确保文件名有 uploaded_ 前缀
-        if not original_filename.startswith('uploaded_'):
+        # 只有不是以 generated_ 开头的文件才添加 uploaded_ 前缀
+        if not original_filename.startswith('generated_') and not original_filename.startswith('uploaded_'):
             original_filename = f'uploaded_{original_filename}'
         
         # 读取原始SVG文件
@@ -705,8 +723,8 @@ def get_visible_elements():
         if not filename:
             return jsonify({'error': 'No filename provided'}), 400
             
-        # 确保文件名有 uploaded_ 前缀
-        if not filename.startswith('uploaded_'):
+        # 只有不是以 generated_ 开头的文件才添加 uploaded_ 前缀
+        if not filename.startswith('generated_') and not filename.startswith('uploaded_'):
             filename = f'uploaded_{filename}'
             
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)

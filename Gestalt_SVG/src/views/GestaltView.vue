@@ -8,26 +8,23 @@
             </div>
             <div class="left-bottom">
                 <div class="fill-height">
-                    <CodeToSvg/>
+                    <CodeToSvg />
                 </div>
             </div>
         </div>
         <div class="right">
             <div class="fill-height datas">
-                <!-- <div style="display: flex; align-items: center;">
-                    <span style="font-size:1.1em; font-weight: 700; padding-left: 8px"> </span>
-                </div> -->
                 <div v-if="file" class="data-cards">
                     <div class="maxtistic">
                         <SubgroupVisualization v-if="file" :key="componentKey2" />
-                        <!-- <maxstic :key="componentKey" /> -->
-                        <analysisWords title="analysis" content="No analysis available"/>
+                        <analysisWords title="Feature dimension mapping analysis"/>
                         <div class="main-card margin-right">
                             <v-card class="position-card card1">
                                 <PositionStatistics position="top" title="Top Position" :key="componentKey4" />
                             </v-card>
                             <v-card class="position-card card2">
-                                <PositionStatistics position="bottom" title="Bottom Position" :key="componentKey4 + 1" />
+                                <PositionStatistics position="bottom" title="Bottom Position"
+                                    :key="componentKey4 + 1" />
                             </v-card>
                             <v-card class="position-card card3">
                                 <PositionStatistics position="right" title="Right Position" :key="componentKey4 + 2" />
@@ -50,7 +47,6 @@
                                 <HisAttrProportionsVue :key="componentKey4 + 6" />
                             </v-card>
                         </div>
-                        
                     </div>
                 </div>
             </div>
@@ -65,7 +61,6 @@ import HisAttrProportionsVue from '../components/statistics/AttributeStatistics.
 import FillStatistician from '../components/statistics/FillStatistics.vue';
 import strokeStatistician from '../components/statistics/StrokeStatistics.vue';
 import PositionStatistics from '../components/statistics/PositionStatistics.vue';
-import maxstic from '../components/visualization/maxstic.vue';
 import SubgroupVisualization from '../components/visualization/SubgroupVisualization.vue';
 import SvgUploader from '../components/SvgUploader.vue';
 import analysisWords from '@/components/statistics/analysisWords.vue';
@@ -83,14 +78,7 @@ const handleFileUploaded = () => {
     componentKey3.value += 1;
     componentKey4.value += 1;
     file.value = true;
-}
-
-const refresh = () => {
-    componentKey.value += 1;
-    componentKey2.value += 1;
-    componentKey4.value += 1;
-}
-
+};
 </script>
 
 <style scoped>
@@ -235,32 +223,32 @@ const refresh = () => {
     padding: 4px;
 }
 
-.maxtistic > * {
+.maxtistic>* {
     border-radius: 12px;
     transition: all 0.3s ease;
 }
 
 /* 只为 SubgroupVisualization 和 maxstic 添加悬浮效果 */
-.maxtistic > SubgroupVisualization:hover,
-.maxtistic > maxstic:hover {
+.maxtistic>SubgroupVisualization:hover,
+.maxtistic>maxstic:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
 }
 
-.maxtistic > analysisWords {
+.maxtistic>analysisWords {
     background-color: transparent !important;
     box-shadow: none !important;
 }
 
-.maxtistic > analysisWords:hover {
+.maxtistic>analysisWords:hover {
     transform: none !important;
 }
 
-.maxtistic > maxstic {
+.maxtistic>maxstic {
     height: 40%;
 }
 
-.maxtistic > SubgroupVisualization {
+.maxtistic>SubgroupVisualization {
     height: 60%;
 }
 

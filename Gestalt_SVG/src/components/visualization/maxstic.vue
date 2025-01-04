@@ -18,6 +18,9 @@ import { useStore } from 'vuex';
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 
+// 添加 emit
+const emit = defineEmits(['update-analysis']);
+
 // 数据源URL
 const NORMAL_DATA_URL = "http://localhost:5000/normalized_init_json";
 const INIT_DATA_URL = "http://localhost:5000/cluster_features";
@@ -58,108 +61,40 @@ const handleGlobalMouseUp = () => {
         .style('display', null); // 显示所有连线
 };
 
-// 在 onMounted 之前添加相关性矩阵渲染函数
-function renderCorrelationMatrix(correlationData, svg, width) {
-    if (!svg) return;
+// 生成分析文字的函数
+const generateAnalysis = (dataMapping, dataEquivalentWeights) => {
+    if (!dataMapping || !dataEquivalentWeights) return '';
 
-    const matrixWidth = 200;
-    const matrixHeight = 200;
-    const cellSize = matrixWidth / 4;
+    let analysis = '';
+    const inputDimensions = dataMapping.input_dimensions;
+    const outputDimensions = dataMapping.output_dimensions;
+    const weights = dataMapping.weights;
 
-    // 移除旧的相关性矩阵
-    svg.selectAll('.correlation-matrix').remove();
-    svg.selectAll('.dimension-stats').remove();
-
-    const correlationGroup = svg.append('g')
-        .attr('class', 'correlation-matrix')
-        .attr('transform', `translate(${width + 50}, 20)`);
-
-    // 添加标题
-    correlationGroup.append('text')
-        .attr('x', matrixWidth / 2)
-        .attr('y', -10)
-        .attr('text-anchor', 'middle')
-        .style('font-size', '14px')
-        .style('font-weight', 'bold')
-        .text('维度相关性矩阵');
-
-    // 创建颜色比例尺
-    const colorScale = d3.scaleSequential(d3.interpolateRdBu)
-        .domain([1, -1]);
-
-    // 绘制相关性矩阵
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
-            const cell = correlationGroup.append('g')
-                .attr('transform', `translate(${j * cellSize}, ${i * cellSize})`);
-
-            // 添加背景矩形
-            cell.append('rect')
-                .attr('width', cellSize)
-                .attr('height', cellSize)
-                .style('fill', colorScale(correlationData.correlations[i][j]))
-                .style('stroke', 'white');
-
-            // 添加相关系数文本
-            cell.append('text')
-                .attr('x', cellSize / 2)
-                .attr('y', cellSize / 2)
-                .attr('dy', '0.35em')
-                .attr('text-anchor', 'middle')
-                .style('font-size', '12px')
-                .style('fill', Math.abs(correlationData.correlations[i][j]) > 0.5 ? 'white' : 'black')
-                .text(correlationData.correlations[i][j].toFixed(2));
-        }
-    }
-
-    // 添加维度标签
-    for (let i = 0; i < 4; i++) {
-        // Y轴标签
-        correlationGroup.append('text')
-            .attr('x', -10)
-            .attr('y', i * cellSize + cellSize / 2)
-            .attr('dy', '0.35em')
-            .attr('text-anchor', 'end')
-            .style('font-size', '12px')
-            .text(`Z_${i + 1}`);
-
-        // X轴标签
-        correlationGroup.append('text')
-            .attr('x', i * cellSize + cellSize / 2)
-            .attr('y', matrixHeight + 20)
-            .attr('text-anchor', 'middle')
-            .style('font-size', '12px')
-            .text(`Z_${i + 1}`);
-    }
-
-    // 添加维度统计信息
-    const statsGroup = svg.append('g')
-        .attr('class', 'dimension-stats')
-        .attr('transform', `translate(${width + 50}, ${matrixHeight + 100})`);
-
-    statsGroup.append('text')
-        .attr('x', 0)
-        .attr('y', -20)
-        .style('font-size', '14px')
-        .style('font-weight', 'bold')
-        .text('维度统计特征');
-
-    correlationData.dimensionStats.forEach((stats, i) => {
-        const statText = statsGroup.append('g')
-            .attr('transform', `translate(0, ${i * 60})`);
-
-        statText.append('text')
-            .attr('x', 0)
-            .attr('y', 0)
-            .style('font-weight', 'bold')
-            .text(`Z_${i + 1}:`);
-
-        statText.append('text')
-            .attr('x', 0)
-            .attr('y', 20)
-            .text(`偏度: ${stats.skewness.toFixed(2)}, 峰度: ${stats.kurtosis.toFixed(2)}`);
+    // 分析每个输出维度的主要特征
+    outputDimensions.forEach((outDim, j) => {
+        analysis += `维度 Z_${j + 1}：\n`;
+        
+        // 获取该维度的权重
+        const dimensionWeights = weights[j];
+        
+        // 找出最重要的输入特征（权重绝对值最大的两个）
+        const weightEntries = dimensionWeights.map((w, i) => ({ weight: w, index: i }));
+        weightEntries.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
+        
+        // 取前2个最重要的特征
+        const topFeatures = weightEntries.slice(0, 2);
+        
+        analysis += `主要由 `;
+        topFeatures.forEach(({ weight, index }, i) => {
+            const featureName = inputDimensions[index];
+            const influence = weight > 0 ? '正向' : '负向';
+            analysis += `${featureName}(${influence})${i < topFeatures.length - 1 ? ' 和 ' : ' '}`;
+        });
+        analysis += '特征组成\n\n';
     });
-}
+
+    return analysis;
+};
 
 // 在组件挂载后执行
 onMounted(async () => {
@@ -182,6 +117,10 @@ onMounted(async () => {
         const rawDataInit = await responseInit.json();
         const rawDataMapping = await responseMapping.json();
         const rawDataEquivalentWeights = await responseEquivalentWeights.json();
+
+        // 生成分析文字
+        const analysis = generateAnalysis(rawDataMapping, rawDataEquivalentWeights);
+        emit('update-analysis', analysis);
 
         const dataNormal = processDataNormal(rawDataNormal);
         const dataInit = processDataInit(rawDataInit);

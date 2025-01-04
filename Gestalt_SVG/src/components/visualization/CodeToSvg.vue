@@ -14,10 +14,10 @@
                 </div>
               </el-option>
             </el-select>
-            <el-button type="primary" @click="generateSvg">Generate SVG</el-button>
+            <el-button type="primary" @click="generateSvg">Generate</el-button>
           </div>
           <div class="right-tools">
-            <el-switch v-model="autoGenerate" active-text="实时生成" />
+            <el-switch v-model="autoGenerate" active-text="real time" />
           </div>
           <div class="side-mode-switch">
             <div class="mode-tabs">
@@ -41,8 +41,8 @@
           <span>SVG Code</span>
           <div>
             <div class="right-tools">
-              <el-button @click="copyCode">Copy SVG</el-button>
-              <el-button @click="downloadSvg">Download SVG</el-button>
+              <el-button @click="copyCode">Copy</el-button>
+              <el-button @click="downloadSvg">Download</el-button>
             </div>
           </div>
           <div class="side-mode-switch">
@@ -202,30 +202,6 @@ const initEditors = () => {
   }
 }
 
-// 处理编辑器模式切换
-const handleEditorModeChange = () => {
-  nextTick(() => {
-    if (!declarativeEditor || !svgEditor) {
-      initEditors()
-    }
-    if (isDeclarativeMode.value) {
-      declarativeEditor?.layout()
-    } else {
-      svgEditor?.layout()
-    }
-  })
-}
-
-// 更新编辑器内容
-const updateEditors = () => {
-  if (declarativeEditor) {
-    declarativeEditor.setValue(code.value)
-  }
-  if (svgEditor) {
-    svgEditor.setValue(svgCode.value)
-  }
-}
-
 // 监听语法变化
 watch(selectedSyntax, (newValue) => {
   if (declarativeEditor) {
@@ -249,11 +225,6 @@ const debounce = (fn, delay) => {
     }, delay)
   }
 }
-
-// 获取占位符文本
-const getPlaceholder = computed(() => {
-  return `请输入${selectedSyntax.value}代码，例如：\n${placeholders[selectedSyntax.value]}`
-})
 
 // 格式化SVG代码
 const formatSvgCode = (svgString) => {
@@ -779,7 +750,7 @@ watch(svgOutput, async () => {
 
 // 组件挂载时初始化
 onMounted(() => {
-  selectedSyntax.value = 'd3'
+  selectedSyntax.value = 'vega'
   code.value = placeholders[selectedSyntax.value]
   nextTick(() => {
     initEditors()

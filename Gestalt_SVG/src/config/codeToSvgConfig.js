@@ -1,88 +1,39 @@
 // 语法选项配置
 export const syntaxOptions = [
-  { 
-    label: 'D3.js', 
-    value: 'd3',
-    description: '复杂图表、高度定制，适合创建自定义可视化'
+  {
+    label: "Vega",
+    value: "vega",
+    description: "底层声明式语法，提供完整的可视化控制能力",
   },
-  { 
-    label: 'ECharts', 
-    value: 'echarts',
-    description: '复杂图表、高度定制，适合创建专业级数据可视化'
+  {
+    label: "ECharts",
+    value: "echarts",
+    description: "复杂图表、高度定制，适合创建专业级数据可视化",
   },
-  { 
-    label: 'Vega', 
-    value: 'vega',
-    description: '底层声明式语法，提供完整的可视化控制能力'
+  {
+    label: "Vega-Lite",
+    value: "vega-lite",
+    description: "高级声明式语法，适合快速数据探索和原型设计",
   },
-  { 
-    label: 'Vega-Lite', 
-    value: 'vega-lite',
-    description: '高级声明式语法，适合快速数据探索和原型设计'
+  {
+    label: "D3.js",
+    value: "d3",
+    description: "复杂图表、高度定制，适合创建自定义可视化",
   },
-  { 
-    label: 'Highcharts', 
-    value: 'highcharts',
-    description: '商业级别图表，适合创建专业级数据可视化'
+  {
+    label: "Highcharts",
+    value: "highcharts",
+    description: "商业级别图表，适合创建专业级数据可视化",
   },
-  { 
-    label: 'Matplotlib', 
-    value: 'matplotlib',
-    description: '科学绘图、需要较高自定义，适合创建科学图表'
-  }
-]
+  {
+    label: "Matplotlib",
+    value: "matplotlib",
+    description: "科学绘图、需要较高自定义，适合创建科学图表",
+  },
+];
 
 // 示例代码配置
 export const placeholders = {
-  // D3.js 示例
-  d3: `const width = 400;
-const height = 300;
-const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-
-const svg = d3.select(container)
-  .append('svg')
-  .attr('width', width)
-  .attr('height', height);
-
-// 创建数据
-const data = [
-  { name: 'A', value: 30 },
-  { name: 'B', value: 45 },
-  { name: 'C', value: 25 },
-  { name: 'D', value: 60 },
-  { name: 'E', value: 35 }
-];
-
-// 创建比例尺
-const x = d3.scaleBand()
-  .domain(data.map(d => d.name))
-  .range([margin.left, width - margin.right])
-  .padding(0.1);
-
-const y = d3.scaleLinear()
-  .domain([0, d3.max(data, d => d.value)])
-  .nice()
-  .range([height - margin.bottom, margin.top]);
-
-// 添加坐标轴
-svg.append('g')
-  .attr('transform', \`translate(0,\${height - margin.bottom})\`)
-  .call(d3.axisBottom(x));
-
-svg.append('g')
-  .attr('transform', \`translate(\${margin.left},0)\`)
-  .call(d3.axisLeft(y));
-
-// 添加柱状图
-svg.selectAll('rect')
-  .data(data)
-  .join('rect')
-  .attr('x', d => x(d.name))
-  .attr('y', d => y(d.value))
-  .attr('width', x.bandwidth())
-  .attr('height', d => y(0) - y(d.value))
-  .attr('fill', '#4CAF50');`,
-
   // ECharts 示例
   echarts: `{
   "title": {
@@ -294,6 +245,54 @@ svg.selectAll('rect')
     }
   }
 }`,
+  // D3.js 示例
+  d3: `const width = 400;
+const height = 300;
+const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+
+const svg = d3.select(container)
+  .append('svg')
+  .attr('width', width)
+  .attr('height', height);
+
+// 创建数据
+const data = [
+  { name: 'A', value: 30 },
+  { name: 'B', value: 45 },
+  { name: 'C', value: 25 },
+  { name: 'D', value: 60 },
+  { name: 'E', value: 35 }
+];
+
+// 创建比例尺
+const x = d3.scaleBand()
+  .domain(data.map(d => d.name))
+  .range([margin.left, width - margin.right])
+  .padding(0.1);
+
+const y = d3.scaleLinear()
+  .domain([0, d3.max(data, d => d.value)])
+  .nice()
+  .range([height - margin.bottom, margin.top]);
+
+// 添加坐标轴
+svg.append('g')
+  .attr('transform', \`translate(0,\${height - margin.bottom})\`)
+  .call(d3.axisBottom(x));
+
+svg.append('g')
+  .attr('transform', \`translate(\${margin.left},0)\`)
+  .call(d3.axisLeft(y));
+
+// 添加柱状图
+svg.selectAll('rect')
+  .data(data)
+  .join('rect')
+  .attr('x', d => x(d.name))
+  .attr('y', d => y(d.value))
+  .attr('width', x.bandwidth())
+  .attr('height', d => y(0) - y(d.value))
+  .attr('fill', '#4CAF50');`,
 
   // Highcharts 示例
   highcharts: `{
@@ -357,5 +356,5 @@ plt.legend()
 plt.grid(True, linestyle='--', alpha=0.7)
 
 # 保存为SVG
-plt.savefig('output.svg', format='svg', bbox_inches='tight')`
-} 
+plt.savefig('output.svg', format='svg', bbox_inches='tight')`,
+};

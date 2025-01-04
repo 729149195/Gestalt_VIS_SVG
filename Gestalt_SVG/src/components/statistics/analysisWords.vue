@@ -1,107 +1,196 @@
 <template>
   <div class="analysis-words-container">
-    <div class="analysis-header">
+    <!-- <div class="analysis-header">
       <h3>{{ props.title }}</h3>
-    </div>
-    <div class="analysis-content" @scroll="handleScroll">
-      <p>{{ props.content }}</p>
+    </div> -->
+    <div class="analysis-content" @scroll="handleScroll" v-html="analysisContent">
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+import axios from 'axios'
+
+// 数据源URL
+const MAPPING_DATA_URL = "http://localhost:5000/average_equivalent_mapping";
+const EQUIVALENT_WEIGHTS_URL = "http://localhost:5000/equivalent_weights_by_tag";
+
+// 特征名称映射
+const featureNameMap = {
+    'tag_name': '元素名称',
+    'tag': '标签类型',
+    'opacity': '不透明度',
+    'fill_h_cos': '填充色相(C)',
+    'fill_h_sin': '填充色相(S)',
+    'fill_s_n': '填充饱和度',
+    'fill_l_n': '填充亮度',
+    'stroke_h_cos': '描边色相(C)',
+    'stroke_h_sin': '描边色相(S)',
+    'stroke_s_n': '描边饱和度',
+    'stroke_l_n': '描边亮度',
+    'stroke_width': '描边宽度',
+    'bbox_left_n': '左边界位置',
+    'bbox_right_n': '右边界位置',
+    'bbox_top_n': '上边界位置',
+    'bbox_bottom_n': '下边界位置',
+    'bbox_mds_1': '位置分布特征1',
+    'bbox_mds_2': '位置分布特征2',
+    'bbox_center_x_n': '中心X坐标',
+    'bbox_center_y_n': '中心Y坐标',
+    'bbox_width_n': '宽度',
+    'bbox_height_n': '高度',
+    'bbox_fill_area': '元素面积'
+};
+
 const props = defineProps({
   title: {
     type: String,
     default: 'analysis'
-  },
-  content: {
-    type: String,
-    default: 'No analysis available'
   }
 })
 
 const emit = defineEmits(['scroll'])
 
+const analysisContent = ref('等待分析...')
+
+// 生成分析文字的函数
+const generateAnalysis = (dataMapping, dataEquivalentWeights) => {
+    if (!dataMapping || !dataEquivalentWeights) return '等待分析...';
+
+    let analysis = '';
+    const inputDimensions = dataMapping.input_dimensions;
+    const outputDimensions = dataMapping.output_dimensions;
+    const weights = dataMapping.weights;
+
+    // 分析每个输出维度的主要特征
+    outputDimensions.forEach((outDim, j) => {
+        analysis += `<div class="dimension-analysis">【维度 ${j + 1} 的主要组成】 `;
+        
+        const dimensionWeights = weights[j];
+        const weightEntries = dimensionWeights.map((w, i) => ({ weight: w, index: i }));
+        weightEntries.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
+        
+        const topFeatures = weightEntries.slice(0, 3);
+        
+        let featureTexts = topFeatures.map(({ weight, index }) => {
+            const featureName = inputDimensions[index];
+            const displayName = featureNameMap[featureName] || featureName;
+            const influence = weight > 0 ? '正相关' : '负相关';
+            const strength = Math.abs(weight).toFixed(2);
+            
+            let strengthSymbol = '•';
+            if (strength > 1) strengthSymbol = '★';
+            else if (strength > 0.8) strengthSymbol = '☆';
+            
+            return `<span class="feature-tag">${displayName}</span> ${influence} ${strength} ${strengthSymbol}`;
+        })
+        
+        analysis += featureTexts.join('   ') + '</div>';
+    });
+
+    return analysis;
+};
+
+// 获取数据并生成分析
+const fetchDataAndGenerateAnalysis = async () => {
+    try {
+        const [responseMapping, responseEquivalentWeights] = await Promise.all([
+            axios.get(MAPPING_DATA_URL),
+            axios.get(EQUIVALENT_WEIGHTS_URL)
+        ]);
+
+        if (!responseMapping.data || !responseEquivalentWeights.data) {
+            throw new Error('网络响应有问题');
+        }
+
+        // 生成分析文字
+        analysisContent.value = generateAnalysis(responseMapping.data, responseEquivalentWeights.data);
+    } catch (error) {
+        console.error('获取数据失败:', error);
+        analysisContent.value = '分析生成失败，请重试';
+    }
+};
+
 const handleScroll = (event) => {
-  emit('scroll', {
-    scrollTop: event.target.scrollTop,
-    scrollHeight: event.target.scrollHeight
-  })
+    emit('scroll', {
+        scrollTop: event.target.scrollTop,
+        scrollHeight: event.target.scrollHeight
+    })
 }
+
+// 监听 SVG 内容更新事件
+const handleSvgUpdate = () => {
+    fetchDataAndGenerateAnalysis();
+};
+
+onMounted(() => {
+    window.addEventListener('svg-content-updated', handleSvgUpdate);
+    // 初始获取数据
+    fetchDataAndGenerateAnalysis();
+});
+
+onUnmounted(() => {
+    window.removeEventListener('svg-content-updated', handleSvgUpdate);
+});
 </script>
 
 <style scoped>
 .analysis-words-container {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(200, 200, 200, 0.3);
-  padding: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(200, 200, 200, 0.2);
+  padding: 14px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   height: 400px;
   display: flex;
   flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 
 .analysis-words-container:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
-  border: 1px solid rgba(180, 180, 180, 0.4);
 }
 
 .analysis-header {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding-bottom: 12px;
+  padding-bottom: 16px;
   flex-shrink: 0;
 }
 
-.analysis-header h3 {
-  margin: 0;
-  color: var(--el-text-color-primary);
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
 
 .analysis-content {
-  color: var(--el-text-color-regular);
-  line-height: 1.8;
-  font-size: 14px;
+  color: #424245;
+  font-size: 13px;
   overflow-y: auto;
-  flex-grow: 1;
-  padding: 0 12px 0 0;
+  line-height: 1.4;
 }
 
-.analysis-content::-webkit-scrollbar {
-  width: 6px;
+:deep(.feature-tag) {
+  background-color: rgba(0, 122, 255, 0.08);
+  border: 1px solid rgba(0, 122, 255, 0.15);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin: 0 1px;
+  color: #007AFF;
+  font-size: 13px;
+  display: inline-block;
+  font-weight: 500;
+  letter-spacing: -0.016em;
 }
 
-.analysis-content::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-  transition: background 0.3s ease;
+:deep(.dimension-analysis) {
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
 }
 
-.analysis-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.analysis-content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-
-.analysis-content p {
-  margin: 0;
-  padding: 4px 0;
-  transition: color 0.3s ease;
-}
-
-.analysis-content p:hover {
-  color: var(--el-text-color-primary);
+:deep(.dimension-analysis:last-child) {
+  margin-bottom: 0;
 }
 </style>

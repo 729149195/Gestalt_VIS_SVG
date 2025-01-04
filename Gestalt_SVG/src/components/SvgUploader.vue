@@ -23,6 +23,23 @@
             </div>
         </div>
 
+        <!-- 进度条组件 - 移到元素选择列表前面 -->
+        <div v-if="analyzing" class="progress-card">
+            <div class="progress-label">{{ currentStep }}</div>
+            <v-progress-linear
+                :model-value="progress"
+                color="primary"
+                height="6"
+                rounded
+                :striped="false"
+                bg-color="rgba(85, 192, 0, 0.1)"
+            >
+                <template v-slot:default="{ value }">
+                    <div class="progress-value">{{ Math.ceil(value) }}%</div>
+                </template>
+            </v-progress-linear>
+        </div>
+
         <!-- 添加元素类型选择列表 -->
         <div v-if="visibleElements.length > 0" class="element-selector mac-style-selector">
             <h3 class="mac-style-title">Select the type of element:</h3>
@@ -41,9 +58,9 @@
                 color="primary" 
                 class="mt-4 mac-style-button" 
                 @click="analyzeSvg" 
-                :disabled="selectedElements.length === 0"
+                :disabled="selectedElements.length === 0 || analyzing"
             >
-            Analysing selected element types
+                {{ analyzing ? '分析中...' : '分析' }}
             </v-btn>
         </div>
 
@@ -122,10 +139,18 @@ onUnmounted(() => {
     window.removeEventListener('svg-uploaded', handleSvgUploaded)
 })
 
+// 添加清除选中节点的函数
+const clearSelectedNodes = () => {
+    store.dispatch('clearSelectedNodes');
+};
+
 // 处理从CodeToSvg组件触发的上传事件
 const handleSvgUploaded = async (event) => {
     const filename = event.detail.filename
     console.log('接收到SVG上传事件:', filename)
+
+    // 清除选中的节点
+    clearSelectedNodes();
 
     try {
         // 设置file值，这样可以触发界面更新
@@ -177,6 +202,9 @@ const uploadFile = () => {
     const newFile = new File([file.value], `uploaded_${file.value.name}`, { type: file.value.type })
     formData.append('file', newFile)
 
+    // 清除选中的节点
+    clearSelectedNodes();
+
     // 先上传文件
     axios.post('http://localhost:5000/upload', formData, {
         headers: {
@@ -219,16 +247,38 @@ const uploadFile = () => {
         })
 }
 
+// 添加进度相关的响应式变量
+const analyzing = ref(false);
+const progress = ref(0);
+const currentStep = ref('');
+
 const analyzeSvg = () => {
     if (!file.value) return;
 
-    // 禁用分析按钮
-    const analyzing = ref(true);
+    // 重置进度状态
+    analyzing.value = true;
+    progress.value = 0;
+    currentStep.value = '准备分析...';
 
     // 确保 selectedNodeIds 是数组格式
     const nodeIds = Array.isArray(selectedNodeIds.value) ? selectedNodeIds.value : [];
     
     console.log('选中的节点ID:', nodeIds);
+
+    // 创建 EventSource 连接
+    const eventSource = new EventSource('http://localhost:5000/progress');
+    
+    // 监听进度更新
+    eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        progress.value = data.progress;
+        currentStep.value = data.step;
+    };
+
+    // 监听错误
+    eventSource.onerror = () => {
+        eventSource.close();
+    };
 
     axios.post('http://localhost:5000/filter_and_process', {
         filename: file.value.name,
@@ -245,14 +295,12 @@ const analyzeSvg = () => {
         })
         .then(() => {
             console.log('SVG更新完成');
-            // 触发事件通知CodeToSvg组件更新内容
             window.dispatchEvent(new CustomEvent('svg-content-updated', {
                 detail: { 
                     filename: file.value.name,
                     type: 'analysis'
                 }
             }));
-            // 触发file-uploaded事件
             emit('file-uploaded');
         })
         .catch(error => {
@@ -260,11 +308,16 @@ const analyzeSvg = () => {
         })
         .finally(() => {
             analyzing.value = false;
+            eventSource.close();
         });
 }
 
 const fetchProcessedSvg = () => {
     console.log('开始获取SVG内容')
+    
+    // 清除选中的节点
+    clearSelectedNodes();
+    
     return axios.get('http://localhost:5000/get_svg', {
         responseType: 'text',
         headers: {
@@ -688,14 +741,12 @@ watch(selectedElements, () => {
 }
 
 .element-selector {
-    flex: 0 0 auto;
-    overflow-y: auto;
-    margin: 10px 0;
     position: absolute;
     left: 16px;
-    bottom: 6px;
-    z-index: 1000;
-    max-height: 400px;
+    bottom: 16px;
+    z-index: 90;
+    max-height: calc(100vh - 280px);  /* 调整最大高度，留出进度条的空间 */
+    overflow-y: auto;
 }
 
 /* SVG 相关样式 */
@@ -795,5 +846,58 @@ watch(selectedElements, () => {
 .file-size {
     color: #86868b;
     font-size: 11px;
+}
+
+.progress-card {
+    position: absolute;
+    top: 90px;  /* 调整位置，确保在上传区域下方 */
+    left: 16px;
+    right: 16px;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(200, 200, 200, 0.3);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.progress-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1d1d1f;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-value {
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #86868b;
+    font-weight: 500;
+}
+
+:deep(.v-progress-linear) {
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+:deep(.v-progress-linear__background) {
+    opacity: 0.1 !important;
+}
+
+:deep(.v-progress-linear__determinate) {
+    background: linear-gradient(90deg, #55C000, #4CAF00);
+    box-shadow: 0 1px 3px rgba(85, 192, 0, 0.2);
+    transition: all 0.3s ease;
 }
 </style>
