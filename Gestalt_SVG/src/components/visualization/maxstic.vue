@@ -368,9 +368,9 @@ const processDataNormal = (rawData) => {
     let processedData = [];
     rawData.forEach((node) => {
         // 确保 node.features 长度为 20
-        if (node.features.length !== 22) {
-            console.warn(`节点 ${node.id} 的特征数量为 ${node.features.length}，预期为 21`);
-        }
+        // if (node.features.length !== 22) {
+        //     console.warn(`节点 ${node.id} 的特征数量为 ${node.features.length}，预期为 21`);
+        // }
         node.features.forEach((probability, groupIndex) => {
             processedData.push({
                 node: node.id,

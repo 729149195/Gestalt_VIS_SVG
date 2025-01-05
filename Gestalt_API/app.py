@@ -134,7 +134,7 @@ def process_svg_file(file_path):
         
         print("计算等价权重...")
         send_progress_update(60, "正在计算等价权重...")
-        calculator = EquivalentWeightsCalculator(model_path="static/modules/best_mds_model.tar")
+        calculator = EquivalentWeightsCalculator(model_path="static/modules/best_all_model_nocenter.tar")
         calculator.compute_and_save_equivalent_weights(
             output_paths['normalized_csv'],
             output_file_avg='static/data/average_equivalent_mapping.json',
@@ -156,7 +156,8 @@ def process_svg_file(file_path):
         run_subgraph_detection(
             features_json_path=output_paths['features_data'],
             output_dir=os.path.dirname(output_paths['features_data']),
-            clustering_method='gmm',
+            # louvain/gmm
+            clustering_method='louvain',  
             subgraph_dimensions=[[0], [1], [2], [3], [0,1], [0,2], [0,3], [1,2], [1,3], [2,3],
                                [0,1,2], [0,1,3], [0,2,3], [1,2,3], [0,1,2,3]],
             progress_callback=send_progress_update

@@ -101,7 +101,7 @@ const render = (data) => {
 
     // 添加 x 轴图例
     svg.append("text")
-        .attr("transform", `translate(${width / 2},${height - marginBottom / 4})`)
+        .attr("transform", `translate(${width / 2},${height - marginBottom / 10})`)
         .style("text-anchor", "middle")
         .style("font-size", "14px")
         .text("Fill Color");

@@ -1,119 +1,56 @@
 {
-    "-97.5-102.6": {
+    "120.0-198.8": {
         "tags": [
-            "path_13",
-            "path_12",
-            "text_20",
-            "line_12",
-            "path_10",
-            "line_11",
-            "line_10",
-            "line_9",
-            "line_8",
-            "line_7",
-            "line_6",
-            "line_5",
-            "line_4",
-            "line_3",
-            "line_2",
-            "line_1",
-            "text_13",
-            "text_12",
-            "text_11",
-            "text_10",
-            "text_9",
-            "text_8",
-            "text_7",
-            "text_6",
-            "text_5",
-            "text_4",
-            "text_3",
-            "line",
-            "path_8",
-            "text_1"
+            "rect_11",
+            "rect_10"
         ],
         "total": {
-            "path": 4,
-            "text": 13,
-            "line": 13
+            "rect": 2
         }
     },
-    "102.6-302.6": {
+    "198.8-277.5": {
         "tags": [
-            "line_18",
-            "text_2",
-            "path_7",
-            "text"
+            "rect_9",
+            "rect_8"
         ],
         "total": {
-            "line": 1,
-            "text": 2,
-            "path": 1
+            "rect": 2
         }
     },
-    "302.6-502.7": {
+    "356.2-435.0": {
         "tags": [
-            "line_17",
-            "text_19",
-            "path_6",
-            "path_5",
-            "path_2"
+            "rect_7",
+            "rect_6"
         ],
         "total": {
-            "line": 1,
-            "text": 1,
-            "path": 3
+            "rect": 2
         }
     },
-    "702.8-902.8": {
+    "435.0-513.8": {
         "tags": [
-            "line_16",
-            "text_17",
-            "text_14",
-            "path_3"
+            "rect_5",
+            "rect_4"
         ],
         "total": {
-            "line": 1,
-            "text": 2,
-            "path": 1
+            "rect": 2
         }
     },
-    "902.8-1102.9": {
+    "592.5-671.2": {
         "tags": [
-            "line_15"
+            "rect_3",
+            "rect_2"
         ],
         "total": {
-            "line": 1
+            "rect": 2
         }
     },
-    "1102.9-1302.9": {
+    "671.2-750.0": {
         "tags": [
-            "line_14",
-            "text_16"
+            "rect_1",
+            "rect"
         ],
         "total": {
-            "line": 1,
-            "text": 1
-        }
-    },
-    "1302.9-1503.0": {
-        "tags": [
-            "line_13",
-            "text_15"
-        ],
-        "total": {
-            "line": 1,
-            "text": 1
-        }
-    },
-    "502.7-702.8": {
-        "tags": [
-            "text_18",
-            "path_4"
-        ],
-        "total": {
-            "text": 1,
-            "path": 1
+            "rect": 2
         }
     }
 }
