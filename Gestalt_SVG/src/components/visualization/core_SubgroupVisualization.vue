@@ -84,7 +84,7 @@ function processGraphData(coreData) {
         // 创建组合节点（包含核心和外延）
         processedNodes.push({
             id: coreNodeId,
-            name: `核心聚类 ${clusterIndex + 1} (Z_${cluster.core_dimensions.join(',Z_')})`,
+            name: `co ${clusterIndex + 1} (Z_${cluster.core_dimensions.join(',Z_')})`,
             type: 'core',
             originalNodes: cluster.core_nodes,
             dimensions: cluster.dimensions,
@@ -268,7 +268,7 @@ function renderGraph(container, graphData) {
                 allNodeData.push({
                     data: {
                         id: `ext_${node.data.id.split('_')[1]}_${index}`,
-                        name: `外延(${extension.dimension})`,
+                        name: `ex(${extension.dimension})`,
                         type: 'extension',
                         dimension: extension.dimension,
                         originalNodes: extension.nodes,
@@ -297,15 +297,64 @@ function renderGraph(container, graphData) {
         .attr('class', 'node')
         .attr('transform', d => `translate(${d.x0},${d.y0})`);
 
-    // 添加节点基础矩形
+    // 添加阴影滤镜定义
+    const defs = svg.append('defs');
+    
+    // 默认阴影
+    defs.append('filter')
+        .attr('id', 'dropShadow')
+        .attr('filterUnits', 'userSpaceOnUse')
+        .attr('color-interpolation-filters', 'sRGB')
+        .html(`
+            <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.2"/>
+        `);
+    
+    // hover时的阴影
+    defs.append('filter')
+        .attr('id', 'dropShadowHover')
+        .attr('filterUnits', 'userSpaceOnUse')
+        .attr('color-interpolation-filters', 'sRGB')
+        .html(`
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/>
+        `);
+
+    // 添加节点背景矩形（带阴影）
     nodeGroup.append('rect')
         .attr('width', d => d.x1 - d.x0)
         .attr('height', d => d.y1 - d.y0)
         .attr('fill', 'white')
-        .attr('stroke', d => d.isCore ? '#1a73e8' : '#34a853')
-        .attr('stroke-width', 2)
-        .attr('rx', 4)
-        .attr('ry', 4);
+        .attr('stroke', d => {
+            const nodeElements = (d.isCore ? d.data : d.data).originalNodes.map(n => n.split('/').pop());
+            const selectedElements = nodeElements.filter(id => selectedNodeIds.value.includes(id));
+            const selectedSet = new Set(selectedElements);
+            // 检查选中的元素是否与选中集合完全匹配
+            const isMatch = selectedElements.length > 0 && 
+                          selectedElements.length === selectedNodeIds.value.length &&
+                          selectedElements.every(id => selectedNodeIds.value.includes(id));
+            return d.isCore ? 
+                (isMatch ? '#1967d2' : '#1a73e8') : 
+                (isMatch ? '#188038' : '#34a853');
+        })
+        .attr('stroke-width', d => {
+            const nodeElements = (d.isCore ? d.data : d.data).originalNodes.map(n => n.split('/').pop());
+            const selectedElements = nodeElements.filter(id => selectedNodeIds.value.includes(id));
+            const isMatch = selectedElements.length > 0 && 
+                          selectedElements.length === selectedNodeIds.value.length &&
+                          selectedElements.every(id => selectedNodeIds.value.includes(id));
+            return isMatch ? 2.5 : 1.5;
+        })
+        .attr('stroke-opacity', d => {
+            const nodeElements = (d.isCore ? d.data : d.data).originalNodes.map(n => n.split('/').pop());
+            const selectedElements = nodeElements.filter(id => selectedNodeIds.value.includes(id));
+            const isMatch = selectedElements.length > 0 && 
+                          selectedElements.length === selectedNodeIds.value.length &&
+                          selectedElements.every(id => selectedNodeIds.value.includes(id));
+            return isMatch ? 1 : 0.8;
+        })
+        .attr('rx', 8)
+        .attr('ry', 8)
+        .attr('filter', 'url(#dropShadow)')
+        .style('transition', 'all 0.2s ease-in-out');
 
     // 添加连接线（从外延节点到核心节点）
     nodeGroup.each(function(d) {
@@ -315,13 +364,21 @@ function renderGraph(container, graphData) {
             const coreNode = allNodeData.find(n => n.isCore && n.data.id === coreNodeId);
             
             if (coreNode) {
+                const nodeElements = d.data.originalNodes.map(n => n.split('/').pop());
+                const selectedElements = nodeElements.filter(id => selectedNodeIds.value.includes(id));
+                const isMatch = selectedElements.length > 0 && 
+                              selectedElements.length === selectedNodeIds.value.length &&
+                              selectedElements.every(id => selectedNodeIds.value.includes(id));
+                
                 g.append('path')
                     .attr('d', `M${d.x1},${d.y0 + (d.y1 - d.y0)/2} 
                                L${coreNode.x0},${d.y0 + (d.y1 - d.y0)/2}`)
-                    .attr('stroke', '#34a853')
-                    .attr('stroke-width', 2)
+                    .attr('stroke', isMatch ? '#188038' : '#34a853')
+                    .attr('stroke-width', isMatch ? 2 : 1.5)
+                    .attr('stroke-opacity', isMatch ? 0.8 : 0.6)
                     .attr('stroke-dasharray', '4,4')
-                    .attr('fill', 'none');
+                    .attr('fill', 'none')
+                    .style('transition', 'all 0.2s ease-in-out');
             }
         }
     });
@@ -334,30 +391,52 @@ function renderGraph(container, graphData) {
         
         // 减小padding，增大SVG显示区域
         const foreignObject = node.append('foreignObject')
-            .attr('width', width - 8)  // 减小左右padding
-            .attr('height', height - 24)  // 减小上下padding
-            .attr('x', 4)
-            .attr('y', 4);
+            .attr('width', width - 16)
+            .attr('height', height - 32)
+            .attr('x', 8)
+            .attr('y', 8);
 
         const div = foreignObject.append('xhtml:div')
             .style('width', '100%')
             .style('height', '100%')
             .style('overflow', 'hidden')
-            .style('border-radius', '4px');
+            .style('border-radius', '6px')
+            .style('background', '#fafafa');
 
         div.html(createThumbnail(d.isCore ? d.data : d.data));
 
-        // 添加标签
+        // 添加标签背景
+        node.append('rect')
+            .attr('class', 'label-bg')
+            .attr('x', 8)
+            .attr('y', height - 28)
+            .attr('width', width - 16)
+            .attr('height', 24)
+            .attr('fill', 'white')
+            .attr('rx', 4)
+            .attr('ry', 4);
+
+        // 添加标签文本
         node.append('text')
             .attr('x', width / 2)
             .attr('y', height - 12)
             .attr('text-anchor', 'middle')
             .attr('dominant-baseline', 'middle')
-            .style('font-family', "'Google Sans', 'Roboto', sans-serif")
+            .style('font-family', "'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif")
             .style('font-size', '13px')
             .style('font-weight', '500')
             .style('fill', '#3c4043')
             .text(d.isCore ? d.data.name : d.data.name);
+    });
+
+    // 添加hover效果
+    nodeGroup.on('mouseenter', function() {
+        d3.select(this).select('rect')
+            .attr('filter', 'url(#dropShadowHover)');
+    })
+    .on('mouseleave', function() {
+        d3.select(this).select('rect')
+            .attr('filter', 'url(#dropShadow)');
     });
 
     // 添加点击事件
@@ -411,30 +490,56 @@ onMounted(async () => {
 watch(selectedNodeIds, () => {
     nextTick(() => {
         const svg = d3.select(graphContainer.value).select('svg');
-        svg.selectAll('.node-group').each(function(d) {
-            const nodeGroup = d3.select(this);
-            const rect = nodeGroup.select('rect');
-            
-            // 获取节点包含的所有元素ID
-            const nodeElements = d.originalNodes.map(n => n.split('/').pop());
-            // 检查是否所有元素都被选中
-            const allSelected = nodeElements.every(id => selectedNodeIds.value.includes(id));
-            // 检查是否有部分元素被选中
-            const someSelected = nodeElements.some(id => selectedNodeIds.value.includes(id));
-            
-            // 更新边框样式
-            rect
-                .attr('stroke', d => {
-                    if (allSelected) {
-                        // 全部选中时使用更亮的颜色
-                        return d.type === 'core' ? '#ff3333' : '#33cc33';
-                    } else {
-                        // 保持原有颜色
-                        return d.type === 'core' ? '#ff6347' : '#69b3a2';
+        
+        // 更新节点边框
+        svg.selectAll('.node rect').each(function(d) {
+            const rect = d3.select(this);
+            // 检查是否为标签背景或者数据不存在
+            if (!rect.classed('label-bg') && d) {
+                try {
+                    const data = d.data || d;
+                    const isCore = d.isCore || data.type === 'core';
+                    const nodeElements = (isCore ? data : data).originalNodes.map(n => n.split('/').pop());
+                    const selectedElements = nodeElements.filter(id => selectedNodeIds.value.includes(id));
+                    const isMatch = selectedElements.length > 0 && 
+                                  selectedElements.length === selectedNodeIds.value.length &&
+                                  selectedElements.every(id => selectedNodeIds.value.includes(id));
+                    
+                    rect
+                        .attr('stroke', isCore ? 
+                            (isMatch ? '#1967d2' : '#1a73e8') : 
+                            (isMatch ? '#188038' : '#34a853'))
+                        .attr('stroke-width', isMatch ? 2.5 : 1.5)
+                        .attr('stroke-opacity', isMatch ? 1 : 0.8);
+                } catch (error) {
+                    console.warn('Error updating node border:', error);
+                }
+            }
+        });
+        
+        // 更新连接线
+        svg.selectAll('path').each(function(d, i, nodes) {
+            const path = d3.select(this);
+            if (path.attr('stroke-dasharray') === '4,4') {  // 只处理连接线
+                const sourceNode = d3.select(nodes[i].parentNode).datum();
+                if (sourceNode && !sourceNode.isCore) {  // 确保是外延节点的连接线且数据存在
+                    try {
+                        const data = sourceNode.data || sourceNode;
+                        const nodeElements = data.originalNodes.map(n => n.split('/').pop());
+                        const selectedElements = nodeElements.filter(id => selectedNodeIds.value.includes(id));
+                        const isMatch = selectedElements.length > 0 && 
+                                      selectedElements.length === selectedNodeIds.value.length &&
+                                      selectedElements.every(id => selectedNodeIds.value.includes(id));
+                        
+                        path
+                            .attr('stroke', isMatch ? '#188038' : '#34a853')
+                            .attr('stroke-width', isMatch ? 2 : 1.5)
+                            .attr('stroke-opacity', isMatch ? 0.8 : 0.6);
+                    } catch (error) {
+                        console.warn('Error updating connection line:', error);
                     }
-                })
-                .attr('stroke-width', allSelected ? 4 : 2)  // 全部选中时加粗边框
-                .attr('stroke-opacity', allSelected ? 1 : (someSelected ? 0.8 : 0.6));  // 调整透明度
+                }
+            }
         });
     });
 });
