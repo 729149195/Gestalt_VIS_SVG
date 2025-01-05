@@ -12,6 +12,8 @@ import time
 matplotlib.use('Agg')  # 在导入 pyplot 之前设置后端
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.mixture import GaussianMixture
 
 # 设置中文字体
 matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'KaiTi', 'FangSong']
@@ -157,7 +159,7 @@ def process_svg_file(file_path):
             features_json_path=output_paths['features_data'],
             output_dir=os.path.dirname(output_paths['features_data']),
             # louvain/gmm
-            clustering_method='louvain',  
+            clustering_method='gmm',  
             subgraph_dimensions=[[0], [1], [2], [3], [0,1], [0,2], [0,3], [1,2], [1,3], [2,3],
                                [0,1,2], [0,1,3], [0,2,3], [1,2,3], [0,1,2,3]],
             progress_callback=send_progress_update
@@ -894,6 +896,60 @@ def clear_upload_folder():
             'success': False,
             'error': str(e)
         }), 500
+
+@app.route('/calculate_gmm', methods=['POST'])
+def calculate_gmm():
+    """计算GMM结果的API端点"""
+    try:
+        data = request.get_json()
+        if not data or 'values' not in data:
+            return jsonify({'error': 'Missing values in request'}), 400
+
+        values = np.array(data['values'])
+        
+        # 标准化数据
+        scaler = StandardScaler()
+        scaled_values = scaler.fit_transform(values.reshape(-1, 1)).ravel()
+        
+        # 使用BIC准则自动选择最佳的聚类数量（2到5之间）
+        n_components_range = range(2, min(6, len(values)))
+        bic = []
+        gmm_models = []
+        
+        for n_components in n_components_range:
+            gmm = GaussianMixture(n_components=n_components, random_state=42)
+            gmm.fit(scaled_values.reshape(-1, 1))
+            bic.append(gmm.bic(scaled_values.reshape(-1, 1)))
+            gmm_models.append(gmm)
+        
+        # 选择BIC最小的模型
+        best_idx = np.argmin(bic)
+        best_n_components = n_components_range[best_idx]
+        best_gmm = gmm_models[best_idx]
+        
+        # 获取每个组件的参数
+        components = []
+        for i in range(best_n_components):
+            # 将标准化的参数转换回原始尺度
+            mean = scaler.inverse_transform([[best_gmm.means_[i][0]]])[0][0]
+            variance = best_gmm.covariances_[i][0][0] * (scaler.scale_[0] ** 2)
+            
+            components.append({
+                'mean': float(mean),
+                'variance': float(variance),
+                'weight': float(best_gmm.weights_[i])
+            })
+        
+        return jsonify({
+            'success': True,
+            'components': components,
+            'bic_scores': [float(score) for score in bic]
+        }), 200
+        
+    except Exception as e:
+        print(f"GMM计算错误: {str(e)}")
+        print(f"错误堆栈: {traceback.format_exc()}")
+        return jsonify({'error': f'GMM calculation error: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

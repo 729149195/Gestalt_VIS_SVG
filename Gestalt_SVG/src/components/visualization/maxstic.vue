@@ -985,287 +985,372 @@ const calculateCombinedDimensionValue = (features, combination) => {
 };
 
 // 修改renderDimensionAxes函数
-const renderDimensionAxes = (data, containerWidth) => {
-    // 清空旧的轴
-    d3.select(axisContainer.value).selectAll('*').remove();
+const renderDimensionAxes = async (data, containerWidth) => {
+    try {
+        // 清空旧的轴
+        d3.select(axisContainer.value).selectAll('*').remove();
 
-    const margin = { top: 20, right: 15, bottom: 20, left: 420 };
-    const width = containerWidth - margin.left - margin.right;
-    const height = 60; // 每个轴的高度
-    const gmmHeight = 30; // GMM曲线的高度
+        const margin = { top: 20, right: 15, bottom: 20, left: 420 };
+        const width = containerWidth - margin.left - margin.right;
+        const height = 60; // 每个轴的高度
+        const gmmHeight = 30; // GMM曲线的高度
 
-    // 获取所有维度组合
-    const dimensionCombinations = generateDimensionCombinations();
-    const totalHeight = height * dimensionCombinations.length;
+        // 获取所有维度组合
+        const dimensionCombinations = generateDimensionCombinations();
+        const totalHeight = height * dimensionCombinations.length;
 
-    // 创建SVG
-    const svg = d3.select(axisContainer.value)
-        .append('svg')
-        .attr('width', containerWidth)
-        .attr('height', totalHeight + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
+        // 创建SVG
+        const svg = d3.select(axisContainer.value)
+            .append('svg')
+            .attr('width', containerWidth)
+            .attr('height', totalHeight + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // 为每个维度组合创建数据
-    const combinedData = dimensionCombinations.map(combination => {
-        return data.map(d => ({
-            id: d.id,
-            value: calculateCombinedDimensionValue(d.features, combination),
-            combination: combination
-        }));
-    });
+        // 为每个维度组合创建数据
+        const combinedData = dimensionCombinations.map(combination => {
+            return data.map(d => ({
+                id: d.id,
+                value: calculateCombinedDimensionValue(d.features, combination),
+                combination: combination
+            }));
+        });
 
-    // 创建GMM曲线生成器
-    const gmmCurve = d3.line()
-        .x(d => d[0])
-        .y(d => d[1])
-        .curve(d3.curveBasis);
+        // 创建GMM曲线生成器
+        const gmmCurve = d3.line()
+            .x(d => d[0])
+            .y(d => d[1])
+            .curve(d3.curveBasis);
 
-    // 为每个维度组合创建统计信息
-    const dimensionStats = combinedData.map(dimData => {
-        const values = dimData.map(d => d.value);
-        const gmm = fitGMM(values);
-        
-        return {
-            variance: d3.variance(values).toFixed(4),
-            range: (d3.max(values) - d3.min(values)).toFixed(4),
-            dispersionDegree: calculateDispersionDegree(values).toFixed(4),
-            localClustering: calculateLocalClustering(gmm.components).toFixed(4),
-            gmm: gmm
-        };
-    });
-
-    // 定义表格列
-    const columns = ['方差', '数据范围', '分散程度', '局部聚集性'];
-    const columnWidths = [100, 100, 100, 100];
-
-    // 为每个维度组合创建表头
-    const header = svg.append('g')
-        .attr('class', 'stats-header')
-        .attr('transform', `translate(-400,0)`);
-
-    header.selectAll('text')
-        .data(columns)
-        .enter()
-        .append('text')
-        .attr('x', (d, i) => {
-            let x = 0;
-            for (let j = 0; j < i; j++) {
-                x += columnWidths[j];
+        // 为每个维度组合创建统计信息
+        const dimensionStats = await Promise.all(combinedData.map(async dimData => {
+            const values = dimData.map(d => d.value);
+            try {
+                const gmm = await fitGMM(values);
+                return {
+                    variance: d3.variance(values) || 0,
+                    range: (d3.max(values) - d3.min(values)) || 0,
+                    dispersionDegree: calculateDispersionDegree(values),
+                    localClustering: calculateLocalClustering(gmm.components),
+                    gmm: gmm
+                };
+            } catch (error) {
+                console.error('处理GMM时出错:', error);
+                return {
+                    variance: d3.variance(values) || 0,
+                    range: (d3.max(values) - d3.min(values)) || 0,
+                    dispersionDegree: calculateDispersionDegree(values),
+                    localClustering: 0,
+                    gmm: { components: [{ mean: 0, variance: 0.0001, weight: 1.0 }] }
+                };
             }
-            return x;
-        })
-        .attr('y', 0)
-        .text(d => d)
-        .style('font-weight', 'bold')
-        .style('font-size', '12px');
+        }));
 
-    // 创建全局缩放行为
-    const zoom = d3.zoom()
-        .scaleExtent([0.5, 10])
-        .extent([[0, 0], [width, height]])
-        .on('zoom', function(event) {
-            svg.selectAll('.dimension-group').each(function(d, i) {
-                const group = d3.select(this);
-                const transform = event.transform;
-                
-                // 创建固定domain的比例尺
-                const xScale = d3.scaleLinear()
-                    .domain([-1, 1])
-                    .range([0, width]);
-                
-                // 使用transform来调整比例尺
-                const newXScale = transform.rescaleX(xScale);
-                
-                // 更新轴
-                group.select('.x-axis').call(d3.axisBottom(newXScale));
-                
-                // 更新节点
-                group.selectAll('.dimension-nodes')
-                    .attr('cx', d => newXScale(d.value));
+        // 定义表格列
+        const columns = ['方差', '数据范围', '分散程度', '局部聚集性'];
+        const columnWidths = [100, 100, 100, 100];
 
-                // 更新GMM曲线和参数标签
-                const stats = dimensionStats[i];
-                stats.gmm.components.forEach((component, idx) => {
-                    const points = updateGMMCurve(component, newXScale, gmmHeight);
-                    const path = group.select(`.gmm-curve path:nth-child(${idx * 2 + 1})`);
-                    const label = group.select(`.gmm-curve text:nth-child(${idx * 2 + 2})`);
+        // 为每个维度组合创建表头
+        const header = svg.append('g')
+            .attr('class', 'stats-header')
+            .attr('transform', `translate(-400,0)`);
+
+        header.selectAll('text')
+            .data(columns)
+            .enter()
+            .append('text')
+            .attr('x', (d, i) => {
+                let x = 0;
+                for (let j = 0; j < i; j++) {
+                    x += columnWidths[j];
+                }
+                return x;
+            })
+            .attr('y', 0)
+            .text(d => d)
+            .style('font-weight', 'bold')
+            .style('font-size', '12px');
+
+        // 创建全局缩放行为
+        const zoom = d3.zoom()
+            .scaleExtent([0.5, 10])
+            .extent([[0, 0], [width, height]])
+            .on('zoom', function(event) {
+                svg.selectAll('.dimension-group').each(function(d, i) {
+                    const group = d3.select(this);
+                    const transform = event.transform;
                     
-                    // 更新曲线
-                    path.datum(points)
-                        .attr('d', gmmCurve);
+                    // 创建固定domain的比例尺
+                    const xScale = d3.scaleLinear()
+                        .domain([-1, 1])
+                        .range([0, width]);
                     
-                    // 更新参数标签位置
-                    label.attr('x', newXScale(component.mean));
+                    // 使用transform来调整比例尺
+                    const newXScale = transform.rescaleX(xScale);
+                    
+                    // 更新轴
+                    group.select('.x-axis').call(d3.axisBottom(newXScale));
+                    
+                    // 更新节点
+                    group.selectAll('.dimension-nodes')
+                        .attr('cx', d => newXScale(d.value));
+
+                    // 更新GMM曲线和参数标签
+                    const stats = dimensionStats[i];
+                    if (stats && stats.gmm && stats.gmm.components) {
+                        stats.gmm.components.forEach((component, idx) => {
+                            const { points, containedNodes } = updateGMMCurve(component, newXScale, gmmHeight, combinedData[i]);
+                            
+                            // 更新曲线路径 - 修改选择器
+                            const componentGroup = group.select(`.gmm-curve .gmm-component-group:nth-child(${idx + 1})`);
+                            if (componentGroup.node()) {
+                                // 更新路径
+                                componentGroup.select('path')
+                                    .datum(points)
+                                    .attr('d', gmmCurve)
+                                    .attr('data-contained-nodes', JSON.stringify(containedNodes));
+
+                                // 更新文字标签位置
+                                componentGroup.select('text')
+                                    .attr('x', newXScale(component.mean));
+                            }
+                        });
+                    }
                 });
             });
+
+        // 添加缩放矩形
+        const zoomRect = svg.append('rect')
+            .attr('class', 'zoom-rect')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', totalHeight)
+            .attr('x', -margin.left)
+            .style('fill', 'none')
+            .style('pointer-events', 'all');
+
+        // 将缩放行为应用到整个SVG
+        svg.call(zoom);
+
+        // 添加双击重置功能
+        svg.on('dblclick.zoom', function() {
+            svg.transition()
+                .duration(750)
+                .call(zoom.transform, d3.zoomIdentity);
         });
 
-    // 添加缩放矩形（移到节点之前）
-    const zoomRect = svg.append('rect')
-        .attr('class', 'zoom-rect')
-        .attr('width', width + margin.left + margin.right)  // 增加宽度以覆盖整个区域
-        .attr('height', totalHeight)
-        .attr('x', -margin.left)  // 向左延伸以覆盖标签区域
-        .style('fill', 'none')
-        .style('pointer-events', 'all');
+        // 创建一个新的组用于放置所有可交互元素
+        const interactiveGroup = svg.append('g')
+            .attr('class', 'interactive-layer')
+            .style('pointer-events', 'all');
 
-    // 将缩放行为应用到整个SVG
-    svg.call(zoom);
+        // 在新的组中渲染维度组合
+        dimensionCombinations.forEach((combination, index) => {
+            const yPos = index * height;
+            const dimensionGroup = interactiveGroup.append('g')
+                .attr('class', `dimension-group dimension-group-${combination.join('-')}`)
+                .attr('transform', `translate(0,${yPos})`);
 
-    // 添加双击重置功能
-    svg.on('dblclick.zoom', function() {
-        svg.transition()
-            .duration(750)
-            .call(zoom.transform, d3.zoomIdentity);
-    });
+            // 创建比例尺
+            const xScale = d3.scaleLinear()
+                .domain([-1, 1])
+                .range([0, width]);
 
-    // 创建一个新的组用于放置所有可交互元素
-    const interactiveGroup = svg.append('g')
-        .attr('class', 'interactive-layer')
-        .style('pointer-events', 'all');
+            // 添加GMM曲线
+            const gmmGroup = dimensionGroup.append('g')
+                .attr('class', 'gmm-curve')
+                .attr('transform', `translate(0,${height/2 - gmmHeight})`);
 
-    // 在新的组中渲染维度组合
-    dimensionCombinations.forEach((combination, index) => {
-        const yPos = index * height;
-        const dimensionGroup = interactiveGroup.append('g')
-            .attr('class', `dimension-group dimension-group-${combination.join('-')}`)
-            .attr('transform', `translate(0,${yPos})`);
+            const stats = dimensionStats[index];
+            if (stats && stats.gmm && stats.gmm.components) {
+                stats.gmm.components.forEach((component, idx) => {
+                    const { points, containedNodes } = updateGMMCurve(component, xScale, gmmHeight, combinedData[index]);
+                    
+                    // 创建一个组来包含路径和文字
+                    const componentGroup = gmmGroup.append('g')
+                        .attr('class', 'gmm-component-group');
 
-        // 创建比例尺
-        const xScale = d3.scaleLinear()
-            .domain([-1, 1])  // 固定domain为[-1, 1]
-            .range([0, width]);
+                    const gmmPath = componentGroup.append('path')
+                        .datum(points)
+                        .attr('d', gmmCurve)
+                        .attr('class', 'gmm-component')
+                        .style('fill', d3.schemeCategory10[idx % 10])
+                        .style('fill-opacity', 0.2)
+                        .style('stroke', d3.schemeCategory10[idx % 10])
+                        .style('stroke-width', 1.5)
+                        .style('opacity', 0.6)
+                        .style('cursor', 'pointer')
+                        .attr('data-contained-nodes', JSON.stringify(containedNodes));
 
-        // 添加GMM曲线
-        const gmmGroup = dimensionGroup.append('g')
-            .attr('class', 'gmm-curve')
-            .attr('transform', `translate(0,${height/2 - gmmHeight})`);
+                    // 添加文字标签
+                    const label = componentGroup.append('text')
+                        .attr('x', xScale(component.mean))
+                        .attr('y', -5)
+                        .attr('text-anchor', 'middle')
+                        .style('font-size', '10px')
+                        .style('fill', d3.schemeCategory10[idx % 10])
+                        .style('cursor', 'pointer')
+                        .text(`μ=${component.mean.toFixed(2)}, σ²=${component.variance.toFixed(2)}`);
 
-        dimensionStats[index].gmm.components.forEach((component, idx) => {
-            const points = updateGMMCurve(component, xScale, gmmHeight);
-            
-            gmmGroup.append('path')
-                .datum(points)
-                .attr('d', gmmCurve)
-                .attr('class', 'gmm-component')
-                .style('fill', 'none')
-                .style('stroke', d3.schemeCategory10[idx % 10])
-                .style('stroke-width', 1.5)
-                .style('opacity', 0.6);
+                    // 为路径和文字添加相同的点击事件
+                    const handleClick = function(event) {
+                        event.stopPropagation();
+                        const nodes = JSON.parse(gmmPath.attr('data-contained-nodes'));
+                        
+                        // 高亮显示当前曲线
+                        d3.selectAll('.gmm-component')
+                            .style('fill-opacity', 0.2)
+                            .style('stroke-width', 1.5);
+                        gmmPath
+                            .style('fill-opacity', 0.4)
+                            .style('stroke-width', 2.5);
 
-            gmmGroup.append('text')
-                .attr('x', xScale(component.mean))
-                .attr('y', -5)
-                .attr('text-anchor', 'middle')
-                .style('font-size', '10px')
-                .style('fill', d3.schemeCategory10[idx % 10])
-                .text(`μ=${component.mean.toFixed(2)}, σ²=${component.variance.toFixed(2)}`);
-        });
+                        // 先清除所有已选中的节点
+                        store.state.selectedNodes.nodeIds.forEach(id => {
+                            store.commit('REMOVE_SELECTED_NODE', id);
+                        });
+                        
+                        // 添加新选中的节点
+                        nodes.forEach(nodeId => {
+                            store.commit('ADD_SELECTED_NODE', nodeId);
+                        });
+                    };
 
-        // 添加X轴
-        const xAxis = d3.axisBottom(xScale);
-        dimensionGroup.append('g')
-            .attr('class', 'x-axis')
-            .attr('transform', `translate(0,${height/2})`)
-            .call(xAxis);
+                    // 为路径和文字添加相同的悬停事件
+                    const handleMouseOver = function() {
+                        gmmPath
+                            .style('fill-opacity', 0.4)
+                            .style('stroke-width', 2.5);
+                    };
 
-        // 添加维度标签
-        const tagGroup = dimensionGroup.append('g')
-            .attr('class', 'dimension-tag')
-            .attr('transform', `translate(-10, ${height/2})`);
+                    const handleMouseOut = function() {
+                        if (!gmmPath.classed('selected')) {
+                            gmmPath
+                                .style('fill-opacity', 0.2)
+                                .style('stroke-width', 1.5);
+                        }
+                    };
 
-        // 添加tag背景
-        tagGroup.append('rect')
-            .attr('x', -30)
-            .attr('y', -12)
-            .attr('width', 40)
-            .attr('height', 24)
-            .attr('rx', 8)
-            .attr('ry', 4)
-            .style('fill', '#f0f2f5')
-            .style('stroke', '#e4e7ed')
-            .style('stroke-width', 1);
+                    // 绑定事件到路径和文字
+                    gmmPath
+                        .on('click', handleClick)
+                        .on('mouseover', handleMouseOver)
+                        .on('mouseout', handleMouseOut);
 
-        // 添加文本标签
-        tagGroup.append('text')
-            .attr('x', -10)
-            .attr('y', 4)
-            .style('text-anchor', 'middle')
-            .style('font-size', '14px')
-            .style('fill', '#909399')
-            .text(`Z_${combination.map(d => d + 1).join(',')}`);
-
-        // 添加节点
-        const nodes = dimensionGroup.selectAll('.dimension-nodes')
-            .data(combinedData[index])
-            .enter()
-            .append('circle')
-            .attr('class', d => `dimension-nodes node-${d.id.split('/').pop()}`)
-            .attr('cx', d => xScale(d.value))
-            .attr('cy', height/2)
-            .attr('r', 4)
-            .style('fill', d => selectedNodeIds.value.includes(d.id.split('/').pop()) ? '#ff6347' : '#333')
-            .style('opacity', d => selectedNodeIds.value.includes(d.id.split('/').pop()) ? 1 : 0.6)
-            .style('cursor', 'pointer')
-            .on('mouseover', function(event, d) {
-                d3.select(this)
-                    .attr('r', 6)
-                    .style('fill', '#ff6347')
-                    .style('opacity', 1);
-
-                d3.select(lineTooltip.value)
-                    .style('visibility', 'visible')
-                    .text(`${d.id.split('/').pop()}: ${d.value.toFixed(4)}`);
-            })
-            .on('mousemove', function(event) {
-                const [mouseX, mouseY] = d3.pointer(event);
-                d3.select(lineTooltip.value)
-                    .style('left', `${mouseX + margin.left + 10}px`)
-                    .style('top', `${mouseY + margin.top - 10}px`);
-            })
-            .on('mouseout', function(event, d) {
-                d3.select(this)
-                    .attr('r', 4)
-                    .style('fill', selectedNodeIds.value.includes(d.id.split('/').pop()) ? '#ff6347' : '#333')
-                    .style('opacity', selectedNodeIds.value.includes(d.id.split('/').pop()) ? 1 : 0.6);
-
-                d3.select(lineTooltip.value)
-                    .style('visibility', 'hidden');
-            })
-            .on('click', function(event, d) {
-                event.stopPropagation();
-                const nodeId = d.id.split('/').pop();
-                if (selectedNodeIds.value.includes(nodeId)) {
-                    store.commit('REMOVE_SELECTED_NODE', nodeId);
-                } else {
-                    store.commit('ADD_SELECTED_NODE', nodeId);
-                }
-            });
-
-        // 添加统计信息
-        const statsRow = svg.append('g')
-            .attr('class', `stats-row-${index}`)
-            .attr('transform', `translate(-400,${yPos + height/2})`);
-
-        const stats = dimensionStats[index];
-        const values = [
-            stats.variance,
-            stats.range,
-            stats.dispersionDegree,
-            stats.localClustering
-        ];
-
-        values.forEach((value, i) => {
-            let x = 0;
-            for (let j = 0; j < i; j++) {
-                x += columnWidths[j];
+                    label
+                        .on('click', handleClick)
+                        .on('mouseover', handleMouseOver)
+                        .on('mouseout', handleMouseOut);
+                });
             }
-            statsRow.append('text')
-                .attr('x', x)
-                .attr('y', 8)
-                .text(value)
-                .style('font-size', '12px');
+
+            // 添加X轴
+            const xAxis = d3.axisBottom(xScale);
+            dimensionGroup.append('g')
+                .attr('class', 'x-axis')
+                .attr('transform', `translate(0,${height/2})`)
+                .call(xAxis);
+
+            // 添加维度标签
+            const tagGroup = dimensionGroup.append('g')
+                .attr('class', 'dimension-tag')
+                .attr('transform', `translate(-10, ${height/2})`);
+
+            // 添加tag背景
+            tagGroup.append('rect')
+                .attr('x', -30)
+                .attr('y', -12)
+                .attr('width', 40)
+                .attr('height', 24)
+                .attr('rx', 8)
+                .attr('ry', 4)
+                .style('fill', '#f0f2f5')
+                .style('stroke', '#e4e7ed')
+                .style('stroke-width', 1);
+
+            // 添加文本标签
+            tagGroup.append('text')
+                .attr('x', -10)
+                .attr('y', 4)
+                .style('text-anchor', 'middle')
+                .style('font-size', '14px')
+                .style('fill', '#909399')
+                .text(`Z_${combination.map(d => d + 1).join(',')}`);
+
+            // 添加节点
+            if (combinedData[index]) {
+                const nodes = dimensionGroup.selectAll('.dimension-nodes')
+                    .data(combinedData[index])
+                    .enter()
+                    .append('circle')
+                    .attr('class', d => `dimension-nodes node-${d.id.split('/').pop()}`)
+                    .attr('cx', d => xScale(d.value))
+                    .attr('cy', height/2)
+                    .attr('r', 4)
+                    .style('fill', d => selectedNodeIds.value.includes(d.id.split('/').pop()) ? '#ff6347' : '#333')
+                    .style('opacity', d => selectedNodeIds.value.includes(d.id.split('/').pop()) ? 1 : 0.6)
+                    .style('cursor', 'pointer')
+                    .on('mouseover', function(event, d) {
+                        d3.select(this)
+                            .attr('r', 6)
+                            .style('fill', '#ff6347')
+                            .style('opacity', 1);
+
+                        d3.select(lineTooltip.value)
+                            .style('visibility', 'visible')
+                            .text(`${d.id.split('/').pop()}: ${d.value.toFixed(4)}`);
+                    })
+                    .on('mousemove', function(event) {
+                        const [mouseX, mouseY] = d3.pointer(event);
+                        d3.select(lineTooltip.value)
+                            .style('left', `${mouseX + margin.left + 10}px`)
+                            .style('top', `${mouseY + margin.top - 10}px`);
+                    })
+                    .on('mouseout', function(event, d) {
+                        d3.select(this)
+                            .attr('r', 4)
+                            .style('fill', selectedNodeIds.value.includes(d.id.split('/').pop()) ? '#ff6347' : '#333')
+                            .style('opacity', selectedNodeIds.value.includes(d.id.split('/').pop()) ? 1 : 0.6);
+
+                        d3.select(lineTooltip.value)
+                            .style('visibility', 'hidden');
+                    })
+                    .on('click', function(event, d) {
+                        event.stopPropagation();
+                        const nodeId = d.id.split('/').pop();
+                        if (selectedNodeIds.value.includes(nodeId)) {
+                            store.commit('REMOVE_SELECTED_NODE', nodeId);
+                        } else {
+                            store.commit('ADD_SELECTED_NODE', nodeId);
+                        }
+                    });
+            }
+
+            // 添加统计信息
+            if (dimensionStats[index]) {
+                const statsRow = svg.append('g')
+                    .attr('class', `stats-row-${index}`)
+                    .attr('transform', `translate(-400,${yPos + height/2})`);
+
+                const stats = dimensionStats[index];
+                const values = [
+                    stats.variance.toFixed(4),
+                    stats.range.toFixed(4),
+                    stats.dispersionDegree.toFixed(4),
+                    stats.localClustering.toFixed(4)
+                ];
+
+                values.forEach((value, i) => {
+                    let x = 0;
+                    for (let j = 0; j < i; j++) {
+                        x += columnWidths[j];
+                    }
+                    statsRow.append('text')
+                        .attr('x', x)
+                        .attr('y', 8)
+                        .text(value)
+                        .style('font-size', '12px');
+                });
+            }
         });
 
         // 修改 zoomRect 的事件处理
@@ -1274,25 +1359,47 @@ const renderDimensionAxes = (data, containerWidth) => {
                 // 当鼠标在空白处时，隐藏tooltip
                 d3.select(lineTooltip.value).style('visibility', 'hidden');
             });
-    });
+    } catch (error) {
+        console.error('渲染维度轴时出错:', error);
+    }
 };
 
-// 添加辅助函数用于更新GMM曲线
-const updateGMMCurve = (component, xScale, height) => {
+// 修改 updateGMMCurve 函数
+const updateGMMCurve = (component, xScale, height, dimensionData) => {
     const points = [];
     const numPoints = 100;
     const xMin = xScale.domain()[0];
     const xMax = xScale.domain()[1];
     const step = (xMax - xMin) / numPoints;
 
+    // 计算最大高度用于归一化
+    const maxHeight = component.weight / Math.sqrt(2 * Math.PI * component.variance);
+
     for (let i = 0; i <= numPoints; i++) {
         const x = xMin + i * step;
-        const gaussian = Math.exp(-Math.pow(x - component.mean, 2) / (2 * component.variance)) 
+        const gaussian = component.weight * Math.exp(-Math.pow(x - component.mean, 2) / (2 * component.variance)) 
             / Math.sqrt(2 * Math.PI * component.variance);
-        points.push([xScale(x), height * (1 - gaussian * Math.sqrt(component.variance * 2 * Math.PI))]);
+        points.push([
+            xScale(x), 
+            height * (1 - gaussian / maxHeight * 0.8) // 使用相对高度，保留20%空间
+        ]);
     }
 
-    return points;
+    // 添加闭合路径的点，使其成为一个可填充的区域
+    points.push([xScale(xMax), height]); // 右下角
+    points.push([xScale(xMin), height]); // 左下角
+
+    return {
+        points,
+        // 添加属性用于确定哪些节点属于这个组件
+        containedNodes: dimensionData.filter(d => {
+            // 计算节点值属于该高斯成分的概率
+            const prob = Math.exp(-Math.pow(d.value - component.mean, 2) / (2 * component.variance)) 
+                / Math.sqrt(2 * Math.PI * component.variance);
+            // 如果概率大于阈值，认为节点属于该组件
+            return prob > 0.1; // 可以调整这个阈值
+        }).map(d => d.id.split('/').pop())
+    };
 };
 
 // 添加计算分散程度的函数
@@ -1368,68 +1475,62 @@ watch(selectedNodeIds, (newSelectedIds) => {
 }, { deep: true });
 
 // 添加GMM拟合函数
-function fitGMM(data) {
-    // 简单的GMM实现，使用k-means作为初始聚类
-    const components = [];
-    
-    // 计算数据的整体范围
-    const min = d3.min(data);
-    const max = d3.max(data);
-    const range = max - min;
-    
-    // 使用简单的阈值来确定组件数量
-    const histogram = d3.histogram()
-        .domain([min, max])
-        .thresholds(20)(data);
-    
-    // 寻找局部最大值作为组件中心
-    const peaks = findPeaks(histogram);
-    
-    // 为每个峰值创建一个高斯组件
-    peaks.forEach(peak => {
-        const peakData = data.filter(d => 
-            Math.abs(d - peak.x) < range / (2 * peaks.length)
-        );
-        
-        if (peakData.length > 0) {
-            components.push({
-                mean: d3.mean(peakData),
-                variance: d3.variance(peakData) || 0.0001
-            });
+async function fitGMM(data) {
+    try {
+        // 如果数据无效，返回默认单组件
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            console.warn('无效的输入数据，返回默认GMM组件');
+            return {
+                components: [{
+                    mean: 0,
+                    variance: 0.0001,
+                    weight: 1.0
+                }]
+            };
         }
-    });
-    
-    return {
-        components: components
-    };
-}
 
-// 寻找直方图中的局部最大值
-function findPeaks(histogram) {
-    const peaks = [];
-    for (let i = 1; i < histogram.length - 1; i++) {
-        const curr = histogram[i].length;
-        const prev = histogram[i - 1].length;
-        const next = histogram[i + 1].length;
-        
-        if (curr > prev && curr > next && curr > histogram.length / 10) {
-            peaks.push({
-                x: (histogram[i].x0 + histogram[i].x1) / 2,
-                y: curr
-            });
-        }
-    }
-    
-    // 如果没有找到峰值，使用整体均值作为单个组件
-    if (peaks.length === 0) {
-        const x = (histogram[0].x0 + histogram[histogram.length - 1].x1) / 2;
-        peaks.push({
-            x: x,
-            y: d3.max(histogram, d => d.length)
+        // 调用后端API计算GMM
+        const response = await fetch('http://localhost:5000/calculate_gmm', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ values: data })
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (!result.success || !result.components || !Array.isArray(result.components) || result.components.length === 0) {
+            throw new Error(result.error || '无效的GMM结果');
+        }
+
+        // 验证每个组件都有必要的属性
+        const validComponents = result.components.map(comp => ({
+            mean: comp.mean || 0,
+            variance: comp.variance || 0.0001,
+            weight: comp.weight || 1.0/result.components.length
+        }));
+
+        return {
+            components: validComponents
+        };
+    } catch (error) {
+        console.error('Error calculating GMM:', error);
+        // 如果API调用失败，返回一个简单的单组件结果
+        const mean = data ? d3.mean(data) || 0 : 0;
+        const variance = data ? d3.variance(data) || 0.0001 : 0.0001;
+        return {
+            components: [{
+                mean: mean,
+                variance: variance,
+                weight: 1.0
+            }]
+        };
     }
-    
-    return peaks;
 }
 
 // 添加计算维度相关性的函数
@@ -1511,16 +1612,31 @@ function calculatePearsonCorrelation(x, y) {
 
 // 添加局部聚集性计算函数
 function calculateLocalClustering(components) {
-    if (components.length === 0) return 0;
+    // 添加参数检查
+    if (!components || !Array.isArray(components) || components.length === 0) {
+        console.warn('无效的GMM组件数据，返回默认值0');
+        return 0;
+    }
     
-    // 使用组件方差的倒数作为权重
-    const totalWeight = components.reduce((sum, comp) => sum + 1/comp.variance, 0);
-    const weightedClusteringScore = components.reduce((sum, comp) => {
-        const weight = 1/comp.variance / totalWeight;
-        return sum + weight * (1 - Math.sqrt(comp.variance));
-    }, 0);
-    
-    return weightedClusteringScore;
+    try {
+        // 使用组件方差的倒数作为权重
+        const totalWeight = components.reduce((sum, comp) => {
+            // 确保方差不为0，如果为0则使用一个很小的值
+            const variance = comp.variance || 0.0001;
+            return sum + 1/variance;
+        }, 0);
+
+        const weightedClusteringScore = components.reduce((sum, comp) => {
+            const variance = comp.variance || 0.0001;
+            const weight = 1/variance / totalWeight;
+            return sum + weight * (1 - Math.sqrt(variance));
+        }, 0);
+        
+        return weightedClusteringScore;
+    } catch (error) {
+        console.error('计算局部聚集性时出错:', error);
+        return 0;
+    }
 }
 
 // 添加 MDS 散点图渲染函数

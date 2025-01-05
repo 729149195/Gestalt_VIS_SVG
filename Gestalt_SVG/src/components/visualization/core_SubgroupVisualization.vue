@@ -200,11 +200,21 @@ function renderGraph(container, graphData) {
         .paddingRight(24)
         .paddingBottom(24)
         .paddingLeft(24)
-        .paddingInner(32)
+        .paddingInner(16)  // 减小节点间距以获得更多空间
         .round(true);
 
     const root = d3.hierarchy(hierarchyData)
-        .sum(d => d.value);
+        .sum(d => {
+            // 调整节点大小计算逻辑，使其更倾向于方形
+            if (d.type === 'core') {
+                // 核心节点基础大小
+                const baseSize = 800;
+                // 根据外延节点数量适度增加大小
+                return baseSize + (d.extensionCount * 300);
+            }
+            // 外延节点固定大小，但保持较大以避免过小
+            return 500;
+        });
 
     treemap(root);
 
@@ -217,20 +227,44 @@ function renderGraph(container, graphData) {
         const extensionCount = node.data.extensionCount;
 
         if (extensionCount > 0) {
-            // 计算核心节点的实际位置
+            // 调整核心节点和外延节点的比例
+            const totalWidth = nodeWidth;
+            const totalHeight = nodeHeight;
+            
+            // 根据外延节点数量动态调整布局
+            let coreWidth, extensionWidth, gap;
+            if (extensionCount <= 2) {
+                // 当外延节点较少时，采用更宽的布局
+                coreWidth = totalWidth * 0.65;  // 核心节点占65%
+                extensionWidth = totalWidth * 0.32;  // 外延节点占32%
+                gap = totalWidth * 0.03;  // 3%间隔
+            } else {
+                // 当外延节点较多时，采用更窄的布局以保持方形
+                coreWidth = totalWidth * 0.55;  // 核心节点占55%
+                extensionWidth = totalWidth * 0.42;  // 外延节点占42%
+                gap = totalWidth * 0.03;  // 3%间隔
+            }
+
+            // 计算每个外延节点的高度，确保最小高度
+            const minExtensionHeight = Math.max(totalHeight / extensionCount, totalHeight / 3);
+            const extensionHeight = Math.min(minExtensionHeight, totalHeight / extensionCount);
+
+            // 添加核心节点
             const coreNode = {
                 ...node,
-                x0: node.x0 + node.data.extensionWidth,
-                x1: node.x1,
+                x0: node.x0 + extensionWidth + gap,
+                x1: node.x0 + extensionWidth + gap + coreWidth,
                 y0: node.y0,
                 y1: node.y1,
                 isCore: true
             };
             allNodeData.push(coreNode);
 
-            // 计算外延节点的位置，确保最小高度
-            const minExtensionHeight = nodeHeight / Math.min(2, extensionCount);
+            // 添加外延节点，调整位置使其均匀分布
             node.data.extensions.forEach((extension, index) => {
+                const yStart = node.y0 + (index * extensionHeight);
+                const yEnd = Math.min(node.y0 + ((index + 1) * extensionHeight), node.y1);
+                
                 allNodeData.push({
                     data: {
                         id: `ext_${node.data.id.split('_')[1]}_${index}`,
@@ -241,14 +275,14 @@ function renderGraph(container, graphData) {
                         thumbnail: null
                     },
                     x0: node.x0,
-                    y0: node.y0 + (index * minExtensionHeight),
-                    x1: node.x0 + node.data.extensionWidth,
-                    y1: node.y0 + ((index + 1) * minExtensionHeight),
+                    y0: yStart,
+                    x1: node.x0 + extensionWidth,
+                    y1: yEnd,
                     isCore: false
                 });
             });
         } else {
-            // 没有外延节点的核心节点
+            // 没有外延节点的核心节点保持原样
             allNodeData.push({
                 ...node,
                 isCore: true
@@ -263,83 +297,47 @@ function renderGraph(container, graphData) {
         .attr('class', 'node')
         .attr('transform', d => `translate(${d.x0},${d.y0})`);
 
-    // 添加节点形状（带齿孔的矩形）
-    nodeGroup.append('path')
+    // 添加节点基础矩形
+    nodeGroup.append('rect')
+        .attr('width', d => d.x1 - d.x0)
+        .attr('height', d => d.y1 - d.y0)
         .attr('fill', 'white')
         .attr('stroke', d => d.isCore ? '#1a73e8' : '#34a853')
-        .attr('stroke-width', d => {
-            const nodeElements = (d.isCore ? d.data : d.data).originalNodes.map(n => n.split('/').pop());
-            const allSelected = nodeElements.every(id => selectedNodeIds.value.includes(id));
-            return allSelected ? 3 : 2;
-        })
-        .attr('stroke-opacity', d => {
-            const nodeElements = (d.isCore ? d.data : d.data).originalNodes.map(n => n.split('/').pop());
-            const allSelected = nodeElements.every(id => selectedNodeIds.value.includes(id));
-            const someSelected = nodeElements.some(id => selectedNodeIds.value.includes(id));
-            return allSelected ? 1 : (someSelected ? 0.85 : 0.7);
-        })
-        .attr('d', d => {
-            const width = d.x1 - d.x0;
-            const height = d.y1 - d.y0;
-            const radius = Math.min(8, width / 4, height / 4);
+        .attr('stroke-width', 2)
+        .attr('rx', 4)
+        .attr('ry', 4);
 
-            if (!d.isCore) {
-                // 外延节点：右边有齿孔
-                const holeCount = Math.max(3, Math.floor(height / 30)); // 减少齿孔数量，增大间距
-                const holeRadius = 4; // 增大齿孔半径
-                const spacing = height / (holeCount + 1);
-                
-                let path = `M ${radius},0 L ${width},0`;
-                
-                // 添加右边的齿孔
-                for (let i = 1; i <= holeCount; i++) {
-                    const y = i * spacing;
-                    path += ` L ${width},${y - holeRadius}`;
-                    path += ` A ${holeRadius},${holeRadius} 0 1,1 ${width},${y + holeRadius}`;
-                }
-                
-                path += ` L ${width},${height} L ${radius},${height}`;
-                path += ` Q 0,${height} 0,${height - radius}`;
-                path += ` L 0,${radius} Q 0,0 ${radius},0`;
-                
-                return path + 'Z';
-            } else {
-                // 核心节点：左边有齿孔
-                const holeCount = Math.max(3, Math.floor(height / 30));
-                const holeRadius = 4;
-                const spacing = height / (holeCount + 1);
-                
-                let path = `M ${radius},0 L ${width - radius},0`;
-                path += ` Q ${width},0 ${width},${radius}`;
-                path += ` L ${width},${height - radius}`;
-                path += ` Q ${width},${height} ${width - radius},${height}`;
-                path += ` L ${radius},${height}`;
-                
-                // 添加左边的齿孔
-                for (let i = holeCount; i >= 1; i--) {
-                    const y = i * spacing;
-                    path += ` L 0,${y + holeRadius}`;
-                    path += ` A ${holeRadius},${holeRadius} 0 1,1 0,${y - holeRadius}`;
-                }
-                
-                path += ` L 0,${radius} Q 0,0 ${radius},0`;
-                
-                return path + 'Z';
+    // 添加连接线（从外延节点到核心节点）
+    nodeGroup.each(function(d) {
+        if (!d.isCore) {
+            const node = d3.select(this);
+            const coreNodeId = `core_${d.data.id.split('_')[1]}`;
+            const coreNode = allNodeData.find(n => n.isCore && n.data.id === coreNodeId);
+            
+            if (coreNode) {
+                g.append('path')
+                    .attr('d', `M${d.x1},${d.y0 + (d.y1 - d.y0)/2} 
+                               L${coreNode.x0},${d.y0 + (d.y1 - d.y0)/2}`)
+                    .attr('stroke', '#34a853')
+                    .attr('stroke-width', 2)
+                    .attr('stroke-dasharray', '4,4')
+                    .attr('fill', 'none');
             }
-        });
+        }
+    });
 
-    // 添加缩略图和标签
+    // 添加缩略图，调整padding使SVG更大
     nodeGroup.each(function(d) {
         const node = d3.select(this);
         const width = d.x1 - d.x0;
         const height = d.y1 - d.y0;
         
-        // 添加缩略图
+        // 减小padding，增大SVG显示区域
         const foreignObject = node.append('foreignObject')
-            .attr('width', width - 16)
-            .attr('height', height - 40)
-            .attr('x', 8)
-            .attr('y', 8);
+            .attr('width', width - 8)  // 减小左右padding
+            .attr('height', height - 24)  // 减小上下padding
+            .attr('x', 4)
+            .attr('y', 4);
 
         const div = foreignObject.append('xhtml:div')
             .style('width', '100%')
