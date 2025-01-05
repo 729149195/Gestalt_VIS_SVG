@@ -1,13 +1,23 @@
 [
     {
-        "tag": "rect",
-        "num": 76,
+        "tag": "g",
+        "num": 24,
+        "visible": false
+    },
+    {
+        "tag": "text",
+        "num": 21,
         "visible": true
     },
     {
-        "tag": "g",
-        "num": 1,
-        "visible": false
+        "tag": "line",
+        "num": 19,
+        "visible": true
+    },
+    {
+        "tag": "path",
+        "num": 14,
+        "visible": true
     },
     {
         "tag": "svg",

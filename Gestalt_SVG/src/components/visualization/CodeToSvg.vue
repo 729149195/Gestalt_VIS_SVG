@@ -38,7 +38,7 @@
       <!-- SVG编辑器 -->
       <div v-show="!isDeclarativeMode" class="editor-section editor-transition">
         <div class="section-header">
-          <span>SVG Code</span>
+          <span>SVG</span>
           <div>
             <div class="right-tools">
               <el-button @click="copyCode">Copy</el-button>
@@ -72,22 +72,18 @@
             <el-icon class="upload-icon">
               <Upload />
             </el-icon>
-            Upload Chart
+            Upload
           </el-button>
         </div>
       </div>
     </div>
-
-    <!-- 侧边书签导航 -->
-
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, nextTick, onUnmounted } from 'vue'
+import { ref, watch, onMounted, nextTick, onUnmounted } from 'vue'
 import * as monaco from 'monaco-editor'
 import * as d3 from 'd3'
-import { ElMessage } from 'element-plus'
 import { Upload } from '@element-plus/icons-vue'
 import { syntaxOptions, placeholders } from '@/config/codeToSvgConfig'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
@@ -128,7 +124,7 @@ let svgEditor = null
 
 // Monaco Editor配置
 const declarativeEditorOptions = {
-  theme: 'vs-dark',
+  theme: 'vs',
   fontSize: 14,
   lineNumbers: 'on',
   roundedSelection: false,
@@ -663,8 +659,18 @@ const handleMatplotlibCode = async () => {
 // 复制SVG代码
 const copyCode = () => {
   navigator.clipboard.writeText(svgCode.value)
-    .then(() => ElMessage.success('SVG代码已复制到剪贴板'))
-    .catch(() => ElMessage.error('复制失败'))
+    .then(() => ElMessage({
+      message: 'SVG代码已复制到剪贴板',
+      type: 'success',
+      position: 'top-right',
+      customClass: 'custom-message'
+    }))
+    .catch(() => ElMessage({
+      message: '复制失败',
+      type: 'error',
+      position: 'top-right',
+      customClass: 'custom-message'
+    }))
 }
 
 // 下载SVG文件
@@ -807,40 +813,41 @@ const handleSvgContentUpdated = async (event) => {
 
     // 根据更新类型显示不同的消息
     if (event.detail.type === 'analysis') {
-      ElMessage.success('SVG分析结果已更新')
+      ElMessage({
+        message: 'SVG分析结果已更新',
+        type: 'success',
+        position: 'top-right',
+        customClass: 'custom-message'
+      })
     } else {
-      ElMessage.success('SVG内容已更新')
+      ElMessage({
+        message: 'SVG内容已更新',
+        type: 'success',
+        position: 'top-right',
+        customClass: 'custom-message'
+      })
     }
   } catch (error) {
     console.error('更新SVG内容时出错:', error)
-    ElMessage.error('更新SVG内容失败: ' + error.message)
+    ElMessage({
+      message: '更新SVG内容失败: ' + error.message,
+      type: 'error',
+      position: 'top-right',
+      customClass: 'custom-message'
+    })
   }
 }
 
-// Canvas转SVG辅助函数
-const canvasToSVG = async (canvas) => {
-  return new Promise((resolve) => {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    const img = new Image()
-    img.onload = () => {
-      svg.setAttribute('width', canvas.width)
-      svg.setAttribute('height', canvas.height)
-      svg.setAttribute('viewBox', `0 0 ${canvas.width} ${canvas.height}`)
-      const image = document.createElementNS('http://www.w3.org/2000/svg', 'image')
-      image.setAttribute('width', '100%')
-      image.setAttribute('height', '100%')
-      image.setAttribute('href', img.src)
-      svg.appendChild(image)
-      resolve(svg.outerHTML)
-    }
-    img.src = canvas.toDataURL()
-  })
-}
 
 // 添加上传相关的函数
 const uploadToAnalyzer = async () => {
   if (!svgOutput.value) {
-    ElMessage.warning('没有可上传的SVG内容')
+    ElMessage({
+      message: '没有可上传的SVG内容',
+      type: 'warning',
+      position: 'top-right',
+      customClass: 'custom-message'
+    })
     return
   }
 
@@ -865,7 +872,12 @@ const uploadToAnalyzer = async () => {
     const result = await response.json()
 
     if (result.success) {
-      ElMessage.success('SVG已成功上传到分析器')
+      ElMessage({
+        message: 'SVG已成功上传到分析器',
+        type: 'success',
+        position: 'top-right',
+        customClass: 'custom-message'
+      })
       // 触发全局事件，通知SvgUploader组件刷新
       window.dispatchEvent(new CustomEvent('svg-uploaded', { detail: { filename: file.name } }))
     } else {
@@ -873,31 +885,13 @@ const uploadToAnalyzer = async () => {
     }
   } catch (error) {
     console.error('上传错误:', error)
-    ElMessage.error('上传失败: ' + error.message)
+    ElMessage({
+      message: '上传失败: ' + error.message,
+      type: 'error',
+      position: 'top-right',
+      customClass: 'custom-message'
+    })
   }
-}
-
-// 添加工具提示相关的响应式变量
-const modeTooltipStyle = ref({
-  opacity: 0,
-  top: '0px',
-  left: '0px'
-});
-const modeTooltipText = ref('');
-const modeTooltip = ref(null);
-
-// 添加工具提示显示函数
-function showModeTooltip(event, isDeclarative) {
-  const text = isDeclarative ? '声明式编辑器' : 'SVG代码编辑器';
-  modeTooltipText.value = text;
-  modeTooltipStyle.value = {
-    opacity: 1
-  };
-}
-
-// 添加工具提示隐藏函数
-function hideModeTooltip() {
-  modeTooltipStyle.value.opacity = 0;
 }
 
 // 监听模式切换
@@ -1013,9 +1007,9 @@ watch(isDeclarativeMode, (newValue) => {
   overflow: hidden;
   display: flex;
   min-height: 0;
-  background-color: rgba(30, 30, 30, 0.95);
+  background-color: #ffffff;
   margin: 0;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .editor-wrapper {
@@ -1225,5 +1219,40 @@ watch(isDeclarativeMode, (newValue) => {
 .mode-tab.active {
   background: #55C000;
   color: white;
+}
+
+/* 全局样式，不能使用 scoped */
+:global(.custom-message) {
+  min-width: 380px !important;
+  padding: 14px 26px 14px 13px !important;
+  height: 40px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1) !important;
+  background: #fff !important;
+  border-radius: 8px !important;
+  border: 1px solid #e4e7ed !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+:global(.custom-message .el-message__content) {
+  font-size: 14px !important;
+  color: #333 !important;
+  line-height: 1 !important;
+  padding-left: 8px !important;
+}
+
+:global(.custom-message.el-message--success .el-message__icon) {
+  color: #55C000 !important;
+  font-size: 16px !important;
+}
+
+:global(.custom-message.el-message--error .el-message__icon) {
+  color: #ff4d4f !important;
+  font-size: 16px !important;
+}
+
+:global(.custom-message.el-message--warning .el-message__icon) {
+  color: #faad14 !important;
+  font-size: 16px !important;
 }
 </style>

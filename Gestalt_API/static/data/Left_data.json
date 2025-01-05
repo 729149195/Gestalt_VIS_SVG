@@ -1,113 +1,119 @@
 {
-    "130.0-195.7": {
+    "-97.5-102.6": {
         "tags": [
-            "rect_75",
-            "rect_74",
-            "rect_73",
-            "rect_72",
-            "rect_71",
-            "rect_70",
-            "rect_69",
-            "rect_68",
-            "rect_67",
-            "rect_66",
-            "rect_65",
-            "rect_64",
-            "rect_57"
+            "path_13",
+            "path_12",
+            "text_20",
+            "line_12",
+            "path_10",
+            "line_11",
+            "line_10",
+            "line_9",
+            "line_8",
+            "line_7",
+            "line_6",
+            "line_5",
+            "line_4",
+            "line_3",
+            "line_2",
+            "line_1",
+            "text_13",
+            "text_12",
+            "text_11",
+            "text_10",
+            "text_9",
+            "text_8",
+            "text_7",
+            "text_6",
+            "text_5",
+            "text_4",
+            "text_3",
+            "line",
+            "path_8",
+            "text_1"
         ],
         "total": {
-            "rect": 13
+            "path": 4,
+            "text": 13,
+            "line": 13
         }
     },
-    "195.7-261.5": {
+    "102.6-302.6": {
         "tags": [
-            "rect_63",
-            "rect_62",
-            "rect_61",
-            "rect_60",
-            "rect_59",
-            "rect_58"
+            "line_18",
+            "text_2",
+            "path_7",
+            "text"
         ],
         "total": {
-            "rect": 6
+            "line": 1,
+            "text": 2,
+            "path": 1
         }
     },
-    "261.5-327.3": {
+    "302.6-502.7": {
         "tags": [
-            "rect_56",
-            "rect_55",
-            "rect_54",
-            "rect_53",
-            "rect_52",
-            "rect_51",
-            "rect_50",
-            "rect_49",
-            "rect_48",
-            "rect_47",
-            "rect_46",
-            "rect_45",
-            "rect_44",
-            "rect_43",
-            "rect_42",
-            "rect_41",
-            "rect_40",
-            "rect_39",
-            "rect_38"
+            "line_17",
+            "text_19",
+            "path_6",
+            "path_5",
+            "path_2"
         ],
         "total": {
-            "rect": 19
+            "line": 1,
+            "text": 1,
+            "path": 3
         }
     },
-    "524.7-590.5": {
+    "702.8-902.8": {
         "tags": [
-            "rect_37",
-            "rect_36",
-            "rect_35",
-            "rect_34",
-            "rect_33",
-            "rect_32",
-            "rect_31",
-            "rect_30",
-            "rect_29",
-            "rect_28",
-            "rect_27",
-            "rect_26",
-            "rect_25",
-            "rect_19"
+            "line_16",
+            "text_17",
+            "text_14",
+            "path_3"
         ],
         "total": {
-            "rect": 14
+            "line": 1,
+            "text": 2,
+            "path": 1
         }
     },
-    "590.5-656.3": {
+    "902.8-1102.9": {
         "tags": [
-            "rect_24",
-            "rect_23",
-            "rect_22",
-            "rect_21",
-            "rect_20",
-            "rect_18",
-            "rect_17",
-            "rect_16",
-            "rect_15",
-            "rect_14",
-            "rect_13",
-            "rect_12",
-            "rect_11",
-            "rect_10",
-            "rect_9",
-            "rect_8",
-            "rect_7",
-            "rect_6",
-            "rect_5",
-            "rect_4",
-            "rect_3",
-            "rect_2",
-            "rect_1",
-            "rect"
+            "line_15"
         ],
         "total": {
-            "rect": 24
+            "line": 1
+        }
+    },
+    "1102.9-1302.9": {
+        "tags": [
+            "line_14",
+            "text_16"
+        ],
+        "total": {
+            "line": 1,
+            "text": 1
+        }
+    },
+    "1302.9-1503.0": {
+        "tags": [
+            "line_13",
+            "text_15"
+        ],
+        "total": {
+            "line": 1,
+            "text": 1
+        }
+    },
+    "502.7-702.8": {
+        "tags": [
+            "text_18",
+            "path_4"
+        ],
+        "total": {
+            "text": 1,
+            "path": 1
         }
     }
 }

@@ -1,22 +1,24 @@
 <template>
   <div class="analysis-words-container">
-    <!-- 添加苹果风格按钮到右上角 -->
-    <button class="apple-button-corner" @click="showDialog = true">
-      <span class="button-icon">↗</span>
+    <!-- 修改按钮图标为更合适的展开图标 -->
+    <button class="apple-button-corner" @click="showDrawer = true">
+      <div class="arrow-wrapper">
+        <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </div>
     </button>
     
     <div class="analysis-content" @scroll="handleScroll" v-html="analysisContent">
     </div>
 
-    <!-- 使用 Teleport 将对话框传送到 body -->
+    <!-- 使用 Teleport 将抽屉传送到 body -->
     <Teleport to="body">
-      <div class="fullscreen-dialog" v-if="showDialog">
-        <div class="dialog-header">
-          <h3>维度分析详情</h3>
-          <button class="close-button" @click="showDialog = false">×</button>
-        </div>
-        <div class="dialog-body">
-          <maxstic />
+      <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
+      <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
+        <button class="close-button" @click="showDrawer = false">×</button>
+        <div class="drawer-body">
+          <maxstic :key="componentKey" />
         </div>
       </div>
     </Teleport>
@@ -24,7 +26,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import axios from 'axios'
 import maxstic from '../visualization/maxstic.vue'
 
@@ -63,15 +65,29 @@ const props = defineProps({
   title: {
     type: String,
     default: 'analysis'
+  },
+  updateKey: {
+    type: Number,
+    default: 0
   }
+})
+
+// 添加一个计算组件key的ref
+const componentKey = ref(0)
+
+// 监听 updateKey 的变化
+watch(() => props.updateKey, (newVal) => {
+  componentKey.value = newVal
+  // 重新获取数据
+  fetchDataAndGenerateAnalysis()
 })
 
 const emit = defineEmits(['scroll'])
 
 const analysisContent = ref('等待分析...')
 
-// 添加对话框控制变量
-const showDialog = ref(false)
+// 将 showDialog 改名为 showDrawer
+const showDrawer = ref(false)
 
 // 生成分析文字的函数
 const generateAnalysis = (dataMapping, dataEquivalentWeights) => {
@@ -219,55 +235,74 @@ onUnmounted(() => {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(0, 122, 255, 0.1);
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  background: rgba(0, 122, 255, 0.08);
+  border: 1px solid rgba(0, 122, 255, 0.1);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   color: #007AFF;
-  font-size: 16px;
   z-index: 10;
+  overflow: visible;
 }
 
 .apple-button-corner:hover {
+  background: rgba(0, 122, 255, 0.12);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+}
+
+.apple-button-corner:active {
+  transform: scale(0.98);
   background: rgba(0, 122, 255, 0.15);
-  transform: translateY(-1px);
 }
 
-.apple-button-corner .button-icon {
-  line-height: 1;
+
+.apple-button-corner:hover{
+  opacity: 1;
+  transform: translateX(0);
 }
 
-/* 全屏对话框样式 */
-.fullscreen-dialog {
+/* 添加遮罩层样式 */
+.drawer-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  z-index: 998;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 抽屉基础样式 */
+.side-drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 60%;
+  height: 100vh;
   background: #fff;
-  z-index: 1000;
+  z-index: 999;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.3s ease-out;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+/* 抽屉打开状态 */
+.side-drawer.drawer-open {
+  right: 0;
 }
 
-.dialog-header {
+/* 抽屉头部样式 */
+.drawer-header {
   padding: 16px 24px;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
@@ -280,20 +315,28 @@ onUnmounted(() => {
   z-index: 10;
 }
 
-.dialog-header h3 {
+.drawer-header h3 {
   margin: 0;
   font-size: 18px;
   color: #1d1d1f;
   font-weight: 500;
 }
 
+/* 抽屉内容区域样式 */
+.drawer-body {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  height: calc(100vh - 70px);
+}
+
+/* 关闭按钮样式 */
 .close-button {
   background: none;
   border: none;
   font-size: 24px;
   color: #86868b;
   cursor: pointer;
-  padding: 8px;
   border-radius: 50%;
   width: 36px;
   height: 36px;
@@ -301,6 +344,10 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 1000;
 }
 
 .close-button:hover {
@@ -308,16 +355,36 @@ onUnmounted(() => {
   color: #1d1d1f;
 }
 
-.dialog-body {
-  flex: 1;
-  overflow: auto;
-  padding: 24px;
-  height: calc(100vh - 70px);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-/* 移除旧的对话框样式 */
+/* 移除旧的对话框相关样式 */
+.fullscreen-dialog,
 .dialog-overlay,
 .dialog-content {
   display: none;
+}
+
+/* 箭头容器和动画样式 */
+.arrow-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.arrow-icon {
+  transition: transform 0.3s ease;
+}
+
+.apple-button-corner:hover .arrow-icon {
+  transform: rotate(180deg);
 }
 </style>

@@ -1,11 +1,11 @@
 import json
 import os
 import numpy as np
-from sklearn.cluster import DBSCAN
 import networkx as nx
 import community.community_louvain as community_louvain
-from networkx.algorithms.community import label_propagation_communities
 from collections import Counter, defaultdict
+from sklearn.mixture import GaussianMixture
+from sklearn.preprocessing import StandardScaler
 
 def load_features_from_json(json_file_path):
     """从JSON文件加载特征数据"""
@@ -27,6 +27,7 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
     print(f"聚类方法: {clustering_method}")
     
     selected_features = features[:, dimensions]
+    communities = {}
     
     # Louvain方法
     if clustering_method.lower() == 'louvain':
@@ -42,6 +43,30 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
                     G.add_edge(identifiers[i], identifiers[j], weight=similarity)
         
         communities = community_louvain.best_partition(G)
+    
+    # GMM方法
+    elif clustering_method.lower() == 'gmm':
+        # 标准化特征
+        scaler = StandardScaler()
+        scaled_features = scaler.fit_transform(selected_features)
+        
+        # 使用BIC准则自动选择最佳的聚类数量（2到10之间）
+        n_components_range = range(2, min(5, len(identifiers)))
+        bic = []
+        for n_components in n_components_range:
+            gmm = GaussianMixture(n_components=n_components, random_state=42)
+            gmm.fit(scaled_features)
+            bic.append(gmm.bic(scaled_features))
+        
+        # 选择BIC最小的聚类数
+        best_n_components = n_components_range[np.argmin(bic)]
+        
+        # 使用最佳聚类数进行聚类
+        gmm = GaussianMixture(n_components=best_n_components, random_state=42)
+        cluster_labels = gmm.fit_predict(scaled_features)
+        
+        # 转换为与Louvain方法相同的格式
+        communities = {identifiers[i]: int(cluster_labels[i]) for i in range(len(identifiers))}
     
     print(f"聚类完成，社区数量: {len(set(communities.values()))}")
     print(f"社区分布: {sorted(Counter(communities.values()).items())}")
@@ -151,7 +176,7 @@ def analyze_cluster_overlaps(subgraphs_dir):
                         overlap_ratio1 = len(intersection) / len(cluster1_nodes)
                         overlap_ratio2 = len(intersection) / len(cluster2_nodes)
                         
-                        if overlap_ratio1 > 0.8 or overlap_ratio2 > 0.8:
+                        if overlap_ratio1 > 0.8 and overlap_ratio2 > 0.8:
                             overlapping_found = True
                             # 创建新的核心聚类（重叠部分）
                             new_core = {
@@ -306,7 +331,7 @@ if __name__ == '__main__':
     features_json_path = '../data/cluster_features.json'
     output_dir = '../data'
     clustering_config = {
-        'method': 'louvain',
+        'method': ['louvain', 'gmm'],  # 支持两种聚类方法
         'dimensions': [
             [0], [1], [2], [3],
             [0,1], [0,2], [0,3],
@@ -316,10 +341,16 @@ if __name__ == '__main__':
         ]
     }
     
-    # 运行主函数
-    main(
-        features_json_path=features_json_path,
-        output_dir=output_dir,
-        clustering_method=clustering_config['method'],
-        subgraph_dimensions=clustering_config['dimensions']
-    ) 
+    # 对每种聚类方法运行主函数
+    for method in clustering_config['method']:
+        print(f"\n使用聚类方法: {method}")
+        output_subdir = os.path.join(output_dir, f'results_{method}')
+        if not os.path.exists(output_subdir):
+            os.makedirs(output_subdir)
+            
+        main(
+            features_json_path=features_json_path,
+            output_dir=output_subdir,
+            clustering_method=method,
+            subgraph_dimensions=clustering_config['dimensions']
+        ) 

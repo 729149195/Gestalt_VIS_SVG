@@ -6,10 +6,8 @@ import json
 from bs4 import BeautifulSoup
 import traceback
 import io
-import base64
 import matplotlib
 import queue
-import threading
 import time
 matplotlib.use('Agg')  # 在导入 pyplot 之前设置后端
 import matplotlib.pyplot as plt
@@ -158,7 +156,7 @@ def process_svg_file(file_path):
         run_subgraph_detection(
             features_json_path=output_paths['features_data'],
             output_dir=os.path.dirname(output_paths['features_data']),
-            clustering_method='louvain',
+            clustering_method='gmm',
             subgraph_dimensions=[[0], [1], [2], [3], [0,1], [0,2], [0,3], [1,2], [1,3], [2,3],
                                [0,1,2], [0,1,3], [0,2,3], [1,2,3], [0,1,2,3]],
             progress_callback=send_progress_update

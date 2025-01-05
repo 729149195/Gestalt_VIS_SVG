@@ -640,7 +640,30 @@ watch(selectedElements, () => {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     max-width: 300px;
-    max-height: 400px;
+    max-height: 200px;
+    overflow-y: auto;
+    /* 添加自定义滚动条样式 */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(85, 192, 0, 0.5) rgba(0, 0, 0, 0.1);
+}
+
+/* 添加 Webkit 浏览器的滚动条样式 */
+.mac-style-selector::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mac-style-selector::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.mac-style-selector::-webkit-scrollbar-thumb {
+    background: rgba(85, 192, 0, 0.5);
+    border-radius: 3px;
+}
+
+.mac-style-selector::-webkit-scrollbar-thumb:hover {
+    background: rgba(85, 192, 0, 0.7);
 }
 
 .mac-style-title {

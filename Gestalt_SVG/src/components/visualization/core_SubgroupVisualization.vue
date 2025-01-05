@@ -41,7 +41,19 @@ function createThumbnail(nodeData) {
     });
     
     // 高亮当前节点包含的元素
-    nodeData.originalNodes.forEach(nodeId => {
+    let nodesToHighlight = [...nodeData.originalNodes];
+    
+    // 如果是外延节点，添加对应核心节点的元素
+    if (nodeData.type === 'extension') {
+        const coreIndex = parseInt(nodeData.id.split('_')[1]);
+        const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
+        if (coreNode) {
+            nodesToHighlight = [...nodesToHighlight, ...coreNode.originalNodes];
+        }
+    }
+    
+    // 高亮所有需要高亮的节点
+    nodesToHighlight.forEach(nodeId => {
         const element = svgDoc.getElementById(nodeId.split('/').pop());
         if (element) {
             element.style.opacity = '1';
@@ -73,9 +85,7 @@ function processGraphData(coreData) {
         });
         
         // 安全地处理维度信息
-        const dimensionsStr = cluster.dimensions 
-            ? `Z_${cluster.dimensions.join(',Z_')}`
-            : `核心聚类 ${clusterIndex + 1}`;  // 临时回退方案
+        const dimensionsStr =  `核心聚类 ${clusterIndex + 1} (Z_${cluster.core_dimensions.join(',Z_')})`
             
         processedNodes.push({
             id: coreNodeId,
@@ -435,7 +445,6 @@ watch(selectedNodeIds, () => {
     width: 100%;
     height: 100%;
     position: relative;
-    padding: 16px;
 }
 
 :deep(.context-menu) {

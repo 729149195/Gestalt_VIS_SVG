@@ -90,12 +90,14 @@ def normalize_features(input_path, output_path):
     df['bbox_mds_2'] = (df['bbox_mds_2'] - df['bbox_mds_2'].min()) / (df['bbox_mds_2'].max() - df['bbox_mds_2'].min())
 
     n_columns = [
-        'tag_name', 'tag', 'opacity',
+        'tag_name', 
+        'tag', 'opacity',
         'fill_h_cos', 'fill_h_sin', 'fill_s_n', 'fill_l_n',
-        'stroke_h_cos', 'stroke_h_sin', 'stroke_s_n', 'stroke_l_n', 'stroke_width',
-        'bbox_left_n', 'bbox_right_n', 'bbox_top_n',
-        'bbox_bottom_n',
-        'bbox_mds_1', 'bbox_mds_2' ,'bbox_center_x_n', 'bbox_center_y_n',
+        'stroke_h_cos', 'stroke_h_sin', 'stroke_s_n', 'stroke_l_n', 
+        'stroke_width',
+        'bbox_left_n', 'bbox_right_n', 'bbox_top_n', 'bbox_bottom_n',
+        'bbox_mds_1', 'bbox_mds_2' ,
+        'bbox_center_x_n', 'bbox_center_y_n',
         'bbox_width_n', 'bbox_height_n', 'bbox_fill_area',    
     ]
     df[n_columns].to_csv(output_path, index=False)

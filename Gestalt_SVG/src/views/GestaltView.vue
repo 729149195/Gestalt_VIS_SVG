@@ -17,7 +17,7 @@
                 <div v-if="file" class="data-cards">
                     <div class="maxtistic">
                         <SubgroupVisualization v-if="file" :key="componentKey2" />
-                        <analysisWords title="Feature dimension mapping analysis"/>
+                        <analysisWords title="Feature dimension mapping analysis" :update-key="componentKey2"/>
                         <div class="main-card margin-right">
                             <v-card class="position-card card1">
                                 <PositionStatistics position="top" title="Top Position" :key="componentKey4" />
@@ -225,7 +225,7 @@ onMounted(async () => {
     height: 100%;
     width: 100%;
     display: flex;
-    padding: 16px;
+    padding: 8px;
 }
 
 .maxtistic {

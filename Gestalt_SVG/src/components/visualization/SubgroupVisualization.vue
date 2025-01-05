@@ -246,7 +246,7 @@ function processGraphData(graphData) {
     const nodeMapping = new Map(); // 用于记录原始节点到新节点的映射
 
     groups.forEach((nodes, root) => {
-        if (nodes.length > 2) {
+        if (nodes.length > 1) {
             // 创建一个大节点
             const groupNode = {
                 id: `group_${root}`,
@@ -917,8 +917,8 @@ onUnmounted(() => {
 
 .control-button {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 5px;
+    right: 5px;
     background-color: #55C000 !important;
     border-color: #55C000 !important;
     color: white !important;
@@ -940,7 +940,7 @@ onUnmounted(() => {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    padding: 20px;
+    padding: 10px;
     flex: 1;
     overflow-y: auto;
     height: calc(100% - 60px);
@@ -980,7 +980,7 @@ onUnmounted(() => {
 
 .core-view-container {
     flex: 1;
-    padding: 20px;
+    padding: 10px;
     overflow: hidden;
     height: calc(100% - 60px);
 }
@@ -992,7 +992,7 @@ onUnmounted(() => {
 /* 添加侧边书签导航样式 */
 .side-pagination {
     position: fixed;
-    right: 10px;
+    right: 5px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 100;
