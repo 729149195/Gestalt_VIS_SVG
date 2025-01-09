@@ -29,42 +29,82 @@ async function fetchOriginalSvg() {
 
 // 创建节点的缩略图
 function createThumbnail(nodeData) {
-    const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(originalSvgContent.value, 'image/svg+xml');
-    const svgElement = svgDoc.querySelector('svg');
-    
-    // 设置所有元素透明度为0.3
-    svgElement.querySelectorAll('*').forEach(el => {
-        if (el.tagName !== 'svg' && el.tagName !== 'g') {
-            el.style.opacity = '0.02';
+    try {
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(originalSvgContent.value, 'image/svg+xml');
+        const svgElement = svgDoc.querySelector('svg');
+        
+        if (!svgElement) {
+            console.error('SVG元素未找到');
+            return '';
         }
-    });
-    
-    // 高亮当前节点包含的元素
-    let nodesToHighlight = [...nodeData.originalNodes];
-    
-    // 如果是外延节点，添加对应核心节点的元素
-    if (nodeData.type === 'extension') {
-        const coreIndex = parseInt(nodeData.id.split('_')[1]);
-        const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
-        if (coreNode) {
-            nodesToHighlight = [...nodesToHighlight, ...coreNode.originalNodes];
+
+        // 先克隆SVG以避免修改原始内容
+        const clonedSvg = svgElement.cloneNode(true);
+        
+        // 设置所有元素透明度为0.2（增加默认透明度使非高亮元素可见）
+        clonedSvg.querySelectorAll('*').forEach(el => {
+            if (el.tagName !== 'svg' && el.tagName !== 'g') {
+                el.style.opacity = '0.2';
+                // 保持原始颜色
+                if (el.hasAttribute('fill')) {
+                    el.style.fill = el.getAttribute('fill');
+                }
+                if (el.hasAttribute('stroke')) {
+                    el.style.stroke = el.getAttribute('stroke');
+                }
+            }
+        });
+        
+        // 高亮当前节点包含的元素
+        let nodesToHighlight = [...nodeData.originalNodes];
+        
+        // 如果是外延节点，添加对应核心节点的元素
+        if (nodeData.type === 'extension') {
+            const coreIndex = parseInt(nodeData.id.split('_')[1]);
+            const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
+            if (coreNode) {
+                nodesToHighlight = [...nodesToHighlight, ...coreNode.originalNodes];
+            }
         }
+        
+        // 高亮所有需要高亮的节点
+        let highlightedCount = 0;
+        nodesToHighlight.forEach(nodeId => {
+            const element = clonedSvg.getElementById(nodeId.split('/').pop());
+            if (element) {
+                element.style.opacity = '1';
+                highlightedCount++;
+                // 确保保持原始颜色
+                if (element.hasAttribute('fill')) {
+                    element.style.fill = element.getAttribute('fill');
+                }
+                if (element.hasAttribute('stroke')) {
+                    element.style.stroke = element.getAttribute('stroke');
+                }
+            }
+        });
+
+        // 如果没有找到任何要高亮的元素，将所有元素设为可见
+        if (highlightedCount === 0) {
+            console.warn(`未找到要高亮的元素: ${nodesToHighlight.join(', ')}`);
+            clonedSvg.querySelectorAll('*').forEach(el => {
+                if (el.tagName !== 'svg' && el.tagName !== 'g') {
+                    el.style.opacity = '1';
+                }
+            });
+        }
+        
+        // 调整SVG大小为缩略图大小
+        clonedSvg.setAttribute('width', '100%');
+        clonedSvg.setAttribute('height', '100%');
+        clonedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        
+        return clonedSvg.outerHTML;
+    } catch (error) {
+        console.error('创建缩略图时出错:', error);
+        return '';
     }
-    
-    // 高亮所有需要高亮的节点
-    nodesToHighlight.forEach(nodeId => {
-        const element = svgDoc.getElementById(nodeId.split('/').pop());
-        if (element) {
-            element.style.opacity = '1';
-        }
-    });
-    
-    // 调整SVG大小为缩略图大小
-    svgElement.setAttribute('width', '100%');
-    svgElement.setAttribute('height', '100%');
-    
-    return svgElement.outerHTML;
 }
 
 // 处理核心聚类数据
