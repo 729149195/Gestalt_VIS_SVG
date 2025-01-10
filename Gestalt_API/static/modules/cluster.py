@@ -8,7 +8,7 @@ from torch.nn.functional import normalize
 import numpy as np
 
 # 模型路径
-model_path = ("./static/modules/best_all_model_nocenter.tar")
+model_path = ("./static/modules/best_model_mds_newnetworksmall_16_nodq.tar")
 
 # 定义模型类
 class ModifiedNetwork(nn.Module):
@@ -17,10 +17,18 @@ class ModifiedNetwork(nn.Module):
         self.input_dim = input_dim
         self.feature_dim = feature_dim
         self.instance_projector = nn.Sequential(
-            nn.Linear(self.input_dim, 64),
+            # 第一层：20 -> 32
+            nn.Linear(input_dim, 32),
+            nn.BatchNorm1d(32),
             nn.ReLU(),
-            nn.Linear(64, self.feature_dim)
-        )
+            # 第二层：32 -> 16
+            nn.Linear(32, 16),
+            nn.BatchNorm1d(16),
+            nn.ReLU(),
+            # 第三层：16 -> feature_dim
+            nn.Linear(16, self.feature_dim),
+            nn.Tanh()
+        ) 
         self._initialize_weights()
 
     def _initialize_weights(self):

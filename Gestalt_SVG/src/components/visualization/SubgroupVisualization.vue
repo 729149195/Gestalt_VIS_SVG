@@ -60,7 +60,7 @@ const originalSvgContent = ref(''); // 添加存储原始SVG内容的ref
 // 添加获取原始SVG内容的函数
 async function fetchOriginalSvg() {
     try {
-        const response = await fetch('http://localhost:5000/get_svg');
+        const response = await fetch('http://192.168.107.209:5000/get_svg');
         const svgContent = await response.text();
         originalSvgContent.value = svgContent;
     } catch (error) {
@@ -170,7 +170,7 @@ async function loadAndRenderAllGraphs() {
             try {
                 const dims = currentDimensions.value[i];
                 const dimKey = getDimensionKey(dims);
-                const data = await d3.json(`http://localhost:5000/static/data/subgraphs/subgraph_dimension_${dimKey}.json`);
+                const data = await d3.json(`http://192.168.107.209:5000/static/data/subgraphs/subgraph_dimension_${dimKey}.json`);
                 const container = graphContainers.value[i];
 
                 if (!container) {

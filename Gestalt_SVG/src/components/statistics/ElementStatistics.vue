@@ -11,7 +11,7 @@ import * as d3 from 'd3';
 import { useStore } from 'vuex';
 const store = useStore();
 
-const eleURL = "http://localhost:5000/ele_num_data"
+const eleURL = "http://192.168.107.209:5000/ele_num_data"
 const chartContainer = ref(null);
 
 onMounted(async () => {

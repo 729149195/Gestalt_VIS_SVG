@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, defineProps } from 'vue';
+import { onMounted, ref } from 'vue';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
 
@@ -26,7 +26,7 @@ const store = useStore();
 const chartContainer = ref(null);
 
 
-const eleURL = `http://localhost:5000/${props.position}_position`;
+const eleURL = `http://192.168.107.209:5000/${props.position}_position`;
 
 onMounted(async () => {
     if (!chartContainer.value) return;

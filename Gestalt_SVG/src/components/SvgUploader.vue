@@ -154,7 +154,7 @@ const handleSvgUploaded = async (event) => {
 
     try {
         // 设置file值，这样可以触发界面更新
-        const response = await fetch('http://localhost:5000/get_svg', {
+        const response = await fetch('http://192.168.107.209:5000/get_svg', {
             responseType: 'text',
             headers: {
                 'Accept': 'image/svg+xml'
@@ -174,7 +174,7 @@ const handleSvgUploaded = async (event) => {
         await fetchProcessedSvg()
         
         // 获取可见元素列表
-        const elementsResponse = await axios.post('http://localhost:5000/get_visible_elements', {
+        const elementsResponse = await axios.post('http://192.168.107.209:5000/get_visible_elements', {
             filename: filename
         })
 
@@ -206,7 +206,7 @@ const uploadFile = () => {
     clearSelectedNodes();
 
     // 先上传文件
-    axios.post('http://localhost:5000/upload', formData, {
+    axios.post('http://192.168.107.209:5000/upload', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
@@ -224,7 +224,7 @@ const uploadFile = () => {
         })
         .then(() => {
             // 获取可见元素列表
-            return axios.post('http://localhost:5000/get_visible_elements', {
+            return axios.post('http://192.168.107.209:5000/get_visible_elements', {
                 filename: newFile.name
             })
         })
@@ -266,7 +266,7 @@ const analyzeSvg = () => {
     console.log('选中的节点ID:', nodeIds);
 
     // 创建 EventSource 连接
-    const eventSource = new EventSource('http://localhost:5000/progress');
+    const eventSource = new EventSource('http://192.168.107.209:5000/progress');
     
     // 监听进度更新
     eventSource.onmessage = (event) => {
@@ -280,7 +280,7 @@ const analyzeSvg = () => {
         eventSource.close();
     };
 
-    axios.post('http://localhost:5000/filter_and_process', {
+    axios.post('http://192.168.107.209:5000/filter_and_process', {
         filename: file.value.name,
         selectedElements: selectedElements.value,
         selectedNodeIds: nodeIds
@@ -318,7 +318,7 @@ const fetchProcessedSvg = () => {
     // 清除选中的节点
     clearSelectedNodes();
     
-    return axios.get('http://localhost:5000/get_svg', {
+    return axios.get('http://192.168.107.209:5000/get_svg', {
         responseType: 'text',
         headers: {
             'Accept': 'image/svg+xml'

@@ -83,7 +83,7 @@ const handleFileUploaded = () => {
 // 组件加时清空 uploadSvg 目录
 onMounted(async () => {
     try {
-        const response = await fetch('http://localhost:5000/clear_upload_folder', {
+        const response = await fetch('http://192.168.107.209:5000/clear_upload_folder', {
             method: 'POST'
         });
         if (!response.ok) {

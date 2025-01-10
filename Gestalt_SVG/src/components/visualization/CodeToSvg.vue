@@ -636,7 +636,7 @@ const handleHighchartsCode = async () => {
 const handleMatplotlibCode = async () => {
   try {
     // 这里需要与后端API交互来执行Python代码
-    const response = await fetch('http://localhost:5000/api/matplotlib', {
+    const response = await fetch('http://192.168.107.209:5000/api/matplotlib', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -761,7 +761,7 @@ onMounted(() => {
   nextTick(() => {
     initEditors()
   })
-  generateSvg()
+  // generateSvg()
 
   if (svgOutput.value) {
     setupZoomAndPan()
@@ -781,7 +781,7 @@ onUnmounted(() => {
 // 处理从SvgUploader接收到的新SVG内容
 const handleSvgContentUpdated = async (event) => {
   try {
-    const response = await fetch('http://localhost:5000/get_svg', {
+    const response = await fetch('http://192.168.107.209:5000/get_svg', {
       responseType: 'text',
       headers: {
         'Accept': 'image/svg+xml'
@@ -864,7 +864,7 @@ const uploadToAnalyzer = async () => {
     formData.append('file', file)
 
     // 发送上传请求
-    const response = await fetch('http://localhost:5000/upload', {
+    const response = await fetch('http://192.168.107.209:5000/upload', {
       method: 'POST',
       body: formData
     })

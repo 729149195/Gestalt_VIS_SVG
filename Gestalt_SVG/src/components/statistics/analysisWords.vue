@@ -31,8 +31,8 @@ import axios from 'axios'
 import maxstic from '../visualization/maxstic.vue'
 
 // 数据源URL
-const MAPPING_DATA_URL = "http://localhost:5000/average_equivalent_mapping";
-const EQUIVALENT_WEIGHTS_URL = "http://localhost:5000/equivalent_weights_by_tag";
+const MAPPING_DATA_URL = "http://192.168.107.209:5000/average_equivalent_mapping";
+const EQUIVALENT_WEIGHTS_URL = "http://192.168.107.209:5000/equivalent_weights_by_tag";
 
 // 特征名称映射
 const featureNameMap = {

@@ -136,7 +136,7 @@ def process_svg_file(file_path):
         
         print("计算等价权重...")
         send_progress_update(60, "正在计算等价权重...")
-        calculator = EquivalentWeightsCalculator(model_path="static/modules/best_all_model_nocenter.tar")
+        calculator = EquivalentWeightsCalculator(model_path="static/modules/best_model_mds_newnetworksmall_16_nodq.tar")
         calculator.compute_and_save_equivalent_weights(
             output_paths['normalized_csv'],
             output_file_avg='static/data/average_equivalent_mapping.json',
@@ -159,7 +159,7 @@ def process_svg_file(file_path):
             features_json_path=output_paths['features_data'],
             output_dir=os.path.dirname(output_paths['features_data']),
             # louvain/gmm
-            clustering_method='louvain',  
+            clustering_method='gmm',  
             subgraph_dimensions=[[0], [1], [2], [3], [0,1], [0,2], [0,3], [1,2], [1,3], [2,3],
                                [0,1,2], [0,1,3], [0,2,3], [1,2,3], [0,1,2,3]],
             progress_callback=send_progress_update
@@ -246,8 +246,16 @@ def upload_file():
             # 读取SVG内容
             svg_content = file.read().decode('utf-8')
             
-            # 处理样式
-            processed_svg = process_svg_styles(svg_content)
+            # 添加详细的日志
+            print("SVG内容读取成功，长度:", len(svg_content))
+            
+            try:
+                # 处理样式
+                processed_svg = process_svg_styles(svg_content)
+                print("样式处理成功")
+            except Exception as style_error:
+                print(f"样式处理失败: {str(style_error)}")
+                return jsonify({'error': f'Error processing styles: {str(style_error)}'}), 500
             
             # 保存处理后的文件
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
@@ -256,12 +264,24 @@ def upload_file():
                 
             print(f"文件已保存到: {file_path}")
 
-            # 立即处理SVG，添加ID
-            output_svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
-            
-            # 使用featureCSV块理SVG，添加ID
-            temp_csv_path = os.path.join(app.config['DATA_FOLDER'], 'temp_features.csv')
-            featureCSV.process_and_save_features(file_path, temp_csv_path, output_svg_with_ids_path)
+            try:
+                # 使用featureCSV处理SVG，添加ID
+                temp_csv_path = os.path.join(app.config['DATA_FOLDER'], 'temp_features.csv')
+                output_svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
+                
+                # 添加详细的参数检查
+                print(f"处理参数检查:")
+                print(f"- 输入文件存在: {os.path.exists(file_path)}")
+                print(f"- 输入文件大小: {os.path.getsize(file_path)}")
+                
+                featureCSV.process_and_save_features(file_path, temp_csv_path, output_svg_with_ids_path)
+                print("SVG处理完成")
+                
+            except Exception as process_error:
+                print(f"SVG处理失败: {str(process_error)}")
+                print(f"错误类型: {type(process_error)}")
+                print(f"堆栈跟踪: {traceback.format_exc()}")
+                return jsonify({'error': f'Error processing SVG: {str(process_error)}'}), 500
             
             # 删除临时CSV文件
             if os.path.exists(temp_csv_path):
@@ -274,6 +294,8 @@ def upload_file():
             }), 200
         except Exception as e:
             print(f"上传处理出错: {str(e)}")
+            print(f"错误类型: {type(e)}")
+            print(f"堆栈跟踪: {traceback.format_exc()}")
             return jsonify({'error': f'Error processing file: {str(e)}'}), 500
     else:
         return jsonify({'error': 'Invalid file type'}), 400
@@ -907,17 +929,47 @@ def calculate_gmm():
 
         values = np.array(data['values'])
         
+        # 数据验证
+        if len(values) < 2:
+            return jsonify({
+                'success': False,
+                'error': '数据点数量不足，至少需要2个数据点'
+            }), 400
+
+        # 检查数据是否都相同
+        if np.all(values == values[0]):
+            return jsonify({
+                'success': True,
+                'components': [{
+                    'mean': float(values[0]),
+                    'variance': 0.0,
+                    'weight': 1.0
+                }],
+                'bic_scores': [0.0]
+            }), 200
+
         # 标准化数据
         scaler = StandardScaler()
         scaled_values = scaler.fit_transform(values.reshape(-1, 1)).ravel()
         
-        # 使用BIC准则自动选择最佳的聚类数量（2到5之间）
-        n_components_range = range(2, min(6, len(values)))
+        # 根据数据量动态调整最大聚类数
+        max_components = min(5, len(values) - 1)
+        if max_components < 2:
+            max_components = 2
+        
+        n_components_range = range(2, max_components + 1)
         bic = []
         gmm_models = []
         
         for n_components in n_components_range:
-            gmm = GaussianMixture(n_components=n_components, random_state=42)
+            # 增加迭代次数和收敛阈值
+            gmm = GaussianMixture(
+                n_components=n_components,
+                random_state=42,
+                max_iter=200,
+                tol=1e-4,
+                reg_covar=1e-6  # 增加协方差矩阵的正则化
+            )
             gmm.fit(scaled_values.reshape(-1, 1))
             bic.append(gmm.bic(scaled_values.reshape(-1, 1)))
             gmm_models.append(gmm)
@@ -940,6 +992,9 @@ def calculate_gmm():
                 'weight': float(best_gmm.weights_[i])
             })
         
+        # 按均值排序组件
+        components.sort(key=lambda x: x['mean'])
+        
         return jsonify({
             'success': True,
             'components': components,
@@ -949,7 +1004,10 @@ def calculate_gmm():
     except Exception as e:
         print(f"GMM计算错误: {str(e)}")
         print(f"错误堆栈: {traceback.format_exc()}")
-        return jsonify({'error': f'GMM calculation error: {str(e)}'}), 500
+        return jsonify({
+            'success': False,
+            'error': f'GMM计算错误: {str(e)}'
+        }), 500
 
 @app.route('/batch_evaluate', methods=['POST'])
 def batch_evaluate():
@@ -986,4 +1044,4 @@ def batch_evaluate():
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)

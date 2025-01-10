@@ -1,5 +1,8 @@
 <template>
     <div class="core-graph-container">
+        <div v-if="loading" class="loading-overlay">
+            <div class="loading-spinner"></div>
+        </div>
         <div ref="graphContainer" class="graph-container"></div>
     </div>
 </template>
@@ -14,12 +17,16 @@ const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 const graphContainer = ref(null);
 const graphData = ref(null);
 const nodes = ref([]);
-const originalSvgContent = ref(''); // 存储原始SVG内容
+const originalSvgContent = ref('');
+const loading = ref(true);
+
+// 添加缩略图缓存
+const thumbnailCache = new Map();
 
 // 从后端获取原始SVG内容
 async function fetchOriginalSvg() {
     try {
-        const response = await fetch('http://localhost:5000/get_svg');
+        const response = await fetch('http://192.168.107.209:5000/get_svg');
         const svgContent = await response.text();
         originalSvgContent.value = svgContent;
     } catch (error) {
@@ -29,6 +36,11 @@ async function fetchOriginalSvg() {
 
 // 创建节点的缩略图
 function createThumbnail(nodeData) {
+    const cacheKey = JSON.stringify(nodeData.originalNodes);
+    if (thumbnailCache.has(cacheKey)) {
+        return thumbnailCache.get(cacheKey);
+    }
+    
     try {
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(originalSvgContent.value, 'image/svg+xml');
@@ -39,14 +51,11 @@ function createThumbnail(nodeData) {
             return '';
         }
 
-        // 先克隆SVG以避免修改原始内容
         const clonedSvg = svgElement.cloneNode(true);
         
-        // 设置所有元素透明度为0.2（增加默认透明度使非高亮元素可见）
         clonedSvg.querySelectorAll('*').forEach(el => {
             if (el.tagName !== 'svg' && el.tagName !== 'g') {
                 el.style.opacity = '0.2';
-                // 保持原始颜色
                 if (el.hasAttribute('fill')) {
                     el.style.fill = el.getAttribute('fill');
                 }
@@ -56,10 +65,8 @@ function createThumbnail(nodeData) {
             }
         });
         
-        // 高亮当前节点包含的元素
         let nodesToHighlight = [...nodeData.originalNodes];
         
-        // 如果是外延节点，添加对应核心节点的元素
         if (nodeData.type === 'extension') {
             const coreIndex = parseInt(nodeData.id.split('_')[1]);
             const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
@@ -68,14 +75,12 @@ function createThumbnail(nodeData) {
             }
         }
         
-        // 高亮所有需要高亮的节点
         let highlightedCount = 0;
         nodesToHighlight.forEach(nodeId => {
             const element = clonedSvg.getElementById(nodeId.split('/').pop());
             if (element) {
                 element.style.opacity = '1';
                 highlightedCount++;
-                // 确保保持原始颜色
                 if (element.hasAttribute('fill')) {
                     element.style.fill = element.getAttribute('fill');
                 }
@@ -85,9 +90,7 @@ function createThumbnail(nodeData) {
             }
         });
 
-        // 如果没有找到任何要高亮的元素，将所有元素设为可见
         if (highlightedCount === 0) {
-            console.warn(`未找到要高亮的元素: ${nodesToHighlight.join(', ')}`);
             clonedSvg.querySelectorAll('*').forEach(el => {
                 if (el.tagName !== 'svg' && el.tagName !== 'g') {
                     el.style.opacity = '1';
@@ -95,12 +98,13 @@ function createThumbnail(nodeData) {
             });
         }
         
-        // 调整SVG大小为缩略图大小
         clonedSvg.setAttribute('width', '100%');
         clonedSvg.setAttribute('height', '100%');
         clonedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         
-        return clonedSvg.outerHTML;
+        const thumbnail = clonedSvg.outerHTML;
+        thumbnailCache.set(cacheKey, thumbnail);
+        return thumbnail;
     } catch (error) {
         console.error('创建缩略图时出错:', error);
         return '';
@@ -208,7 +212,6 @@ function renderGraph(container, graphData) {
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // 清除现有内容
     d3.select(container).selectAll('svg').remove();
 
     const svg = d3.select(container)
@@ -217,7 +220,6 @@ function renderGraph(container, graphData) {
         .attr('height', '100%')
         .attr('viewBox', [0, 0, width, height]);
 
-    // 设置缩放
     const zoom = d3.zoom()
         .scaleExtent([0.1, 10])
         .on('zoom', (event) => {
@@ -227,32 +229,26 @@ function renderGraph(container, graphData) {
     svg.call(zoom);
     const g = svg.append('g');
 
-    // 创建布局数据
     const hierarchyData = {
         name: "root",
         children: graphData.nodes
     };
 
-    // 使用改进的treemap布局
     const treemap = d3.treemap()
         .size([width * 0.96, height * 0.96])
         .paddingTop(24)
         .paddingRight(24)
         .paddingBottom(24)
         .paddingLeft(24)
-        .paddingInner(16)  // 减小节点间距以获得更多空间
+        .paddingInner(16)
         .round(true);
 
     const root = d3.hierarchy(hierarchyData)
         .sum(d => {
-            // 调整节点大小计算逻辑，使其更倾向于方形
             if (d.type === 'core') {
-                // 核心节点基础大小
                 const baseSize = 800;
-                // 根据外延节点数量适度增加大小
                 return baseSize + (d.extensionCount * 300);
             }
-            // 外延节点固定大小，但保持较大以避免过小
             return 500;
         });
 
@@ -260,7 +256,6 @@ function renderGraph(container, graphData) {
 
     const allNodeData = [];
 
-    // 处理所有节点的位置
     root.leaves().forEach(node => {
         const nodeWidth = node.x1 - node.x0;
         const nodeHeight = node.y1 - node.y0;
@@ -330,7 +325,9 @@ function renderGraph(container, graphData) {
         }
     });
 
-    // 渲染节点
+    // 使用文档片段批量创建节点
+    const fragment = document.createDocumentFragment();
+    
     const nodeGroup = g.selectAll('g.node')
         .data(allNodeData)
         .join('g')
@@ -429,7 +426,6 @@ function renderGraph(container, graphData) {
         const width = d.x1 - d.x0;
         const height = d.y1 - d.y0;
         
-        // 减小padding，增大SVG显示区域
         const foreignObject = node.append('foreignObject')
             .attr('width', width - 16)
             .attr('height', height - 32)
@@ -443,7 +439,10 @@ function renderGraph(container, graphData) {
             .style('border-radius', '6px')
             .style('background', '#fafafa');
 
-        div.html(createThumbnail(d.isCore ? d.data : d.data));
+        // 使用requestIdleCallback延迟加载缩略图
+        requestIdleCallback(() => {
+            div.html(createThumbnail(d.isCore ? d.data : d.data));
+        });
 
         // 添加标签背景
         node.append('rect')
@@ -468,6 +467,14 @@ function renderGraph(container, graphData) {
             .style('fill', '#3c4043')
             .text(d.isCore ? d.data.name : d.data.name);
     });
+
+    // 将节点组添加到文档片段
+    nodeGroup.each(function() {
+        fragment.appendChild(this);
+    });
+
+    // 一次性将所有节点添加到DOM
+    g.node().appendChild(fragment);
 
     // 添加hover效果
     nodeGroup.on('mouseenter', function() {
@@ -504,20 +511,27 @@ function calculateExtensionPositions(count, coreX, coreY, coreWidth, coreHeight,
 // 加载数据并渲染
 async function loadAndRenderGraph() {
     try {
-        await fetchOriginalSvg(); // 首先获取原始SVG内容
-        const response = await fetch('http://localhost:5000/static/data/subgraphs/subgraph_dimension_all.json');
-        const data = await response.json();
-        console.log('Loaded core cluster data structure:', {
-            hasCoreClusters: 'core_clusters' in data,
-            dataKeys: Object.keys(data),
-            firstCluster: data.core_clusters ? data.core_clusters[0] : null
-        });
+        loading.value = true;
+        // 并行请求数据
+        const [svgResponse, graphResponse] = await Promise.all([
+            fetch('http://192.168.107.209:5000/get_svg'),
+            fetch('http://192.168.107.209:5000/static/data/subgraphs/subgraph_dimension_all.json')
+        ]);
+        
+        const [svgContent, data] = await Promise.all([
+            svgResponse.text(),
+            graphResponse.json()
+        ]);
+        
+        originalSvgContent.value = svgContent;
         graphData.value = data;
         const processedData = processGraphData(data);
         nodes.value = processedData.nodes;
         renderGraph(graphContainer.value, processedData);
     } catch (error) {
-        console.error('Error loading core cluster data:', error);
+        console.error('Error loading data:', error);
+    } finally {
+        loading.value = false;
     }
 }
 
@@ -638,5 +652,32 @@ watch(selectedNodeIds, () => {
     fill: #3c4043;
     font-size: 13px;
     font-weight: 500;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #1a73e8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 </style>

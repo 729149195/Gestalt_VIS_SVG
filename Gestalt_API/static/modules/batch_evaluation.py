@@ -2,10 +2,9 @@ import os
 import json
 import matplotlib.pyplot as plt
 from typing import Dict, List
-from .evaluation import ClusterEvaluator
+from evaluation import ClusterEvaluator
 import numpy as np
 from tqdm import tqdm
-import shutil
 import sys
 import traceback
 from pathlib import Path
@@ -178,10 +177,15 @@ def main():
     """
     主函数，用于运行批量评估
     """
-    # 设置路径
-    svg_dir = "static/data/newData3"
-    ground_truth_dir = "static/data/StepGroups_3"
-    output_dir = "static/data"
+    # 获取当前文件的绝对路径
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # 构建数据目录的绝对路径
+    base_dir = os.path.dirname(os.path.dirname(current_dir))  # 回到 Gestalt_API 目录
+    
+    # 设置绝对路径
+    svg_dir = os.path.join(base_dir, "static", "data", "newData3")
+    ground_truth_dir = os.path.join(base_dir, "static", "data", "StepGroups_3")
+    output_dir = os.path.join(base_dir, "static", "data")
     
     # 创建评估器
     evaluator = BatchEvaluator(svg_dir, ground_truth_dir, output_dir)
@@ -190,7 +194,8 @@ def main():
     evaluator.batch_evaluate()
     
     # 可视化结果并保存
-    evaluator.visualize_results("static/data/batch_evaluation_results.png")
+    results_path = os.path.join(output_dir, "batch_evaluation_results.png")
+    evaluator.visualize_results(results_path)
 
 if __name__ == '__main__':
     main() 
