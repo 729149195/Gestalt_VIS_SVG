@@ -9,6 +9,8 @@ import io
 import matplotlib
 import queue
 import time
+
+from Gestalt_API.static.modules.batch_evaluation import BatchEvaluator
 matplotlib.use('Agg')  # 在导入 pyplot 之前设置后端
 import matplotlib.pyplot as plt
 import numpy as np
