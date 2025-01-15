@@ -1,171 +1,249 @@
 {
     "nodes": [
         {
-            "id": "svg/rect_11",
-            "name": "svg/rect_11",
-            "cluster": 3
-        },
-        {
-            "id": "svg/rect_10",
-            "name": "svg/rect_10",
-            "cluster": 2
-        },
-        {
-            "id": "svg/rect_9",
-            "name": "svg/rect_9",
-            "cluster": 0
-        },
-        {
-            "id": "svg/rect_8",
-            "name": "svg/rect_8",
-            "cluster": 2
-        },
-        {
-            "id": "svg/rect_7",
-            "name": "svg/rect_7",
-            "cluster": 0
-        },
-        {
-            "id": "svg/rect_6",
-            "name": "svg/rect_6",
-            "cluster": 2
-        },
-        {
-            "id": "svg/rect_5",
-            "name": "svg/rect_5",
-            "cluster": 0
-        },
-        {
-            "id": "svg/rect_4",
-            "name": "svg/rect_4",
-            "cluster": 2
-        },
-        {
-            "id": "svg/rect_3",
-            "name": "svg/rect_3",
-            "cluster": 0
-        },
-        {
-            "id": "svg/rect_2",
-            "name": "svg/rect_2",
+            "id": "svg/path_11",
+            "name": "svg/path_11",
             "cluster": 1
         },
         {
-            "id": "svg/rect_1",
-            "name": "svg/rect_1",
+            "id": "svg/path_10",
+            "name": "svg/path_10",
+            "cluster": 1
+        },
+        {
+            "id": "svg/path_9",
+            "name": "svg/path_9",
+            "cluster": 1
+        },
+        {
+            "id": "svg/path_8",
+            "name": "svg/path_8",
+            "cluster": 1
+        },
+        {
+            "id": "svg/path_7",
+            "name": "svg/path_7",
             "cluster": 0
         },
         {
-            "id": "svg/rect",
-            "name": "svg/rect",
+            "id": "svg/path_6",
+            "name": "svg/path_6",
+            "cluster": 0
+        },
+        {
+            "id": "svg/path_5",
+            "name": "svg/path_5",
+            "cluster": 0
+        },
+        {
+            "id": "svg/path_4",
+            "name": "svg/path_4",
             "cluster": 1
+        },
+        {
+            "id": "svg/path_3",
+            "name": "svg/path_3",
+            "cluster": 1
+        },
+        {
+            "id": "svg/path_2",
+            "name": "svg/path_2",
+            "cluster": 0
+        },
+        {
+            "id": "svg/path_1",
+            "name": "svg/path_1",
+            "cluster": 0
+        },
+        {
+            "id": "svg/path",
+            "name": "svg/path",
+            "cluster": 0
         }
     ],
     "links": [
         {
-            "source": "svg/rect_10",
-            "target": "svg/rect_8",
+            "source": "svg/path_11",
+            "target": "svg/path_10",
             "value": 1.0,
-            "cluster": 2
-        },
-        {
-            "source": "svg/rect_10",
-            "target": "svg/rect_6",
-            "value": 1.0,
-            "cluster": 2
-        },
-        {
-            "source": "svg/rect_10",
-            "target": "svg/rect_4",
-            "value": 1.0,
-            "cluster": 2
-        },
-        {
-            "source": "svg/rect_9",
-            "target": "svg/rect_7",
-            "value": 0.9635914429190449,
-            "cluster": 0
-        },
-        {
-            "source": "svg/rect_9",
-            "target": "svg/rect_5",
-            "value": 0.9820991006280001,
-            "cluster": 0
-        },
-        {
-            "source": "svg/rect_9",
-            "target": "svg/rect_3",
-            "value": 0.9669685878229362,
-            "cluster": 0
-        },
-        {
-            "source": "svg/rect_9",
-            "target": "svg/rect_1",
-            "value": 0.9555649167664448,
-            "cluster": 0
-        },
-        {
-            "source": "svg/rect_8",
-            "target": "svg/rect_6",
-            "value": 1.0,
-            "cluster": 2
-        },
-        {
-            "source": "svg/rect_8",
-            "target": "svg/rect_4",
-            "value": 1.0,
-            "cluster": 2
-        },
-        {
-            "source": "svg/rect_7",
-            "target": "svg/rect_5",
-            "value": 0.9808180974013726,
-            "cluster": 0
-        },
-        {
-            "source": "svg/rect_7",
-            "target": "svg/rect_3",
-            "value": 0.9963886202921252,
-            "cluster": 0
-        },
-        {
-            "source": "svg/rect_7",
-            "target": "svg/rect_1",
-            "value": 0.9913581825188228,
-            "cluster": 0
-        },
-        {
-            "source": "svg/rect_6",
-            "target": "svg/rect_4",
-            "value": 1.0,
-            "cluster": 2
-        },
-        {
-            "source": "svg/rect_5",
-            "target": "svg/rect_3",
-            "value": 0.9843172910660246,
-            "cluster": 0
-        },
-        {
-            "source": "svg/rect_5",
-            "target": "svg/rect_1",
-            "value": 0.9725032548833612,
-            "cluster": 0
-        },
-        {
-            "source": "svg/rect_3",
-            "target": "svg/rect_1",
-            "value": 0.9878088401070307,
-            "cluster": 0
-        },
-        {
-            "source": "svg/rect_2",
-            "target": "svg/rect",
-            "value": 0.9998789003570225,
             "cluster": 1
+        },
+        {
+            "source": "svg/path_11",
+            "target": "svg/path_9",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_11",
+            "target": "svg/path_8",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_11",
+            "target": "svg/path_4",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_11",
+            "target": "svg/path_3",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_10",
+            "target": "svg/path_9",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_10",
+            "target": "svg/path_8",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_10",
+            "target": "svg/path_4",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_10",
+            "target": "svg/path_3",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_9",
+            "target": "svg/path_8",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_9",
+            "target": "svg/path_4",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_9",
+            "target": "svg/path_3",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_8",
+            "target": "svg/path_4",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_8",
+            "target": "svg/path_3",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_7",
+            "target": "svg/path_6",
+            "value": 0.9125374853281553,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_7",
+            "target": "svg/path_5",
+            "value": 0.9761011386475796,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_7",
+            "target": "svg/path_2",
+            "value": 0.87428755464406,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_7",
+            "target": "svg/path_1",
+            "value": 0.9633895301888481,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_7",
+            "target": "svg/path",
+            "value": 0.923076813037592,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_6",
+            "target": "svg/path_5",
+            "value": 0.9333918571079306,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_6",
+            "target": "svg/path_2",
+            "value": 0.806689823299783,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_6",
+            "target": "svg/path_1",
+            "value": 0.881953111721833,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_6",
+            "target": "svg/path",
+            "value": 0.9876426825479826,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_5",
+            "target": "svg/path_2",
+            "value": 0.8559647245749126,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_5",
+            "target": "svg/path_1",
+            "value": 0.9411891094175825,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_5",
+            "target": "svg/path",
+            "value": 0.9444213143385334,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_4",
+            "target": "svg/path_3",
+            "value": 1.0,
+            "cluster": 1
+        },
+        {
+            "source": "svg/path_2",
+            "target": "svg/path_1",
+            "value": 0.9043335302121372,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_2",
+            "target": "svg/path",
+            "value": 0.8149149618624635,
+            "cluster": 0
+        },
+        {
+            "source": "svg/path_1",
+            "target": "svg/path",
+            "value": 0.8917940021711983,
+            "cluster": 0
         }
     ],
-    "clusters": 4,
+    "clusters": 2,
     "dimensions": [
         0,
         1

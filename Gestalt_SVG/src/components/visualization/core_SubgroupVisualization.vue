@@ -26,7 +26,7 @@ const thumbnailCache = new Map();
 // 从后端获取原始SVG内容
 async function fetchOriginalSvg() {
     try {
-        const response = await fetch('http://192.168.107.209:5000/get_svg');
+        const response = await fetch('http://127.0.0.1:5000/get_svg');
         const svgContent = await response.text();
         originalSvgContent.value = svgContent;
     } catch (error) {
@@ -514,8 +514,8 @@ async function loadAndRenderGraph() {
         loading.value = true;
         // 并行请求数据
         const [svgResponse, graphResponse] = await Promise.all([
-            fetch('http://192.168.107.209:5000/get_svg'),
-            fetch('http://192.168.107.209:5000/static/data/subgraphs/subgraph_dimension_all.json')
+            fetch('http://127.0.0.1:5000/get_svg'),
+            fetch('http://127.0.0.1:5000/static/data/subgraphs/subgraph_dimension_all.json')
         ]);
         
         const [svgContent, data] = await Promise.all([

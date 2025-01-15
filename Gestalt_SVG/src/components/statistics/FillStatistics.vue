@@ -12,7 +12,7 @@ import { useStore } from 'vuex';
 const store = useStore();
 
 // 更新了数据接口地址
-const eleURL = "http://192.168.107.209:5000/fill_num";
+const eleURL = "http://127.0.0.1:5000/fill_num";
 const chartContainer = ref(null);
 
 onMounted(async () => {

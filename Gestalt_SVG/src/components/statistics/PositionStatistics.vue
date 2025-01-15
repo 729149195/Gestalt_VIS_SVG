@@ -26,7 +26,7 @@ const store = useStore();
 const chartContainer = ref(null);
 
 
-const eleURL = `http://192.168.107.209:5000/${props.position}_position`;
+const eleURL = `http://127.0.0.1:5000/${props.position}_position`;
 
 onMounted(async () => {
     if (!chartContainer.value) return;
