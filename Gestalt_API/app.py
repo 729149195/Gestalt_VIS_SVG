@@ -10,7 +10,7 @@ import matplotlib
 import queue
 import time
 
-from Gestalt_API.static.modules.batch_evaluation import BatchEvaluator
+# from Gestalt_API.static.modules.batch_evaluation import BatchEvaluator
 matplotlib.use('Agg')  # 在导入 pyplot 之前设置后端
 import matplotlib.pyplot as plt
 import numpy as np
@@ -1011,39 +1011,39 @@ def calculate_gmm():
             'error': f'GMM计算错误: {str(e)}'
         }), 500
 
-@app.route('/batch_evaluate', methods=['POST'])
-def batch_evaluate():
-    """批量评估SVG文件的API端点"""
-    try:
-        # 设置路径
-        svg_dir = os.path.join(app.config['DATA_FOLDER'], 'newData3')
-        ground_truth_dir = os.path.join(app.config['DATA_FOLDER'], 'StepGroups_3')
-        output_dir = app.config['DATA_FOLDER']
+# @app.route('/batch_evaluate', methods=['POST'])
+# def batch_evaluate():
+#     """批量评估SVG文件的API端点"""
+#     try:
+#         # 设置路径
+#         svg_dir = os.path.join(app.config['DATA_FOLDER'], 'newData3')
+#         ground_truth_dir = os.path.join(app.config['DATA_FOLDER'], 'StepGroups_3')
+#         output_dir = app.config['DATA_FOLDER']
         
-        # 创建评估器
-        evaluator = BatchEvaluator(svg_dir, ground_truth_dir, output_dir)
+#         # 创建评估器
+#         evaluator = BatchEvaluator(svg_dir, ground_truth_dir, output_dir)
         
-        # 运行批量评估
-        results = evaluator.batch_evaluate()
+#         # 运行批量评估
+#         results = evaluator.batch_evaluate()
         
-        # 保存可视化结果
-        results_path = os.path.join(app.config['DATA_FOLDER'], 'batch_evaluation_results.png')
-        evaluator.visualize_results(results_path)
+#         # 保存可视化结果
+#         results_path = os.path.join(app.config['DATA_FOLDER'], 'batch_evaluation_results.png')
+#         evaluator.visualize_results(results_path)
         
-        return jsonify({
-            'success': True,
-            'message': '批量评估完成',
-            'results': results,
-            'visualization_path': '/static/data/batch_evaluation_results.png'
-        }), 200
+#         return jsonify({
+#             'success': True,
+#             'message': '批量评估完成',
+#             'results': results,
+#             'visualization_path': '/static/data/batch_evaluation_results.png'
+#         }), 200
         
-    except Exception as e:
-        print(f"批量评估出错: {str(e)}")
-        print(f"错误堆栈: {traceback.format_exc()}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+#     except Exception as e:
+#         print(f"批量评估出错: {str(e)}")
+#         print(f"错误堆栈: {traceback.format_exc()}")
+#         return jsonify({
+#             'success': False,
+#             'error': str(e)
+#         }), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
