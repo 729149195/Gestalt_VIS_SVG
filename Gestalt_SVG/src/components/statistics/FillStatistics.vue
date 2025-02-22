@@ -1,6 +1,6 @@
 <template>
     <div class="statistics-container">
-        <span style="color: #666">Fill color Statiction</span>
+        <span class="title">Fill color Statiction</span>
         <div ref="chartContainer" class="chart-container"></div>
     </div>
 </template>
@@ -84,11 +84,21 @@ const render = (data) => {
     const yAxis = svg.append('g')
         .attr('class', 'y-axis')
         .attr('transform', `translate(${marginLeft},0)`)
-        .call(d3.axisLeft(y));
-
-    yAxis.selectAll('line')
-        .attr('x2', width - marginLeft - marginRight)
-        .attr('stroke', '#ddd');
+        .call(d3.axisLeft(y)
+            .ticks(5)  // 减少刻度数量
+            .tickFormat(d => {
+                if (d >= 1000) {
+                    return d3.format('.1k')(d);
+                }
+                return d;
+            }))
+        .call(g => {
+            g.selectAll('.tick line')
+                .attr('x2', width - marginLeft - marginRight)
+                .attr('stroke', '#ddd');
+            g.selectAll('.tick text')
+                .style('font-size', '12px');
+        });
 
     // 绘制带圆角的条形图
     svg.selectAll('.bar')
@@ -100,11 +110,11 @@ const render = (data) => {
         .attr('d', d => roundedRectPath(d, x, y));
 
     // 添加 x 轴图例
-    svg.append("text")
-        .attr("transform", `translate(${width / 2},${height - marginBottom / 10})`)
-        .style("text-anchor", "middle")
-        .style("font-size", "14px")
-        .text("Fill Color");
+    // svg.append("text")
+    //     .attr("transform", `translate(${width / 2},${height - marginBottom / 10})`)
+    //     .style("text-anchor", "middle")
+    //     .style("font-size", "14px")
+    //     .text("Fill Color");
 
     // 添加 y 轴图例
     svg.append("text")
@@ -145,5 +155,17 @@ const roundedRectPath = (d, x, y) => {
     flex: 1;
     width: 100%;
     min-height: 0;
+}
+.title {
+  top: 12px;
+  left: 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
 }
 </style>

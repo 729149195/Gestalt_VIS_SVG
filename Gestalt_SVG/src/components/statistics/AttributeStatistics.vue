@@ -1,6 +1,6 @@
 <template>
     <div class="statistics-container">
-        <span style="color: #666">AttrProportions</span>
+        <span class="title">AttrProportions</span>
         <div ref="chartContainer" class="chart-container"></div>
     </div>
 </template>
@@ -37,7 +37,7 @@ const render = (data) => {
     const height = container.clientHeight;
     const marginTop = height * 0.08;
     const marginRight = width * 0.02;
-    const marginBottom = height * 0.25;
+    const marginBottom = height * 0.45;
     const marginLeft = width * 0.15;
 
     const x = d3.scaleBand()
@@ -72,23 +72,6 @@ const render = (data) => {
             }));
     };
 
-    const yAxis = svg.append('g')
-        .attr('class', 'y-axis')
-        .attr('transform', `translate(${marginLeft},0)`)
-        .call(d3.axisLeft(y));
-
-    yAxis.selectAll('line')
-        .attr('x2', width - marginLeft - marginRight)
-        .attr('stroke', '#ddd');
-
-    svg.append('g')
-        .selectAll('path')
-        .data(data)
-        .join('path')
-        .attr('class', 'bars')
-        .attr('fill', 'steelblue')
-        .attr('d', d => roundedRectPath(d, x, y));
-
     svg.append('g')
         .attr('class', 'x-axis')
         .attr('transform', `translate(0,${height - marginBottom})`)
@@ -101,21 +84,39 @@ const render = (data) => {
         .attr("dy", ".15em")
         .attr("transform", "rotate(-45)");
 
-    svg.append('g')
+    const yAxis = svg.append('g')
         .attr('class', 'y-axis')
         .style("pointer-events", "none")
         .attr('transform', `translate(${marginLeft},0)`)
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(y)
+            .ticks(5)
+            .tickFormat(d => {
+                if (d >= 1000) {
+                    return d3.format('.1k')(d);
+                }
+                return d;
+            }))
+        .call(g => {
+            g.selectAll('.tick line')
+                .attr('x2', width - marginLeft - marginRight)
+                .attr('stroke', '#ddd')
+                .style('stroke-opacity', 0.5);
+            g.selectAll('.tick text')
+                .style('font-size', '12px')
+                .attr('dx', '-5px');
+        });
 
-    svg.append("text")
-        .attr("transform", `translate(${width / 2},${height - marginBottom / 10})`)
-        .style("text-anchor", "middle")
-        .style("font-size", "12px")
-        .text("Attributes");
+    svg.append('g')
+        .selectAll('path')
+        .data(data)
+        .join('path')
+        .attr('class', 'bars')
+        .attr('fill', 'steelblue')
+        .attr('d', d => roundedRectPath(d, x, y));
 
     svg.append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", marginLeft / 3)
+        .attr("y", marginLeft / 4)
         .attr("x", 0 - (height - marginBottom) / 2)
         .style("text-anchor", "middle")
         .style("font-size", "12px")
@@ -153,5 +154,17 @@ const roundedRectPath = (d, x, y) => {
     flex: 1;
     width: 100%;
     min-height: 0;
+}
+.title {
+  top: 12px;
+  left: 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
 }
 </style>

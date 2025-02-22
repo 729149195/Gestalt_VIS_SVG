@@ -6,6 +6,7 @@ import community.community_louvain as community_louvain
 from collections import Counter, defaultdict
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import NearestNeighbors
 
 def load_features_from_json(json_file_path):
     """从JSON文件加载特征数据"""
@@ -20,6 +21,105 @@ def load_features_from_json(json_file_path):
     
     return identifiers, np.array(features)
 
+def calculate_metrics(features):
+    """计算数据的分散度和聚集性
+    
+    Args:
+        features: 特征数据，shape为(n_samples, n_features)
+    
+    Returns:
+        dispersion: 分散度 (0-1)
+        clustering: 聚集性 (0-1)
+    """
+    # 计算分散度 (使用四分位距/数据范围)
+    sorted_features = np.sort(features, axis=0)
+    q1 = np.percentile(sorted_features, 25, axis=0)
+    q3 = np.percentile(sorted_features, 75, axis=0)
+    min_vals = np.min(sorted_features, axis=0)
+    max_vals = np.max(sorted_features, axis=0)
+    
+    # 避免除以零
+    ranges = max_vals - min_vals
+    ranges[ranges == 0] = 1  # 防止除以零
+    
+    # 计算每个维度的分散度
+    dimension_dispersions = (q3 - q1) / ranges
+    dispersion = np.mean(dimension_dispersions)
+    
+    # 计算局部聚集性 (使用GMM组件的方差)
+    # 标准化数据
+    scaler = StandardScaler()
+    scaled_features = scaler.fit_transform(features)
+    
+    # 使用GMM进行聚类
+    max_components = min(5, len(features) - 1)
+    if max_components < 2:
+        max_components = 2
+    
+    n_components_range = range(2, max_components + 1)
+    bic = []
+    gmm_models = []
+    
+    for n_components in n_components_range:
+        gmm = GaussianMixture(
+            n_components=n_components,
+            random_state=42,
+            max_iter=200,
+            tol=1e-4,
+            reg_covar=1e-6
+        )
+        gmm.fit(scaled_features)
+        bic.append(gmm.bic(scaled_features))
+        gmm_models.append(gmm)
+    
+    # 选择BIC最小的模型
+    best_idx = np.argmin(bic)
+    best_gmm = gmm_models[best_idx]
+    
+    # 计算局部聚集性
+    variances = best_gmm.covariances_.reshape(-1)  # 展平协方差矩阵
+    weights = 1 / (variances + 1e-6)  # 避免除以零
+    total_weight = np.sum(weights)
+    normalized_weights = weights / total_weight
+    
+    clustering = np.sum(normalized_weights * (1 - np.sqrt(variances)))
+    
+    return dispersion, clustering
+
+def evaluate_dimension_combination(features):
+    """评估维度组合的适用性
+    
+    Args:
+        features: 特征数据
+    
+    Returns:
+        result: 评估结果 ("保留" 或 "过滤的原因")
+    """
+    dispersion, clustering = calculate_metrics(features)
+    
+    # 根据评估矩阵进行判断
+    if clustering > 0.7:  # 高聚集
+        if dispersion > 0.7:
+            return "保留(多类别特征)", (dispersion, clustering)
+        elif dispersion > 0.3:
+            return "保留(多类别特征)", (dispersion, clustering)
+        else:
+            return "需要检查(区分不明显)", (dispersion, clustering)
+    elif clustering > 0.3:  # 中等聚集
+        if dispersion > 0.7:
+            return "可能保留(需要检查)", (dispersion, clustering)
+        elif dispersion > 0.3:
+            return "需要检查(需要进一步分析)", (dispersion, clustering)
+        else:
+            return "可能过滤(区分不明显)", (dispersion, clustering)
+    else:  # 低聚集
+        if dispersion > 0.7:
+            return "过滤(纯噪声)", (dispersion, clustering)
+        elif dispersion > 0.3:
+            return "过滤(杂乱无规律)", (dispersion, clustering)
+        else:
+            return "过滤(无区分度)", (dispersion, clustering)
+
 def generate_subgraph(identifiers, features, dimensions, clustering_method):
     """为指定维度生成子图"""
     print(f"\n=== 开始生成子图 ===")
@@ -27,6 +127,25 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
     print(f"聚类方法: {clustering_method}")
     
     selected_features = features[:, dimensions]
+    
+    # 评估维度组合
+    evaluation_result, metrics = evaluate_dimension_combination(selected_features)
+    dispersion, clustering = metrics
+    print(f"维度评估结果: {evaluation_result}")
+    print(f"分散度: {dispersion:.3f}, 聚集性: {clustering:.3f}")
+    
+    # 如果评估结果包含"过滤"，则返回空的图数据结构而不是None
+    if "过滤" in evaluation_result:
+        print("该维度组合被过滤，跳过聚类")
+        return {
+            "nodes": [],
+            "links": [],
+            "clusters": 0,
+            "dimensions": dimensions,
+            "filtered": True,
+            "filter_reason": evaluation_result
+        }
+    
     communities = {}
     
     # Louvain方法
@@ -50,20 +169,41 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
         scaler = StandardScaler()
         scaled_features = scaler.fit_transform(selected_features)
         
-        # 使用BIC准则自动选择最佳的聚类数量（2到10之间）
-        n_components_range = range(2, min(5, len(identifiers)))
+        # 检查数据是否都相同
+        if np.all(scaled_features == scaled_features[0]):
+            communities = {identifiers[i]: 0 for i in range(len(identifiers))}
+            print("所有数据点相同，归为一个聚类")
+            return communities
+
+        # 根据数据量动态调整最大聚类数
+        max_components = min(5, len(identifiers) - 1)
+        if max_components < 2:
+            max_components = 2
+        
+        n_components_range = range(2, max_components + 1)
         bic = []
+        gmm_models = []
+        
+        # 尝试不同的聚类数
         for n_components in n_components_range:
-            gmm = GaussianMixture(n_components=n_components, random_state=42)
+            # 使用更稳定的参数配置
+            gmm = GaussianMixture(
+                n_components=n_components,
+                random_state=42,
+                max_iter=200,
+                tol=1e-4,
+                reg_covar=1e-6  # 增加协方差矩阵的正则化
+            )
             gmm.fit(scaled_features)
             bic.append(gmm.bic(scaled_features))
+            gmm_models.append(gmm)
         
-        # 选择BIC最小的聚类数
-        best_n_components = n_components_range[np.argmin(bic)]
+        # 选择BIC最小的模型
+        best_idx = np.argmin(bic)
+        best_gmm = gmm_models[best_idx]
         
-        # 使用最佳聚类数进行聚类
-        gmm = GaussianMixture(n_components=best_n_components, random_state=42)
-        cluster_labels = gmm.fit_predict(scaled_features)
+        # 使用最佳模型进行聚类
+        cluster_labels = best_gmm.fit_predict(scaled_features)
         
         # 转换为与Louvain方法相同的格式
         communities = {identifiers[i]: int(cluster_labels[i]) for i in range(len(identifiers))}
@@ -91,7 +231,9 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
         "nodes": [{"id": id, "name": id, "cluster": int(communities[id])} for id in identifiers],
         "links": edges,
         "clusters": len(set(communities.values())),
-        "dimensions": dimensions
+        "dimensions": dimensions,
+        "filtered": False,
+        "filter_reason": None
     }
 
     return graph_data
@@ -109,6 +251,16 @@ def analyze_cluster_overlaps(subgraphs_dir):
             with open(os.path.join(subgraphs_dir, filename), 'r') as f:
                 graph_data = json.load(f)
                 
+                # 跳过被过滤的维度组合
+                if graph_data.get('filtered', False):
+                    print(f"维度组合 {dimension} 被过滤: {graph_data.get('filter_reason')}")
+                    continue
+                
+                # 确保图数据包含必要的字段
+                if not graph_data.get('nodes') or not graph_data.get('links'):
+                    print(f"维度组合 {dimension} 的图数据结构不完整，跳过")
+                    continue
+                
                 # 收集该维度下的所有聚类
                 clusters = defaultdict(set)
                 for node in graph_data['nodes']:
@@ -116,14 +268,23 @@ def analyze_cluster_overlaps(subgraphs_dir):
                 
                 # 将每个聚类作为一个核心聚类
                 for cluster_id, nodes in clusters.items():
-                    # 转换维度标识 (dimension + 1)
+                    # 转换维度标识
                     dimension_str = str(int(dimension) + 1) if len(dimension) == 1 else ''.join(str(int(d) + 1) for d in dimension)
                     core_clusters.append({
                         'core_nodes': list(nodes),
                         'core_dimensions': [dimension_str],
-                        'extensions': [],  # 暂时不处理外延
-                        'links': [link for link in graph_data['links'] if link['cluster'] == cluster_id]  # 保存连接信息
+                        'extensions': [],
+                        'links': [link for link in graph_data['links'] if link['cluster'] == cluster_id]
                     })
+    
+    # 如果没有有效的核心聚类，返回空结果
+    if not core_clusters:
+        print("没有找到有效的核心聚类")
+        return {
+            'core_clusters': [],
+            'overlap_matrix': [],
+            'dimension_groups': {}
+        }
     
     # 第二步：去除完全重复的核心聚类
     unique_core_clusters = []

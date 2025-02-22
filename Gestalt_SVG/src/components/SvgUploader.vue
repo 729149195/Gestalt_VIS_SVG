@@ -62,6 +62,12 @@
             >
                 {{ analyzing ? 'analysising...' : 'analyse' }}
             </v-btn>
+                   <!-- <span style="font-size: 14px; color: #86868b;">
+                Instruction : <br/> 
+                Single elements can be selected directly <br/> 
+                by clicking on them<br/> 
+                Multiple elements can be selected by <br/> 
+            </span> -->
         </div>
 
         <div v-if="file" class="svg-container mac-style-container" ref="svgContainer">
@@ -562,7 +568,17 @@ const updateNodeOpacity = () => {
 
 // 点击 SVG 节点的处理函数
 const handleSvgClick = (event) => {
-    const nodeId = event.target.id;
+    // 检查点击的是否是 SVG 容器本身或者 zoom-wrapper
+    const target = event.target;
+    if (target.tagName.toLowerCase() === 'svg' || 
+        (target.tagName.toLowerCase() === 'g' && target.classList.contains('zoom-wrapper'))) {
+        // 如果点击的是空白区域，清空所有选中的节点
+        store.dispatch('clearSelectedNodes');
+        return;
+    }
+
+    // 如果点击的是具体的 SVG 元素，则执行原有的选中逻辑
+    const nodeId = target.id;
     if (!nodeId) return;
 
     console.log('点击节点:', nodeId);

@@ -1,30 +1,42 @@
 [
     {
-        "attribute": "d",
-        "num": 12
+        "attribute": "id",
+        "num": 48
     },
     {
-        "attribute": "aria-label",
-        "num": 12
-    },
-    {
-        "attribute": "fill",
-        "num": 12
-    },
-    {
-        "attribute": "stroke",
-        "num": 12
-    },
-    {
-        "attribute": "stroke-width",
-        "num": 12
-    },
-    {
-        "attribute": "width",
-        "num": 1
+        "attribute": "tag_name",
+        "num": 48
     },
     {
         "attribute": "height",
+        "num": 47
+    },
+    {
+        "attribute": "width",
+        "num": 47
+    },
+    {
+        "attribute": "x",
+        "num": 46
+    },
+    {
+        "attribute": "y",
+        "num": 46
+    },
+    {
+        "attribute": "fill",
+        "num": 2
+    },
+    {
+        "attribute": "font-family",
+        "num": 1
+    },
+    {
+        "attribute": "font-size",
+        "num": 1
+    },
+    {
+        "attribute": "text-anchor",
         "num": 1
     },
     {
@@ -32,11 +44,15 @@
         "num": 1
     },
     {
-        "attribute": "id",
+        "attribute": "xmlns",
         "num": 1
     },
     {
-        "attribute": "xmlns",
+        "attribute": "xmlns:xlink",
+        "num": 1
+    },
+    {
+        "attribute": "aria-label",
         "num": 1
     }
 ]

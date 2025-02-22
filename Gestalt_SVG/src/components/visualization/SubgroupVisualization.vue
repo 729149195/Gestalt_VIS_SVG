@@ -1,8 +1,8 @@
 <template>
     <div class="force-graph-container">
-        <div class="controls">
+        <!-- <div class="controls">
             <el-button class="control-button" type="primary" @click="clearSelectedNodes">Restore node selection status</el-button>
-        </div>
+        </div> -->
 
         <!-- 显示核心聚类视图 -->
         <div v-if="currentPage === 1" class="core-view-container">
@@ -16,24 +16,6 @@
                 <div :ref="el => { if (el) graphContainers[index] = el }" class="graph-container"></div>
             </div>
         </div>
-
-        <!-- 侧边书签导航 -->
-        <div class="side-pagination">
-            <div class="pagination-dots">
-                <div v-for="page in Math.ceil(allDimensions.length / 6) + 1" 
-                     :key="page" 
-                     class="pagination-dot"
-                     :class="{ active: currentPage === page }"
-                     @click="handlePageChange(page)"
-                     @mouseenter="showPageTooltip($event, page)"
-                     @mouseleave="hidePageTooltip">
-                </div>
-            </div>
-            <!-- 页面提示工具提示 -->
-            <div class="page-tooltip" ref="pageTooltip" :style="tooltipStyle">
-                {{ tooltipText }}
-            </div>
-        </div>
     </div>
 </template>
 
@@ -41,7 +23,6 @@
 import { ref, onMounted, nextTick, watch, onUnmounted, computed } from 'vue';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
-import { ElButton } from 'element-plus';
 import CoreSubgroupVisualization from './core_SubgroupVisualization.vue';
 
 // 添加延迟函数
@@ -888,8 +869,10 @@ onUnmounted(() => {
 <style scoped>
 .force-graph-container {
     position: relative;
-    width: 100%;
-    height: 1000px;
+    width: 1280px;  /* 设置固定宽度 */
+    margin: 0 auto;  /* 水平居中 */
+    height: calc(100vh - 120px);
+    max-height: 900px;
     background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -938,15 +921,17 @@ onUnmounted(() => {
 
 .graph-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 400px);  /* 设置固定列宽 */
+    justify-content: center;  /* 网格水平居中 */
     gap: 20px;
     padding: 10px;
-    flex: 1;
-    overflow-y: auto;
-    height: calc(100% - 60px);
+    height: 100%;
+    overflow: auto;
+    min-height: 0;
 }
 
 .graph-item {
+    width: 400px;  /* 设置固定宽度 */
     display: flex;
     flex-direction: column;
     border: 1px solid rgba(200, 200, 200, 0.3);
@@ -956,6 +941,7 @@ onUnmounted(() => {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
     height: 350px;
+    min-height: 350px;
 }
 
 .graph-item:hover {
@@ -981,8 +967,11 @@ onUnmounted(() => {
 .core-view-container {
     flex: 1;
     padding: 10px;
-    overflow: hidden;
-    height: calc(100% - 60px);
+    overflow: auto;
+    height: 100%;
+    min-height: 0;
+    width: 1260px;  /* 设置固定宽度，留出padding空间 */
+    margin: 0 auto;  /* 水平居中 */
 }
 
 .pagination-wrapper {

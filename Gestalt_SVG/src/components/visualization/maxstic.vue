@@ -207,6 +207,18 @@ const updateCorrelationMatrix = () => {
     }
 };
 
+// 添加防抖函数
+const debounce = (fn, delay) => {
+    let timeoutId;
+    return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn.apply(this, args), delay);
+    };
+};
+
+// 在 setup 函数顶部声明清理函数
+let cleanup = () => {};
+
 // 在组件挂载后执行
 onMounted(async () => {
     if (!parentContainer.value) return;
@@ -257,30 +269,52 @@ onMounted(async () => {
         drawLines(dataMapping, initialWidth, groupNames);
         renderDimensionAxes(rawDataInit, initialWidth);
 
-        // 设置 ResizeObserver
-        resizeObserver = new ResizeObserver(async entries => {
-            for (let entry of entries) {
-                const newWidth = entry.contentRect.width;
-                await renderNormal(dataNormal, newWidth, groupNames);
-                await renderInit(dataInit, newWidth, dataMapping.output_dimensions);
-                await nextTick();
-                if (xScaleNormal && xScaleInit) {
-                    updateHighlights(selectedNodeIds.value);
+        // 设置 ResizeObserver 使用防抖
+        const handleResize = debounce(async (entries) => {
+            try {
+                for (let entry of entries) {
+                    const newWidth = entry.contentRect.width;
+                    await renderNormal(dataNormal, newWidth, groupNames);
+                    await renderInit(dataInit, newWidth, dataMapping.output_dimensions);
+                    await nextTick();
+                    if (xScaleNormal && xScaleInit) {
+                        updateHighlights(selectedNodeIds.value);
+                    }
+                    drawLines(dataMapping, newWidth, groupNames);
+                    renderDimensionAxes(rawDataInit, newWidth);
+                    renderMDSScatterplot(rawDataNormal, newWidth);
                 }
-                drawLines(dataMapping, newWidth, groupNames);
-                renderDimensionAxes(rawDataInit, newWidth);
-                renderMDSScatterplot(rawDataNormal, newWidth);
+            } catch (error) {
+                console.error('处理resize事件时出错:', error);
             }
+        }, 150);
+
+        resizeObserver = new ResizeObserver((entries) => {
+            window.requestAnimationFrame(() => {
+                handleResize(entries);
+            });
         });
 
         resizeObserver.observe(parentContainer.value);
+
+        // 添加全局事件监听器
+        window.addEventListener('mouseup', handleGlobalMouseUp);
+
+        // 更新清理函数
+        cleanup = () => {
+            window.removeEventListener('mouseup', handleGlobalMouseUp);
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            }
+            if (parentContainer.value) {
+                resizeObserver.unobserve(parentContainer.value);
+            }
+        };
 
         // 计算并渲染相关性矩阵
         const correlationData = calculateDimensionCorrelations(rawDataInit);
         const axisSvg = d3.select(axisContainer.value).select('svg');
         renderCorrelationMatrix(correlationData, axisSvg, initialWidth);
-
-        window.addEventListener('mouseup', handleGlobalMouseUp);
 
         // 监听 selectedNodeIds 的变化
         watch(selectedNodeIds, (newVal) => {
@@ -307,9 +341,9 @@ onMounted(async () => {
     }
 });
 
-// 在组件卸载时移除全局事件监听器
+// 在 setup 函数中直接调用 onUnmounted
 onUnmounted(() => {
-    window.removeEventListener('mouseup', handleGlobalMouseUp);
+    cleanup();
 });
 
 // 更新高亮显示
@@ -387,9 +421,9 @@ const processDataInit = (rawData) => {
     let processedData = [];
     rawData.forEach((node) => {
         // 确保 node.features 长度为 4
-        if (node.features.length !== 4) {
-            console.warn(`节点 ${node.id} 的特征数量为 ${node.features.length}，预期为 4`);
-        }
+        // if (node.features.length !== 4) {
+        //     console.warn(`节点 ${node.id} 的特征数量为 ${node.features.length}，预期为 4`);
+        // }
         node.features.forEach((featureValue, featureIndex) => {
             processedData.push({
                 node: node.id,
@@ -990,6 +1024,42 @@ const renderDimensionAxes = async (data, containerWidth) => {
         // 清空旧的轴
         d3.select(axisContainer.value).selectAll('*').remove();
 
+        // 创建或更新 tooltip
+        let tooltip;
+        if (lineTooltip.value) {
+            tooltip = d3.select(lineTooltip.value)
+                .style('position', 'absolute')
+                .style('background', '#fff')
+                .style('padding', '5px')
+                .style('border', '1px solid #ccc')
+                .style('border-radius', '5px')
+                .style('pointer-events', 'none')
+                .style('visibility', 'hidden')
+                .style('z-index', 9999);
+        }
+
+        // 修改使用 tooltip 的地方
+        const showTooltip = (text) => {
+            if (tooltip && lineTooltip.value) {
+                tooltip.style('visibility', 'visible')
+                    .text(text);
+            }
+        };
+
+        const moveTooltip = (event) => {
+            if (tooltip && lineTooltip.value) {
+                const [mouseX, mouseY] = d3.pointer(event);
+                tooltip.style('left', `${mouseX + margin.left + 10}px`)
+                    .style('top', `${mouseY + margin.top - 10}px`);
+            }
+        };
+
+        const hideTooltip = () => {
+            if (tooltip && lineTooltip.value) {
+                tooltip.style('visibility', 'hidden');
+            }
+        };
+
         const margin = { top: 20, right: 15, bottom: 20, left: 420 };
         const width = containerWidth - margin.left - margin.right;
         const height = 60; // 每个轴的高度
@@ -1256,7 +1326,7 @@ const renderDimensionAxes = async (data, containerWidth) => {
                 .attr('transform', `translate(-10, ${height/2})`);
 
             // 添加tag背景
-            tagGroup.append('rect')
+            const tagBg = tagGroup.append('rect')
                 .attr('x', -30)
                 .attr('y', -12)
                 .attr('width', 40)
@@ -1268,13 +1338,78 @@ const renderDimensionAxes = async (data, containerWidth) => {
                 .style('stroke-width', 1);
 
             // 添加文本标签
-            tagGroup.append('text')
+            const tagText = tagGroup.append('text')
                 .attr('x', -10)
                 .attr('y', 4)
                 .style('text-anchor', 'middle')
                 .style('font-size', '14px')
                 .style('fill', '#909399')
                 .text(`Z_${combination.map(d => d + 1).join(',')}`);
+
+            // 检查是否被过滤
+            if (combinedData[index] && combinedData[index].length > 0) {
+                const stats = dimensionStats[index];
+                if (stats) {
+                    const dispersion = stats.dispersionDegree;
+                    const clustering = stats.localClustering;
+                    let filterStatus = '';
+
+                    // 根据评估矩阵进行判断
+                    if (clustering > 0.7) {  // 高聚集
+                        if (dispersion > 0.7 || dispersion > 0.3) {
+                            filterStatus = '保留(多类别特征)';
+                            tagBg.style('fill', '#d4edda');  // 浅绿色背景
+                            tagText.style('fill', '#28a745');
+                        } else {
+                            filterStatus = '需要检查(区分不明显)';
+                            tagBg.style('fill', '#fff3cd');  // 浅黄色背景
+                            tagText.style('fill', '#856404');
+                        }
+                    } else if (clustering > 0.3) {  // 中等聚集
+                        if (dispersion > 0.7) {
+                            filterStatus = '可能保留(需要检查)';
+                            tagBg.style('fill', '#fff3cd');  // 浅黄色背景
+                            tagText.style('fill', '#856404');
+                        } else if (dispersion > 0.3) {
+                            filterStatus = '需要检查(需要进一步分析)';
+                            tagBg.style('fill', '#fff3cd');  // 浅黄色背景
+                            tagText.style('fill', '#856404');
+                        } else {
+                            filterStatus = '可能过滤(区分不明显)';
+                            tagBg.style('fill', '#ffd6d6');  // 浅红色背景
+                            tagText.style('fill', '#d63031');
+                        }
+                    } else {  // 低聚集
+                        if (dispersion > 0.7) {
+                            filterStatus = '过滤(纯噪声)';
+                            tagBg.style('fill', '#ffb8b8');  // 红色背景
+                            tagText.style('fill', '#c0392b');
+                        } else if (dispersion > 0.3) {
+                            filterStatus = '过滤(杂乱无规律)';
+                            tagBg.style('fill', '#ffb8b8');  // 红色背景
+                            tagText.style('fill', '#c0392b');
+                        } else {
+                            filterStatus = '过滤(无区分度)';
+                            tagBg.style('fill', '#ffb8b8');  // 红色背景
+                            tagText.style('fill', '#c0392b');
+                        }
+                    }
+
+                    // 添加过滤状态标签
+                    tagGroup.append('text')
+                        .attr('x', 20)
+                        .attr('y', -10)
+                        .style('text-anchor', 'start')
+                        .style('font-size', '12px')
+                        .style('fill', tagText.style('fill'))
+                        .text(filterStatus);
+
+                    // 如果被过滤，添加半透明遮罩
+                    if (filterStatus.includes('过滤')) {
+                        dimensionGroup.style('opacity', 0.5);
+                    }
+                }
+            }
 
             // 添加节点
             if (combinedData[index]) {
@@ -1294,25 +1429,15 @@ const renderDimensionAxes = async (data, containerWidth) => {
                             .attr('r', 6)
                             .style('fill', '#ff6347')
                             .style('opacity', 1);
-
-                        d3.select(lineTooltip.value)
-                            .style('visibility', 'visible')
-                            .text(`${d.id.split('/').pop()}: ${d.value.toFixed(4)}`);
+                        showTooltip(`${d.id.split('/').pop()}: ${d.value.toFixed(4)}`);
                     })
-                    .on('mousemove', function(event) {
-                        const [mouseX, mouseY] = d3.pointer(event);
-                        d3.select(lineTooltip.value)
-                            .style('left', `${mouseX + margin.left + 10}px`)
-                            .style('top', `${mouseY + margin.top - 10}px`);
-                    })
+                    .on('mousemove', moveTooltip)
                     .on('mouseout', function(event, d) {
                         d3.select(this)
                             .attr('r', 4)
                             .style('fill', selectedNodeIds.value.includes(d.id.split('/').pop()) ? '#ff6347' : '#333')
                             .style('opacity', selectedNodeIds.value.includes(d.id.split('/').pop()) ? 1 : 0.6);
-
-                        d3.select(lineTooltip.value)
-                            .style('visibility', 'hidden');
+                        hideTooltip();
                     })
                     .on('click', function(event, d) {
                         event.stopPropagation();
@@ -1355,10 +1480,7 @@ const renderDimensionAxes = async (data, containerWidth) => {
 
         // 修改 zoomRect 的事件处理
         zoomRect.style('pointer-events', 'painted')
-            .on('mouseover', function() {
-                // 当鼠标在空白处时，隐藏tooltip
-                d3.select(lineTooltip.value).style('visibility', 'hidden');
-            });
+            .on('mouseover', hideTooltip);
     } catch (error) {
         console.error('渲染维度轴时出错:', error);
     }

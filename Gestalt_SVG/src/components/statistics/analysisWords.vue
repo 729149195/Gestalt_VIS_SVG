@@ -9,13 +9,23 @@
       </div>
     </button>
     
-    <div class="analysis-content" @scroll="handleScroll" v-html="analysisContent">
+    <div class="sections-container">
+      <span class="title">Analysis and Suggestions：</span>
+      <div class="section feature-section">
+        <div class="analysis-content" @scroll="handleScroll" v-html="analysisContent"></div>
+      </div>
+      <div class="section middle-section">
+        
+      </div>
     </div>
-
+    
     <!-- 使用 Teleport 将抽屉传送到 body -->
     <Teleport to="body">
+      
       <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
+      
       <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
+        
         <button class="close-button" @click="showDrawer = false">×</button>
         <div class="drawer-body">
           <maxstic :key="componentKey" />
@@ -35,30 +45,53 @@ const MAPPING_DATA_URL = "http://127.0.0.1:5000/average_equivalent_mapping";
 const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag";
 
 // 特征名称映射
+// const featureNameMap = {
+//     'tag': '标签类型',
+//     'opacity': '不透明度',
+//     'fill_h_cos': '色相',
+//     'fill_h_sin': '色相',
+//     'fill_s_n': '饱和度',
+//     'fill_l_n': '亮度',
+//     'stroke_h_cos': '色相',
+//     'stroke_h_sin': '色相',
+//     'stroke_s_n': '饱和度',
+//     'stroke_l_n': '亮度',
+//     'stroke_width': '描边',
+//     'bbox_left_n': '位置',
+//     'bbox_right_n': '位置',
+//     'bbox_top_n': '位置',
+//     'bbox_bottom_n': '位置',
+//     'bbox_mds_1': '位置',
+//     'bbox_mds_2': '位置',
+//     'bbox_center_x_n': '位置',
+//     'bbox_center_y_n': '位置',
+//     'bbox_width_n': '宽度',
+//     'bbox_height_n': '高度',
+//     'bbox_fill_area': '元素面积'
+// };
 const featureNameMap = {
-    'tag_name': '元素名称',
-    'tag': '标签类型',
-    'opacity': '不透明度',
-    'fill_h_cos': '填充色相(C)',
-    'fill_h_sin': '填充色相(S)',
-    'fill_s_n': '填充饱和度',
-    'fill_l_n': '填充亮度',
-    'stroke_h_cos': '描边色相(C)',
-    'stroke_h_sin': '描边色相(S)',
-    'stroke_s_n': '描边饱和度',
-    'stroke_l_n': '描边亮度',
-    'stroke_width': '描边宽度',
-    'bbox_left_n': '左边界位置',
-    'bbox_right_n': '右边界位置',
-    'bbox_top_n': '上边界位置',
-    'bbox_bottom_n': '下边界位置',
-    'bbox_mds_1': '位置mds特征1',
-    'bbox_mds_2': '位置mds特征2',
-    'bbox_center_x_n': '中心X坐标',
-    'bbox_center_y_n': '中心Y坐标',
-    'bbox_width_n': '宽度',
-    'bbox_height_n': '高度',
-    'bbox_fill_area': '元素面积'
+    'tag': 'Label Type',
+    'opacity': 'opacity',
+    'fill_h_cos': 'coloration',
+    'fill_h_sin': 'coloration',
+    'fill_s_n': 'saturation ',
+    'fill_l_n': 'luminance',
+    'stroke_h_cos': 'coloration',
+    'stroke_h_sin': 'coloration',
+    'stroke_s_n': 'saturation',
+    'stroke_l_n': 'luminance',
+    'stroke_width': 'stroke',
+    'bbox_left_n': 'position',
+    'bbox_right_n': 'position',
+    'bbox_top_n': 'position',
+    'bbox_bottom_n': 'position',
+    'bbox_mds_1': 'position',
+    'bbox_mds_2': 'position',
+    'bbox_center_x_n': 'position',
+    'bbox_center_y_n': 'position',
+    'bbox_width_n': 'width',
+    'bbox_height_n': 'height',
+    'bbox_fill_area': 'area'
 };
 
 const props = defineProps({
@@ -93,37 +126,131 @@ const showDrawer = ref(false)
 const generateAnalysis = (dataMapping, dataEquivalentWeights) => {
     if (!dataMapping || !dataEquivalentWeights) return '等待分析...';
 
-    let analysis = '';
     const inputDimensions = dataMapping.input_dimensions;
     const outputDimensions = dataMapping.output_dimensions;
     const weights = dataMapping.weights;
 
-    // 分析每个输出维度的主要特征
-    outputDimensions.forEach((outDim, j) => {
-        analysis += `<div class="dimension-analysis">【维度 ${j + 1} 的主要组成】 `;
-        
-        const dimensionWeights = weights[j];
-        const weightEntries = dimensionWeights.map((w, i) => ({ weight: w, index: i }));
-        weightEntries.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
-        
-        const topFeatures = weightEntries.slice(0, 3);
-        
-        let featureTexts = topFeatures.map(({ weight, index }) => {
-            const featureName = inputDimensions[index];
+    // 创建一个Map来存储每个特征的最大绝对权重
+    const featureMaxWeights = new Map();
+
+    // 遍历所有维度和权重
+    outputDimensions.forEach((_, dimIndex) => {
+        const dimensionWeights = weights[dimIndex];
+        dimensionWeights.forEach((weight, featureIndex) => {
+            const featureName = inputDimensions[featureIndex];
             const displayName = featureNameMap[featureName] || featureName;
-            const influence = weight > 0 ? '正相关' : '负相关';
-            const strength = Math.abs(weight).toFixed(2);
+            const absWeight = Math.abs(weight);
             
-            let strengthSymbol = '•';
-            if (strength > 1) strengthSymbol = '★';
-            else if (strength > 0.8) strengthSymbol = '☆';
-            
-            return `<span class="feature-tag">${displayName}</span> ${influence} ${strength} ${strengthSymbol}`;
-        })
-        
-        analysis += featureTexts.join('   ') + '</div>';
+            // 如果当前权重更大，则更新该特征的最大权重和符号
+            if (!featureMaxWeights.has(displayName) || absWeight > featureMaxWeights.get(displayName).absWeight) {
+                featureMaxWeights.set(displayName, {
+                    weight: weight,
+                    absWeight: absWeight
+                });
+            }
+        });
     });
 
+    // 转换为数组并排序，分成正相关和负相关两组
+    const features = Array.from(featureMaxWeights.entries())
+        .filter(([_, {absWeight}]) => absWeight > 0.1); // 只保留权重绝对值大于0.1的特征
+
+    const positiveFeatures = features
+        .filter(([_, {weight}]) => weight > 0)
+        .sort((a, b) => b[1].absWeight - a[1].absWeight);
+
+    const negativeFeatures = features
+        .filter(([_, {weight}]) => weight < 0)
+        .sort((a, b) => b[1].absWeight - a[1].absWeight);
+
+    // 生成HTML
+    let analysis = '<div class="feature-columns">';
+    
+    // 正相关列
+    analysis += '<div class="feature-column positive">';
+    analysis += '<div class="column-title">Features suggest to be used</div>';
+    
+    // 存储超出显示限制的正相关特征
+    const hiddenPositiveFeatures = positiveFeatures.slice(3).map(([name, {absWeight}]) => 
+        `${name} (${absWeight.toFixed(2)})`
+    ).join('\n');
+    
+    positiveFeatures.forEach(([name, {absWeight}], index) => {
+        if (index >= 3) {
+            if (index === 3) {
+                analysis += `
+                    <div class="feature-item ellipsis" title="${hiddenPositiveFeatures}">
+                        <span class="feature-tag tooltip" style="color: #E53935; border-color: #E5393520; background-color: #E5393508">
+                            ...
+                        </span>
+                    </div>
+                `;
+            }
+            return;
+        }
+        
+        const strengthValue = absWeight.toFixed(2);
+        let strengthSymbol = '•';
+        if (absWeight > 1) strengthSymbol = '★★★';
+        else if (absWeight > 0.8) strengthSymbol = '★★';
+        else if (absWeight > 0.5) strengthSymbol = '★';
+        
+        analysis += `
+            <div class="feature-item">
+                <span class="feature-tag" style="color: #E53935; border-color: #E5393520; background-color: #E5393508">
+                    ${name}
+                </span>
+                <span class="feature-influence" style="color: #E53935">
+                    ${strengthValue} ${strengthSymbol}
+                </span>
+            </div>
+        `;
+    });
+    analysis += '</div>';
+    
+    // 负相关列
+    analysis += '<div class="feature-column negative">';
+    analysis += '<div class="column-title">Current Feature</div>';
+    
+    // 存储超出显示限制的负相关特征
+    const hiddenNegativeFeatures = negativeFeatures.slice(3).map(([name, {absWeight}]) => 
+        `${name} (${absWeight.toFixed(2)})`
+    ).join('\n');
+    
+    negativeFeatures.forEach(([name, {absWeight}], index) => {
+        if (index >= 3) {
+            if (index === 3) {
+                analysis += `
+                    <div class="feature-item ellipsis" title="${hiddenNegativeFeatures}">
+                        <span class="feature-tag tooltip" style="color: #1E88E5; border-color: #1E88E520; background-color: #1E88E508">
+                            ...
+                        </span>
+                    </div>
+                `;
+            }
+            return;
+        }
+        
+        const strengthValue = absWeight.toFixed(2);
+        let strengthSymbol = '•';
+        if (absWeight > 1) strengthSymbol = '★★★';
+        else if (absWeight > 0.8) strengthSymbol = '★★';
+        else if (absWeight > 0.5) strengthSymbol = '★';
+        
+        analysis += `
+            <div class="feature-item">
+                <span class="feature-tag" style="color: #1E88E5; border-color: #1E88E520; background-color: #1E88E508">
+                    ${name}
+                </span>
+                <span class="feature-influence" style="color: #1E88E5">
+                    ${strengthValue} ${strengthSymbol}
+                </span>
+            </div>
+        `;
+    });
+    analysis += '</div>';
+    
+    analysis += '</div>';
     return analysis;
 };
 
@@ -187,9 +314,49 @@ onUnmounted(() => {
   position: relative;
 }
 
-.analysis-words-container:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
+/* 添加标题样式 */
+.title {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #1d1d1f;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
+}
+
+.sections-container {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+  overflow: hidden;
+  margin-top: 24px; /* 为标题留出空间 */
+}
+
+.section {
+  flex: 1;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(200, 200, 200, 0.2);
+  padding: 12px;
+  overflow: auto;
+}
+
+.feature-section {
+  min-width: 0;
+}
+
+.middle-section, .right-section {
+  background: rgba(240, 240, 240, 0.3);
+}
+
+.analysis-content {
+  height: 100%;
+  overflow: auto;
 }
 
 .analysis-header {
@@ -197,14 +364,6 @@ onUnmounted(() => {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   padding-bottom: 16px;
   flex-shrink: 0;
-}
-
-
-.analysis-content {
-  color: #424245;
-  font-size: 13px;
-  overflow-y: auto;
-  line-height: 1.4;
 }
 
 :deep(.feature-tag) {
@@ -261,7 +420,6 @@ onUnmounted(() => {
   transform: scale(0.98);
   background: rgba(0, 122, 255, 0.15);
 }
-
 
 .apple-button-corner:hover{
   opacity: 1;
@@ -386,5 +544,95 @@ onUnmounted(() => {
 
 .apple-button-corner:hover .arrow-icon {
   transform: rotate(180deg);
+}
+
+:deep(.feature-columns) {
+    display: flex;
+    gap: 24px;
+    padding: 12px;
+}
+
+:deep(.feature-column) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+:deep(.column-title) {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+:deep(.feature-item) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.6);
+}
+
+:deep(.feature-influence) {
+    font-size: 13px;
+    font-weight: 500;
+    margin-left: auto;
+}
+
+:deep(.feature-tag) {
+    min-width: 80px;
+    text-align: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-style: solid;
+}
+
+:deep(.feature-item.ellipsis) {
+    opacity: 0.6;
+    justify-content: center;
+    cursor: help;
+    position: relative;
+}
+
+:deep(.feature-item.ellipsis:hover) {
+    opacity: 1;
+}
+
+:deep([title]) {
+    position: relative;
+}
+
+:deep([title]:hover::before) {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: pre-line;
+    z-index: 1000;
+    max-width: 300px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+:deep([title]:hover::after) {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.8);
+    margin-bottom: -12px;
+    z-index: 1000;
 }
 </style>

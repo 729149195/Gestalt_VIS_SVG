@@ -20,17 +20,17 @@
                         <analysisWords title="Feature dimension mapping analysis" :update-key="componentKey2"/>
                         <div class="main-card margin-right">
                             <v-card class="position-card card1">
-                                <PositionStatistics position="top" title="Top Position" :key="componentKey4" />
+                                <PositionStatistics position="top" title="Elementals Top Edge" :key="componentKey4" />
                             </v-card>
                             <v-card class="position-card card2">
-                                <PositionStatistics position="bottom" title="Bottom Position"
+                                <PositionStatistics position="bottom" title="Elementals Bottom Edge"
                                     :key="componentKey4 + 1" />
                             </v-card>
                             <v-card class="position-card card3">
-                                <PositionStatistics position="right" title="Right Position" :key="componentKey4 + 2" />
+                                <PositionStatistics position="right" title="Elementals Right Edge" :key="componentKey4 + 2" />
                             </v-card>
                             <v-card class="position-card card4">
-                                <PositionStatistics position="left" title="Left Position" :key="componentKey4 + 3" />
+                                <PositionStatistics position="left" title="Elementals Left Edge" :key="componentKey4 + 3" />
                             </v-card>
                         </div>
                         <div class="main-card margin-right">

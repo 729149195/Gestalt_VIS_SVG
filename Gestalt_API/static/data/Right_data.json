@@ -1,56 +1,104 @@
 {
-    "28.7-141.0": {
+    "61.4-195.2": {
         "tags": [
-            "path_11",
-            "path_10",
-            "path_9"
+            "rect_45",
+            "rect_44"
         ],
         "total": {
-            "path": 3
+            "rect": 2
         }
     },
-    "141.0-253.4": {
+    "195.2-329.1": {
         "tags": [
-            "path_8"
+            "rect_43",
+            "rect_42",
+            "rect_41",
+            "rect_40",
+            "rect_39",
+            "rect_38"
         ],
         "total": {
-            "path": 1
+            "rect": 6
         }
     },
-    "253.4-365.8": {
+    "329.1-462.9": {
         "tags": [
-            "path_7"
+            "rect_37",
+            "rect_36",
+            "rect_35",
+            "rect_34",
+            "rect_33",
+            "rect_32"
         ],
         "total": {
-            "path": 1
+            "rect": 6
         }
     },
-    "590.5-702.8": {
+    "462.9-596.7": {
         "tags": [
-            "path_6",
-            "path_5",
-            "path_4",
-            "path_3"
+            "rect_31",
+            "rect_30",
+            "rect_29",
+            "rect_28",
+            "rect_27",
+            "rect_26",
+            "rect_25"
         ],
         "total": {
-            "path": 4
+            "rect": 7
         }
     },
-    "702.8-815.2": {
+    "596.7-730.5": {
         "tags": [
-            "path_2"
+            "rect_24",
+            "rect_23",
+            "rect_22",
+            "rect_21",
+            "rect_20",
+            "rect_19"
         ],
         "total": {
-            "path": 1
+            "rect": 6
         }
     },
-    "815.2-927.6": {
+    "730.5-864.4": {
         "tags": [
-            "path_1",
-            "path"
+            "rect_18",
+            "rect_17",
+            "rect_16",
+            "rect_15",
+            "rect_14",
+            "rect_13"
         ],
         "total": {
-            "path": 2
+            "rect": 6
+        }
+    },
+    "864.4-998.2": {
+        "tags": [
+            "rect_12",
+            "rect_11",
+            "rect_10",
+            "rect_9",
+            "rect_8",
+            "rect_7"
+        ],
+        "total": {
+            "rect": 6
+        }
+    },
+    "998.2-1132.0": {
+        "tags": [
+            "rect_6",
+            "rect_5",
+            "rect_4",
+            "rect_3",
+            "rect_2",
+            "rect_1",
+            "rect"
+        ],
+        "total": {
+            "rect": 7
         }
     }
 }

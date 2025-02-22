@@ -394,6 +394,61 @@ def extract_features(element, layer_extractor, current_transform='', current_col
     ]
 
 
+def parse_length(length_str, default_value=0.0, reference_size=16.0):
+    """
+    将SVG长度值转换为像素值
+    :param length_str: 带单位的长度字符串
+    :param default_value: 默认值
+    :param reference_size: 参考尺寸，用于em和百分比转换
+    :return: 像素值
+    """
+    if length_str is None:
+        return default_value
+    
+    if isinstance(length_str, (int, float)):
+        return float(length_str)
+
+    try:
+        return float(length_str)
+    except ValueError:
+        pass
+
+    # 移除空白字符
+    length_str = length_str.strip()
+    
+    # 提取数值和单位
+    match = re.match(r'^(-?\d*\.?\d*)([a-zA-Z%]*)$', length_str)
+    if not match:
+        return default_value
+        
+    value, unit = match.groups()
+    value = float(value)
+    
+    # 单位转换
+    if unit == '' or unit == 'px':
+        return value
+    elif unit == 'pt':
+        return value * 1.3333
+    elif unit == 'pc':
+        return value * 16
+    elif unit == 'mm':
+        return value * 3.7795
+    elif unit == 'cm':
+        return value * 37.795
+    elif unit == 'in':
+        return value * 96
+    elif unit == 'em':
+        return value * reference_size
+    elif unit == 'rem':
+        return value * reference_size
+    elif unit == 'ex':
+        return value * reference_size / 2
+    elif unit == '%':
+        return value * reference_size / 100
+    else:
+        return default_value
+
+
 def get_transformed_bbox(element, current_transform=''):
     bbox = None
     fill_area = 0.0
@@ -405,52 +460,47 @@ def get_transformed_bbox(element, current_transform=''):
     
     stroke_width = 0.0
     if stroke.lower() != 'none':
-        stroke_width = float(element.attrib.get('stroke-width', 1.0))
+        stroke_width = parse_length(element.attrib.get('stroke-width', 1.0))
 
     # 修改height属性的处理
-    height_str = element.attrib.get('height', '0')
-    height = 0 if height_str == 'auto' else float(height_str)
-    
-    # 同样处理width属性
-    width_str = element.attrib.get('width', '0')
-    width = 0 if width_str == 'auto' else float(width_str)
+    height = parse_length(element.attrib.get('height', '0'))
+    width = parse_length(element.attrib.get('width', '0'))
     
     if element.tag.endswith('rect'):
-        x = float(element.attrib.get('x', 0))
-        y = float(element.attrib.get('y', 0))
+        x = parse_length(element.attrib.get('x', 0))
+        y = parse_length(element.attrib.get('y', 0))
         bbox = [(x, y), (x + width, y), (x, y + height), (x + width, y + height)]
         fill_area = width * height
         stroke_area = 2 * (width + height) * stroke_width
 
     elif element.tag.endswith('circle'):
-        cx = float(element.attrib.get('cx', 0))
-        cy = float(element.attrib.get('cy', 0))
-        r = float(element.attrib.get('r', 0))
+        cx = parse_length(element.attrib.get('cx', 0))
+        cy = parse_length(element.attrib.get('cy', 0))
+        r = parse_length(element.attrib.get('r', 0))
         bbox = [(cx - r, cy - r), (cx + r, cy - r), (cx - r, cy + r), (cx + r, cy + r)]
         fill_area = np.pi * r * r
         stroke_area = 2 * np.pi * r * stroke_width
 
     elif element.tag.endswith('ellipse'):
-        cx = float(element.attrib.get('cx', 0))
-        cy = float(element.attrib.get('cy', 0))
-        rx = float(element.attrib.get('rx', 0))
-        ry = float(element.attrib.get('ry', 0))
+        cx = parse_length(element.attrib.get('cx', 0))
+        cy = parse_length(element.attrib.get('cy', 0))
+        rx = parse_length(element.attrib.get('rx', 0))
+        ry = parse_length(element.attrib.get('ry', 0))
         bbox = [(cx - rx, cy - ry), (cx + rx, cy - ry), (cx - rx, cy + ry), (cx + rx, cy + ry)]
         fill_area = np.pi * rx * ry
         stroke_area = 2 * np.pi * (rx + ry) * stroke_width
 
     elif element.tag.split('}')[-1] == 'line':
-        x1 = float(element.attrib.get('x1', 0))
-        y1 = float(element.attrib.get('y1', 0))
-        x2 = float(element.attrib.get('x2', 0))
-        y2 = float(element.attrib.get('y2', 0))
+        x1 = parse_length(element.attrib.get('x1', 0))
+        y1 = parse_length(element.attrib.get('y1', 0))
+        x2 = parse_length(element.attrib.get('x2', 0))
+        y2 = parse_length(element.attrib.get('y2', 0))
         half_stroke = stroke_width / 2
         bbox = [(x1 - half_stroke, y1 - half_stroke), (x2 + half_stroke, y2 + half_stroke),
                 (x1 + half_stroke, y1 + half_stroke), (x2 - half_stroke, y2 - half_stroke)]
         length = np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
         fill_area = 0.0
         stroke_area = length * stroke_width
-
 
     elif element.tag.split('}')[-1] == 'polyline' or element.tag.split('}')[-1] == 'polygon':
 
@@ -482,12 +532,23 @@ def get_transformed_bbox(element, current_transform=''):
             xmin, ymin = vertices.min(axis=0)
             xmax, ymax = vertices.max(axis=0)
             bbox = [(xmin, ymin), (xmax, ymin), (xmin, ymax), (xmax, ymax)]
+            # 修改这部分代码
             try:
-                if path.codes is not None and np.all(path.codes == 1):
-                    fill_area = path.to_polygons()[0].area
+                polygons = path.to_polygons()
+                if polygons and len(polygons) > 0:
+                    # 如果有多个多边形，计算所有多边形的总面积
+                    fill_area = sum(calculate_polygon_area(poly) for poly in polygons)
+                else:
+                    fill_area = 0.0
+            except Exception as e:
+                # print(f"Warning: Could not calculate path fill area: {e}")
+                fill_area = 0.0
+            
+            try:
                 stroke_area = calculate_path_length(path) * stroke_width
-            except AssertionError:
-                stroke_area = calculate_path_length(path) * stroke_width
+            except Exception as e:
+                # print(f"Warning: Could not calculate path stroke area: {e}")
+                stroke_area = 0.0
 
     # 在 get_transformed_bbox 函数的 text 处理部分使用 parse_font_size 函数
     elif element.tag.endswith('text'):
@@ -497,8 +558,8 @@ def get_transformed_bbox(element, current_transform=''):
         stroke_area = 0.0
         if text_content.strip():
             font_size = parse_font_size(element.attrib.get('font-size', '16px'))
-            x = float(element.attrib.get('x', 0))
-            y = float(element.attrib.get('y', 0))
+            x = parse_length(element.attrib.get('x', 0), reference_size=font_size)
+            y = parse_length(element.attrib.get('y', 0), reference_size=font_size)
             text_width = len(text_content) * font_size * 0.6  # 文本宽度
             bbox = [(x - text_width / 2, y - font_size),     # 左上角
                     (x + text_width / 2, y - font_size),     # 右上角

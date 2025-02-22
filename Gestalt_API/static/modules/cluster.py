@@ -8,7 +8,7 @@ from torch.nn.functional import normalize
 import numpy as np
 
 # 模型路径
-model_path = ("./static/modules/best_model_mds_newnetworksmall_16_nodq.tar")
+model_path = ("./static/modules/model_feature_dim_4_batch_64.tar")
 
 # 定义模型类
 class ModifiedNetwork(nn.Module):
@@ -16,18 +16,36 @@ class ModifiedNetwork(nn.Module):
         super(ModifiedNetwork, self).__init__()
         self.input_dim = input_dim
         self.feature_dim = feature_dim
+        # self.instance_projector = nn.Sequential(
+        #     # 第一层：20 -> 32
+        #     nn.Linear(input_dim, 32),
+        #     nn.BatchNorm1d(32),
+        #     nn.ReLU(),
+        #     # 第二层：32 -> 16
+        #     nn.Linear(32, 16),
+        #     nn.BatchNorm1d(16),
+        #     nn.ReLU(),
+        #     # 第三层：16 -> feature_dim
+        #     nn.Linear(16, self.feature_dim),
+        #     nn.Tanh()
+        # )
         self.instance_projector = nn.Sequential(
-            # 第一层：20 -> 32
+            # 第一层：input_dim -> 32（适度扩大特征维度）
             nn.Linear(input_dim, 32),
             nn.BatchNorm1d(32),
             nn.ReLU(),
-            # 第二层：32 -> 16
+            # 第二层：32 -> 16（平缓降维）
             nn.Linear(32, 16),
             nn.BatchNorm1d(16),
             nn.ReLU(),
-            # 第三层：16 -> feature_dim
-            nn.Linear(16, self.feature_dim),
-            nn.Tanh()
+            # 第三层：16 -> 8（继续降维）
+            nn.Linear(16, 8),
+            nn.BatchNorm1d(8),
+            nn.ReLU(),
+            # 最后一层：8 -> 4（最终输出维度）
+            nn.Linear(8, self.feature_dim),
+            # 保持最终归一化层
+            nn.BatchNorm1d(self.feature_dim, affine=False)
         ) 
         self._initialize_weights()
 
@@ -40,13 +58,14 @@ class ModifiedNetwork(nn.Module):
 
     def forward(self, x):
         outputs = {}
-        z1 = self.instance_projector[0](x)
-        outputs['linear1_output'] = z1
-        z2 = self.instance_projector[1](z1)
-        outputs['relu_output'] = z2
-        z3 = self.instance_projector[2](z2)
-        outputs['linear2_output'] = z3
-        z = normalize(z3, dim=1)
+        x = self.instance_projector[0:3](x)  # 第一层Linear+BN+ReLU
+        outputs['layer1_output'] = x
+        x = self.instance_projector[3:6](x)  # 第二层Linear+BN+ReLU
+        outputs['layer2_output'] = x
+        x = self.instance_projector[6:9](x)  # 第三层Linear+BN+ReLU
+        outputs['layer3_output'] = x
+        x = self.instance_projector[9:](x)   # 最后一层Linear+BN
+        z = normalize(x, dim=1)
         outputs['normalized_output'] = z
         return z, outputs
 
@@ -105,6 +124,7 @@ class ClusterPredictor:
 
     def run(self):
         identifiers, features = self.predict()
+        
         self.save_features_to_json(identifiers, features)
 
 # 主函数

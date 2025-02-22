@@ -1,7 +1,8 @@
 <template>
     <div class="statistics-container">
-        <span style="color: #666">Stroke color Statiction</span>
-        <div ref="chartContainer" class="chart-container"></div>
+        <span class="title">Stroke color Statiction</span>
+        <div v-if="hasData" ref="chartContainer" class="chart-container"></div>
+        <div v-else class="no-data-message">No Data</div>
     </div>
 </template>
 
@@ -14,6 +15,7 @@ const store = useStore();
 // 更新了数据接口地址
 const eleURL = "http://127.0.0.1:5000/stroke_num";
 const chartContainer = ref(null);
+const hasData = ref(false);
 
 onMounted(async () => {
     if (!chartContainer.value) return;
@@ -29,8 +31,12 @@ onMounted(async () => {
             num: rawData[key], // 对应的数量
             visible: true // 可见性标志，根据需要调整
         }));
-        store.commit('GET_ELE_NUM_DATA', data);
-        render(data);
+        
+        if (data.length > 0) {
+            hasData.value = true;
+            store.commit('GET_ELE_NUM_DATA', data);
+            render(data);
+        }
     } catch (error) {
         console.error('There has been a problem with your fetch operation:', error);
     }
@@ -84,11 +90,21 @@ const render = (data) => {
     const yAxis = svg.append('g')
         .attr('class', 'y-axis')
         .attr('transform', `translate(${marginLeft},0)`)
-        .call(d3.axisLeft(y));
-
-    yAxis.selectAll('line')
-        .attr('x2', width - marginLeft - marginRight)
-        .attr('stroke', '#ddd');
+        .call(d3.axisLeft(y)
+            .ticks(5)
+            .tickFormat(d => {
+                if (d >= 1000) {
+                    return d3.format('.1k')(d);
+                }
+                return d;
+            }))
+        .call(g => {
+            g.selectAll('.tick line')
+                .attr('x2', width - marginLeft - marginRight)
+                .attr('stroke', '#ddd');
+            g.selectAll('.tick text')
+                .style('font-size', '12px');
+        });
 
     // 绘制带圆角的条形图
     svg.selectAll('.bar')
@@ -100,11 +116,11 @@ const render = (data) => {
         .attr('d', d => roundedRectPath(d, x, y));
 
     // 添加 x 轴图例
-    svg.append("text")
-        .attr("transform", `translate(${width / 2},${height - marginBottom / 10})`)
-        .style("text-anchor", "middle")
-        .style("font-size", "14px")
-        .text("Stroke Color");
+    // svg.append("text")
+    //     .attr("transform", `translate(${width / 2},${height - marginBottom / 10})`)
+    //     .style("text-anchor", "middle")
+    //     .style("font-size", "14px")
+    //     .text("Stroke Color");
 
     // 添加 y 轴图例
     svg.append("text")
@@ -145,5 +161,26 @@ const roundedRectPath = (d, x, y) => {
     flex: 1;
     width: 100%;
     min-height: 0;
+}
+
+.no-data-message {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 14px;
+}
+.title {
+  top: 12px;
+  left: 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
 }
 </style>

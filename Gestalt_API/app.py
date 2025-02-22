@@ -138,7 +138,7 @@ def process_svg_file(file_path):
         
         print("计算等价权重...")
         send_progress_update(60, "正在计算等价权重...")
-        calculator = EquivalentWeightsCalculator(model_path="static/modules/best_model_mds_newnetworksmall_16_nodq.tar")
+        calculator = EquivalentWeightsCalculator(model_path="static/modules/model_feature_dim_4_batch_64.tar")
         calculator.compute_and_save_equivalent_weights(
             output_paths['normalized_csv'],
             output_file_avg='static/data/average_equivalent_mapping.json',

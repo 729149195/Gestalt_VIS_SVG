@@ -1,12 +1,12 @@
 <template>
     <div class="statistics-container">
-        <span style="color: #666">{{ title }}</span>
+        <span class="title">{{ title }}</span>
         <div ref="chartContainer" class="chart-container"></div>
     </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
 
@@ -24,7 +24,58 @@ const props = defineProps({
 
 const store = useStore();
 const chartContainer = ref(null);
+const svg = ref(null);
 
+// 计算选中比例的函数
+const calculateSelectedRatio = (tags, selectedNodes) => {
+    if (!selectedNodes || !selectedNodes.length) return 0;
+    const intersection = tags.filter(tag => selectedNodes.includes(tag));
+    return intersection.length / tags.length;
+};
+
+// 监听 selectedNodes 变化
+watch(
+    () => store.state.selectedNodes,
+    (newSelectedNodes) => {
+        if (!svg.value) return;
+        
+        // 更新所有柱子的颜色
+        svg.value.selectAll('.range')
+            .each(function(d) {
+                const ratio = calculateSelectedRatio(d.tags, newSelectedNodes);
+                if (ratio > 0) {
+                    // 创建渐变
+                    const gradientId = `gradient-${d.range.replace(/\./g, '-')}`;
+                    const gradient = svg.value.select('defs')
+                        .append('linearGradient')
+                        .attr('id', gradientId)
+                        .attr('x1', '0%')
+                        .attr('x2', '0%')
+                        .attr('y1', '0%')
+                        .attr('y2', '100%');
+
+                    gradient.append('stop')
+                        .attr('offset', `${ratio * 100}%`)
+                        .attr('stop-color', '#1E90FF');
+
+                    gradient.append('stop')
+                        .attr('offset', `${ratio * 100}%`)
+                        .attr('stop-color', '#808080');
+
+                    d3.select(this).selectAll('rect')
+                        .transition()
+                        .duration(300)
+                        .attr('fill', `url(#${gradientId})`);
+                } else {
+                    d3.select(this).selectAll('rect')
+                        .transition()
+                        .duration(300)
+                        .attr('fill', '#808080');
+                }
+            });
+    },
+    { deep: true }
+);
 
 const eleURL = `http://127.0.0.1:5000/${props.position}_position`;
 
@@ -61,7 +112,7 @@ const renderChart = (dataset) => {
     const margin = { 
         top: svgHeight * 0.05, 
         right: svgWidth * 0.05, 
-        bottom: svgHeight * 0.40,
+        bottom: svgHeight * 0.45,
         left: svgWidth * 0.15 
     };
     const width = svgWidth - margin.left - margin.right;
@@ -76,12 +127,15 @@ const renderChart = (dataset) => {
         .range([height, 0])
         .domain([0, d3.max(dataset, d => d3.sum(d.totals, t => t.value))]).nice();
 
-    const svg = d3.select(chartContainer.value).append('svg')
+    svg.value = d3.select(chartContainer.value).append('svg')
         .attr('viewBox', `0 0 ${svgWidth} ${svgHeight}`)
         .attr('width', svgWidth)
         .attr('height', svgHeight)
         .attr('style', 'max-width: 100%; height: auto;')
         .style("position", "relative");
+
+    // 添加 defs 元素用于存放渐变定义
+    svg.value.append('defs');
 
     const tooltip = d3.select(chartContainer.value)
         .append("div")
@@ -96,7 +150,7 @@ const renderChart = (dataset) => {
         .style("box-shadow", "0px 0px 10px rgba(0,0,0,0.1)")
         .style("white-space", "nowrap");
 
-    const g = svg.append('g')
+    const g = svg.value.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
     g.append('g')
@@ -113,11 +167,20 @@ const renderChart = (dataset) => {
 
     const yAxis = g.append('g')
         .attr('class', 'y-axis')
-        .call(d3.axisLeft(yScale))
+        .call(d3.axisLeft(yScale)
+            .ticks(4.5)
+            .tickFormat(d => {
+                if (d >= 1000) {
+                    return d3.format('.1k')(d);
+                }
+                return d;
+            }))
         .call(g => g.selectAll('.tick line')
             .clone()
             .attr('x2', width)
-            .attr('stroke', '#ddd'));
+            .attr('stroke', '#ddd'))
+        .call(g => g.selectAll('.tick text')
+            .style('font-size', '12px'));
 
     const zoom = d3.zoom()
         .scaleExtent([1, 3])
@@ -131,7 +194,7 @@ const renderChart = (dataset) => {
             g.selectAll('.range rect').attr('width', xScale.bandwidth());
         });
 
-    svg.call(zoom);
+    svg.value.call(zoom);
 
     const rangeGroup = g.selectAll('.range')
         .data(dataset)
@@ -157,45 +220,62 @@ const renderChart = (dataset) => {
             store.commit('UPDATE_SELECTED_NODES', { nodeIds: d.tags, group: null });
         });
 
-    const customColorMap = {
-        "circle": "#FFE119", "rect": "#E6194B", "line": "#4363D8",
-        "polyline": "#911EB4", "polygon": "#F58231", "path": "#3CB44B",
-        "text": "#46F0F0", "ellipse": "#F032E6", "image": "#BCF60C",
-        "use": "#FFD700", "defs": "#FF4500", "linearGradient": "#1E90FF",
-        "radialGradient": "#FF6347", "stop": "#4682B4", "symbol": "#D2691E",
-        "clipPath": "#FABEBE", "mask": "#8B008B", "pattern": "#A52A2A",
-        "filter": "#5F9EA0", "feGaussianBlur": "#D8BFD8", "feOffset": "#FFDAB9",
-        "feBlend": "#32CD32", "feFlood": "#FFD700", "feImage": "#FF6347",
-        "feComposite": "#FF4500", "feColorMatrix": "#1E90FF", "feMerge": "#FF1493",
-        "feMorphology": "#00FA9A", "feTurbulence": "#8B008B",
-        "feDisplacementMap": "#FFD700", "unknown": "#696969"
-    };
-
     rangeGroup.each(function (d) {
         let yAccumulator = 0;
-        d3.select(this).selectAll('rect')
-            .data(d.totals)
-            .enter().append('rect')
-            .attr('x', 0)
-            .attr('y', t => {
-                const y = yScale(yAccumulator + t.value);
-                yAccumulator += t.value;
-                return y;
-            })
-            .attr('width', xScale.bandwidth())
-            .attr('height', t => height - yScale(t.value))
-            .attr('fill', t => customColorMap[t.key] || '#696969')
-            .attr('rx', 2)
-            .attr('ry', 2);
+        const selectedRatio = calculateSelectedRatio(d.tags, store.state.selectedNodes);
+        
+        // 如果有选中的节点，创建渐变
+        if (selectedRatio > 0) {
+            const gradientId = `gradient-${d.range.replace(/\./g, '-')}`;
+            const gradient = svg.value.select('defs')
+                .append('linearGradient')
+                .attr('id', gradientId)
+                .attr('x1', '0%')
+                .attr('x2', '0%')
+                .attr('y1', '0%')
+                .attr('y2', '100%');
+
+            gradient.append('stop')
+                .attr('offset', `${selectedRatio * 100}%`)
+                .attr('stop-color', '#1E90FF');
+
+            gradient.append('stop')
+                .attr('offset', `${selectedRatio * 100}%`)
+                .attr('stop-color', '#808080');
+
+            d3.select(this).selectAll('rect')
+                .data(d.totals)
+                .enter().append('rect')
+                .attr('x', 0)
+                .attr('y', t => {
+                    const y = yScale(yAccumulator + t.value);
+                    yAccumulator += t.value;
+                    return y;
+                })
+                .attr('width', xScale.bandwidth())
+                .attr('height', t => height - yScale(t.value))
+                .attr('fill', `url(#${gradientId})`)
+                .attr('rx', 2)
+                .attr('ry', 2);
+        } else {
+            d3.select(this).selectAll('rect')
+                .data(d.totals)
+                .enter().append('rect')
+                .attr('x', 0)
+                .attr('y', t => {
+                    const y = yScale(yAccumulator + t.value);
+                    yAccumulator += t.value;
+                    return y;
+                })
+                .attr('width', xScale.bandwidth())
+                .attr('height', t => height - yScale(t.value))
+                .attr('fill', '#808080')
+                .attr('rx', 2)
+                .attr('ry', 2);
+        }
     });
 
-    svg.append("text")
-        .attr("transform", `translate(${width / 2 + margin.left},${svgHeight - margin.bottom / 100})`)
-        .style("text-anchor", "middle")
-        .style("font-size", "12px")
-        .text("Position zones");
-
-    svg.append("text")
+    svg.value.append("text")
         .attr("transform", "rotate(-90)")
         .attr("y", margin.left / 3)
         .attr("x", 0 - (height + margin.top + margin.bottom) / 2)
@@ -206,6 +286,19 @@ const renderChart = (dataset) => {
 </script>
 
 <style scoped>
+.title {
+  top: 12px;
+  left: 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
+}
+
 .statistics-container {
     width: 100%;
     height: 100%;

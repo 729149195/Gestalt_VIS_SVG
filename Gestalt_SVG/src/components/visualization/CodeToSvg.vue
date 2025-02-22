@@ -38,7 +38,7 @@
       <!-- SVG编辑器 -->
       <div v-show="!isDeclarativeMode" class="editor-section editor-transition">
         <div class="section-header">
-          <span>SVG</span>
+          <span class="title">SVG Editor</span>
           <div>
             <div class="right-tools">
               <el-button @click="copyCode">Copy</el-button>
@@ -699,22 +699,27 @@ const setupZoomAndPan = () => {
     svgElement.setAttribute('width', '100%')
     svgElement.setAttribute('height', '100%')
 
-    // 获取或设置viewBox
-    if (!svgElement.getAttribute('viewBox')) {
-      let width = svgElement.width?.baseVal?.value
-      let height = svgElement.height?.baseVal?.value
+    // 获取容器和SVG的尺寸
+    const containerRect = container.getBoundingClientRect()
+    const containerWidth = containerRect.width
+    const containerHeight = containerRect.height
 
-      if (!width || !height) {
-        const bbox = svgElement.getBBox()
-        width = bbox.width || 800
-        height = bbox.height || 600
-      }
+    // 获取SVG的原始尺寸
+    const bbox = svgElement.getBBox()
+    const svgWidth = bbox.width
+    const svgHeight = bbox.height
 
-      width = typeof width === 'number' ? width : 800
-      height = typeof height === 'number' ? height : 600
+    // 计算适当的缩放比例
+    const scaleX = (containerWidth - 80) / svgWidth // 增加边距
+    const scaleY = (containerHeight - 80) / svgHeight
+    const scale = Math.min(scaleX, scaleY) // 移除最大缩放限制，允许放大
 
-      svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`)
-    }
+    // 计算居中位置
+    const translateX = (containerWidth - svgWidth * scale) / 2
+    const translateY = (containerHeight - svgHeight * scale) / 2
+
+    // 设置viewBox
+    svgElement.setAttribute('viewBox', `${bbox.x} ${bbox.y} ${svgWidth} ${svgHeight}`)
     svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet')
 
     // 创建或获取包装组
@@ -732,17 +737,19 @@ const setupZoomAndPan = () => {
 
     // 创建缩放行为
     const zoom = d3.zoom()
-      .scaleExtent([0.5, 10])
+      .scaleExtent([0.1, 4]) // 允许更大范围的缩放
       .on('zoom', (event) => {
         g.attr('transform', event.transform)
       })
 
     svg.call(zoom)
 
-    // 设置初始缩放为0.8（80%的原始大小）并向右平移5%
-    const width = svg.node().getBoundingClientRect().width
-    const translateX = width * 0.05 // 向右平移5%
-    svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, 10).scale(0.8))
+    // 设置初始变换以适应容器
+    const initialTransform = d3.zoomIdentity
+      .translate(translateX, translateY)
+      .scale(scale)
+    
+    svg.call(zoom.transform, initialTransform)
   } catch (error) {
     console.error('设置缩放时出错:', error)
   }
@@ -1254,5 +1261,18 @@ watch(isDeclarativeMode, (newValue) => {
 :global(.custom-message.el-message--warning .el-message__icon) {
   color: #faad14 !important;
   font-size: 16px !important;
+}
+
+.title {
+  top: 12px;
+  left: 16px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
 }
 </style>
