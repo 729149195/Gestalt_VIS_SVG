@@ -28,8 +28,17 @@ const svg = ref(null);
 
 // 计算选中比例的函数
 const calculateSelectedRatio = (tags, selectedNodes) => {
-    if (!selectedNodes || !selectedNodes.length) return 0;
-    const intersection = tags.filter(tag => selectedNodes.includes(tag));
+    if (!selectedNodes || !tags || tags.length === 0) return 0;
+    
+    // 标准化标签格式
+    const normalizedTags = tags.map(tag => tag.split('/').pop());
+    const normalizedSelectedNodes = selectedNodes.map(node => node.split('/').pop());
+    
+    // 计算交集
+    const intersection = normalizedTags.filter(tag => 
+        normalizedSelectedNodes.includes(tag)
+    );
+    
     return intersection.length / tags.length;
 };
 
@@ -180,7 +189,14 @@ const renderChart = (dataset) => {
             tooltip.style("visibility", "hidden");
         })
         .on('click', (event, d) => {
-            store.commit('UPDATE_SELECTED_NODES', { nodeIds: d.tags, group: null });
+            // 标准化标签格式
+            const normalizedTags = d.tags.map(tag => 
+                tag.startsWith('svg/') ? tag : `svg/${tag}`
+            );
+            store.commit('UPDATE_SELECTED_NODES', { 
+                nodeIds: normalizedTags,
+                group: null 
+            });
         });
 
     // 渲染基础条形图
@@ -188,7 +204,6 @@ const renderChart = (dataset) => {
         let yAccumulator = 0;
         const group = d3.select(this);
         
-        // 为每个数据创建背景条形
         d.totals.forEach(t => {
             const { y, height: rectHeight } = calculateRectDimensions(t.value, yAccumulator);
             
@@ -199,17 +214,17 @@ const renderChart = (dataset) => {
                 .attr('y', y)
                 .attr('width', xScale.bandwidth())
                 .attr('height', rectHeight)
-                .attr('fill', '#808080')
+                .attr('fill', '#E0E0E0') // 使用更浅的灰色
                 .attr('rx', 2)
                 .attr('ry', 2);
             
-            // 前景蓝色条形（初始高度为0）
+            // 前景蓝色条形
             group.append('rect')
                 .attr('class', 'highlight-bar')
                 .attr('x', 0)
-                .attr('y', y)
+                .attr('y', y + rectHeight) // 初始位置在底部
                 .attr('width', xScale.bandwidth())
-                .attr('height', 0)
+                .attr('height', 0) // 初始高度为0
                 .attr('fill', '#1E90FF')
                 .attr('rx', 2)
                 .attr('ry', 2)
@@ -221,14 +236,19 @@ const renderChart = (dataset) => {
 
     // 更新选中状态的函数
     const updateSelection = (selectedNodes) => {
+        if (!selectedNodes) return;
+
         rangeGroup.each(function(d) {
             const ratio = calculateSelectedRatio(d.tags, selectedNodes);
             let yAccumulator = 0;
             
+            // 获取该组的所有条形
+            const bars = d3.select(this).selectAll('rect.highlight-bar');
+            
             d.totals.forEach((t, i) => {
                 const { y, height: rectHeight } = calculateRectDimensions(t.value, yAccumulator);
                 
-                // 更新高亮条形的高度
+                // 更新高亮条形的高度和位置
                 d3.select(this).select(`.highlight-bar:nth-of-type(${i * 2 + 2})`)
                     .transition()
                     .duration(300)
@@ -242,12 +262,12 @@ const renderChart = (dataset) => {
 
     // 监听选中节点变化
     watch(
-        () => store.state.selectedNodes,
+        () => store.state.selectedNodes.nodeIds, // 直接监听 nodeIds 数组
         (newSelectedNodes) => {
             if (!svg.value) return;
-            updateSelection(newSelectedNodes);
+            updateSelection(newSelectedNodes || []); // 确保传入空数组而不是 undefined
         },
-        { deep: true }
+        { deep: true, immediate: true } // 添加 immediate: true 确保初始化时也执行
     );
 
     svg.value.append("text")

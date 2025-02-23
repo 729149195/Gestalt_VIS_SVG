@@ -760,8 +760,8 @@ const calculateAttentionProbability = (nodeData) => {
         });
 
         // 添加调试信息
-        console.log('Highlighted Features Count:', highlightedFeatures.length);
-        console.log('Non-Highlighted Features Count:', nonHighlightedFeatures.length);
+        // console.log('Highlighted Features Count:', highlightedFeatures.length);
+        // console.log('Non-Highlighted Features Count:', nonHighlightedFeatures.length);
 
         if (highlightedFeatures.length === 0 || nonHighlightedFeatures.length === 0) {
             return 0.1;
