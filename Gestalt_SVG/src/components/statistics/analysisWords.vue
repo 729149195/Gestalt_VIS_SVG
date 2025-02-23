@@ -1,13 +1,13 @@
 <template>
   <div class="analysis-words-container">
     <!-- 修改按钮图标为更合适的展开图标 -->
-    <!-- <button class="apple-button-corner" @click="showDrawer = true">
+    <button class="apple-button-corner" @click="showDrawer = true">
       <div class="arrow-wrapper">
         <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </div>
-    </button> -->
+    </button>
     
     <div class="sections-container">
       <span class="title">Analysis and Suggestions：</span>
@@ -20,7 +20,7 @@
     </div>
     
     <!-- 使用 Teleport 将抽屉传送到 body -->
-    <!-- <Teleport to="body">
+    <Teleport to="body">
       <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
       <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
         <button class="close-button" @click="showDrawer = false">×</button>
@@ -28,7 +28,7 @@
           <maxstic :key="componentKey" />
         </div>
       </div>
-    </Teleport> -->
+    </Teleport>
   </div>
 </template>
 
@@ -374,6 +374,28 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('svg-content-updated', handleSvgUpdate);
 });
+
+function showNodeList(node) {
+    try {
+        // 获取当前卡片中的SVG元素
+        const cardContainer = document.querySelector(`[data-node-id="${node.id}"] .card-svg-container svg`);
+        if (!cardContainer) {
+            console.error('找不到卡片SVG容器');
+            return;
+        }
+
+        // 获取所有不透明度为1的元素（即高亮元素）
+        const highlightedElements = Array.from(cardContainer.querySelectorAll('*'))
+            .filter(el => el.style.opacity === '1' && el.id && el.tagName !== 'svg' && el.tagName !== 'g');
+
+        // 收集这些元素的ID
+        const nodeNames = highlightedElements.map(el => el.id);
+
+        store.commit('UPDATE_SELECTED_NODES', { nodeIds: nodeNames, group: null });
+    } catch (error) {
+        console.error('获取高亮节点时出错:', error);
+    }
+}
 </script>
 
 <style scoped>

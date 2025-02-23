@@ -43,8 +43,8 @@
                     <div class="card-svg-container" ref="graphContainer"></div>
                     <div class="card-info">
                         <div class="highlight-stats">
-                            <template v-if="Object.keys(getHighlightedElementsStats(node)).length > 0">
-                                <span v-for="(count, type) in getHighlightedElementsStats(node)" :key="type">
+                            <template v-if="Object.keys(getStats(node)).length > 0">
+                                <span v-for="(count, type) in getStats(node)" :key="type">
                                     {{ count }} of {{ type }} 
                                 </span>
                             </template>
@@ -76,6 +76,7 @@ const nodes = ref([]);
 const originalSvgContent = ref('');
 const loading = ref(true);
 const currentPages = ref(new Map());
+const elementStats = ref(new Map());
 
 // 添加缩略图缓存
 const thumbnailCache = new Map();
@@ -380,7 +381,7 @@ function renderGraph(container, graphData) {
         .append('svg')
         .attr('width', '100%')
         .attr('height', '100%')
-        .style('display', 'block') // 确保SVG占满容器
+        .style('display', 'block')
         .style('max-width', '100%')
         .style('max-height', '100%');
 
@@ -393,12 +394,10 @@ function renderGraph(container, graphData) {
     const availableWidth = cardWidth - (padding * 2);
     const availableHeight = cardHeight - (padding * 2);
 
-    // 创建核心节点
     const coreNode = g.append('g')
         .attr('class', 'node')
         .attr('transform', `translate(${padding},${padding})`);
 
-    // 添加缩略图
     const foreignObject = coreNode.append('foreignObject')
         .attr('width', availableWidth)
         .attr('height', availableHeight)
@@ -411,24 +410,23 @@ function renderGraph(container, graphData) {
         .style('overflow', 'hidden')
         .style('border-radius', '6px')
         .style('background', '#fafafa')
-        .style('display', 'flex') // 使用flex布局
-        .style('align-items', 'center') // 垂直居中
-        .style('justify-content', 'center'); // 水平居中
+        .style('display', 'flex')
+        .style('align-items', 'center')
+        .style('justify-content', 'center');
 
     requestIdleCallback(() => {
         const thumbnailContent = createThumbnail(nodeData);
         div.html(thumbnailContent);
 
-        // 在缩略图加载完成后，获取其中的SVG元素并设置合适的viewBox
         const thumbnailSvg = div.select('svg').node();
         if (thumbnailSvg) {
-            // 获取SVG的原始尺寸
             const bbox = thumbnailSvg.getBBox();
-            const padding = 20; // 添加一些内边距
-            
-            // 设置viewBox以确保内容完全可见
+            const padding = 20;
             thumbnailSvg.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
             thumbnailSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            
+            // 在SVG渲染完成后更新统计信息
+            elementStats.value.set(nodeData.id, getHighlightedElementsStats(nodeData));
         }
     });
 }
@@ -656,6 +654,18 @@ async function loadAndRenderGraph() {
                     renderGraph(container, nodeData);
                 }
             });
+
+            // 添加一个延时以确保SVG已经完全渲染
+            setTimeout(() => {
+                const cards = document.querySelectorAll('.card');
+                cards.forEach((card) => {
+                    const nodeId = card.getAttribute('data-node-id');
+                    const node = nodes.value.find(n => n.id === nodeId);
+                    if (node) {
+                        getHighlightedElementsStats(node);
+                    }
+                });
+            }, 100);
         });
     } catch (error) {
         console.error('Error loading data:', error);
@@ -667,6 +677,12 @@ async function loadAndRenderGraph() {
 onMounted(async () => {
     await nextTick();
     await loadAndRenderGraph();
+    // 初始化统计信息
+    nextTick(() => {
+        nodes.value.forEach(node => {
+            elementStats.value.set(node.id, getHighlightedElementsStats(node));
+        });
+    });
 });
 
 // 监听选中节点的变化
@@ -682,32 +698,34 @@ watch(selectedNodeIds, () => {
     });
 });
 
+// 监听页面变化
+watch(currentPages, () => {
+    nextTick(() => {
+        nodes.value.forEach(node => {
+            elementStats.value.set(node.id, getHighlightedElementsStats(node));
+        });
+    });
+}, { deep: true });
+
 function getHighlightedElementsStats(nodeData) {
     try {
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(originalSvgContent.value, 'image/svg+xml');
+        // 获取当前卡片中的SVG元素
+        const cardContainer = document.querySelector(`[data-node-id="${nodeData.id}"] .card-svg-container svg`);
+        if (!cardContainer) {
+            console.error('找不到卡片SVG容器');
+            return {};
+        }
+
         const stats = new Map();
         
-        const currentPage = getCurrentPage(nodeData);
-        let nodesToHighlight = [];
-        
-        if (currentPage === 1) {
-            // 第一页只显示核心节点的统计
-            nodesToHighlight = [...nodeData.originalNodes];
-        } else {
-            // 其他页面显示对应外延节点的统计
-            const extension = nodeData.extensions[currentPage - 2];
-            if (extension) {
-                nodesToHighlight = [...extension.originalNodes];
-            }
-        }
-        
-        nodesToHighlight.forEach(nodeId => {
-            const element = svgDoc.getElementById(nodeId.split('/').pop());
-            if (element) {
-                const tagName = element.tagName.toLowerCase();
-                stats.set(tagName, (stats.get(tagName) || 0) + 1);
-            }
+        // 获取所有不透明度为1的元素（即高亮元素）
+        const highlightedElements = Array.from(cardContainer.querySelectorAll('*'))
+            .filter(el => el.style.opacity === '1' && el.id && el.tagName !== 'svg' && el.tagName !== 'g');
+
+        // 统计每种元素的数量
+        highlightedElements.forEach(element => {
+            const tagName = element.tagName.toLowerCase();
+            stats.set(tagName, (stats.get(tagName) || 0) + 1);
         });
         
         return Object.fromEntries(stats);
@@ -758,10 +776,6 @@ const calculateAttentionProbability = (nodeData) => {
                 nonHighlightedFeatures.push(item.features);
             }
         });
-
-        // 添加调试信息
-        // console.log('Highlighted Features Count:', highlightedFeatures.length);
-        // console.log('Non-Highlighted Features Count:', nonHighlightedFeatures.length);
 
         if (highlightedFeatures.length === 0 || nonHighlightedFeatures.length === 0) {
             return 0.1;
@@ -835,6 +849,11 @@ const sortedNodes = computed(() => {
         calculateAttentionProbability(b) - calculateAttentionProbability(a)
     );
 });
+
+// 添加计算属性来获取统计信息
+const getStats = (node) => {
+    return elementStats.value.get(node.id) || {};
+};
 </script>
 
 <style scoped>
@@ -906,47 +925,94 @@ const sortedNodes = computed(() => {
 
 .extension-indicator {
     position: absolute;
-    top: 12px;
-    left: 12px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 4px 8px;
-    border-radius: 16px;
+    top: 16px;
+    left: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 6px 12px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
-    gap: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     z-index: 2;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(52, 168, 83, 0.15);
+    transition: all 0.2s ease;
+}
+
+.extension-indicator:hover {
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .extension-count {
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
     color: #34A853;
+    min-width: 16px;
+    text-align: center;
 }
 
 .page-controls {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 4px 8px;
-    border-radius: 16px;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 4px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     z-index: 2;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(60, 64, 67, 0.15);
+    transition: all 0.2s ease;
+}
+
+.page-controls:hover {
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .page-info {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
-    color: #666;
+    color: #3c4043;
+    padding: 0 8px;
+    user-select: none;
 }
 
 .page-buttons {
     display: flex;
-    gap: 4px;
+    gap: 2px;
+}
+
+.page-buttons :deep(.v-btn) {
+    background: transparent !important;
+    color: #3c4043 !important;
+    min-width: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    border-radius: 16px !important;
+}
+
+.page-buttons :deep(.v-btn:hover) {
+    background: rgba(60, 64, 67, 0.08) !important;
+}
+
+.page-buttons :deep(.v-btn:active) {
+    background: rgba(60, 64, 67, 0.12) !important;
+}
+
+.page-buttons :deep(.v-btn--disabled) {
+    color: rgba(60, 64, 67, 0.38) !important;
+    background: transparent !important;
+}
+
+.page-buttons :deep(.v-btn__content) {
+    opacity: 0.87;
 }
 
 .card-svg-container {
@@ -976,7 +1042,7 @@ const sortedNodes = computed(() => {
     max-height: 80px;
     overflow-y: auto;
     position: relative;
-    padding-right: 100px;
+    padding-right: 120px;
 }
 
 .highlight-stats {
@@ -998,20 +1064,24 @@ const sortedNodes = computed(() => {
 
 .analysis-content {
     margin-top: 4px;
-    font-size: 16px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.4;
     gap: 4px;
+    padding-right: 8px;
+    max-width: calc(100% - 40px);
 }
 
 :deep(.feature-tag) {
     border-radius: 4px;
-    padding: 1px 6px;
+    padding: 2px 6px;
     font-size: 11px;
     font-weight: 500;
     display: inline-flex;
     align-items: center;
     white-space: nowrap;
     height: 20px;
+    margin-right: 4px;
+    margin-bottom: 2px;
 }
 
 /* 删除不再需要的样式 */
@@ -1054,10 +1124,10 @@ const sortedNodes = computed(() => {
     position: absolute;
     bottom: 8px;
     right: 12px;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 600;
     color: #1a73e8;
-    padding: 4px 12px 4px 8px;
+    padding: 4px 8px;
     border-radius: 6px;
     background: rgba(26, 115, 232, 0.08);
     border: 1px solid rgba(26, 115, 232, 0.2);
@@ -1065,6 +1135,9 @@ const sortedNodes = computed(() => {
     display: flex;
     align-items: center;
     gap: 4px;
+    min-width: 90px;
+    justify-content: center;
+    white-space: nowrap;
 }
 
 .eye-icon {
