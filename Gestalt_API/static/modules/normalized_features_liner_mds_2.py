@@ -45,15 +45,15 @@ def normalize_features(input_path, output_path):
     # 2. 不透明度归一化
     df['opacity'] = np.sqrt(df['opacity']) 
 
-    df['fill_h_cos'] = (np.cos(2 * np.pi * df['fill_h'] / 360) + 1) / 2.0
-    df['fill_h_sin'] = (np.sin(2 * np.pi * df['fill_h'] / 360) + 1) / 2.0
+    df['fill_h_cos'] = (np.cos(2 * np.pi * df['fill_h'] / 360) + 1)
+    df['fill_h_sin'] = (np.sin(2 * np.pi * df['fill_h'] / 360) + 1) 
 
     df['stroke_h_cos'] = np.where(df['stroke_width'] == 0, 
                                  0, 
-                                 (np.cos(2 * np.pi * df['stroke_h'] / 360) + 1) / 2.0)
+                                 (np.cos(2 * np.pi * df['stroke_h'] / 360) + 1))
     df['stroke_h_sin'] = np.where(df['stroke_width'] == 0,
                                  0,
-                                 (np.sin(2 * np.pi * df['stroke_h'] / 360) + 1) / 2.0)
+                                 (np.sin(2 * np.pi * df['stroke_h'] / 360) + 1))
 
     # 饱和度归一化
     df['fill_s_n'] = df['fill_s'] / 100.0

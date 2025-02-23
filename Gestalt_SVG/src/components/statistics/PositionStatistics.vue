@@ -33,50 +33,6 @@ const calculateSelectedRatio = (tags, selectedNodes) => {
     return intersection.length / tags.length;
 };
 
-// 监听 selectedNodes 变化
-watch(
-    () => store.state.selectedNodes,
-    (newSelectedNodes) => {
-        if (!svg.value) return;
-        
-        // 更新所有柱子的颜色
-        svg.value.selectAll('.range')
-            .each(function(d) {
-                const ratio = calculateSelectedRatio(d.tags, newSelectedNodes);
-                if (ratio > 0) {
-                    // 创建渐变
-                    const gradientId = `gradient-${d.range.replace(/\./g, '-')}`;
-                    const gradient = svg.value.select('defs')
-                        .append('linearGradient')
-                        .attr('id', gradientId)
-                        .attr('x1', '0%')
-                        .attr('x2', '0%')
-                        .attr('y1', '0%')
-                        .attr('y2', '100%');
-
-                    gradient.append('stop')
-                        .attr('offset', `${ratio * 100}%`)
-                        .attr('stop-color', '#1E90FF');
-
-                    gradient.append('stop')
-                        .attr('offset', `${ratio * 100}%`)
-                        .attr('stop-color', '#808080');
-
-                    d3.select(this).selectAll('rect')
-                        .transition()
-                        .duration(300)
-                        .attr('fill', `url(#${gradientId})`);
-                } else {
-                    d3.select(this).selectAll('rect')
-                        .transition()
-                        .duration(300)
-                        .attr('fill', '#808080');
-                }
-            });
-    },
-    { deep: true }
-);
-
 const eleURL = `http://127.0.0.1:5000/${props.position}_position`;
 
 onMounted(async () => {
@@ -196,6 +152,13 @@ const renderChart = (dataset) => {
 
     svg.value.call(zoom);
 
+    // 创建一个函数来计算矩形的高度和位置
+    const calculateRectDimensions = (value, yAccumulator) => {
+        const y = yScale(yAccumulator + value);
+        const rectHeight = height - yScale(value);
+        return { y, height: rectHeight };
+    };
+
     const rangeGroup = g.selectAll('.range')
         .data(dataset)
         .enter().append('g')
@@ -220,60 +183,72 @@ const renderChart = (dataset) => {
             store.commit('UPDATE_SELECTED_NODES', { nodeIds: d.tags, group: null });
         });
 
-    rangeGroup.each(function (d) {
+    // 渲染基础条形图
+    rangeGroup.each(function(d) {
         let yAccumulator = 0;
-        const selectedRatio = calculateSelectedRatio(d.tags, store.state.selectedNodes);
+        const group = d3.select(this);
         
-        // 如果有选中的节点，创建渐变
-        if (selectedRatio > 0) {
-            const gradientId = `gradient-${d.range.replace(/\./g, '-')}`;
-            const gradient = svg.value.select('defs')
-                .append('linearGradient')
-                .attr('id', gradientId)
-                .attr('x1', '0%')
-                .attr('x2', '0%')
-                .attr('y1', '0%')
-                .attr('y2', '100%');
-
-            gradient.append('stop')
-                .attr('offset', `${selectedRatio * 100}%`)
-                .attr('stop-color', '#1E90FF');
-
-            gradient.append('stop')
-                .attr('offset', `${selectedRatio * 100}%`)
-                .attr('stop-color', '#808080');
-
-            d3.select(this).selectAll('rect')
-                .data(d.totals)
-                .enter().append('rect')
+        // 为每个数据创建背景条形
+        d.totals.forEach(t => {
+            const { y, height: rectHeight } = calculateRectDimensions(t.value, yAccumulator);
+            
+            // 背景灰色条形
+            group.append('rect')
+                .attr('class', 'background-bar')
                 .attr('x', 0)
-                .attr('y', t => {
-                    const y = yScale(yAccumulator + t.value);
-                    yAccumulator += t.value;
-                    return y;
-                })
+                .attr('y', y)
                 .attr('width', xScale.bandwidth())
-                .attr('height', t => height - yScale(t.value))
-                .attr('fill', `url(#${gradientId})`)
-                .attr('rx', 2)
-                .attr('ry', 2);
-        } else {
-            d3.select(this).selectAll('rect')
-                .data(d.totals)
-                .enter().append('rect')
-                .attr('x', 0)
-                .attr('y', t => {
-                    const y = yScale(yAccumulator + t.value);
-                    yAccumulator += t.value;
-                    return y;
-                })
-                .attr('width', xScale.bandwidth())
-                .attr('height', t => height - yScale(t.value))
+                .attr('height', rectHeight)
                 .attr('fill', '#808080')
                 .attr('rx', 2)
                 .attr('ry', 2);
-        }
+            
+            // 前景蓝色条形（初始高度为0）
+            group.append('rect')
+                .attr('class', 'highlight-bar')
+                .attr('x', 0)
+                .attr('y', y)
+                .attr('width', xScale.bandwidth())
+                .attr('height', 0)
+                .attr('fill', '#1E90FF')
+                .attr('rx', 2)
+                .attr('ry', 2)
+                .style('opacity', 0.7);
+                
+            yAccumulator += t.value;
+        });
     });
+
+    // 更新选中状态的函数
+    const updateSelection = (selectedNodes) => {
+        rangeGroup.each(function(d) {
+            const ratio = calculateSelectedRatio(d.tags, selectedNodes);
+            let yAccumulator = 0;
+            
+            d.totals.forEach((t, i) => {
+                const { y, height: rectHeight } = calculateRectDimensions(t.value, yAccumulator);
+                
+                // 更新高亮条形的高度
+                d3.select(this).select(`.highlight-bar:nth-of-type(${i * 2 + 2})`)
+                    .transition()
+                    .duration(300)
+                    .attr('height', rectHeight * ratio)
+                    .attr('y', y + rectHeight * (1 - ratio));
+                
+                yAccumulator += t.value;
+            });
+        });
+    };
+
+    // 监听选中节点变化
+    watch(
+        () => store.state.selectedNodes,
+        (newSelectedNodes) => {
+            if (!svg.value) return;
+            updateSelection(newSelectedNodes);
+        },
+        { deep: true }
+    );
 
     svg.value.append("text")
         .attr("transform", "rotate(-90)")

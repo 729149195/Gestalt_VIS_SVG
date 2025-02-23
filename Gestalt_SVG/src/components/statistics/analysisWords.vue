@@ -15,17 +15,14 @@
         <div class="analysis-content" @scroll="handleScroll" v-html="analysisContent"></div>
       </div>
       <div class="section middle-section">
-        
+        <div class="analysis-content" @scroll="handleScroll" v-html="selectedNodesAnalysis"></div>
       </div>
     </div>
     
     <!-- 使用 Teleport 将抽屉传送到 body -->
     <Teleport to="body">
-      
       <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
-      
       <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
-        
         <button class="close-button" @click="showDrawer = false">×</button>
         <div class="drawer-body">
           <maxstic :key="componentKey" />
@@ -39,6 +36,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import axios from 'axios'
 import maxstic from '../visualization/maxstic.vue'
+import { useStore } from 'vuex'
 
 // 数据源URL
 const MAPPING_DATA_URL = "http://127.0.0.1:5000/average_equivalent_mapping";
@@ -72,15 +70,15 @@ const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag"
 const featureNameMap = {
     'tag': 'Label Type',
     'opacity': 'opacity',
-    'fill_h_cos': 'coloration',
-    'fill_h_sin': 'coloration',
-    'fill_s_n': 'saturation ',
-    'fill_l_n': 'luminance',
-    'stroke_h_cos': 'coloration',
-    'stroke_h_sin': 'coloration',
-    'stroke_s_n': 'saturation',
-    'stroke_l_n': 'luminance',
-    'stroke_width': 'stroke',
+    'fill_h_cos': 'fill color',
+    'fill_h_sin': 'fill color',
+    'fill_s_n': 'fill color ',
+    'fill_l_n': 'fill color',
+    'stroke_h_cos': 'stroke color',
+    'stroke_h_sin': 'stroke color',
+    'stroke_s_n': 'stroke color',
+    'stroke_l_n': 'stroke color',
+    'stroke_width': 'stroke width',
     'bbox_left_n': 'position',
     'bbox_right_n': 'position',
     'bbox_top_n': 'position',
@@ -89,8 +87,8 @@ const featureNameMap = {
     'bbox_mds_2': 'position',
     'bbox_center_x_n': 'position',
     'bbox_center_y_n': 'position',
-    'bbox_width_n': 'width',
-    'bbox_height_n': 'height',
+    'bbox_width_n': 'width / height',
+    'bbox_height_n': 'width / height',
     'bbox_fill_area': 'area'
 };
 
@@ -118,37 +116,48 @@ watch(() => props.updateKey, (newVal) => {
 const emit = defineEmits(['scroll'])
 
 const analysisContent = ref('等待分析...')
+const selectedNodesAnalysis = ref('等待选中节点...')
 
 // 将 showDialog 改名为 showDrawer
 const showDrawer = ref(false)
 
+const store = useStore()
+
 // 生成分析文字的函数
-const generateAnalysis = (dataMapping, dataEquivalentWeights) => {
-    if (!dataMapping || !dataEquivalentWeights) return '等待分析...';
+const generateAnalysis = (dataMapping, dataEquivalentWeights, isSelectedNodes = false) => {
+    if (!dataMapping || !dataEquivalentWeights) return isSelectedNodes ? '等待选中节点...' : '等待分析...';
 
     const inputDimensions = dataMapping.input_dimensions;
     const outputDimensions = dataMapping.output_dimensions;
     const weights = dataMapping.weights;
 
+    // 检查数据结构是否完整
+    if (!Array.isArray(inputDimensions) || !Array.isArray(weights) || weights.length === 0) {
+        return isSelectedNodes ? '无法分析选中节点的数据' : '数据结构不完整';
+    }
+
     // 创建一个Map来存储每个特征的最大绝对权重
     const featureMaxWeights = new Map();
 
-    // 遍历所有维度和权重
-    outputDimensions.forEach((_, dimIndex) => {
-        const dimensionWeights = weights[dimIndex];
-        dimensionWeights.forEach((weight, featureIndex) => {
-            const featureName = inputDimensions[featureIndex];
-            const displayName = featureNameMap[featureName] || featureName;
-            const absWeight = Math.abs(weight);
-            
-            // 如果当前权重更大，则更新该特征的最大权重和符号
-            if (!featureMaxWeights.has(displayName) || absWeight > featureMaxWeights.get(displayName).absWeight) {
-                featureMaxWeights.set(displayName, {
-                    weight: weight,
-                    absWeight: absWeight
-                });
-            }
-        });
+    // 遍历权重数组
+    weights.forEach(dimensionWeights => {
+        if (Array.isArray(dimensionWeights)) {
+            dimensionWeights.forEach((weight, featureIndex) => {
+                if (featureIndex < inputDimensions.length) {
+                    const featureName = inputDimensions[featureIndex];
+                    const displayName = featureNameMap[featureName] || featureName;
+                    const absWeight = Math.abs(weight);
+                    
+                    // 如果当前权重更大，则更新该特征的最大权重和符号
+                    if (!featureMaxWeights.has(displayName) || absWeight > featureMaxWeights.get(displayName).absWeight) {
+                        featureMaxWeights.set(displayName, {
+                            weight: weight,
+                            absWeight: absWeight
+                        });
+                    }
+                }
+            });
+        }
     });
 
     // 转换为数组并排序，分成正相关和负相关两组
@@ -163,12 +172,17 @@ const generateAnalysis = (dataMapping, dataEquivalentWeights) => {
         .filter(([_, {weight}]) => weight < 0)
         .sort((a, b) => b[1].absWeight - a[1].absWeight);
 
+    // 如果没有找到任何特征，返回提示信息
+    if (features.length === 0) {
+        return '<div class="no-selection">没有找到显著的特征关系</div>';
+    }
+
     // 生成HTML
     let analysis = '<div class="feature-columns">';
     
     // 正相关列
     analysis += '<div class="feature-column positive">';
-    analysis += '<div class="column-title">Features suggest to be used</div>';
+    analysis += `<div class="column-title">${isSelectedNodes ? 'Selected Nodes Features' : 'Features suggest to be used'}</div>`;
     
     // 存储超出显示限制的正相关特征
     const hiddenPositiveFeatures = positiveFeatures.slice(3).map(([name, {absWeight}]) => 
@@ -210,7 +224,7 @@ const generateAnalysis = (dataMapping, dataEquivalentWeights) => {
     
     // 负相关列
     analysis += '<div class="feature-column negative">';
-    analysis += '<div class="column-title">Current Feature</div>';
+    analysis += `<div class="column-title">${isSelectedNodes ? 'Current Selected Features' : 'Current Feature'}</div>`;
     
     // 存储超出显示限制的负相关特征
     const hiddenNegativeFeatures = negativeFeatures.slice(3).map(([name, {absWeight}]) => 
@@ -266,13 +280,78 @@ const fetchDataAndGenerateAnalysis = async () => {
             throw new Error('网络响应有问题');
         }
 
-        // 生成分析文字
-        analysisContent.value = generateAnalysis(responseMapping.data, responseEquivalentWeights.data);
+        // 生成全局分析文字
+        analysisContent.value = generateAnalysis(responseMapping.data, responseEquivalentWeights.data, false);
+        
+        // 获取选中节点的分析数据
+        const selectedNodeIds = store.state.selectedNodes.nodeIds;
+        if (selectedNodeIds && selectedNodeIds.length > 0) {
+            // 从equivalent_weights_by_tag中获取选中节点的权重数据
+            const selectedNodesWeights = {};
+            selectedNodeIds.forEach(nodeId => {
+                // 在所有权重数据中查找匹配的节点ID
+                const matchingKey = Object.keys(responseEquivalentWeights.data).find(key => 
+                    key.endsWith(`/${nodeId}`)  // 使用endsWith来匹配节点ID
+                );
+                
+                if (matchingKey) {
+                    selectedNodesWeights[matchingKey] = responseEquivalentWeights.data[matchingKey];
+                }
+            });
+
+            if (Object.keys(selectedNodesWeights).length > 0) {
+                // 计算每个特征的最大绝对值权重
+                const maxWeights = [];
+                const dimensions = responseMapping.data.input_dimensions.length;
+                
+                // 初始化最大权重数组
+                for (let i = 0; i < dimensions; i++) {
+                    maxWeights[i] = {
+                        value: 0,  // 实际权重值
+                        absValue: 0  // 绝对值
+                    };
+                }
+
+                // 遍历所有选中节点的权重
+                Object.values(selectedNodesWeights).forEach(nodeWeights => {
+                    nodeWeights.forEach(row => {
+                        row.forEach((weight, index) => {
+                            const absWeight = Math.abs(weight);
+                            // 如果当前权重的绝对值大于已记录的最大绝对值
+                            if (absWeight > maxWeights[index].absValue) {
+                                maxWeights[index] = {
+                                    value: weight,
+                                    absValue: absWeight
+                                };
+                            }
+                        });
+                    });
+                });
+
+                // 创建选中节点的分析数据
+                const selectedData = {
+                    ...responseMapping.data,
+                    weights: [maxWeights.map(w => w.value)]  // 使用最大权重值
+                };
+
+                selectedNodesAnalysis.value = generateAnalysis(selectedData, responseEquivalentWeights.data, true);
+            } else {
+                selectedNodesAnalysis.value = '<div class="no-selection">无法找到选中节点的权重数据</div>';
+            }
+        } else {
+            selectedNodesAnalysis.value = '<div class="no-selection">请选择节点查看分析...</div>';
+        }
     } catch (error) {
         console.error('获取数据失败:', error);
         analysisContent.value = '分析生成失败，请重试';
+        selectedNodesAnalysis.value = '分析生成失败，请重试';
     }
 };
+
+// 修改监听逻辑，当选中节点变化时重新获取数据
+watch(() => store.state.selectedNodes.nodeIds, () => {
+    fetchDataAndGenerateAnalysis();
+}, { deep: true, immediate: true });
 
 const handleScroll = (event) => {
     emit('scroll', {
@@ -634,5 +713,15 @@ onUnmounted(() => {
     border-top-color: rgba(0, 0, 0, 0.8);
     margin-bottom: -12px;
     z-index: 1000;
+}
+
+:deep(.no-selection) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #86868b;
+    font-size: 14px;
+    font-style: italic;
 }
 </style>

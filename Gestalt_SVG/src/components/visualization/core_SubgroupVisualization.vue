@@ -129,8 +129,29 @@ const nextPage = (node) => {
 
 const updateNodeDisplay = (node) => {
     const currentPage = getCurrentPage(node);
-    const content = currentPage === 1 ? node : node.extensions[currentPage - 2];
-    renderGraph(graphContainer.value, { nodes: [content] });
+    let displayNodes = [];
+    
+    if (currentPage === 1) {
+        // 第一页只显示核心节点
+        displayNodes = [...node.originalNodes];
+    } else {
+        // 其他页面显示对应的外延节点
+        const extension = node.extensions[currentPage - 2];
+        if (extension) {
+            displayNodes = [...extension.originalNodes];
+        }
+    }
+    
+    // 更新缩略图
+    const container = document.querySelector(`[data-node-id="${node.id}"] .card-svg-container`);
+    if (container) {
+        const nodeData = {
+            id: node.id,
+            type: currentPage === 1 ? 'core' : 'extension',
+            originalNodes: displayNodes
+        };
+        renderGraph(container, { nodes: [nodeData] });
+    }
 };
 
 // 创建节点的缩略图
@@ -445,15 +466,15 @@ const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag"
 const featureNameMap = {
     'tag': 'Label Type',
     'opacity': 'opacity',
-    'fill_h_cos': 'coloration',
-    'fill_h_sin': 'coloration',
-    'fill_s_n': 'saturation ',
-    'fill_l_n': 'luminance',
-    'stroke_h_cos': 'coloration',
-    'stroke_h_sin': 'coloration',
-    'stroke_s_n': 'saturation',
-    'stroke_l_n': 'luminance',
-    'stroke_width': 'stroke',
+    'fill_h_cos': 'fill color',
+    'fill_h_sin': 'fill color',
+    'fill_s_n': 'fill color ',
+    'fill_l_n': 'fill color',
+    'stroke_h_cos': 'stroke color',
+    'stroke_h_sin': 'stroke color',
+    'stroke_s_n': 'stroke color',
+    'stroke_l_n': 'stroke color',
+    'stroke_width': 'stroke width',
     'bbox_left_n': 'position',
     'bbox_right_n': 'position',
     'bbox_top_n': 'position',
@@ -462,8 +483,8 @@ const featureNameMap = {
     'bbox_mds_2': 'position',
     'bbox_center_x_n': 'position',
     'bbox_center_y_n': 'position',
-    'bbox_width_n': 'width',
-    'bbox_height_n': 'height',
+    'bbox_width_n': 'width / height',
+    'bbox_height_n': 'width / height',
     'bbox_fill_area': 'area'
 };
 
@@ -475,22 +496,23 @@ const equivalentWeightsData = ref(null);
 const generateAnalysis = (nodeData) => {
     if (!analysisData.value || !equivalentWeightsData.value) return '';
 
-    const inputDimensions = analysisData.value.input_dimensions;
-    const outputDimensions = analysisData.value.output_dimensions;
+    const currentPage = getCurrentPage(nodeData);
+    let nodesToAnalyze = [];
     
-    // 获取当前节点的所有高亮元素
-    let highlightedNodes = [...nodeData.originalNodes];
-    if (nodeData.type === 'extension') {
-        const coreIndex = parseInt(nodeData.id.split('_')[1]);
-        const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
-        if (coreNode) {
-            highlightedNodes = [...highlightedNodes, ...coreNode.originalNodes];
+    if (currentPage === 1) {
+        // 第一页只分析核心节点
+        nodesToAnalyze = [...nodeData.originalNodes];
+    } else {
+        // 其他页面分析对应的外延节点
+        const extension = nodeData.extensions[currentPage - 2];
+        if (extension) {
+            nodesToAnalyze = [...extension.originalNodes];
         }
     }
 
     // 获取这些元素的权重数据
     const nodeWeights = {};
-    highlightedNodes.forEach(nodeId => {
+    nodesToAnalyze.forEach(nodeId => {
         const fullPath = nodeId.startsWith('svg/') ? nodeId : `svg/${nodeId}`;
         if (equivalentWeightsData.value[fullPath]) {
             nodeWeights[fullPath] = equivalentWeightsData.value[fullPath];
@@ -503,11 +525,12 @@ const generateAnalysis = (nodeData) => {
     });
 
     if (Object.keys(nodeWeights).length === 0) {
-        console.warn('No weight data found for nodes:', highlightedNodes);
         return '';
     }
 
-    // 计算这些节点在每个维度上的平均权重
+    // 使用现有的分析逻辑继续处理
+    const inputDimensions = analysisData.value.input_dimensions;
+    const outputDimensions = analysisData.value.output_dimensions;
     const dimensionCount = outputDimensions.length;
     const featureCount = inputDimensions.length;
     const averageWeights = Array(dimensionCount).fill().map(() => Array(featureCount).fill(0));
@@ -520,7 +543,6 @@ const generateAnalysis = (nodeData) => {
         });
     });
 
-    // 合并所有维度的特征，并保留最大绝对值
     const featureMap = new Map();
     averageWeights.forEach((dimensionWeights, dimIndex) => {
         dimensionWeights.forEach((weight, featureIndex) => {
@@ -534,12 +556,10 @@ const generateAnalysis = (nodeData) => {
         });
     });
 
-    // 转换为数组并排序
     let sortedFeatures = Array.from(featureMap.entries())
         .sort((a, b) => b[1].absWeight - a[1].absWeight)
-        .filter(([_, {absWeight}]) => absWeight > 0.1); // 只保留权重绝对值大于0.1的特征
+        .filter(([_, {absWeight}]) => absWeight > 0.1);
 
-    // 如果特征数量大于1，计算相邻特征之间的权重差异
     if (sortedFeatures.length > 1) {
         const weightDiffs = [];
         for (let i = 1; i < sortedFeatures.length; i++) {
@@ -550,19 +570,15 @@ const generateAnalysis = (nodeData) => {
             });
         }
 
-        // 找到最大差异点
         const maxDiff = weightDiffs.reduce((max, curr) => curr.diff > max.diff ? curr : max);
         
-        // 如果最大差异点大于平均权重的20%，并且在前3个位置，就在那里截断
         if (maxDiff.diff > sortedFeatures[0][1].absWeight * 0.2 && maxDiff.index <= 3) {
             sortedFeatures = sortedFeatures.slice(0, maxDiff.index);
         } else {
-            // 否则最多显示3个特征
             sortedFeatures = sortedFeatures.slice(0, 3);
         }
     }
 
-    // 生成HTML
     return sortedFeatures.map(([name, {weight}]) => {
         const absWeight = Math.abs(weight).toFixed(2);
         const color = weight > 0 ? '#E53935' : '#1E88E5';
@@ -666,13 +682,17 @@ function getHighlightedElementsStats(nodeData) {
         const svgDoc = parser.parseFromString(originalSvgContent.value, 'image/svg+xml');
         const stats = new Map();
         
-        let nodesToHighlight = [...nodeData.originalNodes];
+        const currentPage = getCurrentPage(nodeData);
+        let nodesToHighlight = [];
         
-        if (nodeData.type === 'extension') {
-            const coreIndex = parseInt(nodeData.id.split('_')[1]);
-            const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
-            if (coreNode) {
-                nodesToHighlight = [...nodesToHighlight, ...coreNode.originalNodes];
+        if (currentPage === 1) {
+            // 第一页只显示核心节点的统计
+            nodesToHighlight = [...nodeData.originalNodes];
+        } else {
+            // 其他页面显示对应外延节点的统计
+            const extension = nodeData.extensions[currentPage - 2];
+            if (extension) {
+                nodesToHighlight = [...extension.originalNodes];
             }
         }
         
@@ -691,18 +711,23 @@ function getHighlightedElementsStats(nodeData) {
     }
 }
 
-// 添加注意概率计算函数
+// 修改注意概率计算函数
 const calculateAttentionProbability = (nodeData) => {
     if (!equivalentWeightsData.value || !analysisData.value) return 0;
 
     try {
         // 1. 获取所有需要计算的节点
-        let nodesToAnalyze = [...nodeData.originalNodes];
-        if (nodeData.type === 'extension') {
-            const coreIndex = parseInt(nodeData.id.split('_')[1]);
-            const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
-            if (coreNode) {
-                nodesToAnalyze = [...nodesToAnalyze, ...coreNode.originalNodes];
+        const currentPage = getCurrentPage(nodeData);
+        let nodesToAnalyze = [];
+        
+        if (currentPage === 1) {
+            // 第一页只分析核心节点
+            nodesToAnalyze = [...nodeData.originalNodes];
+        } else {
+            // 其他页面分析对应的外延节点
+            const extension = nodeData.extensions[currentPage - 2];
+            if (extension) {
+                nodesToAnalyze = [...extension.originalNodes];
             }
         }
 
@@ -720,18 +745,16 @@ const calculateAttentionProbability = (nodeData) => {
 
         if (totalValidNodes === 0) return 0;
 
-        // 3. 计算每个维度的平均特征权重
+        // 继续使用现有的计算逻辑
         const inputDimensions = analysisData.value.input_dimensions;
         const outputDimensions = analysisData.value.output_dimensions;
         const dimensionCount = outputDimensions.length;
         const featureCount = inputDimensions.length;
         
-        // 初始化权重矩阵
         const averageWeights = Array(dimensionCount).fill().map(() => 
             Array(featureCount).fill(0)
         );
 
-        // 计算平均权重
         Object.values(nodeWeights).forEach(weights => {
             weights.forEach((dimWeights, dimIndex) => {
                 dimWeights.forEach((weight, featureIndex) => {
@@ -741,34 +764,23 @@ const calculateAttentionProbability = (nodeData) => {
             });
         });
 
-        // 4. 计算每个维度的最大特征贡献
         const dimensionMaxContributions = averageWeights.map(dimWeights => 
             Math.max(...dimWeights)
         );
 
-        // 5. 计算整体注意力分数
-        // 5.1 计算维度权重（基于最大特征贡献）
         const dimensionWeights = dimensionMaxContributions.map(maxContrib => 
-            Math.min(maxContrib * 2, 1)  // 将权重限制在 [0,1] 范围内
+            Math.min(maxContrib * 2, 1)
         );
 
-        // 5.2 计算加权平均分数
         const totalWeight = dimensionWeights.reduce((sum, w) => sum + w, 0);
         if (totalWeight === 0) return 0;
 
         const weightedScore = dimensionWeights.reduce((sum, weight) => 
             sum + weight, 0) / dimensionWeights.length;
 
-        // 5.3 应用sigmoid函数使分数更平滑
         const sigmoid = x => 1 / (1 + Math.exp(-5 * (x - 0.5)));
-        
-        // 5.4 将分数映射到 [0.1, 0.9] 范围
         const normalizedScore = 0.1 + (sigmoid(weightedScore) * 0.8);
-
-        // 6. 考虑节点数量的影响
-        const nodeCountFactor = Math.min(totalValidNodes / 10, 1); // 最多考虑10个节点
-        
-        // 7. 最终分数计算
+        const nodeCountFactor = Math.min(totalValidNodes / 10, 1);
         const finalScore = normalizedScore * (0.8 + nodeCountFactor * 0.2);
 
         return Math.min(Math.max(finalScore, 0.1), 0.9);

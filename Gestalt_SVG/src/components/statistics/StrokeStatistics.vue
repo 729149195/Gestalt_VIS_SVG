@@ -2,7 +2,7 @@
     <div class="statistics-container">
         <span class="title">Stroke color Statiction</span>
         <div v-if="hasData" ref="chartContainer" class="chart-container"></div>
-        <div v-else class="no-data-message">No Data</div>
+        <div v-else class="no-data-message">No Stroke</div>
     </div>
 </template>
 

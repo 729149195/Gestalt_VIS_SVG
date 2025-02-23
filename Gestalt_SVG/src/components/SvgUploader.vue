@@ -581,7 +581,7 @@ const handleSvgClick = (event) => {
     const nodeId = target.id;
     if (!nodeId) return;
 
-    console.log('点击节点:', nodeId);
+    // console.log('点击节点:', nodeId);
 
     if (selectedNodeIds.value.includes(nodeId)) {
         store.commit('REMOVE_SELECTED_NODE', nodeId);
