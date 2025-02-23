@@ -605,21 +605,27 @@ const fetchAnalysisData = async () => {
     }
 };
 
-// 修改加载数据的方法
+// 首先添加一个ref来存储特征数据
+const clusterFeatures = ref(null);
+
+// 在loadAndRenderGraph函数中添加获取特征数据的逻辑
 async function loadAndRenderGraph() {
     try {
         loading.value = true;
-        const [svgResponse, graphResponse] = await Promise.all([
+        const [svgResponse, graphResponse, featuresResponse] = await Promise.all([
             fetch('http://127.0.0.1:5000/get_svg'),
             fetch('http://127.0.0.1:5000/static/data/subgraphs/subgraph_dimension_all.json'),
-            fetchAnalysisData() // 添加获取分析数据
+            fetch('http://127.0.0.1:5000/cluster_features'),  // 添加获取特征数据
+            fetchAnalysisData()
         ]);
         
-        const [svgContent, data] = await Promise.all([
+        const [svgContent, data, featuresData] = await Promise.all([
             svgResponse.text(),
-            graphResponse.json()
+            graphResponse.json(),
+            featuresResponse.json()
         ]);
         
+        clusterFeatures.value = featuresData;
         originalSvgContent.value = svgContent;
         graphData.value = data;
         
@@ -711,82 +717,114 @@ function getHighlightedElementsStats(nodeData) {
     }
 }
 
-// 修改注意概率计算函数
+// 修改注意力概率计算函数
 const calculateAttentionProbability = (nodeData) => {
-    if (!equivalentWeightsData.value || !analysisData.value) return 0;
+    if (!clusterFeatures.value) return 0;
 
     try {
-        // 1. 获取所有需要计算的节点
+        // 1. 获取当前需要分析的节点
         const currentPage = getCurrentPage(nodeData);
         let nodesToAnalyze = [];
         
         if (currentPage === 1) {
-            // 第一页只分析核心节点
             nodesToAnalyze = [...nodeData.originalNodes];
         } else {
-            // 其他页面分析对应的外延节点
             const extension = nodeData.extensions[currentPage - 2];
             if (extension) {
                 nodesToAnalyze = [...extension.originalNodes];
             }
         }
 
-        // 2. 收集每个节点的权重数据
-        const nodeWeights = {};
-        let totalValidNodes = 0;
-        
-        nodesToAnalyze.forEach(nodeId => {
-            const fullPath = nodeId.startsWith('svg/') ? nodeId : `svg/${nodeId}`;
-            if (equivalentWeightsData.value[fullPath]) {
-                nodeWeights[fullPath] = equivalentWeightsData.value[fullPath];
-                totalValidNodes++;
+        if (nodesToAnalyze.length === 0) return 0.1;
+
+        // 2. 将所有节点分为高亮组和非高亮组
+        const highlightedFeatures = [];
+        const nonHighlightedFeatures = [];
+
+        // 修改这里的路径匹配逻辑
+        clusterFeatures.value.forEach(item => {
+            // 标准化路径格式
+            const normalizedItemId = item.id;
+            const isHighlighted = nodesToAnalyze.some(analyzeNode => {
+                // 移除开头的 'svg/' 并标准化分析节点的路径
+                const normalizedAnalyzeNode = analyzeNode.replace(/^svg\//, '');
+                return normalizedItemId === `svg/${normalizedAnalyzeNode}` || 
+                       normalizedItemId === normalizedAnalyzeNode;
+            });
+
+            if (isHighlighted) {
+                highlightedFeatures.push(item.features);
+            } else {
+                nonHighlightedFeatures.push(item.features);
             }
         });
 
-        if (totalValidNodes === 0) return 0;
+        // 添加调试信息
+        console.log('Highlighted Features Count:', highlightedFeatures.length);
+        console.log('Non-Highlighted Features Count:', nonHighlightedFeatures.length);
 
-        // 继续使用现有的计算逻辑
-        const inputDimensions = analysisData.value.input_dimensions;
-        const outputDimensions = analysisData.value.output_dimensions;
-        const dimensionCount = outputDimensions.length;
-        const featureCount = inputDimensions.length;
-        
-        const averageWeights = Array(dimensionCount).fill().map(() => 
-            Array(featureCount).fill(0)
-        );
+        if (highlightedFeatures.length === 0 || nonHighlightedFeatures.length === 0) {
+            return 0.1;
+        }
 
-        Object.values(nodeWeights).forEach(weights => {
-            weights.forEach((dimWeights, dimIndex) => {
-                dimWeights.forEach((weight, featureIndex) => {
-                    averageWeights[dimIndex][featureIndex] += 
-                        Math.abs(weight) / totalValidNodes;
-                });
-            });
+        // 3. 计算高亮组的平均特征向量
+        const highlightedMean = highlightedFeatures[0].map((_, featureIndex) => {
+            return highlightedFeatures.reduce((sum, features) => 
+                sum + features[featureIndex], 0) / highlightedFeatures.length;
         });
 
-        const dimensionMaxContributions = averageWeights.map(dimWeights => 
-            Math.max(...dimWeights)
+        // 4. 计算非高亮组的平均特征向量
+        const nonHighlightedMean = nonHighlightedFeatures[0].map((_, featureIndex) => {
+            return nonHighlightedFeatures.reduce((sum, features) => 
+                sum + features[featureIndex], 0) / nonHighlightedFeatures.length;
+        });
+
+        // 5. 计算两组之间的欧氏距离
+        const euclideanDistance = Math.sqrt(
+            highlightedMean.reduce((sum, value, index) => {
+                const diff = value - nonHighlightedMean[index];
+                return sum + (diff * diff);
+            }, 0)
         );
 
-        const dimensionWeights = dimensionMaxContributions.map(maxContrib => 
-            Math.min(maxContrib * 2, 1)
-        );
+        // 6. 计算组内的平均距离（衡量组内聚集程度）
+        const avgIntraDistance = highlightedFeatures.reduce((sum, features) => {
+            const distance = Math.sqrt(
+                features.reduce((s, value, index) => {
+                    const diff = value - highlightedMean[index];
+                    return s + (diff * diff);
+                }, 0)
+            );
+            return sum + distance;
+        }, 0) / highlightedFeatures.length;
 
-        const totalWeight = dimensionWeights.reduce((sum, w) => sum + w, 0);
-        if (totalWeight === 0) return 0;
+        // 7. 调整评分计算
+        const score = euclideanDistance / (avgIntraDistance + 0.1);
+        
+        // 调整sigmoid函数的参数以获得更好的分布
+        const sigmoid = x => 1 / (1 + Math.exp(-3 * (x - 0.5)));
+        const normalizedScore = 0.1 + sigmoid(score) * 0.8;
 
-        const weightedScore = dimensionWeights.reduce((sum, weight) => 
-            sum + weight, 0) / dimensionWeights.length;
+        // 调整节点数量因子的影响
+        const nodeCountFactor = Math.min(highlightedFeatures.length / 5, 1); // 改为5个节点达到最大影响
+        const finalScore = normalizedScore * (0.7 + nodeCountFactor * 0.3); // 增加节点数量的影响权重
 
-        const sigmoid = x => 1 / (1 + Math.exp(-5 * (x - 0.5)));
-        const normalizedScore = 0.1 + (sigmoid(weightedScore) * 0.8);
-        const nodeCountFactor = Math.min(totalValidNodes / 10, 1);
-        const finalScore = normalizedScore * (0.8 + nodeCountFactor * 0.2);
+        // 添加调试信息
+        console.log('Node Data:', {
+            euclideanDistance,
+            avgIntraDistance,
+            score,
+            normalizedScore,
+            nodeCountFactor,
+            finalScore
+        });
 
         return Math.min(Math.max(finalScore, 0.1), 0.9);
+
     } catch (error) {
         console.error('计算注意力概率时出错:', error);
-        return 0;
+        console.error('错误详情:', error.stack);
+        return 0.1;
     }
 };
 
