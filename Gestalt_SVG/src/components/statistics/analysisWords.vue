@@ -182,7 +182,7 @@ const generateAnalysis = (dataMapping, dataEquivalentWeights, isSelectedNodes = 
     
     // 正相关列
     analysis += '<div class="feature-column positive">';
-    analysis += `<div class="column-title">${isSelectedNodes ? 'Selected Nodes Features' : 'Features suggest to be used'}</div>`;
+    analysis += `<div class="column-title">${isSelectedNodes ? 'Used features' : 'Available features'}</div>`;
     
     // 存储超出显示限制的正相关特征
     const hiddenPositiveFeatures = positiveFeatures.slice(3).map(([name, {absWeight}]) => 
@@ -204,10 +204,10 @@ const generateAnalysis = (dataMapping, dataEquivalentWeights, isSelectedNodes = 
         }
         
         const strengthValue = absWeight.toFixed(2);
-        let strengthSymbol = '•';
-        if (absWeight > 1) strengthSymbol = '★★★';
-        else if (absWeight > 0.8) strengthSymbol = '★★';
-        else if (absWeight > 0.5) strengthSymbol = '★';
+        let strengthSymbol = '★';
+        if (absWeight > 1) strengthSymbol = '★★★★';
+        else if (absWeight > 0.8) strengthSymbol = '★★★';
+        else if (absWeight > 0.5) strengthSymbol = '★★';
         
         analysis += `
             <div class="feature-item">
@@ -224,7 +224,7 @@ const generateAnalysis = (dataMapping, dataEquivalentWeights, isSelectedNodes = 
     
     // 负相关列
     analysis += '<div class="feature-column negative">';
-    analysis += `<div class="column-title">${isSelectedNodes ? 'Current Selected Features' : 'Current Feature'}</div>`;
+    analysis += `<div class="column-title">${isSelectedNodes ? 'Used Selected Features' : 'Used Feature'}</div>`;
     
     // 存储超出显示限制的负相关特征
     const hiddenNegativeFeatures = negativeFeatures.slice(3).map(([name, {absWeight}]) => 

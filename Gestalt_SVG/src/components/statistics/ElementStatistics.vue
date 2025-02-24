@@ -1,6 +1,6 @@
 <template>
     <div class="statistics-container">
-        <span class="title">EleProportions</span>
+        <span class="title">Type</span>
         <div ref="chartContainer" class="chart-container"></div>
     </div>
 </template>

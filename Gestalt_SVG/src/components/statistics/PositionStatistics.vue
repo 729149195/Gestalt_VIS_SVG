@@ -276,7 +276,7 @@ const renderChart = (dataset) => {
         .attr("x", 0 - (height + margin.top + margin.bottom) / 2)
         .style("text-anchor", "middle")
         .style("font-size", "12px")
-        .text("Position Number");
+        .text("Count");
 };
 </script>
 

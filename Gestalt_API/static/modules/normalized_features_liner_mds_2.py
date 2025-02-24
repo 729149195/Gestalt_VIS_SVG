@@ -50,10 +50,10 @@ def normalize_features(input_path, output_path):
 
     df['stroke_h_cos'] = np.where(df['stroke_width'] == 0, 
                                  0, 
-                                 (np.cos(2 * np.pi * df['stroke_h'] / 360) + 1))
+                                 (np.cos(2 * np.pi * df['stroke_h'] / 360) + 1) / 2.0)
     df['stroke_h_sin'] = np.where(df['stroke_width'] == 0,
                                  0,
-                                 (np.sin(2 * np.pi * df['stroke_h'] / 360) + 1))
+                                 (np.sin(2 * np.pi * df['stroke_h'] / 360) + 1) / 2.0)
 
     # 饱和度归一化
     df['fill_s_n'] = df['fill_s'] / 100.0

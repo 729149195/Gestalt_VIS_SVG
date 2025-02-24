@@ -43,9 +43,9 @@
                             <v-card class="position-card card1">
                                 <HisEleProportions :key="componentKey4 + 4" />
                             </v-card>
-                            <v-card class="position-card card3">
+                            <!-- <v-card class="position-card card3">
                                 <HisAttrProportionsVue :key="componentKey4 + 6" />
-                            </v-card>
+                            </v-card> -->
                         </div>
                     </div>
                 </div>

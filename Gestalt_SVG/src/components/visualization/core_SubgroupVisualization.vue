@@ -1,5 +1,5 @@
 <template>
-    <span class="title">Analysis and Suggestions：</span>
+    <span class="title">Graphical Patterns List</span>
     <div class="core-graph-container">
         
         <div v-if="loading" class="loading-overlay">
@@ -44,8 +44,8 @@
                     <div class="card-info">
                         <div class="highlight-stats">
                             <template v-if="Object.keys(getStats(node)).length > 0">
-                                <span v-for="(count, type) in getStats(node)" :key="type">
-                                    {{ count }} of {{ type }} 
+                                Included elements: <span v-for="(count, type) in getStats(node)" :key="type">
+                                    {{ count }}  <{{ type }}>
                                 </span>
                             </template>
                         </div>
@@ -576,12 +576,12 @@ const generateAnalysis = (nodeData) => {
             sortedFeatures = sortedFeatures.slice(0, 3);
         }
     }
-
+    // ${name} ${absWeight}
     return sortedFeatures.map(([name, {weight}]) => {
         const absWeight = Math.abs(weight).toFixed(2);
-        const color = weight > 0 ? '#E53935' : '#1E88E5';
+        const color = weight > 0 ? '#1E88E5' : '#1E88E5';
         return `<span class="feature-tag" style="color: ${color}; border-color: ${color}20; background-color: ${color}08">
-            ${name} ${absWeight}
+            ${name} 
         </span>`;
     }).join(' ');
 };

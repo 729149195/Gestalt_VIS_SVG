@@ -60,7 +60,7 @@
                 @click="analyzeSvg" 
                 :disabled="selectedElements.length === 0 || analyzing"
             >
-                {{ analyzing ? 'analysising...' : 'analyse' }}
+                {{ analyzing ? 'analysising...' : 'Simulated perception' }}
             </v-btn>
                    <!-- <span style="font-size: 14px; color: #86868b;">
                 Instruction : <br/> 

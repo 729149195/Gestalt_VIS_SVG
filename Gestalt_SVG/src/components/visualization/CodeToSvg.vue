@@ -22,7 +22,7 @@
           <div class="side-mode-switch">
             <div class="mode-tabs">
               <div class="mode-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
-                declarative
+                Code
               </div>
               <div class="mode-tab" :class="{ active: !isDeclarativeMode }" @click="isDeclarativeMode = false">
                 SVG
@@ -48,7 +48,7 @@
           <div class="side-mode-switch">
             <div class="mode-tabs">
               <div class="mode-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
-                declarative
+                Code
               </div>
               <div class="mode-tab" :class="{ active: !isDeclarativeMode }" @click="isDeclarativeMode = false">
                 SVG
