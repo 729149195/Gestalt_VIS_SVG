@@ -1,21 +1,21 @@
 <template>
     <div class="force-graph-container">
-        <!-- <div class="controls">
-            <el-button class="control-button" type="primary" @click="clearSelectedNodes">Restore node selection status</el-button>
-        </div> -->
-
-        <!-- 显示核心聚类视图 -->
+        <span class="title">Graphical Patterns List</span>
+        <div class="hints-container">
+            <span class="scroll-hint">← Scroll horizontally to see more patterns →</span>
+            <span class="scroll-hint">Click to view the model pattern</span>
+        </div>
         <div v-if="currentPage === 1" class="core-view-container">
             <CoreSubgroupVisualization />
         </div>
 
         <!-- 显示维度组合视图 -->
-        <div v-else class="graph-grid">
+        <!-- <div v-else class="graph-grid">
             <div v-for="(dims, index) in currentDimensions" :key="getDimensionKey(dims)" class="graph-item">
                 <div class="graph-title">{{ formatDimensions(dims) }}</div>
                 <div :ref="el => { if (el) graphContainers[index] = el }" class="graph-container"></div>
             </div>
-        </div>
+        </div> -->
     </div>
 </template>
 
@@ -869,7 +869,7 @@ onUnmounted(() => {
 <style scoped>
 .force-graph-container {
     position: relative;
-    width: 1280px;  /* 设置固定宽度 */
+    width: 100%;  /* 设置固定宽度 */
     margin: 0 auto;  /* 水平居中 */
     height: calc(100vh - 120px);
     max-height: 900px;
@@ -880,7 +880,6 @@ onUnmounted(() => {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(200, 200, 200, 0.3);
     overflow: hidden;
-    transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
 }
@@ -889,6 +888,30 @@ onUnmounted(() => {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
     border: 1px solid rgba(180, 180, 180, 0.4);
+}
+
+/* 添加提示容器样式 */
+.hints-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 4px 0 12px 0;
+    gap: 4px;
+}
+
+/* 修改滑动提示样式 */
+.scroll-hint {
+    font-size: 13px;
+    color: #666;
+    letter-spacing: 0.01em;
+    opacity: 0.75;
+}
+
+.scroll-hint:first-child {
+    margin-bottom: 2px;
 }
 
 .controls {
@@ -966,7 +989,6 @@ onUnmounted(() => {
 
 .core-view-container {
     flex: 1;
-    padding: 10px;
     overflow: auto;
     height: 100%;
     min-height: 0;
@@ -1035,5 +1057,14 @@ onUnmounted(() => {
     opacity: 0;
     transition: opacity 0.2s ease;
     white-space: nowrap;
+}
+
+.title {
+  margin: 12px 16px 0 16px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #1d1d1f;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
 }
 </style>

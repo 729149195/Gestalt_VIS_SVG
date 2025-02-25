@@ -5,8 +5,13 @@
       <div v-show="isDeclarativeMode" class="editor-section editor-transition">
         <div class="section-header">
           <div class="left-tools">
-            <el-select v-model="selectedSyntax" placeholder="选择生成式语法" class="syntax-selector"
-              popper-class="syntax-selector-dropdown">
+            <span class="title">SVG Editor</span>
+            <el-button type="primary" @click="generateAndUpload">Generate</el-button>
+            <el-button @click="copyCode">Copy</el-button>
+            <el-button @click="downloadSvg">Download</el-button>
+          </div>
+          <div class="side-mode-switch">
+            <el-select v-model="selectedSyntax" placeholder="选择生成式语法" class="syntax-selector" popper-class="syntax-selector-dropdown">
               <el-option v-for="item in syntaxOptions" :key="item.value" :label="item.label" :value="item.value">
                 <div class="syntax-option">
                   <span class="syntax-label">{{ item.label }}</span>
@@ -14,12 +19,6 @@
                 </div>
               </el-option>
             </el-select>
-            <el-button type="primary" @click="generateSvg">Generate</el-button>
-          </div>
-          <div class="right-tools">
-            <el-switch v-model="autoGenerate" active-text="real time" />
-          </div>
-          <div class="side-mode-switch">
             <div class="mode-tabs">
               <div class="mode-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
                 Code
@@ -38,12 +37,11 @@
       <!-- SVG编辑器 -->
       <div v-show="!isDeclarativeMode" class="editor-section editor-transition">
         <div class="section-header">
-          <span class="title">SVG Editor</span>
-          <div>
-            <div class="right-tools">
-              <el-button @click="copyCode">Copy</el-button>
-              <el-button @click="downloadSvg">Download</el-button>
-            </div>
+          <div class="left-tools">
+            <span class="title">SVG Editor</span>
+            <el-button type="primary" @click="generateAndUpload">Generate</el-button>
+            <el-button @click="copyCode">Copy</el-button>
+            <el-button @click="downloadSvg">Download</el-button>
           </div>
           <div class="side-mode-switch">
             <div class="mode-tabs">
@@ -55,25 +53,9 @@
               </div>
             </div>
           </div>
-
         </div>
         <div class="code-editor">
           <div class="editor-wrapper" ref="svgEditorContainer"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 预览区域 -->
-    <div class="preview-section">
-      <div class="svg-preview" ref="previewContainer">
-        <div class="svg-wrapper" v-html="svgOutput"></div>
-        <div class="analyze-button-wrapper">
-          <el-button class="analyze-btn" type="primary" @click="uploadToAnalyzer">
-            <el-icon class="upload-icon">
-              <Upload />
-            </el-icon>
-            Upload
-          </el-button>
         </div>
       </div>
     </div>
@@ -176,12 +158,9 @@ const initEditors = () => {
       language: getEditorLanguage()
     })
 
-    declarativeEditor.onDidChangeModelContent(debounce(() => {
+    declarativeEditor.onDidChangeModelContent(() => {
       code.value = declarativeEditor.getValue()
-      if (autoGenerate.value) {
-        generateSvg()
-      }
-    }, 500))
+    })
   }
 
   // 初始化SVG编辑器
@@ -191,10 +170,9 @@ const initEditors = () => {
       value: svgCode.value
     })
 
-    svgEditor.onDidChangeModelContent(debounce(() => {
+    svgEditor.onDidChangeModelContent(() => {
       svgCode.value = svgEditor.getValue()
-      updatePreview()
-    }, 500))
+    })
   }
 }
 
@@ -205,9 +183,6 @@ watch(selectedSyntax, (newValue) => {
     monaco.editor.setModelLanguage(model, getEditorLanguage())
     code.value = placeholders[newValue]
     declarativeEditor.setValue(code.value)
-    if (autoGenerate.value) {
-      generateSvg()
-    }
   }
 })
 
@@ -748,7 +723,7 @@ const setupZoomAndPan = () => {
     const initialTransform = d3.zoomIdentity
       .translate(translateX, translateY)
       .scale(scale)
-    
+
     svg.call(zoom.transform, initialTransform)
   } catch (error) {
     console.error('设置缩放时出错:', error)
@@ -768,7 +743,6 @@ onMounted(() => {
   nextTick(() => {
     initEditors()
   })
-  // generateSvg()
 
   if (svgOutput.value) {
     setupZoomAndPan()
@@ -796,7 +770,7 @@ const handleSvgContentUpdated = async (event) => {
     })
 
     const svgContent = await response.text()
-    
+
     // 格式化SVG代码
     const formattedSvg = formatSvgCode(svgContent)
 
@@ -821,23 +795,23 @@ const handleSvgContentUpdated = async (event) => {
     // 根据更新类型显示不同的消息
     if (event.detail.type === 'analysis') {
       ElMessage({
-        message: 'SVG分析结果已更新',
+        message: 'SVG perception results have been updated',
         type: 'success',
         position: 'top-right',
         customClass: 'custom-message'
       })
     } else {
       ElMessage({
-        message: 'SVG内容已更新',
+        message: 'SVG content has been updated',
         type: 'success',
         position: 'top-right',
         customClass: 'custom-message'
       })
     }
   } catch (error) {
-    console.error('更新SVG内容时出错:', error)
+    console.error('Error while updating SVG content:', error)
     ElMessage({
-      message: '更新SVG内容失败: ' + error.message,
+      message: 'Failed to update SVG content: ' + error.message,
       type: 'error',
       position: 'top-right',
       customClass: 'custom-message'
@@ -845,22 +819,33 @@ const handleSvgContentUpdated = async (event) => {
   }
 }
 
-
-// 添加上传相关的函数
-const uploadToAnalyzer = async () => {
-  if (!svgOutput.value) {
-    ElMessage({
-      message: '没有可上传的SVG内容',
-      type: 'warning',
-      position: 'top-right',
-      customClass: 'custom-message'
-    })
-    return
-  }
-
+// 生成SVG并上传到分析器
+const generateAndUpload = async () => {
   try {
+    // 根据当前模式获取要上传的内容
+    let contentToUpload = ''
+
+    if (isDeclarativeMode.value) {
+      // 如果是代码模式，先生成SVG
+      await generateSvg()
+      contentToUpload = svgCode.value
+    } else {
+      // 如果是SVG模式，直接使用SVG编辑器的内容
+      contentToUpload = svgEditor.getValue()
+    }
+
+    if (!contentToUpload) {
+      ElMessage({
+        message: '没有可上传的SVG内容',
+        type: 'warning',
+        position: 'top-right',
+        customClass: 'custom-message'
+      })
+      return
+    }
+
     // 创建Blob对象
-    const blob = new Blob([svgOutput.value], { type: 'image/svg+xml' })
+    const blob = new Blob([contentToUpload], { type: 'image/svg+xml' })
 
     // 创建File对象，使用时间戳确保文件名唯一
     const timestamp = new Date().getTime()
@@ -891,9 +876,9 @@ const uploadToAnalyzer = async () => {
       throw new Error(result.error || '上传失败')
     }
   } catch (error) {
-    console.error('上传错误:', error)
+    console.error('生成或上传错误:', error)
     ElMessage({
-      message: '上传失败: ' + error.message,
+      message: '操作失败: ' + error.message,
       type: 'error',
       position: 'top-right',
       customClass: 'custom-message'
@@ -919,15 +904,13 @@ watch(isDeclarativeMode, (newValue) => {
 <style scoped>
 .code-to-svg-container {
   display: flex;
-  gap: 10px;
   height: 100%;
 }
 
 .editors-container {
-  flex: 0.8;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   height: 100%;
   position: relative;
 }
@@ -935,7 +918,7 @@ watch(isDeclarativeMode, (newValue) => {
 .editor-section {
   display: flex;
   flex-direction: column;
-  height: calc(100%);
+  height: 100%;
   min-height: 0;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
@@ -943,7 +926,6 @@ watch(isDeclarativeMode, (newValue) => {
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(200, 200, 200, 0.3);
-  transition: all 0.3s ease;
   position: relative;
 }
 
@@ -965,8 +947,7 @@ watch(isDeclarativeMode, (newValue) => {
   border-bottom: 1px solid rgba(200, 200, 200, 0.3);
 }
 
-.left-tools,
-.right-tools {
+.left-tools {
   display: flex;
   gap: 12px;
   align-items: center;
@@ -1025,62 +1006,9 @@ watch(isDeclarativeMode, (newValue) => {
   min-height: 200px;
 }
 
-.preview-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-width: 400px;
-  height: 100%;
-  min-height: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(200, 200, 200, 0.3);
-  transition: all 0.3s ease;
-}
-
-.preview-section:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
-}
-
-.svg-preview {
-  flex: 1;
-  border: 1px solid rgba(200, 200, 200, 0.3);
-  border-radius: 12px;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.95);
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s ease;
-}
-
-.svg-wrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.svg-wrapper :deep(svg) {
-  width: 100%;
-  height: 100%;
-  cursor: move;
-  object-fit: contain;
-  transition: transform 0.3s ease;
-}
-
 :deep(.el-button) {
   margin-left: 0;
   border-radius: 8px;
-  transition: all 0.3s ease;
   background: #55C000 !important;
   border-color: #55C000;
   color: white;
@@ -1103,7 +1031,6 @@ watch(isDeclarativeMode, (newValue) => {
 :deep(.el-select) {
   .el-input__wrapper {
     border-radius: 8px;
-    transition: all 0.3s ease;
     background: rgba(240, 240, 240, 0.6);
     border: 1px solid rgba(200, 200, 200, 0.3);
     box-shadow: none;
@@ -1119,80 +1046,16 @@ watch(isDeclarativeMode, (newValue) => {
   }
 }
 
-:deep(.el-switch) {
-  --el-switch-on-color: #55C000;
-  --el-switch-off-color: rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.analyze-button-wrapper {
-  position: absolute;
-  bottom: 24px;
-  right: 24px;
-  z-index: 10;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.analyze-btn {
-  background: #55C000 !important;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  color: white;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  box-shadow: 0 2px 8px rgba(85, 192, 0, 0.2);
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-transform: none;
-  height: 36px;
-}
-
-.analyze-btn:hover {
-  background: #4CAF00 !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(85, 192, 0, 0.3);
-}
-
-.analyze-btn:active {
-  transform: translateY(1px);
-  box-shadow: 0 2px 6px rgba(85, 192, 0, 0.2);
-}
-
-.analyze-btn :deep(.el-icon) {
-  margin-right: 4px;
-  font-size: 16px;
-}
-
-.editor-transition {
-  transition: all 0.3s ease;
-}
-
-.editor-fade-enter-active,
-.editor-fade-leave-active {
-  transition: all 0.3s ease;
-}
-
 .editor-fade-enter-from,
 .editor-fade-leave-to {
   opacity: 0;
   transform: scale(0.98);
 }
 
-.upload-icon {
-  font-size: 16px;
-}
-
 .side-mode-switch {
-  right: 12px;
-  top: -16px;
-  z-index: 100;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 10px;
   align-items: center;
 }
 
@@ -1213,7 +1076,6 @@ watch(isDeclarativeMode, (newValue) => {
   font-size: 13px;
   color: #666;
   cursor: pointer;
-  transition: all 0.3s ease;
   border-radius: 6px;
   font-weight: 500;
 }
@@ -1264,14 +1126,10 @@ watch(isDeclarativeMode, (newValue) => {
 }
 
 .title {
-  top: 12px;
-  left: 16px;
+  margin: 0 0 0 10px;
   font-size: 16px;
   font-weight: bold;
-  color: #000;
-  margin: 0;
-  padding: 0;
-  z-index: 10;
+  color: #1d1d1f;
   letter-spacing: -0.01em;
   opacity: 0.8;
 }

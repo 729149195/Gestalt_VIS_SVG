@@ -68,7 +68,7 @@ const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag"
 //     'bbox_fill_area': '元素面积'
 // };
 const featureNameMap = {
-    'tag': 'Label Type',
+    'tag': 'color',
     'opacity': 'opacity',
     'fill_h_cos': 'fill color',
     'fill_h_sin': 'fill color',

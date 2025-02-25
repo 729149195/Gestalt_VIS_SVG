@@ -442,17 +442,17 @@ def analyze_cluster_overlaps(subgraphs_dir):
     with open(output_file, 'w') as f:
         json.dump(final_graph_data, f, indent=4)
     
-    print(f"核心聚类分析完成，共找到 {len(final_core_clusters)} 个核心聚类")
+    print(f"The core clustering analysis was completed, finding a total of {len(final_core_clusters)} Core clusters")
     return final_graph_data
 
 def main(features_json_path, output_dir, clustering_method, subgraph_dimensions, progress_callback=None):
     """主函数"""
-    print(f"开始处理子图检测...")
-    print(f"使用聚类方法: {clustering_method}")
-    print(f"维度组合: {subgraph_dimensions}")
+    print(f"Start processing subgraph detection...")
+    print(f"Using clustering methods: {clustering_method}")
+    print(f"Dimension combinations: {subgraph_dimensions}")
 
     if progress_callback:
-        progress_callback(85, "开始子图检测...")
+        progress_callback(85, "Start subgraph detection...")
 
     # 创建输出目录
     subgraphs_dir = os.path.join(output_dir, 'subgraphs')
@@ -467,9 +467,9 @@ def main(features_json_path, output_dir, clustering_method, subgraph_dimensions,
     for idx, dimensions in enumerate(subgraph_dimensions):
         if progress_callback:
             current_progress = 85 + (idx / total_dimensions) * 10
-            progress_callback(current_progress, f"正在处理维度组合: {dimensions}")
+            progress_callback(current_progress, f"Dimension combinations being processed: {dimensions}")
             
-        print(f"\n处理维度组合: {dimensions}")
+        print(f"\nHandling of dimension combinations: {dimensions}")
         # 生成子图数据
         graph_data = generate_subgraph(identifiers, features, dimensions, clustering_method)
         
@@ -481,11 +481,11 @@ def main(features_json_path, output_dir, clustering_method, subgraph_dimensions,
     
     # 分析聚类重叠
     if progress_callback:
-        progress_callback(95, "正在分析聚类重叠...")
+        progress_callback(95, "Cluster overlap being analysed...")
     analyze_cluster_overlaps(subgraphs_dir)
 
     if progress_callback:
-        progress_callback(98, "子图检测完成")
+        progress_callback(98, "Subgraph detection complete")
 
 if __name__ == '__main__':
     # 配置参数

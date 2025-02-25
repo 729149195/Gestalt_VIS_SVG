@@ -1,14 +1,14 @@
-<template>
+ <template>
     <div class="main">
         <div class="left">
             <div class="left-top">
-                <div class="svgZoom">
-                    <SvgUploader @file-uploaded="handleFileUploaded" />
+                <div class="fill-height">
+                    <CodeToSvg />
                 </div>
             </div>
             <div class="left-bottom">
-                <div class="fill-height">
-                    <CodeToSvg />
+                <div class="svgZoom">
+                    <SvgUploader @file-uploaded="handleFileUploaded" />
                 </div>
             </div>
         </div>
@@ -16,37 +16,11 @@
             <div class="fill-height datas">
                 <div v-if="file" class="data-cards">
                     <div class="maxtistic">
-                        <SubgroupVisualization v-if="file" :key="componentKey2" />
-                        <analysisWords title="Feature dimension mapping analysis" :update-key="componentKey2"/>
-                        <div class="main-card margin-right">
-                            <v-card class="position-card card1">
-                                <PositionStatistics position="top" title="Elementals Top Edge" :key="componentKey4" />
-                            </v-card>
-                            <v-card class="position-card card2">
-                                <PositionStatistics position="bottom" title="Elementals Bottom Edge"
-                                    :key="componentKey4 + 1" />
-                            </v-card>
-                            <v-card class="position-card card3">
-                                <PositionStatistics position="right" title="Elementals Right Edge" :key="componentKey4 + 2" />
-                            </v-card>
-                            <v-card class="position-card card4">
-                                <PositionStatistics position="left" title="Elementals Left Edge" :key="componentKey4 + 3" />
-                            </v-card>
-                        </div>
-                        <div class="main-card margin-right">
-                            <v-card class="position-card card2">
-                                <FillStatistician :key="componentKey4 + 5" />
-                            </v-card>
-                            <v-card class="position-card card4">
-                                <strokeStatistician :key="componentKey4 + 7" />
-                            </v-card>
-                            <v-card class="position-card card1">
-                                <HisEleProportions :key="componentKey4 + 4" />
-                            </v-card>
-                            <!-- <v-card class="position-card card3">
-                                <HisAttrProportionsVue :key="componentKey4 + 6" />
-                            </v-card> -->
-                        </div>
+                        <SubgroupVisualization v-if="file" :key="componentKey2" class="subgroup-visualization"/>
+                        <analysisWords title="Feature dimension mapping analysis" :update-key="componentKey2" class="analysis-words"/>
+
+                        <StatisticsContainer :component-key="componentKey4" title="Analysis and Suggestions" class="main-card" />
+
                     </div>
                 </div>
             </div>
@@ -56,15 +30,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import HisEleProportions from '../components/statistics/ElementStatistics.vue';
-import HisAttrProportionsVue from '../components/statistics/AttributeStatistics.vue';
-import FillStatistician from '../components/statistics/FillStatistics.vue';
-import strokeStatistician from '../components/statistics/StrokeStatistics.vue';
-import PositionStatistics from '../components/statistics/PositionStatistics.vue';
 import SubgroupVisualization from '../components/visualization/SubgroupVisualization.vue';
 import SvgUploader from '../components/SvgUploader.vue';
 import analysisWords from '@/components/statistics/analysisWords.vue';
 import CodeToSvg from '@/components/visualization/CodeToSvg.vue';
+import StatisticsContainer from '@/components/statistics/StatisticsContainer.vue';
 
 const file = ref(null)
 const componentKey = ref(0)
@@ -87,10 +57,10 @@ onMounted(async () => {
             method: 'POST'
         });
         if (!response.ok) {
-            console.error('清空上传文件夹失败');
+            console.error('Failed to empty upload folder');
         }
     } catch (error) {
-        console.error('清空上传文件夹出错:', error);
+        console.error('Error emptying upload folder:', error);
     }
 });
 </script>
@@ -114,25 +84,24 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    width: 100%;
+    width: 90%;
     height: 100%;
     gap: 12px;
 }
 
-.left-top {
+.left-bottom {
     display: flex;
     gap: 12px;
-    height: 50%;
+    height: 55%;
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
 }
 
-.left-top:hover {
+.left-bottom:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
 }
@@ -142,15 +111,14 @@ onMounted(async () => {
     padding: 12px;
 }
 
-.left-bottom {
-    height: 65%;
+.left-top {
+    height: 45%;
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
 }
 
 
@@ -171,7 +139,6 @@ onMounted(async () => {
     border-radius: 16px !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    transition: all 0.3s ease;
     overflow: hidden;
 }
 
@@ -214,7 +181,6 @@ onMounted(async () => {
     width: auto;
     height: auto;
     display: block;
-    transition: transform 0.3s ease;
 }
 
 .svg-container svg * {
@@ -239,7 +205,6 @@ onMounted(async () => {
 
 .maxtistic>* {
     border-radius: 12px;
-    transition: all 0.3s ease;
 }
 
 /* 只为 SubgroupVisualization 和 maxstic 添加悬浮效果 */
@@ -268,19 +233,25 @@ onMounted(async () => {
 
 .main-card {
     width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 16px;
-    height: 30%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(200, 200, 200, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    height: 45%;
 }
 
 .position-card {
-    flex: 1;
+    flex: 1 1 calc(25% - 16px);
+    min-width: 200px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(200, 200, 200, 0.3);
     padding: 12px;
-    transition: all 0.3s ease;
+    height: 48%;
 }
 
 .position-card:hover {
@@ -312,10 +283,31 @@ onMounted(async () => {
 ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
-    transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.3);
+}
+
+.title {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #1d1d1f;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
+}
+
+.subgroup-visualization{
+    height: 45%;
+}
+
+.analysis-words{
+    height: 25%;
 }
 </style>

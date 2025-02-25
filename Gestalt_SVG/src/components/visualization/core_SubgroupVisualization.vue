@@ -1,41 +1,48 @@
 <template>
-    <span class="title">Graphical Patterns List</span>
     <div class="core-graph-container">
-        
         <div v-if="loading" class="loading-overlay">
             <div class="loading-spinner"></div>
         </div>
         <div class="cards-container" ref="cardsContainer">
-            <div class="cards-wrapper" ref="cardsWrapper" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @mouseleave="endDrag">
-                <div v-for="node in sortedNodes" 
+            <!-- 添加左右滚动阴影指示器 -->
+            <div class="scroll-shadow scroll-shadow-left" :class="{ 'shadow-visible': showLeftShadow }"></div>
+            <div class="scroll-shadow scroll-shadow-right" :class="{ 'shadow-visible': showRightShadow }"></div>
+            
+            <div class="cards-wrapper" ref="cardsWrapper" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @mouseleave="endDrag" @scroll="updateScrollShadows">
+                <div v-for="node in flattenedNodes" 
                      :key="node.id" 
                      class="card"
                      :class="{ 
                          'card-selected': isNodeSelected(node),
+                         'card-core': node.type === 'core',
+                         'card-extension': node.type === 'extension',
                          'has-extension': hasExtension(node)
                      }"
                      :data-type="node.type"
                      :data-node-id="node.id"
-                     @click="!isDragging && showNodeList(node)">
-                    <div v-if="hasExtension(node)" class="extension-indicator">
+                     :data-cluster-id="node.clusterId"
+                     @click.stop="handleCardClick(node, $event)">
+                    
+                    <div v-if="node.type === 'core' && hasExtension(node)" class="extension-indicator">
                         <v-icon color="primary">mdi-layers</v-icon>
                         <span class="extension-count">{{ getExtensionCount(node) }}</span>
                     </div>
                     
-                    <div v-if="hasExtension(node)" class="page-controls">
-                        <span class="page-info">{{ getCurrentPage(node) }}/{{ getTotalPages(node) }}</span>
-                        <div class="page-buttons">
+                    <!-- Navigation buttons for related cards -->
+                    <div v-if="hasRelatedCards(node)" class="navigation-controls">
+                        <div class="navigation-buttons">
                             <v-btn 
                                 icon="mdi-chevron-left" 
                                 size="small"
-                                @click.stop="prevPage(node)"
-                                :disabled="isFirstPage(node)"
+                                @click.stop="navigateToPrevCard(node)"
+                                :disabled="!hasPrevCard(node)"
                             ></v-btn>
+                            <span class="navigation-info">{{ getCurrentCardIndex(node) }}/{{ getTotalRelatedCards(node) }}</span>
                             <v-btn 
                                 icon="mdi-chevron-right" 
                                 size="small"
-                                @click.stop="nextPage(node)"
-                                :disabled="isLastPage(node)"
+                                @click.stop="navigateToNextCard(node)"
+                                :disabled="!hasNextCard(node)"
                             ></v-btn>
                         </div>
                     </div>
@@ -83,75 +90,147 @@ const thumbnailCache = new Map();
 
 // 添加拖动相关的状态
 const isDragging = ref(false);
+const wasRecentlyDragging = ref(false);  // 新增：用于跟踪最近是否有拖动行为
 const startX = ref(0);
 const scrollLeft = ref(0);
 const lastX = ref(0);
 const velocity = ref(0);
 const animationFrame = ref(null);
+const dragEndTimeout = ref(null);  // 新增：用于拖动结束后的延时器
+
+// 首先添加一个标志变量来控制是否需要重新渲染
+const isInitialRender = ref(true);
+const isDataUpdated = ref(false);
+
+// 添加滚动阴影状态变量
+const showLeftShadow = ref(false);
+const showRightShadow = ref(true); // 默认显示右侧阴影，提示有更多内容
+
+// 添加新的计算属性，将所有节点（核心+外延）扁平化展示
+const flattenedNodes = computed(() => {
+    if (!nodes.value) return [];
+    
+    // 创建所有节点的扁平化数组（核心节点和独立的外延节点）
+    let allNodes = [];
+    
+    nodes.value.forEach(coreNode => {
+        // 添加核心节点
+        allNodes.push({
+            ...coreNode,
+            clusterId: coreNode.id.split('_')[1] // 记录聚类ID
+        });
+        
+        // 添加关联的外延节点
+        if (coreNode.extensions && coreNode.extensions.length > 0) {
+            coreNode.extensions.forEach((ext, extIndex) => {
+                allNodes.push({
+                    ...ext,
+                    clusterId: coreNode.id.split('_')[1], // 记录聚类ID
+                    extIndex: extIndex // 记录在扩展数组中的索引
+                });
+            });
+        }
+    });
+    
+    // 按照注意力概率排序
+    return [...allNodes].sort((a, b) => 
+        calculateAttentionProbability(b) - calculateAttentionProbability(a)
+    );
+});
 
 // 添加扩展相关的方法
 const hasExtension = (node) => {
-    return node.extensions && node.extensions.length > 0;
+    if (node.type === 'core') {
+        return node.extensions && node.extensions.length > 0;
+    }
+    return false;
 };
 
 const getExtensionCount = (node) => {
     return node.extensions ? node.extensions.length : 0;
 };
 
-const getCurrentPage = (node) => {
-    return currentPages.value.get(node.id) || 1;
-};
-
-const getTotalPages = (node) => {
-    return hasExtension(node) ? node.extensions.length + 1 : 1;
-};
-
-const isFirstPage = (node) => {
-    return getCurrentPage(node) === 1;
-};
-
-const isLastPage = (node) => {
-    return getCurrentPage(node) === getTotalPages(node);
-};
-
-const prevPage = (node) => {
-    if (!isFirstPage(node)) {
-        currentPages.value.set(node.id, getCurrentPage(node) - 1);
-        updateNodeDisplay(node);
+// 导航相关的函数
+const hasRelatedCards = (node) => {
+    if (node.type === 'core') {
+        return hasExtension(node);
+    } else if (node.type === 'extension') {
+        // 外延节点总是有关联卡片（至少有核心节点）
+        return true;
     }
+    return false;
 };
 
-const nextPage = (node) => {
-    if (!isLastPage(node)) {
-        currentPages.value.set(node.id, getCurrentPage(node) + 1);
-        updateNodeDisplay(node);
-    }
-};
-
-const updateNodeDisplay = (node) => {
-    const currentPage = getCurrentPage(node);
-    let displayNodes = [];
+const getRelatedCardIds = (node) => {
+    const clusterId = node.clusterId;
+    if (!clusterId) return [];
     
-    if (currentPage === 1) {
-        // 第一页只显示核心节点
-        displayNodes = [...node.originalNodes];
-    } else {
-        // 其他页面显示对应的外延节点
-        const extension = node.extensions[currentPage - 2];
-        if (extension) {
-            displayNodes = [...extension.originalNodes];
-        }
-    }
+    // 找出同一聚类中的所有节点ID
+    const relatedIds = flattenedNodes.value
+        .filter(n => n.clusterId === clusterId)
+        .map(n => n.id);
     
-    // 更新缩略图
-    const container = document.querySelector(`[data-node-id="${node.id}"] .card-svg-container`);
-    if (container) {
-        const nodeData = {
-            id: node.id,
-            type: currentPage === 1 ? 'core' : 'extension',
-            originalNodes: displayNodes
-        };
-        renderGraph(container, { nodes: [nodeData] });
+    return relatedIds;
+};
+
+const getCurrentCardIndex = (node) => {
+    const relatedIds = getRelatedCardIds(node);
+    const index = relatedIds.indexOf(node.id);
+    return index !== -1 ? index + 1 : 1;
+};
+
+const getTotalRelatedCards = (node) => {
+    return getRelatedCardIds(node).length;
+};
+
+const hasPrevCard = (node) => {
+    return getCurrentCardIndex(node) > 1;
+};
+
+const hasNextCard = (node) => {
+    return getCurrentCardIndex(node) < getTotalRelatedCards(node);
+};
+
+const navigateToPrevCard = (node) => {
+    // 无需检查拖动状态，导航按钮应始终可用
+    if (!hasPrevCard(node)) return;
+    
+    const relatedIds = getRelatedCardIds(node);
+    const currentIndex = relatedIds.indexOf(node.id);
+    if (currentIndex > 0) {
+        scrollToNodeId(relatedIds[currentIndex - 1]);
+    }
+};
+
+const navigateToNextCard = (node) => {
+    // 无需检查拖动状态，导航按钮应始终可用
+    if (!hasNextCard(node)) return;
+    
+    const relatedIds = getRelatedCardIds(node);
+    const currentIndex = relatedIds.indexOf(node.id);
+    if (currentIndex < relatedIds.length - 1) {
+        scrollToNodeId(relatedIds[currentIndex + 1]);
+    }
+};
+
+const scrollToNodeId = (nodeId) => {
+    const cardElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+    if (cardElement) {
+        const container = cardsWrapper.value;
+        const cardLeft = cardElement.offsetLeft - container.offsetLeft;
+        
+        // 防止滚动期间的其他拖动操作
+        wasRecentlyDragging.value = true;
+        
+        container.scrollTo({
+            left: cardLeft,
+            behavior: 'smooth'
+        });
+        
+        // 滚动完成后重置状态
+        setTimeout(() => {
+            wasRecentlyDragging.value = false;
+        }, 600); // 允许滚动动画完成
     }
 };
 
@@ -168,7 +247,7 @@ function createThumbnail(nodeData) {
         const svgElement = svgDoc.querySelector('svg');
         
         if (!svgElement) {
-            console.error('SVG元素未找到');
+            console.error('SVG element not found');
             return '';
         }
 
@@ -189,7 +268,8 @@ function createThumbnail(nodeData) {
         let nodesToHighlight = [];
         
         if (nodeData.type === 'extension') {
-            const coreIndex = parseInt(nodeData.id.split('_')[1]);
+            // 恢复同时显示核心节点和外延节点的元素
+            const coreIndex = parseInt(nodeData.clusterId);
             const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
             if (coreNode) {
                 // 先添加核心节点
@@ -232,7 +312,7 @@ function createThumbnail(nodeData) {
         thumbnailCache.set(cacheKey, thumbnail);
         return thumbnail;
     } catch (error) {
-        console.error('创建缩略图时出错:', error);
+        console.error('Error creating thumbnail:', error);
         return '';
     }
 }
@@ -248,7 +328,7 @@ function processGraphData(coreData) {
         // 添加核心节点
         processedNodes.push({
             id: coreNodeId,
-            name: `co ${clusterIndex + 1} (Z_${cluster.core_dimensions.join(',Z_')})`,
+            name: `Core ${clusterIndex + 1} (Z_${cluster.core_dimensions.join(',Z_')})`,
             type: 'core',
             originalNodes: cluster.core_nodes,
             dimensions: cluster.core_dimensions,
@@ -261,14 +341,14 @@ function processGraphData(coreData) {
         cluster.extensions.forEach((extension, extIndex) => {
             const extensionNode = {
                 id: `ext_${clusterIndex}_${extIndex}`,
-                name: `ext ${clusterIndex + 1}.${extIndex + 1}`,
+                name: `Extension ${clusterIndex + 1}.${extIndex + 1}`,
                 type: 'extension',
                 originalNodes: extension.nodes,
                 dimensions: extension.dimensions,
                 parentCoreId: coreNodeId,
                 value: 1
             };
-            processedNodes.push(extensionNode);
+            
             // 将扩展节点添加到对应核心节点的extensions数组中
             const coreNode = processedNodes.find(n => n.id === coreNodeId);
             if (coreNode) {
@@ -280,13 +360,32 @@ function processGraphData(coreData) {
     return { nodes: processedNodes };
 }
 
+// 新增卡片点击处理函数
+function handleCardClick(node, event) {
+    // 如果当前正在拖动或刚拖动完毕，不处理点击
+    if (isDragging.value || wasRecentlyDragging.value) {
+        return;
+    }
+    
+    // 防止事件冒泡
+    event.stopPropagation();
+    
+    // 调用原来的点击处理逻辑
+    showNodeList(node);
+}
+
 // 显示节点列表
 function showNodeList(node) {
     try {
+        // 防止任何潜在的拖动触发此函数
+        if (isDragging.value || wasRecentlyDragging.value) {
+            return;
+        }
+        
         // 获取当前卡片中的SVG元素
         const cardContainer = document.querySelector(`[data-node-id="${node.id}"] .card-svg-container svg`);
         if (!cardContainer) {
-            console.error('找不到卡片SVG容器');
+            console.error('Card SVG container not found');
             return;
         }
 
@@ -299,7 +398,7 @@ function showNodeList(node) {
 
         store.commit('UPDATE_SELECTED_NODES', { nodeIds: nodeNames, group: null });
     } catch (error) {
-        console.error('获取高亮节点时出错:', error);
+        console.error('Error getting highlighted nodes:', error);
     }
 }
 
@@ -314,10 +413,15 @@ function isNodeSelected(node) {
 
 // 拖动相关方法
 function startDrag(e) {
-    isDragging.value = true;
+    // 记录拖动起点，用于判断是否真的拖动了
     startX.value = e.pageX - cardsWrapper.value.offsetLeft;
     lastX.value = e.pageX;
     scrollLeft.value = cardsWrapper.value.scrollLeft;
+    
+    // 处于拖动准备状态，但不立即标记为拖动
+    isDragging.value = true;
+    wasRecentlyDragging.value = false;  // 重置状态
+    
     cardsWrapper.value.style.cursor = 'grabbing';
     cardsWrapper.value.style.userSelect = 'none';
     
@@ -325,6 +429,14 @@ function startDrag(e) {
     if (animationFrame.value) {
         cancelAnimationFrame(animationFrame.value);
     }
+    
+    // 清除任何已存在的超时
+    if (dragEndTimeout.value) {
+        clearTimeout(dragEndTimeout.value);
+    }
+    
+    // 重置速度，防止之前的惯性继续影响
+    velocity.value = 0;
 }
 
 function onDrag(e) {
@@ -332,43 +444,103 @@ function onDrag(e) {
     e.preventDefault();
     
     const x = e.pageX;
-    velocity.value = x - lastX.value;
+    const diffX = x - lastX.value;
+    
+    // 计算速度但限制最大值，防止过大的速度引起过度滚动
+    velocity.value = Math.min(Math.max(diffX, -15), 15);
     lastX.value = x;
     
-    const walk = (x - startX.value);
-    cardsWrapper.value.scrollLeft = scrollLeft.value - walk;
+    // 只有当拖动距离超过阈值时才真正进行拖动
+    const dragDistance = Math.abs(x - startX.value);
+    if (dragDistance > 5) {
+        wasRecentlyDragging.value = true;
+        
+        // 根据拖动距离计算滚动位置
+        const walk = (x - startX.value);
+        cardsWrapper.value.scrollLeft = scrollLeft.value - walk;
+        
+        // 更新阴影状态
+        updateScrollShadows();
+    }
 }
 
 function endDrag(e) {
     if (!isDragging.value) return;
+    
+    // 检查是否真的拖动了足够的距离
+    const dragDistance = Math.abs(e.pageX - startX.value);
+    
+    // 如果几乎没有移动，不执行任何滚动或标记为拖动
+    if (dragDistance <= 3) {
+        isDragging.value = false;
+        wasRecentlyDragging.value = false;
+        cardsWrapper.value.style.cursor = 'grab';
+        cardsWrapper.value.style.userSelect = '';
+        velocity.value = 0; // 重要：重置速度
+        return;
+    }
+    
     isDragging.value = false;
     cardsWrapper.value.style.cursor = 'grab';
     cardsWrapper.value.style.userSelect = '';
 
-    // 添加惯性滚动
-    if (Math.abs(velocity.value) > 1) {
+    // 添加惯性滚动，但只有当速度足够大且确实拖动了时
+    if (Math.abs(velocity.value) > 3 && wasRecentlyDragging.value) {
         const startTime = Date.now();
         const startVelocity = velocity.value;
-        const startScroll = cardsWrapper.value.scrollLeft;
         
         function momentumScroll() {
             const elapsed = Date.now() - startTime;
             const remaining = Math.max(0, Math.abs(startVelocity) * 500 - elapsed); // 500ms的减速时间
             const speed = (remaining / (Math.abs(startVelocity) * 500)) * startVelocity;
             
-            if (remaining > 0) {
+            if (remaining > 0 && Math.abs(speed) > 0.1) {
                 cardsWrapper.value.scrollLeft -= speed;
+                updateScrollShadows(); // 更新阴影状态
                 animationFrame.value = requestAnimationFrame(momentumScroll);
+                wasRecentlyDragging.value = true;  // 惯性滚动期间保持状态
+            } else {
+                // 惯性滚动结束后，延迟重置拖动状态
+                dragEndTimeout.value = setTimeout(() => {
+                    wasRecentlyDragging.value = false;
+                }, 300);  // 延迟300ms重置状态
             }
         }
         
         momentumScroll();
+    } else {
+        // 即使没有惯性滚动，如果确实拖动了，保持短暂延迟后重置
+        if (wasRecentlyDragging.value) {
+            dragEndTimeout.value = setTimeout(() => {
+                wasRecentlyDragging.value = false;
+            }, 300);
+        } else {
+            // 立即重置状态，允许立即点击
+            wasRecentlyDragging.value = false;
+        }
     }
+    
+    // 更新阴影状态
+    updateScrollShadows();
+    
+    // 无论如何都重置速度
+    velocity.value = 0;
 }
 
 // 修改渲染图形的方法
-function renderGraph(container, graphData) {
+function renderGraph(container, graphData, useCache = false) {
     if (!container || !graphData) return;
+    
+    // 获取节点ID
+    const nodeId = container.closest('.card').getAttribute('data-node-id');
+    const cacheKey = `render_${nodeId}`;
+    
+    // 如果启用缓存且缓存中存在，直接使用缓存
+    if (useCache && thumbnailCache.has(cacheKey)) {
+        const cachedContent = thumbnailCache.get(cacheKey);
+        d3.select(container).html(cachedContent);
+        return;
+    }
 
     // 清除所有现有的SVG
     const containerElement = d3.select(container);
@@ -414,21 +586,23 @@ function renderGraph(container, graphData) {
         .style('align-items', 'center')
         .style('justify-content', 'center');
 
-    requestIdleCallback(() => {
-        const thumbnailContent = createThumbnail(nodeData);
-        div.html(thumbnailContent);
+    // 使用requestAnimationFrame而不是requestIdleCallback，确保优先渲染
+    const thumbnailContent = createThumbnail(nodeData);
+    div.html(thumbnailContent);
 
-        const thumbnailSvg = div.select('svg').node();
-        if (thumbnailSvg) {
-            const bbox = thumbnailSvg.getBBox();
-            const padding = 20;
-            thumbnailSvg.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
-            thumbnailSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-            
-            // 在SVG渲染完成后更新统计信息
-            elementStats.value.set(nodeData.id, getHighlightedElementsStats(nodeData));
-        }
-    });
+    const thumbnailSvg = div.select('svg').node();
+    if (thumbnailSvg) {
+        const bbox = thumbnailSvg.getBBox();
+        const padding = 20;
+        thumbnailSvg.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
+        thumbnailSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        
+        // 在SVG渲染完成后更新统计信息
+        elementStats.value.set(nodeData.id, getHighlightedElementsStats(nodeData));
+    }
+    
+    // 缓存渲染结果
+    thumbnailCache.set(cacheKey, containerElement.html());
 }
 
 // 添加数据源URL
@@ -436,33 +610,8 @@ const MAPPING_DATA_URL = "http://127.0.0.1:5000/average_equivalent_mapping";
 const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag";
 
 // 特征名称映射
-// const featureNameMap = {
-//     'tag_name': '元素名称',
-//     'tag': '标签类型',
-//     'opacity': '不透明度',
-//     'fill_h_cos': '填充色相',
-//     'fill_h_sin': '填充色相',
-//     'fill_s_n': '填充饱和度',
-//     'fill_l_n': '填充亮度',
-//     'stroke_h_cos': '描边色相',
-//     'stroke_h_sin': '描边色相',
-//     'stroke_s_n': '描边饱和度',
-//     'stroke_l_n': '描边亮度',
-//     'stroke_width': '描边宽度',
-//     'bbox_left_n': '左边界位置',
-//     'bbox_right_n': '右边界位置',
-//     'bbox_top_n': '上边界位置',
-//     'bbox_bottom_n': '下边界位置',
-//     'bbox_mds_1': '位置mds特征1',
-//     'bbox_mds_2': '位置mds特征2',
-//     'bbox_center_x_n': '中心X坐标',
-//     'bbox_center_y_n': '中心Y坐标',
-//     'bbox_width_n': '宽度',
-//     'bbox_height_n': '高度',
-//     'bbox_fill_area': '元素面积'
-// };
 const featureNameMap = {
-    'tag': 'Label Type',
+    'tag': 'color',
     'opacity': 'opacity',
     'fill_h_cos': 'fill color',
     'fill_h_sin': 'fill color',
@@ -494,20 +643,22 @@ const equivalentWeightsData = ref(null);
 const generateAnalysis = (nodeData) => {
     if (!analysisData.value || !equivalentWeightsData.value) return '';
 
-    const currentPage = getCurrentPage(nodeData);
     let nodesToAnalyze = [];
     
-    if (currentPage === 1) {
-        // 第一页只分析核心节点
-        nodesToAnalyze = [...nodeData.originalNodes];
-    } else {
-        // 其他页面分析对应的外延节点
-        const extension = nodeData.extensions[currentPage - 2];
-        if (extension) {
-            nodesToAnalyze = [...extension.originalNodes];
+    if (nodeData.type === 'extension') {
+        // 对于外延节点，同时分析核心节点的内容
+        const coreIndex = parseInt(nodeData.clusterId);
+        const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
+        if (coreNode) {
+            nodesToAnalyze.push(...coreNode.originalNodes);
         }
+        // 再添加外延节点内容
+        nodesToAnalyze.push(...nodeData.originalNodes);
+    } else {
+        // 核心节点只分析自身
+        nodesToAnalyze = [...nodeData.originalNodes];
     }
-
+    
     // 获取这些元素的权重数据
     const nodeWeights = {};
     nodesToAnalyze.forEach(nodeId => {
@@ -576,7 +727,7 @@ const generateAnalysis = (nodeData) => {
             sortedFeatures = sortedFeatures.slice(0, 3);
         }
     }
-    // ${name} ${absWeight}
+    
     return sortedFeatures.map(([name, {weight}]) => {
         const absWeight = Math.abs(weight).toFixed(2);
         const color = weight > 0 ? '#1E88E5' : '#1E88E5';
@@ -599,7 +750,7 @@ const fetchAnalysisData = async () => {
             equivalentWeightsData.value = responseEquivalentWeights.data;
         }
     } catch (error) {
-        console.error('获取分析数据失败:', error);
+        console.error('Failed to fetch analysis data:', error);
     }
 };
 
@@ -610,10 +761,12 @@ const clusterFeatures = ref(null);
 async function loadAndRenderGraph() {
     try {
         loading.value = true;
+        isInitialRender.value = true;
+        
         const [svgResponse, graphResponse, featuresResponse] = await Promise.all([
             fetch('http://127.0.0.1:5000/get_svg'),
             fetch('http://127.0.0.1:5000/static/data/subgraphs/subgraph_dimension_all.json'),
-            fetch('http://127.0.0.1:5000/cluster_features'),  // 添加获取特征数据
+            fetch('http://127.0.0.1:5000/cluster_features'),
             fetchAnalysisData()
         ]);
         
@@ -623,96 +776,139 @@ async function loadAndRenderGraph() {
             featuresResponse.json()
         ]);
         
-        clusterFeatures.value = featuresData;
-        originalSvgContent.value = svgContent;
-        graphData.value = data;
-        
-        // 处理数据，将扩展节点集成到核心节点中
-        const processedData = processGraphData(data);
-        const coreNodes = processedData.nodes.filter(node => !node.id.includes('extension_'));
-        const extensionNodes = processedData.nodes.filter(node => node.id.includes('extension_'));
-        
-        // 将扩展节点添加到对应的核心节点中
-        coreNodes.forEach(coreNode => {
-            const coreIndex = coreNode.id.split('_')[1];
-            const relatedExtensions = extensionNodes.filter(ext => 
-                ext.id.includes(`extension_${coreIndex}_`)
-            );
-            if (relatedExtensions.length > 0) {
-                coreNode.extensions = relatedExtensions;
-            }
-        });
-        
-        nodes.value = coreNodes;
-
-        // 为每个卡片渲染图形
-        nextTick(() => {
-            const containers = document.querySelectorAll('.card-svg-container');
-            containers.forEach((container, index) => {
-                if (nodes.value[index]) {
-                    const nodeData = { nodes: [nodes.value[index]] };
-                    renderGraph(container, nodeData);
-                }
-            });
-
-            // 添加一个延时以确保SVG已经完全渲染
-            setTimeout(() => {
-                const cards = document.querySelectorAll('.card');
-                cards.forEach((card) => {
-                    const nodeId = card.getAttribute('data-node-id');
-                    const node = nodes.value.find(n => n.id === nodeId);
-                    if (node) {
-                        getHighlightedElementsStats(node);
-                    }
-                });
-            }, 100);
-        });
+        // 检查数据是否更新
+        if (originalSvgContent.value !== svgContent || 
+            JSON.stringify(graphData.value) !== JSON.stringify(data) ||
+            JSON.stringify(clusterFeatures.value) !== JSON.stringify(featuresData)) {
+            
+            isDataUpdated.value = true;
+            clusterFeatures.value = featuresData;
+            originalSvgContent.value = svgContent;
+            graphData.value = data;
+            
+            // 清除缓存
+            thumbnailCache.clear();
+            elementStats.value.clear();
+            
+            // 处理数据，将扩展节点集成到核心节点中
+            const processedData = processGraphData(data);
+            nodes.value = processedData.nodes.filter(node => node.type === 'core');
+            
+            // 等待DOM更新后，一次性渲染所有卡片
+            await nextTick();
+            
+            // 统一渲染所有卡片
+            renderAllCards();
+        }
     } catch (error) {
         console.error('Error loading data:', error);
     } finally {
         loading.value = false;
+        // 初始化渲染完成
+        isInitialRender.value = false;
+        isDataUpdated.value = false;
     }
 }
 
+// 新增统一渲染所有卡片的函数
+function renderAllCards() {
+    const containers = document.querySelectorAll('.card-svg-container');
+    if (containers.length === 0) {
+        // 如果DOM还没准备好，等待下一帧再试
+        requestAnimationFrame(renderAllCards);
+        return;
+    }
+    
+    // 先收集所有需要渲染的节点
+    const nodesToRender = [];
+    containers.forEach((container) => {
+        const nodeId = container.closest('.card').getAttribute('data-node-id');
+        const node = flattenedNodes.value.find(n => n.id === nodeId);
+        if (node) {
+            nodesToRender.push({
+                container,
+                node,
+                nodeData: { nodes: [node] }
+            });
+        }
+    });
+    
+    // 批量优化渲染 - 分批处理避免阻塞主线程
+    const batchSize = 5;
+    let currentBatch = 0;
+    
+    function processBatch() {
+        const startIdx = currentBatch * batchSize;
+        const endIdx = Math.min(startIdx + batchSize, nodesToRender.length);
+        
+        for (let i = startIdx; i < endIdx; i++) {
+            const { container, node, nodeData } = nodesToRender[i];
+            renderGraph(container, nodeData);
+            // 同时更新统计信息
+            elementStats.value.set(node.id, getHighlightedElementsStats(node));
+        }
+        
+        currentBatch++;
+        
+        if (currentBatch * batchSize < nodesToRender.length) {
+            setTimeout(processBatch, 0); // 使用setTimeout允许UI更新
+        }
+    }
+    
+    processBatch();
+}
+
 onMounted(async () => {
-    await nextTick();
     await loadAndRenderGraph();
-    // 初始化统计信息
+    
+    // 初始化阴影状态
     nextTick(() => {
-        nodes.value.forEach(node => {
-            elementStats.value.set(node.id, getHighlightedElementsStats(node));
-        });
+        updateScrollShadows();
     });
+    
+    // 添加窗口调整大小时更新阴影的监听器
+    window.addEventListener('resize', updateScrollShadows);
 });
 
-// 监听选中节点的变化
-watch(selectedNodeIds, () => {
-    nextTick(() => {
-        const containers = document.querySelectorAll('.card-svg-container');
-        containers.forEach((container, index) => {
-            if (nodes.value[index]) {
-                const nodeData = { nodes: [nodes.value[index]] };
-                renderGraph(container, nodeData);
-            }
-        });
-    });
+// 在组件卸载时移除事件监听器
+onUnmounted(() => {
+    window.removeEventListener('resize', updateScrollShadows);
 });
 
-// 监听页面变化
-watch(currentPages, () => {
-    nextTick(() => {
-        nodes.value.forEach(node => {
-            elementStats.value.set(node.id, getHighlightedElementsStats(node));
+// 监听选中节点的变化 - 优化为仅在真正改变选中状态时才重绘
+watch(selectedNodeIds, (newVal, oldVal) => {
+    // 只有当选择真正变化且不是初始渲染时才更新
+    const hasChanged = newVal.length !== oldVal.length || 
+                        newVal.some(id => !oldVal.includes(id)) ||
+                        oldVal.some(id => !newVal.includes(id));
+                        
+    if (hasChanged && !isInitialRender.value) {
+        // 使用防抖函数避免短时间内多次渲染
+        if (animationFrame.value) {
+            cancelAnimationFrame(animationFrame.value);
+        }
+        
+        animationFrame.value = requestAnimationFrame(() => {
+            const containers = document.querySelectorAll('.card-svg-container');
+            containers.forEach((container) => {
+                const nodeId = container.closest('.card').getAttribute('data-node-id');
+                const node = flattenedNodes.value.find(n => n.id === nodeId);
+                if (node) {
+                    const nodeData = { nodes: [node] };
+                    // 使用thumbnail缓存，减少重复渲染
+                    renderGraph(container, nodeData, true);
+                }
+            });
         });
-    });
-}, { deep: true });
+    }
+});
 
 function getHighlightedElementsStats(nodeData) {
     try {
         // 获取当前卡片中的SVG元素
         const cardContainer = document.querySelector(`[data-node-id="${nodeData.id}"] .card-svg-container svg`);
         if (!cardContainer) {
-            console.error('找不到卡片SVG容器');
+            console.error('Card SVG container not found');
             return {};
         }
 
@@ -730,7 +926,7 @@ function getHighlightedElementsStats(nodeData) {
         
         return Object.fromEntries(stats);
     } catch (error) {
-        console.error('统计高亮元素时出错:', error);
+        console.error('Error counting highlighted elements:', error);
         return {};
     }
 }
@@ -740,17 +936,20 @@ const calculateAttentionProbability = (nodeData) => {
     if (!clusterFeatures.value) return 0;
 
     try {
-        // 1. 获取当前需要分析的节点
-        const currentPage = getCurrentPage(nodeData);
         let nodesToAnalyze = [];
         
-        if (currentPage === 1) {
-            nodesToAnalyze = [...nodeData.originalNodes];
-        } else {
-            const extension = nodeData.extensions[currentPage - 2];
-            if (extension) {
-                nodesToAnalyze = [...extension.originalNodes];
+        if (nodeData.type === 'extension') {
+            // 对于外延节点，同时分析核心节点的内容
+            const coreIndex = parseInt(nodeData.clusterId);
+            const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
+            if (coreNode) {
+                nodesToAnalyze.push(...coreNode.originalNodes);
             }
+            // 再添加外延节点内容
+            nodesToAnalyze.push(...nodeData.originalNodes);
+        } else {
+            // 核心节点只分析自身
+            nodesToAnalyze = [...nodeData.originalNodes];
         }
 
         if (nodesToAnalyze.length === 0) return 0.1;
@@ -823,50 +1022,43 @@ const calculateAttentionProbability = (nodeData) => {
         const nodeCountFactor = Math.min(highlightedFeatures.length / 5, 1); // 改为5个节点达到最大影响
         const finalScore = normalizedScore * (0.7 + nodeCountFactor * 0.3); // 增加节点数量的影响权重
 
-        // 添加调试信息
-        console.log('Node Data:', {
-            euclideanDistance,
-            avgIntraDistance,
-            score,
-            normalizedScore,
-            nodeCountFactor,
-            finalScore
-        });
-
         return Math.min(Math.max(finalScore, 0.1), 0.9);
 
     } catch (error) {
-        console.error('计算注意力概率时出错:', error);
-        console.error('错误详情:', error.stack);
+        console.error('Error calculating attention probability:', error);
+        console.error('Error details:', error.stack);
         return 0.1;
     }
 };
-
-// 添加计算排序后节点的计算属性
-const sortedNodes = computed(() => {
-    if (!nodes.value) return [];
-    return [...nodes.value].sort((a, b) => 
-        calculateAttentionProbability(b) - calculateAttentionProbability(a)
-    );
-});
 
 // 添加计算属性来获取统计信息
 const getStats = (node) => {
     return elementStats.value.get(node.id) || {};
 };
+
+// 添加更新滚动阴影的方法
+function updateScrollShadows() {
+    if (!cardsWrapper.value) return;
+    
+    const container = cardsWrapper.value;
+    const scrollLeft = container.scrollLeft;
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    
+    // 当滚动位置大于0时显示左侧阴影
+    showLeftShadow.value = scrollLeft > 10;
+    
+    // 当未滚动到最右侧时显示右侧阴影
+    showRightShadow.value = scrollLeft < maxScrollLeft - 10;
+}
 </script>
 
 <style scoped>
 .core-graph-container {
     width: 100%;
-    height: calc(100% - 40px);  /* 减去标题的高度 */
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(151, 151, 151, 0.12), 0 1px 2px rgba(119, 119, 119, 0.08);
+    height: calc(100% - 10px);  /* 减去标题的高度 */
     overflow: hidden;
     border: none;
     position: relative;
-    margin-top: 0;  /* 移除顶部边距 */
 }
 
 .cards-container {
@@ -874,6 +1066,32 @@ const getStats = (node) => {
     height: 100%;
     position: relative;
     overflow: hidden;
+}
+
+/* 添加滚动阴影指示器样式 */
+.scroll-shadow {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 200px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.scroll-shadow-left {
+    left: 0;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.scroll-shadow-right {
+    right: 0;
+    background: linear-gradient(to left, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.shadow-visible {
+    opacity: 1;
 }
 
 .cards-wrapper {
@@ -914,13 +1132,31 @@ const getStats = (node) => {
     box-shadow: 0 4px 6px rgba(60, 64, 67, 0.15);
 }
 
-.card.has-extension {
+.card-core {
+    border-color: #1a73e8;
+}
+
+.card-core:hover {
+    border-color: #1967d2;
+    box-shadow: 0 4px 6px rgba(60, 64, 67, 0.15);
+}
+
+.card-extension {
     border-color: #34A853;
 }
 
-.card.has-extension:hover {
+.card-extension:hover {
     border-color: #2E7D32;
     box-shadow: 0 4px 6px rgba(46, 125, 50, 0.15);
+}
+
+.card.has-extension {
+    border-color: #1a73e8;
+}
+
+.card.has-extension:hover {
+    border-color: #1967d2;
+    box-shadow: 0 4px 6px rgba(60, 64, 67, 0.15);
 }
 
 .extension-indicator {
@@ -953,7 +1189,7 @@ const getStats = (node) => {
     text-align: center;
 }
 
-.page-controls {
+.navigation-controls {
     position: absolute;
     top: 16px;
     right: 16px;
@@ -970,12 +1206,12 @@ const getStats = (node) => {
     transition: all 0.2s ease;
 }
 
-.page-controls:hover {
+.navigation-controls:hover {
     background: rgba(255, 255, 255, 0.98);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-.page-info {
+.navigation-info {
     font-size: 13px;
     font-weight: 500;
     color: #3c4043;
@@ -983,12 +1219,13 @@ const getStats = (node) => {
     user-select: none;
 }
 
-.page-buttons {
+.navigation-buttons {
     display: flex;
+    align-items: center;
     gap: 2px;
 }
 
-.page-buttons :deep(.v-btn) {
+.navigation-buttons :deep(.v-btn) {
     background: transparent !important;
     color: #3c4043 !important;
     min-width: 32px !important;
@@ -998,20 +1235,20 @@ const getStats = (node) => {
     border-radius: 16px !important;
 }
 
-.page-buttons :deep(.v-btn:hover) {
+.navigation-buttons :deep(.v-btn:hover) {
     background: rgba(60, 64, 67, 0.08) !important;
 }
 
-.page-buttons :deep(.v-btn:active) {
+.navigation-buttons :deep(.v-btn:active) {
     background: rgba(60, 64, 67, 0.12) !important;
 }
 
-.page-buttons :deep(.v-btn--disabled) {
+.navigation-buttons :deep(.v-btn--disabled) {
     color: rgba(60, 64, 67, 0.38) !important;
     background: transparent !important;
 }
 
-.page-buttons :deep(.v-btn__content) {
+.navigation-buttons :deep(.v-btn__content) {
     opacity: 0.87;
 }
 
@@ -1140,17 +1377,10 @@ const getStats = (node) => {
     white-space: nowrap;
 }
 
-.eye-icon {
-    opacity: 0.9;
-}
-
-.title {
-  margin: 12px 16px;
-  font-size: 16px;
-  font-weight: bold;
-  color: #1d1d1f;
-  letter-spacing: -0.01em;
-  opacity: 0.8;
+.card-extension .attention-probability {
+    color: #34A853;
+    background: rgba(52, 168, 83, 0.08);
+    border: 1px solid rgba(52, 168, 83, 0.2);
 }
 </style>
 

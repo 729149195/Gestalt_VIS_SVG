@@ -2,35 +2,96 @@
     <div class="statistics-container">
         <span class="title">Type</span>
         <div ref="chartContainer" class="chart-container"></div>
+        <div v-if="!hasData" class="no-data-message">No Elements</div>
     </div>
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, watch, nextTick } from 'vue';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
 const store = useStore();
 
 const eleURL = "http://127.0.0.1:5000/ele_num_data"
 const chartContainer = ref(null);
+const hasData = ref(false);
+const rawJsonData = ref(null);
+const isInitialized = ref(false);
 
 onMounted(async () => {
-    if (!chartContainer.value) return;
+    await nextTick();
+    isInitialized.value = true;
+    await fetchData();
+});
+
+const fetchData = async () => {
+    if (!isInitialized.value) {
+        return;
+    }
+    
+    if (!chartContainer.value) {
+        return;
+    }
+    
     try {
         const response = await fetch(eleURL);
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
+        rawJsonData.value = data;
+
+        const visibleData = data.filter(d => d.visible === true);
+    
+        if (visibleData.length === 0) {
+            hasData.value = false;
+            return;
+        }
+        
+        hasData.value = true;
         store.commit('GET_ELE_NUM_DATA', data);
-        render(data)
+        
+        setTimeout(() => {
+            render(data);
+        }, 0);
     } catch (error) {
-        console.error('There has been a problem with your fetch operation:', error);
+        console.error('获取元素类型数据时出错:', error);
+        hasData.value = false;
+    }
+};
+
+// 监听组件容器变化
+watch([() => chartContainer.value, () => isInitialized.value], ([newContainer, newInitialized]) => {
+    if (newContainer && newInitialized && rawJsonData.value) {
+        
+        // 检查是否有可见元素
+        const visibleData = rawJsonData.value.filter(d => d.visible === true);
+        if (visibleData.length === 0) {
+            hasData.value = false;
+            return;
+        }
+        
+        hasData.value = true;
+        // 清除之前的图表内容
+        if (chartContainer.value) {
+            chartContainer.value.innerHTML = '';
+        }
+        render(rawJsonData.value);
     }
 });
 
 const render = (data) => {
     if (!chartContainer.value) return;
+    
+    // 过滤数据，只保留可见元素
+    const visibleData = data.filter(d => d.visible === true);
+    
+    // 如果没有可见元素，显示提示信息
+    if (visibleData.length === 0) {
+        const container = chartContainer.value;
+        container.innerHTML = '<div class="no-data-message">没有可见元素</div>';
+        return;
+    }
     
     const container = chartContainer.value;
     const width = container.clientWidth;
@@ -41,12 +102,12 @@ const render = (data) => {
     const marginLeft = width * 0.15;
 
     const x = d3.scaleBand()
-        .domain(data.map(d => d.tag))
+        .domain(visibleData.map(d => d.tag))
         .range([marginLeft, width - marginRight])
         .padding(0.1);
 
     const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.num)]).nice()
+        .domain([0, d3.max(visibleData, d => d.num)]).nice()
         .range([height - marginBottom, marginTop]);
 
     const svg = d3.select(chartContainer.value)
@@ -106,10 +167,10 @@ const render = (data) => {
 
     svg.append('g')
         .selectAll('path')
-        .data(data)
+        .data(visibleData)
         .join('path')
         .attr('class', 'bars')
-        .attr('fill', d => d.visible ? 'steelblue' : '#999')
+        .attr('fill', 'steelblue')
         .attr('d', d => roundedRectPath(d, x, y));
 
     // 添加 x 轴图例
@@ -154,13 +215,27 @@ const roundedRectPath = (d, x, y) => {
     height: 100%;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .chart-container {
     flex: 1;
     width: 100%;
-    min-height: 0;
+    min-height: 180px;
+    display: block;
 }
+
+.no-data-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #999;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 5;
+}
+
 .title {
   top: 12px;
   left: 16px;
@@ -171,6 +246,14 @@ const roundedRectPath = (d, x, y) => {
   padding: 0;
   z-index: 10;
   letter-spacing: -0.01em;
+  opacity: 0.8;
+}
+
+/* 添加条形图样式 */
+.bars {
+  transition: opacity 0.3s;
+}
+.bars:hover {
   opacity: 0.8;
 }
 </style>

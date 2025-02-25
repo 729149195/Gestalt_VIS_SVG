@@ -114,22 +114,22 @@ def process_svg_file(file_path):
             raise ValueError(f"输入文件为空: {file_path}")
 
         # 处理步骤
-        print("开始提取特征...")
-        send_progress_update(10, "正在提取特征...")
+        print("Start extracting features...")
+        send_progress_update(10, "Feature extraction in progress...")
         featureCSV.process_and_save_features(file_path, output_paths['csv'], output_paths['svg_with_ids'])
         
-        print("开始标准化特征...")
-        send_progress_update(25, "正在标准化特征...")
+        print("Starting to standardise features...")
+        send_progress_update(25, "Being standardised features...")
         normalized_features.normalize_features(output_paths['csv'], output_paths['normalized_csv'])
         
-        print("处理CSV到JSON...")
-        send_progress_update(35, "正在处理数据格式...")
+        print("Data format being processed...")
+        send_progress_update(35, "Data format being processed...")
         featureCSV.process_csv_to_json(output_paths['csv'], output_paths['init_json'])
         featureCSV.process_csv_to_json(output_paths['normalized_csv'], output_paths['normalized_init_json'])
         
         # 处理位置和属性信息
-        print("开始处理位置和属性信息...")
-        send_progress_update(45, "正在处理位置和属性信息...")
+        print("Location and property information being processed...")
+        send_progress_update(45, "Location and property information being processed...")
         posandprop.process_position_and_properties(
             output_paths['init_json'],
             file_path,
@@ -137,7 +137,7 @@ def process_svg_file(file_path):
         )
         
         print("计算等价权重...")
-        send_progress_update(60, "正在计算等价权重...")
+        send_progress_update(60, "Equivalent weights being calculated...")
         calculator = EquivalentWeightsCalculator(model_path="static/modules/model_feature_dim_4_batch_64.tar")
         calculator.compute_and_save_equivalent_weights(
             output_paths['normalized_csv'],
@@ -147,7 +147,7 @@ def process_svg_file(file_path):
 
         # 运行聚类
         print("开始运行对比学习模型，输出特征表示...")
-        send_progress_update(75, "正在运行对比学习模型...")
+        send_progress_update(75, "Comparative learning model being run...")
         run_clustering(
             output_paths['normalized_csv'],
             output_paths['community_data'],
@@ -156,7 +156,7 @@ def process_svg_file(file_path):
 
         # 运行子图检测
         print("开始运行子图检测...")
-        send_progress_update(85, "正在进行子图检测...")
+        send_progress_update(85, "Subgraph detection in progress...")
         run_subgraph_detection(
             features_json_path=output_paths['features_data'],
             output_dir=os.path.dirname(output_paths['features_data']),
@@ -167,8 +167,8 @@ def process_svg_file(file_path):
             progress_callback=send_progress_update
         )
 
-        send_progress_update(100, "处理完成")
-        print("处理完成")
+        send_progress_update(100, "Processing completed")
+        print("Processing completed")
         return {
             'success': True,
             'data': {

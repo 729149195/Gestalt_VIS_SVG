@@ -2,17 +2,11 @@
     <v-card class="fill-height mac-style-card">
         <div class="mac-upload-zone">
             <div class="mac-upload-container" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleDrop">
-                <input
-                    type="file"
-                    ref="fileInput"
-                    accept=".svg"
-                    class="hidden-input"
-                    @change="handleFileChange"
-                >
+                <input type="file" ref="fileInput" accept=".svg" class="hidden-input" @change="handleFileChange">
                 <div class="upload-content">
                     <v-icon size="32" class="upload-icon">mdi-cloud-upload-outline</v-icon>
                     <div class="upload-text">
-                        <span class="primary-text">Drag and drop the SVG file here</span>
+                        <span class="primary-text">Drag and drop SVG file here</span>
                         <span class="secondary-text">Or click to select a file</span>
                     </div>
                     <div v-if="file" class="file-info">
@@ -26,14 +20,7 @@
         <!-- 进度条组件 - 移到元素选择列表前面 -->
         <div v-if="analyzing" class="progress-card">
             <div class="progress-label">{{ currentStep }}</div>
-            <v-progress-linear
-                :model-value="progress"
-                color="primary"
-                height="6"
-                rounded
-                :striped="false"
-                bg-color="rgba(85, 192, 0, 0.1)"
-            >
+            <v-progress-linear :model-value="progress" color="primary" height="6" rounded :striped="false" bg-color="rgba(85, 192, 0, 0.1)">
                 <template v-slot:default="{ value }">
                     <div class="progress-value">{{ Math.ceil(value) }}%</div>
                 </template>
@@ -41,44 +28,33 @@
         </div>
 
         <!-- 添加元素类型选择列表 -->
-        <div v-if="visibleElements.length > 0" class="element-selector mac-style-selector">
-            <h3 class="mac-style-title">Select the type of element:</h3>
-            <v-list density="compact" class="mac-style-list">
-                <v-list-item v-for="element in visibleElements" :key="element.id" class="mac-style-list-item">
-                    <v-checkbox 
-                        v-model="selectedElements" 
-                        :label="`${element.tag} (${element.count}个)`"
-                        :value="element.id" 
-                        hide-details
-                        class="mac-style-checkbox"
-                    ></v-checkbox>
-                </v-list-item>
-            </v-list>
-            <v-btn 
-                color="primary" 
-                class="mt-4 mac-style-button" 
-                @click="analyzeSvg" 
-                :disabled="selectedElements.length === 0 || analyzing"
-            >
-                {{ analyzing ? 'analysising...' : 'Simulated perception' }}
-            </v-btn>
-                   <!-- <span style="font-size: 14px; color: #86868b;">
-                Instruction : <br/> 
-                Single elements can be selected directly <br/> 
-                by clicking on them<br/> 
-                Multiple elements can be selected by <br/> 
-            </span> -->
+        <div v-if="visibleElements.length > 0" class="element-selector mac-style-selector" :class="{ 'collapsed': !isListExpanded }">
+            <div class="selector-header" @click="toggleList">
+                <h3 class="mac-style-title">Select elements:</h3>
+                <v-icon class="expand-icon" :class="{ 'rotated': isListExpanded }">
+                    mdi-chevron-down
+                </v-icon>
+            </div>
+            <div class="selector-content" :class="{ 'hidden': !isListExpanded }">
+                <v-list density="compact" class="mac-style-list">
+                    <v-list-item v-for="element in visibleElements" :key="element.id" class="mac-style-list-item">
+                        <v-checkbox v-model="selectedElements" :label="`${element.tag} (${element.count})`" :value="element.id" hide-details class="mac-style-checkbox"></v-checkbox>
+                    </v-list-item>
+                </v-list>
+            </div>
+            <div class="button-container">
+                <v-btn color="primary" class="mac-style-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
+                    {{ analyzing ? 'Simulating...' : 'Simulated perception' }}
+                </v-btn>
+                <v-btn @click="toggleTrackMode" class="track mac-style-track-button" :class="{ 'active-mode': isTracking }" :title="'Multiple Selection Mode'">
+                    <span class="selection-text">Multi</span>
+                </v-btn>
+            </div>
         </div>
 
         <div v-if="file" class="svg-container mac-style-container" ref="svgContainer">
             <div v-html="processedSvgContent"></div>
-            <v-btn 
-                @click="toggleTrackMode" 
-                class="track mac-style-track-button"
-                :class="{ 'active-mode': isTracking }"
-            >
-                <v-icon>mdi-cursor-pointer</v-icon>
-            </v-btn>
+
         </div>
     </v-card>
 </template>
@@ -153,8 +129,6 @@ const clearSelectedNodes = () => {
 // 处理从CodeToSvg组件触发的上传事件
 const handleSvgUploaded = async (event) => {
     const filename = event.detail.filename
-    console.log('接收到SVG上传事件:', filename)
-
     // 清除选中的节点
     clearSelectedNodes();
 
@@ -166,19 +140,19 @@ const handleSvgUploaded = async (event) => {
                 'Accept': 'image/svg+xml'
             }
         })
-        
+
         const svgContent = await response.text()
-        
+
         // 创建File对象
         const blob = new Blob([svgContent], { type: 'image/svg+xml' })
         const fileObj = new File([blob], filename, { type: 'image/svg+xml' })
-        
+
         // 更新file引用，这会触发界面更新
         file.value = fileObj
-        
+
         // 获取并显示SVG内容
         await fetchProcessedSvg()
-        
+
         // 获取可见元素列表
         const elementsResponse = await axios.post('http://127.0.0.1:5000/get_visible_elements', {
             filename: filename
@@ -187,23 +161,21 @@ const handleSvgUploaded = async (event) => {
         if (elementsResponse.data.success) {
             visibleElements.value = elementsResponse.data.elements
             selectedElements.value = elementsResponse.data.elements.map(el => el.id)
-            
+
             // 确保DOM更新后再设置交互
             await nextTick()
             setupSvgInteractions()
             updateNodeOpacity()
         }
     } catch (error) {
-        console.error('处理上传事件时出错:', error)
+        console.error('Error handling upload event:', error)
     }
 }
 
 const uploadFile = () => {
     if (!file.value) return
-
-    console.log('开始上传文件:', file.value.name)
     const formData = new FormData()
-    
+
     // 创建新的File对象，添加uploaded_前缀
     const newFile = new File([file.value], `uploaded_${file.value.name}`, { type: file.value.type })
     formData.append('file', newFile)
@@ -218,7 +190,6 @@ const uploadFile = () => {
         },
     })
         .then(response => {
-            console.log('文件上传成功:', response.data)
             if (response.data.success) {
                 // 触发事件通知CodeToSvg组件
                 window.dispatchEvent(new CustomEvent('svg-content-updated', {
@@ -238,12 +209,12 @@ const uploadFile = () => {
             if (response.data.success) {
                 visibleElements.value = response.data.elements;
                 selectedElements.value = response.data.elements.map(el => el.id);
-                
+
                 // 确保DOM更新后再设置交互
                 await nextTick();
                 setupSvgInteractions();
                 updateNodeOpacity();
-                
+
                 // 不再在这里触发file-uploaded事件
                 // 而是等待用户点击分析按钮后触发
             }
@@ -264,16 +235,14 @@ const analyzeSvg = () => {
     // 重置进度状态
     analyzing.value = true;
     progress.value = 0;
-    currentStep.value = '准备分析...';
+    currentStep.value = 'Prepare to percept...';
 
     // 确保 selectedNodeIds 是数组格式
     const nodeIds = Array.isArray(selectedNodeIds.value) ? selectedNodeIds.value : [];
-    
-    console.log('选中的节点ID:', nodeIds);
 
     // 创建 EventSource 连接
     const eventSource = new EventSource('http://127.0.0.1:5000/progress');
-    
+
     // 监听进度更新
     eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -293,16 +262,14 @@ const analyzeSvg = () => {
     })
         .then(response => {
             if (response.data.success) {
-                console.log('分析成功，开始获取处理后的SVG');
                 return fetchProcessedSvg();
             } else {
                 throw new Error(response.data.error || '分析失败');
             }
         })
         .then(() => {
-            console.log('SVG更新完成');
             window.dispatchEvent(new CustomEvent('svg-content-updated', {
-                detail: { 
+                detail: {
                     filename: file.value.name,
                     type: 'analysis'
                 }
@@ -319,11 +286,9 @@ const analyzeSvg = () => {
 }
 
 const fetchProcessedSvg = () => {
-    console.log('开始获取SVG内容')
-    
     // 清除选中的节点
     clearSelectedNodes();
-    
+
     return axios.get('http://127.0.0.1:5000/get_svg', {
         responseType: 'text',
         headers: {
@@ -331,7 +296,6 @@ const fetchProcessedSvg = () => {
         }
     })
         .then(svgResponse => {
-            console.log('获取到SVG响应')
             let svgContent = svgResponse.data;
 
             // 确保SVG内容是有效的
@@ -370,10 +334,8 @@ const fetchProcessedSvg = () => {
             }
 
             processedSvgContent.value = svgElement.outerHTML;
-            console.log('SVG内容已更新');
 
             return nextTick(() => {
-                console.log('设置SVG交互');
                 setupSvgInteractions();
                 addZoomEffectToSvg();
             });
@@ -412,7 +374,7 @@ const addZoomEffectToSvg = () => {
             });
 
         svg.call(zoom);
-        
+
         // 设置初始缩放为0.8（80%的原始大小）并向右平移10%
         const width = svg.node().getBoundingClientRect().width;
         const translateX = width * 0.05; // 向右平移10%
@@ -475,8 +437,8 @@ const enableTrackMode = () => {
             const svgPoint = point.matrixTransform(svg.getScreenCTM().inverse());
 
             const node = document.elementFromPoint(event.clientX, event.clientY);
-            if (node && node.id && !clickedElements.has(node) && 
-                node.tagName && node.tagName.toLowerCase() !== 'svg' && 
+            if (node && node.id && !clickedElements.has(node) &&
+                node.tagName && node.tagName.toLowerCase() !== 'svg' &&
                 node.tagName.toLowerCase() !== 'g') {
                 clickedElements.add(node);
                 node.dispatchEvent(new Event('click', { bubbles: true }));
@@ -519,7 +481,7 @@ const setupSvgInteractions = () => {
 
     // 保存新的事件处理器引用
     svgContainer._clickHandler = handleSvgClick;
-    
+
     // 添加新的事件监听器
     svgContainer.addEventListener('click', svgContainer._clickHandler);
 
@@ -528,8 +490,6 @@ const setupSvgInteractions = () => {
 
     // 添加缩放效果
     addZoomEffectToSvg();
-
-    console.log('SVG交互设置完成');
 };
 
 // 更新节点透明度
@@ -570,7 +530,7 @@ const updateNodeOpacity = () => {
 const handleSvgClick = (event) => {
     // 检查点击的是否是 SVG 容器本身或者 zoom-wrapper
     const target = event.target;
-    if (target.tagName.toLowerCase() === 'svg' || 
+    if (target.tagName.toLowerCase() === 'svg' ||
         (target.tagName.toLowerCase() === 'g' && target.classList.contains('zoom-wrapper'))) {
         // 如果点击的是空白区域，清空所有选中的节点
         store.dispatch('clearSelectedNodes');
@@ -580,8 +540,6 @@ const handleSvgClick = (event) => {
     // 如果点击的是具体的 SVG 元素，则执行原有的选中逻辑
     const nodeId = target.id;
     if (!nodeId) return;
-
-    // console.log('点击节点:', nodeId);
 
     if (selectedNodeIds.value.includes(nodeId)) {
         store.commit('REMOVE_SELECTED_NODE', nodeId);
@@ -607,6 +565,26 @@ watch(selectedElements, () => {
     nextTick(() => {
         updateNodeOpacity();
     });
+});
+
+const isListExpanded = ref(false);
+
+const toggleList = () => {
+    isListExpanded.value = !isListExpanded.value;
+};
+
+// 监听文件变化，当有新文件时自动展开列表
+watch(() => file.value, (newFile) => {
+    if (newFile) {
+        isListExpanded.value = true;
+    }
+});
+
+// 监听分析状态，当开始分析时自动收起列表
+watch(() => analyzing.value, (newValue) => {
+    if (newValue) {
+        isListExpanded.value = false;
+    }
 });
 
 </script>
@@ -655,31 +633,44 @@ watch(selectedElements, () => {
     border: 1px solid rgba(200, 200, 200, 0.3);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    max-width: 300px;
+    max-width: 400px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mac-style-selector.collapsed {
+    max-height: 120px;
+}
+
+.selector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.expand-icon {
+    transition: transform 0.3s ease;
+    opacity: 0.6;
+}
+
+.expand-icon.rotated {
+    transform: rotate(-180deg);
+}
+
+.selector-content {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
     max-height: 200px;
     overflow-y: auto;
-    /* 添加自定义滚动条样式 */
-    scrollbar-width: thin;
-    scrollbar-color: rgba(85, 192, 0, 0.5) rgba(0, 0, 0, 0.1);
+    margin: 12px 0;
 }
 
-/* 添加 Webkit 浏览器的滚动条样式 */
-.mac-style-selector::-webkit-scrollbar {
-    width: 6px;
-}
-
-.mac-style-selector::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 3px;
-}
-
-.mac-style-selector::-webkit-scrollbar-thumb {
-    background: rgba(85, 192, 0, 0.5);
-    border-radius: 3px;
-}
-
-.mac-style-selector::-webkit-scrollbar-thumb:hover {
-    background: rgba(85, 192, 0, 0.7);
+.selector-content.hidden {
+    opacity: 0;
+    max-height: 0;
+    margin: 0;
+    overflow: hidden;
 }
 
 .mac-style-title {
@@ -718,7 +709,7 @@ watch(selectedElements, () => {
     transition: all 0.3s ease;
     text-transform: none;
     height: 36px;
-    width: 100%;
+    flex: 1;
 }
 
 .mac-style-button:hover {
@@ -743,7 +734,7 @@ watch(selectedElements, () => {
     border-radius: 12px;
 }
 
-.mac-style-container > div {
+.mac-style-container>div {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -753,14 +744,22 @@ watch(selectedElements, () => {
 }
 
 .mac-style-track-button {
-    position: absolute;
-    top: 16px;
-    right: 16px;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.9) !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(200, 200, 200, 0.3);
     transition: all 0.3s ease;
+    height: 36px;
+    padding: 0 10px;
+    min-width: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.selection-text {
+    font-size: 13px;
 }
 
 .mac-style-track-button:hover {
@@ -784,7 +783,8 @@ watch(selectedElements, () => {
     left: 16px;
     bottom: 16px;
     z-index: 90;
-    max-height: calc(100vh - 280px);  /* 调整最大高度，留出进度条的空间 */
+    max-height: calc(100vh - 280px);
+    /* 调整最大高度，留出进度条的空间 */
     overflow-y: auto;
 }
 
@@ -845,7 +845,7 @@ watch(selectedElements, () => {
     color: #55C000;
     opacity: 0.8;
     transition: all 0.3s ease;
-    font-size: 20px !important;
+    font-size: 30px !important;
 }
 
 .upload-text {
@@ -856,13 +856,13 @@ watch(selectedElements, () => {
 }
 
 .primary-text {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 500;
     color: #1d1d1f;
 }
 
 .secondary-text {
-    font-size: 11px;
+    font-size: 14px;
     color: #86868b;
 }
 
@@ -889,7 +889,8 @@ watch(selectedElements, () => {
 
 .progress-card {
     position: absolute;
-    top: 90px;  /* 调整位置，确保在上传区域下方 */
+    top: 90px;
+    /* 调整位置，确保在上传区域下方 */
     left: 16px;
     right: 16px;
     z-index: 100;
@@ -938,5 +939,12 @@ watch(selectedElements, () => {
     background: linear-gradient(90deg, #55C000, #4CAF00);
     box-shadow: 0 1px 3px rgba(85, 192, 0, 0.2);
     transition: all 0.3s ease;
+}
+
+.button-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 16px;
 }
 </style>

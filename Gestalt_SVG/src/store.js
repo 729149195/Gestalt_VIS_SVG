@@ -32,7 +32,6 @@ export default createStore({
       // 更新选中的节点 ID 列表和组信息
       state.selectedNodes.nodeIds = payload.nodeIds;
       state.selectedNodes.group = payload.group || null;
-      // console.log(state.selectedNodes.nodeIds)
     },
     SET_ALL_VISIBLE_NODES(state, nodeIds) {
       // 设置所有可见的节点 ID 列表
