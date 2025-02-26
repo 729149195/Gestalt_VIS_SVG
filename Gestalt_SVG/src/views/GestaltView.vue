@@ -18,9 +18,7 @@
                     <div class="maxtistic">
                         <SubgroupVisualization v-if="file" :key="componentKey2" class="subgroup-visualization"/>
                         <analysisWords title="Feature dimension mapping analysis" :update-key="componentKey2" class="analysis-words"/>
-
                         <StatisticsContainer :component-key="componentKey4" title="Analysis and Suggestions" class="main-card" />
-
                     </div>
                 </div>
             </div>
@@ -241,7 +239,7 @@ onMounted(async () => {
     border: 1px solid rgba(200, 200, 200, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    height: 45%;
+    height: 40%;
 }
 
 .position-card {

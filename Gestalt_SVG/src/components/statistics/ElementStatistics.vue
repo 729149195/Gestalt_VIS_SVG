@@ -17,6 +17,37 @@ const chartContainer = ref(null);
 const hasData = ref(false);
 const rawJsonData = ref(null);
 const isInitialized = ref(false);
+const svgRef = ref(null);
+
+// 计算选中元素的类型比例
+const calculateSelectedRatio = (tag, selectedNodes) => {
+    if (!selectedNodes || selectedNodes.length === 0) return 0;
+    
+    // 从 selectedNodes 中提取元素类型和ID
+    const selectedElements = selectedNodes.map(nodeId => {
+        // 通常 nodeId 格式为 "svg/type_number" 或 "type_number"
+        const parts = nodeId.split('/');
+        const lastPart = parts[parts.length - 1];
+        // 返回类型和编号
+        const [type, id] = lastPart.split('_');
+        return { type, id };
+    });
+    
+    // 找出该类型的所有选中元素
+    const selectedOfThisType = selectedElements.filter(el => el.type === tag);
+    
+    // 获取该类型的总数量 (从 rawJsonData 中)
+    const typeData = rawJsonData.value.find(d => d.tag === tag);
+    if (!typeData) return 0;
+    
+    const totalOfThisType = typeData.num;
+    
+    // 如果没有选中该类型，返回 0
+    if (selectedOfThisType.length === 0) return 0;
+    
+    // 计算选中比例 (选中的该类型元素 / 该类型的总元素)
+    return selectedOfThisType.length / totalOfThisType;
+};
 
 onMounted(async () => {
     await nextTick();
@@ -80,6 +111,38 @@ watch([() => chartContainer.value, () => isInitialized.value], ([newContainer, n
     }
 });
 
+// 监听选中节点变化
+watch(
+    () => store.state.selectedNodes.nodeIds,
+    (newSelectedNodes) => {
+        if (!svgRef.value || !rawJsonData.value) return;
+        updateSelection(newSelectedNodes || []);
+    },
+    { deep: true, immediate: true }
+);
+
+// 更新选中状态的函数
+const updateSelection = (selectedNodes) => {
+    if (!selectedNodes || !svgRef.value) return;
+    
+    const visibleData = rawJsonData.value.filter(d => d.visible === true);
+    
+    visibleData.forEach(d => {
+        const ratio = calculateSelectedRatio(d.tag, selectedNodes);
+        
+        // 更新对应标签的背景条和高亮条
+        const barGroup = svgRef.value.select(`.bar-group-${d.tag}`);
+        if (!barGroup.empty()) {
+            // 更新高亮条的高度和位置
+            barGroup.select('.highlight-bar')
+                .transition()
+                .duration(300)
+                .attr('height', rect => rect.height * ratio)
+                .attr('y', rect => rect.y + rect.height * (1 - ratio));
+        }
+    });
+};
+
 const render = (data) => {
     if (!chartContainer.value) return;
     
@@ -116,6 +179,8 @@ const render = (data) => {
         .attr('width', width)
         .attr('height', height)
         .attr('style', 'max-width: 100%; height: auto;');
+    
+    svgRef.value = svg;
 
     const zoom = (svg) => {
         const extent = [[marginLeft, marginTop], [width - marginRight, height - marginBottom]];
@@ -125,10 +190,9 @@ const render = (data) => {
             .extent(extent)
             .on('zoom', (event) => {
                 x.range([marginLeft, width - marginRight].map(d => event.transform.applyX(d)));
-                svg.selectAll('.bars')
-                    .attr('d', d => roundedRectPath(d, x, y)); // 更新路径
-                svg.selectAll('.bar-text')
-                    .attr('x', d => x(d.tag) + x.bandwidth() / 2); // 更新文本位置
+                svg.selectAll('.background-bar, .highlight-bar')
+                    .attr('x', d => x(d.tag))
+                    .attr('width', x.bandwidth());
                 svg.selectAll('.x-axis').call(d3.axisBottom(x));
             }));
     };
@@ -165,20 +229,42 @@ const render = (data) => {
                 .style('font-size', '12px');
         });
 
-    svg.append('g')
-        .selectAll('path')
+    // 为每个元素类型创建条形图组
+    const barGroups = svg.selectAll('.bar-group')
         .data(visibleData)
-        .join('path')
-        .attr('class', 'bars')
-        .attr('fill', 'steelblue')
-        .attr('d', d => roundedRectPath(d, x, y));
-
-    // 添加 x 轴图例
-    // svg.append("text")
-    //     .attr("transform", `translate(${width / 2},${height - marginBottom / 10})`)
-    //     .style("text-anchor", "middle")
-    //     .style("font-size", "14px")
-    //     .text("Element Tag");
+        .enter()
+        .append('g')
+        .attr('class', d => `bar-group bar-group-${d.tag}`);
+    
+    // 添加背景灰色条形
+    barGroups.append('rect')
+        .attr('class', 'background-bar')
+        .attr('x', d => x(d.tag))
+        .attr('y', d => y(d.num))
+        .attr('width', x.bandwidth())
+        .attr('height', d => height - marginBottom - y(d.num))
+        .attr('fill', '#E0E0E0')
+        .attr('rx', 2)
+        .attr('ry', 2)
+        .each(function(d) {
+            // 存储矩形的位置和尺寸信息
+            d.x = x(d.tag);
+            d.y = y(d.num);
+            d.width = x.bandwidth();
+            d.height = height - marginBottom - y(d.num);
+        });
+    
+    // 添加前景蓝色条形（初始高度为0）
+    barGroups.append('rect')
+        .attr('class', 'highlight-bar')
+        .attr('x', d => x(d.tag))
+        .attr('y', d => height - marginBottom) // 初始位置在底部
+        .attr('width', x.bandwidth())
+        .attr('height', 0) // 初始高度为0
+        .attr('fill', '#1E90FF')
+        .attr('rx', 2)
+        .attr('ry', 2)
+        .style('opacity', 0.7);
 
     // 添加 y 轴图例
     svg.append("text")
@@ -190,22 +276,10 @@ const render = (data) => {
         .text("Element Number");
 
     zoom(svg);
-};
-
-const roundedRectPath = (d, x, y) => {
-    const x0 = x(d.tag);
-    const y0 = y(d.num);
-    const x1 = x0 + x.bandwidth();
-    const y1 = y(0);
-    const r = Math.min(x.bandwidth(), y(0) - y(d.num)) / 8; // Radius for the rounded corners
-
-    return `M${x0},${y0 + r}
-            Q${x0},${y0} ${x0 + r},${y0}
-            L${x1 - r},${y0}
-            Q${x1},${y0} ${x1},${y0 + r}
-            L${x1},${y1}
-            L${x0},${y1}
-            Z`;
+    
+    // 初始更新选中状态
+    const selectedNodes = store.state.selectedNodes.nodeIds || [];
+    updateSelection(selectedNodes);
 };
 </script>
 
@@ -250,10 +324,10 @@ const roundedRectPath = (d, x, y) => {
 }
 
 /* 添加条形图样式 */
-.bars {
+.background-bar, .highlight-bar {
   transition: opacity 0.3s;
 }
-.bars:hover {
+.background-bar:hover, .highlight-bar:hover {
   opacity: 0.8;
 }
 </style>

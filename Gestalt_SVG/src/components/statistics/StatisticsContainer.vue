@@ -3,12 +3,12 @@
     <span class="title">{{ title }}</span>
     <div v-if="isLoading" class="loading-indicator">
       <div class="loading-spinner"></div>
-      <div class="loading-text">数据加载中...</div>
+      <div class="loading-text">Data loading...</div>
     </div>
     <div v-else class="statistics-cards">
       <template v-for="(component, index) in sortedComponents" :key="index">
         <v-card v-if="component.hasData" class="position-card">
-          <div class="variance-info">方差: {{ component.variance.toFixed(2) }}</div>
+          <div class="variance-info">Diversity  {{ component.variance.toFixed(2) }}</div>
           <component :is="component.component" 
                     :position="component.props?.position" 
                     :title="component.props?.title" 
@@ -21,7 +21,6 @@
 
 <script setup>
 import { ref, onMounted, computed, watch, markRaw } from 'vue';
-import { useStore } from 'vuex';
 import HisEleProportions from './ElementStatistics.vue';
 import FillStatistician from './FillStatistics.vue';
 import strokeStatistician from './StrokeStatistics.vue';
@@ -30,7 +29,7 @@ import PositionStatistics from './PositionStatistics.vue';
 const props = defineProps({
   title: {
     type: String,
-    default: 'Analysis and Suggestions'
+    default: 'SVG Statistics'
   },
   componentKey: {
     type: Number,
@@ -322,8 +321,8 @@ watch(() => props.componentKey, async () => {
 .variance-info {
   position: absolute;
   top: 2px;
-  right: 8px;
-  font-size: 10px;
+  left: 12px;
+  font-size: 11px;
   color: #666;
   z-index: 10;
 }

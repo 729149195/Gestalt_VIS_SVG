@@ -10,12 +10,23 @@
     </button>
     
     <div class="sections-container">
-      <span class="title">Analysis and Suggestions：</span>
-      <div class="section feature-section">
-        <div class="analysis-content" @scroll="handleScroll" v-html="analysisContent"></div>
+      <div class="section-wrapper">
+        <div class="title">Over All Features</div>
+        <div class="section feature-section" ref="featureSection">
+          <!-- 添加阴影遮盖器 -->
+          <div class="shadow-overlay top" :class="{ active: featureSectionScrollTop > 10 }"></div>
+          <div class="shadow-overlay bottom" :class="{ active: isFeatureSectionScrollable && !isFeatureSectionScrolledToBottom }"></div>
+          <div class="analysis-content" @scroll="handleFeatureSectionScroll" v-html="analysisContent"></div>
+        </div>
       </div>
-      <div class="section middle-section">
-        <div class="analysis-content" @scroll="handleScroll" v-html="selectedNodesAnalysis"></div>
+      <div class="section-wrapper">
+        <div class="title">Suggests For Tagert</div>
+        <div class="section middle-section" ref="middleSection">
+          <!-- 添加阴影遮盖器 -->
+          <div class="shadow-overlay top" :class="{ active: middleSectionScrollTop > 10 }"></div>
+          <div class="shadow-overlay bottom" :class="{ active: isMiddleSectionScrollable && !isMiddleSectionScrolledToBottom }"></div>
+          <div class="analysis-content" @scroll="handleMiddleSectionScroll" v-html="selectedNodesAnalysis"></div>
+        </div>
       </div>
     </div>
     
@@ -41,38 +52,15 @@ import { useStore } from 'vuex'
 // 数据源URL
 const MAPPING_DATA_URL = "http://127.0.0.1:5000/average_equivalent_mapping";
 const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag";
+const NORMAL_DATA_URL = "http://127.0.0.1:5000/normalized_init_json";
 
 // 特征名称映射
-// const featureNameMap = {
-//     'tag': '标签类型',
-//     'opacity': '不透明度',
-//     'fill_h_cos': '色相',
-//     'fill_h_sin': '色相',
-//     'fill_s_n': '饱和度',
-//     'fill_l_n': '亮度',
-//     'stroke_h_cos': '色相',
-//     'stroke_h_sin': '色相',
-//     'stroke_s_n': '饱和度',
-//     'stroke_l_n': '亮度',
-//     'stroke_width': '描边',
-//     'bbox_left_n': '位置',
-//     'bbox_right_n': '位置',
-//     'bbox_top_n': '位置',
-//     'bbox_bottom_n': '位置',
-//     'bbox_mds_1': '位置',
-//     'bbox_mds_2': '位置',
-//     'bbox_center_x_n': '位置',
-//     'bbox_center_y_n': '位置',
-//     'bbox_width_n': '宽度',
-//     'bbox_height_n': '高度',
-//     'bbox_fill_area': '元素面积'
-// };
 const featureNameMap = {
     'tag': 'color',
     'opacity': 'opacity',
     'fill_h_cos': 'fill color',
     'fill_h_sin': 'fill color',
-    'fill_s_n': 'fill color ',
+    'fill_s_n': 'fill color',
     'fill_l_n': 'fill color',
     'stroke_h_cos': 'stroke color',
     'stroke_h_sin': 'stroke color',
@@ -123,6 +111,19 @@ const showDrawer = ref(false)
 
 const store = useStore()
 
+// 添加一个变量来存储原始特征数据
+const rawFeatureData = ref(null);
+
+// 添加滚动相关的状态
+const featureSection = ref(null);
+const middleSection = ref(null);
+const featureSectionScrollTop = ref(0);
+const middleSectionScrollTop = ref(0);
+const isFeatureSectionScrollable = ref(false);
+const isMiddleSectionScrollable = ref(false);
+const isFeatureSectionScrolledToBottom = ref(true);
+const isMiddleSectionScrolledToBottom = ref(true);
+
 // 生成分析文字的函数
 const generateAnalysis = (dataMapping, dataEquivalentWeights, isSelectedNodes = false) => {
     if (!dataMapping || !dataEquivalentWeights) return isSelectedNodes ? '等待选中节点...' : '等待分析...';
@@ -145,14 +146,37 @@ const generateAnalysis = (dataMapping, dataEquivalentWeights, isSelectedNodes = 
             dimensionWeights.forEach((weight, featureIndex) => {
                 if (featureIndex < inputDimensions.length) {
                     const featureName = inputDimensions[featureIndex];
+                    
+                    // 跳过 "tag" 特征
+                    if (featureName === 'tag') {
+                        return;
+                    }
+                    
+                    // 检查该特征是否所有元素都为0
+                    let allZero = true;
+                    if (rawFeatureData.value) {
+                        for (const node of rawFeatureData.value) {
+                            if (node.features[featureIndex] !== 0) {
+                                allZero = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // 如果所有元素都为0，则跳过该特征
+                    if (allZero) {
+                        return;
+                    }
+                    
                     const displayName = featureNameMap[featureName] || featureName;
                     const absWeight = Math.abs(weight);
                     
-                    // 如果当前权重更大，则更新该特征的最大权重和符号
+                    // 使用displayName作为键，如果当前权重更大，则更新
                     if (!featureMaxWeights.has(displayName) || absWeight > featureMaxWeights.get(displayName).absWeight) {
                         featureMaxWeights.set(displayName, {
                             weight: weight,
-                            absWeight: absWeight
+                            absWeight: absWeight,
+                            originalName: featureName // 保存原始特征名以便追踪
                         });
                     }
                 }
@@ -180,89 +204,140 @@ const generateAnalysis = (dataMapping, dataEquivalentWeights, isSelectedNodes = 
     // 生成HTML
     let analysis = '<div class="feature-columns">';
     
-    // 正相关列
-    analysis += '<div class="feature-column positive">';
-    analysis += `<div class="column-title">${isSelectedNodes ? 'Used features' : 'Available features'}</div>`;
-    
-    // 存储超出显示限制的正相关特征
-    const hiddenPositiveFeatures = positiveFeatures.slice(3).map(([name, {absWeight}]) => 
-        `${name} (${absWeight.toFixed(2)})`
-    ).join('\n');
-    
-    positiveFeatures.forEach(([name, {absWeight}], index) => {
-        if (index >= 3) {
-            if (index === 3) {
-                analysis += `
-                    <div class="feature-item ellipsis" title="${hiddenPositiveFeatures}">
-                        <span class="feature-tag tooltip" style="color: #E53935; border-color: #E5393520; background-color: #E5393508">
-                            ...
-                        </span>
-                    </div>
-                `;
+    // 根据是否是选中节点的分析来决定列的顺序
+    if (isSelectedNodes) {
+        // 选中节点分析时，交换顺序：正相关列在左边，负相关列在右边
+        
+        // 正相关列 - 放在第一列（左侧）
+        analysis += '<div class="feature-column positive">';
+        analysis += `<div class="column-title">Used features</div>`;
+        
+        positiveFeatures.forEach(([name, {absWeight}]) => {
+            // 根据权重计算星星数量
+            const filledStars = Math.min(5, Math.ceil(absWeight * 5));
+            const emptyStars = 5 - filledStars;
+            
+            let starsHtml = '';
+            // 添加实心星星
+            for (let i = 0; i < filledStars; i++) {
+                starsHtml += '<span class="star filled">★</span>';
             }
-            return;
-        }
-        
-        const strengthValue = absWeight.toFixed(2);
-        let strengthSymbol = '★';
-        if (absWeight > 1) strengthSymbol = '★★★★';
-        else if (absWeight > 0.8) strengthSymbol = '★★★';
-        else if (absWeight > 0.5) strengthSymbol = '★★';
-        
-        analysis += `
-            <div class="feature-item">
-                <span class="feature-tag" style="color: #E53935; border-color: #E5393520; background-color: #E5393508">
-                    ${name}
-                </span>
-                <span class="feature-influence" style="color: #E53935">
-                    ${strengthValue} ${strengthSymbol}
-                </span>
-            </div>
-        `;
-    });
-    analysis += '</div>';
-    
-    // 负相关列
-    analysis += '<div class="feature-column negative">';
-    analysis += `<div class="column-title">${isSelectedNodes ? 'Used Selected Features' : 'Used Feature'}</div>`;
-    
-    // 存储超出显示限制的负相关特征
-    const hiddenNegativeFeatures = negativeFeatures.slice(3).map(([name, {absWeight}]) => 
-        `${name} (${absWeight.toFixed(2)})`
-    ).join('\n');
-    
-    negativeFeatures.forEach(([name, {absWeight}], index) => {
-        if (index >= 3) {
-            if (index === 3) {
-                analysis += `
-                    <div class="feature-item ellipsis" title="${hiddenNegativeFeatures}">
-                        <span class="feature-tag tooltip" style="color: #1E88E5; border-color: #1E88E520; background-color: #1E88E508">
-                            ...
-                        </span>
-                    </div>
-                `;
+            // 添加空心星星
+            for (let i = 0; i < emptyStars; i++) {
+                starsHtml += '<span class="star empty">☆</span>';
             }
-            return;
-        }
+            
+            analysis += `
+                <div class="feature-item">
+                    <span class="feature-tag" style="color: #E53935; border-color: #E5393520; background-color: #E5393508">
+                        ${name}
+                    </span>
+                    <span class="feature-influence" style="color: #E53935">
+                        ${starsHtml}
+                    </span>
+                </div>
+            `;
+        });
+        analysis += '</div>';
         
-        const strengthValue = absWeight.toFixed(2);
-        let strengthSymbol = '•';
-        if (absWeight > 1) strengthSymbol = '★★★';
-        else if (absWeight > 0.8) strengthSymbol = '★★';
-        else if (absWeight > 0.5) strengthSymbol = '★';
+        // 负相关列 - 放在第二列（右侧）
+        analysis += '<div class="feature-column negative">';
+        analysis += `<div class="column-title">Suggest Features</div>`;
         
-        analysis += `
-            <div class="feature-item">
-                <span class="feature-tag" style="color: #1E88E5; border-color: #1E88E520; background-color: #1E88E508">
-                    ${name}
-                </span>
-                <span class="feature-influence" style="color: #1E88E5">
-                    ${strengthValue} ${strengthSymbol}
-                </span>
-            </div>
-        `;
-    });
-    analysis += '</div>';
+        negativeFeatures.forEach(([name, {absWeight}]) => {
+            // 根据权重计算星星数量
+            const filledStars = Math.min(5, Math.ceil(absWeight * 5));
+            const emptyStars = 5 - filledStars;
+            
+            let starsHtml = '';
+            // 添加实心星星
+            for (let i = 0; i < filledStars; i++) {
+                starsHtml += '<span class="star filled">★</span>';
+            }
+            // 添加空心星星
+            for (let i = 0; i < emptyStars; i++) {
+                starsHtml += '<span class="star empty">☆</span>';
+            }
+            
+            analysis += `
+                <div class="feature-item">
+                    <span class="feature-tag" style="color: #1E88E5; border-color: #1E88E520; background-color: #1E88E508">
+                        ${name}
+                    </span>
+                    <span class="feature-influence" style="color: #1E88E5">
+                        ${starsHtml}
+                    </span>
+                </div>
+            `;
+        });
+        analysis += '</div>';
+    } else {
+        // 默认情况：保持原来的顺序 - 负相关列在左，正相关列在右
+        
+        // 负相关列 - 放在第一列（左侧）
+        analysis += '<div class="feature-column negative">';
+        analysis += `<div class="column-title">Used Features</div>`;
+        
+        negativeFeatures.forEach(([name, {absWeight}]) => {
+            // 根据权重计算星星数量
+            const filledStars = Math.min(5, Math.ceil(absWeight * 5));
+            const emptyStars = 5 - filledStars;
+            
+            let starsHtml = '';
+            // 添加实心星星
+            for (let i = 0; i < filledStars; i++) {
+                starsHtml += '<span class="star filled">★</span>';
+            }
+            // 添加空心星星
+            for (let i = 0; i < emptyStars; i++) {
+                starsHtml += '<span class="star empty">☆</span>';
+            }
+            
+            analysis += `
+                <div class="feature-item">
+                    <span class="feature-tag" style="color: #1E88E5; border-color: #1E88E520; background-color: #1E88E508">
+                        ${name}
+                    </span>
+                    <span class="feature-influence" style="color: #1E88E5">
+                        ${starsHtml}
+                    </span>
+                </div>
+            `;
+        });
+        analysis += '</div>';
+        
+        // 正相关列 - 放在第二列（右侧）
+        analysis += '<div class="feature-column positive">';
+        analysis += `<div class="column-title">Available features</div>`;
+        
+        positiveFeatures.forEach(([name, {absWeight}]) => {
+            // 根据权重计算星星数量
+            const filledStars = Math.min(5, Math.ceil(absWeight * 5));
+            const emptyStars = 5 - filledStars;
+            
+            let starsHtml = '';
+            // 添加实心星星
+            for (let i = 0; i < filledStars; i++) {
+                starsHtml += '<span class="star filled">★</span>';
+            }
+            // 添加空心星星
+            for (let i = 0; i < emptyStars; i++) {
+                starsHtml += '<span class="star empty">☆</span>';
+            }
+            
+            analysis += `
+                <div class="feature-item">
+                    <span class="feature-tag" style="color: #E53935; border-color: #E5393520; background-color: #E5393508">
+                        ${name}
+                    </span>
+                    <span class="feature-influence" style="color: #E53935">
+                        ${starsHtml}
+                    </span>
+                </div>
+            `;
+        });
+        analysis += '</div>';
+    }
     
     analysis += '</div>';
     return analysis;
@@ -271,14 +346,19 @@ const generateAnalysis = (dataMapping, dataEquivalentWeights, isSelectedNodes = 
 // 获取数据并生成分析
 const fetchDataAndGenerateAnalysis = async () => {
     try {
-        const [responseMapping, responseEquivalentWeights] = await Promise.all([
+        // 并行获取所有数据
+        const [responseMapping, responseEquivalentWeights, responseNormal] = await Promise.all([
             axios.get(MAPPING_DATA_URL),
-            axios.get(EQUIVALENT_WEIGHTS_URL)
+            axios.get(EQUIVALENT_WEIGHTS_URL),
+            axios.get(NORMAL_DATA_URL)
         ]);
 
-        if (!responseMapping.data || !responseEquivalentWeights.data) {
+        if (!responseMapping.data || !responseEquivalentWeights.data || !responseNormal.data) {
             throw new Error('网络响应有问题');
         }
+
+        // 保存原始特征数据
+        rawFeatureData.value = responseNormal.data;
 
         // 生成全局分析文字
         analysisContent.value = generateAnalysis(responseMapping.data, responseEquivalentWeights.data, false);
@@ -334,7 +414,33 @@ const fetchDataAndGenerateAnalysis = async () => {
                     weights: [maxWeights.map(w => w.value)]  // 使用最大权重值
                 };
 
+                // 为选中节点创建过滤后的原始特征数据
+                const filteredRawFeatureData = [];
+                
+                // 只保留选中的节点数据
+                if (rawFeatureData.value) {
+                    selectedNodeIds.forEach(nodeId => {
+                        const matchingNode = rawFeatureData.value.find(node => 
+                            node.id === nodeId || node.id.endsWith(`/${nodeId}`)
+                        );
+                        
+                        if (matchingNode) {
+                            filteredRawFeatureData.push(matchingNode);
+                        }
+                    });
+                }
+                
+                // 使用临时变量保存原始的 rawFeatureData.value
+                const originalRawFeatureData = rawFeatureData.value;
+                
+                // 将 rawFeatureData.value 临时替换为过滤后的数据
+                rawFeatureData.value = filteredRawFeatureData;
+                
+                // 生成选中节点的分析
                 selectedNodesAnalysis.value = generateAnalysis(selectedData, responseEquivalentWeights.data, true);
+                
+                // 还原原始的 rawFeatureData.value
+                rawFeatureData.value = originalRawFeatureData;
             } else {
                 selectedNodesAnalysis.value = '<div class="no-selection">无法找到选中节点的权重数据</div>';
             }
@@ -353,6 +459,70 @@ watch(() => store.state.selectedNodes.nodeIds, () => {
     fetchDataAndGenerateAnalysis();
 }, { deep: true, immediate: true });
 
+// 更新滚动处理函数，分别处理两个滚动区域
+const handleFeatureSectionScroll = (event) => {
+    const target = event.target;
+    featureSectionScrollTop.value = target.scrollTop;
+    
+    // 检查是否可滚动
+    isFeatureSectionScrollable.value = target.scrollHeight > target.clientHeight;
+    
+    // 检查是否滚动到底部
+    isFeatureSectionScrolledToBottom.value = Math.abs(
+        target.scrollHeight - target.clientHeight - target.scrollTop
+    ) < 2;
+    
+    // 保持原有的滚动事件传递
+    emit('scroll', {
+        scrollTop: target.scrollTop,
+        scrollHeight: target.scrollHeight
+    });
+}
+
+const handleMiddleSectionScroll = (event) => {
+    const target = event.target;
+    middleSectionScrollTop.value = target.scrollTop;
+    
+    // 检查是否可滚动
+    isMiddleSectionScrollable.value = target.scrollHeight > target.clientHeight;
+    
+    // 检查是否滚动到底部
+    isMiddleSectionScrolledToBottom.value = Math.abs(
+        target.scrollHeight - target.clientHeight - target.scrollTop
+    ) < 2;
+    
+    // 保持原有的滚动事件传递
+    emit('scroll', {
+        scrollTop: target.scrollTop,
+        scrollHeight: target.scrollHeight
+    });
+}
+
+// 初始化滚动检测
+const initScrollDetection = () => {
+    // 为两个区域设置初始滚动状态
+    if (featureSection.value) {
+        const featureContent = featureSection.value.querySelector('.analysis-content');
+        if (featureContent) {
+            isFeatureSectionScrollable.value = featureContent.scrollHeight > featureContent.clientHeight;
+            isFeatureSectionScrolledToBottom.value = Math.abs(
+                featureContent.scrollHeight - featureContent.clientHeight - featureContent.scrollTop
+            ) < 2;
+        }
+    }
+    
+    if (middleSection.value) {
+        const middleContent = middleSection.value.querySelector('.analysis-content');
+        if (middleContent) {
+            isMiddleSectionScrollable.value = middleContent.scrollHeight > middleContent.clientHeight;
+            isMiddleSectionScrolledToBottom.value = Math.abs(
+                middleContent.scrollHeight - middleContent.clientHeight - middleContent.scrollTop
+            ) < 2;
+        }
+    }
+}
+
+// 兼容旧的handleScroll函数，实际不再使用
 const handleScroll = (event) => {
     emit('scroll', {
         scrollTop: event.target.scrollTop,
@@ -365,10 +535,23 @@ const handleSvgUpdate = () => {
     fetchDataAndGenerateAnalysis();
 };
 
+// 监听内容变化，重新检测滚动状态
+watch([analysisContent, selectedNodesAnalysis], () => {
+    // 在下一个渲染周期检测滚动状态
+    setTimeout(() => {
+        initScrollDetection();
+    }, 0);
+});
+
 onMounted(() => {
     window.addEventListener('svg-content-updated', handleSvgUpdate);
     // 初始获取数据
     fetchDataAndGenerateAnalysis();
+    
+    // 初始化滚动检测
+    setTimeout(() => {
+        initScrollDetection();
+    }, 100); // 给足够时间让内容渲染
 });
 
 onUnmounted(() => {
@@ -415,17 +598,13 @@ function showNodeList(node) {
   position: relative;
 }
 
-/* 添加标题样式 */
+/* 修改标题样式，移除绝对定位 */
 .title {
-  position: absolute;
-  top: 12px;
-  left: 16px;
   font-size: 16px;
   font-weight: bold;
   color: #1d1d1f;
-  margin: 0;
+  margin: 0 0 8px 0;
   padding: 0;
-  z-index: 10;
   letter-spacing: -0.01em;
   opacity: 0.8;
 }
@@ -435,7 +614,12 @@ function showNodeList(node) {
   gap: 16px;
   height: 100%;
   overflow: hidden;
-  margin-top: 24px; /* 为标题留出空间 */
+}
+
+.section-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .section {
@@ -444,20 +628,53 @@ function showNodeList(node) {
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(200, 200, 200, 0.2);
   padding: 12px;
-  overflow: auto;
+  overflow: hidden; /* 修改为hidden，防止与阴影遮盖器冲突 */
+  position: relative; /* 添加相对定位，作为阴影遮盖器的参考 */
 }
 
 .feature-section {
   min-width: 0;
 }
 
-.middle-section, .right-section {
-  background: rgba(240, 240, 240, 0.3);
-}
-
 .analysis-content {
   height: 100%;
   overflow: auto;
+  position: relative;
+  z-index: 1; /* 确保内容在阴影之上可以滚动 */
+}
+
+/* 添加滚动阴影遮盖器样式 */
+.shadow-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 20px;
+  pointer-events: none; /* 允许鼠标事件穿透到下面的内容 */
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.shadow-overlay.top {
+  top: 0;
+  background: linear-gradient(to bottom, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(255, 255, 255, 0) 100%);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.shadow-overlay.bottom {
+  bottom: 0;
+  background: linear-gradient(to top, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(255, 255, 255, 0) 100%);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.shadow-overlay.active {
+  opacity: 1;
 }
 
 .analysis-header {
@@ -651,6 +868,8 @@ function showNodeList(node) {
     display: flex;
     gap: 24px;
     padding: 12px;
+    max-height: 100%;
+    overflow-y: auto;
 }
 
 :deep(.feature-column) {
@@ -667,6 +886,10 @@ function showNodeList(node) {
     margin-bottom: 4px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     color: #333;
+    position: sticky;
+    top: 0;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 1;
 }
 
 :deep(.feature-item) {
@@ -682,6 +905,20 @@ function showNodeList(node) {
     font-size: 13px;
     font-weight: 500;
     margin-left: auto;
+    white-space: nowrap;
+}
+
+:deep(.star) {
+    display: inline-block;
+    margin: 0 1px;
+}
+
+:deep(.star.filled) {
+    font-weight: bold;
+}
+
+:deep(.star.empty) {
+    opacity: 0.5;
 }
 
 :deep(.feature-tag) {
@@ -691,50 +928,6 @@ function showNodeList(node) {
     border-radius: 4px;
     border-width: 1px;
     border-style: solid;
-}
-
-:deep(.feature-item.ellipsis) {
-    opacity: 0.6;
-    justify-content: center;
-    cursor: help;
-    position: relative;
-}
-
-:deep(.feature-item.ellipsis:hover) {
-    opacity: 1;
-}
-
-:deep([title]) {
-    position: relative;
-}
-
-:deep([title]:hover::before) {
-    content: attr(title);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    border-radius: 6px;
-    font-size: 12px;
-    white-space: pre-line;
-    z-index: 1000;
-    max-width: 300px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-}
-
-:deep([title]:hover::after) {
-    content: '';
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 6px solid transparent;
-    border-top-color: rgba(0, 0, 0, 0.8);
-    margin-bottom: -12px;
-    z-index: 1000;
 }
 
 :deep(.no-selection) {

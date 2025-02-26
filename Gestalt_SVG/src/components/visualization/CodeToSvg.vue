@@ -66,7 +66,6 @@
 import { ref, watch, onMounted, nextTick, onUnmounted } from 'vue'
 import * as monaco from 'monaco-editor'
 import * as d3 from 'd3'
-import { Upload } from '@element-plus/icons-vue'
 import { syntaxOptions, placeholders } from '@/config/codeToSvgConfig'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
@@ -96,7 +95,6 @@ const code = ref('')
 const svgCode = ref('')
 const svgOutput = ref('')
 const selectedSyntax = ref('d3')
-const autoGenerate = ref(true)
 const isDeclarativeMode = ref(true)
 const declarativeEditorContainer = ref(null)
 const svgEditorContainer = ref(null)
@@ -125,12 +123,16 @@ const declarativeEditorOptions = {
   padding: {
     top: 10,
     bottom: 10
-  }
+  },
+  formatOnPaste: true,
+  formatOnType: true
 }
 
 const svgEditorOptions = {
   ...declarativeEditorOptions,
-  language: 'xml'
+  language: 'xml',
+  formatOnPaste: true,
+  formatOnType: true
 }
 
 // 根据选择的语法设置编辑器语言
@@ -161,6 +163,16 @@ const initEditors = () => {
     declarativeEditor.onDidChangeModelContent(() => {
       code.value = declarativeEditor.getValue()
     })
+
+    // 添加失去焦点时自动格式化的事件监听
+    declarativeEditor.onDidBlurEditorWidget(() => {
+      formatDeclarativeEditor()
+    })
+
+    // 初始化后延迟格式化文档
+    setTimeout(() => {
+      formatDeclarativeEditor()
+    }, 300)
   }
 
   // 初始化SVG编辑器
@@ -173,6 +185,69 @@ const initEditors = () => {
     svgEditor.onDidChangeModelContent(() => {
       svgCode.value = svgEditor.getValue()
     })
+
+    // 添加失去焦点时自动格式化的事件监听
+    svgEditor.onDidBlurEditorWidget(() => {
+      formatSvgEditor()
+    })
+
+    // 初始化后延迟格式化文档
+    setTimeout(() => {
+      formatSvgEditor()
+    }, 300)
+  }
+}
+
+// 格式化声明式编辑器文档
+const formatDeclarativeEditor = () => {
+  if (declarativeEditor) {
+    try {
+      declarativeEditor.getAction('editor.action.formatDocument')?.run()
+    } catch (error) {
+      console.error('格式化声明式代码编辑器失败:', error)
+    }
+  }
+}
+
+// 格式化SVG编辑器文档
+const formatSvgEditor = () => {
+  if (svgEditor) {
+    try {
+      // 尝试直接运行格式化命令
+      const formatAction = svgEditor.getAction('editor.action.formatDocument');
+      if (formatAction) {
+        formatAction.run();
+      } else {
+        // 如果直接格式化命令不可用，使用我们的自定义SVG格式化方法
+        const currentValue = svgEditor.getValue();
+        const formattedValue = formatSvgCode(currentValue);
+        // 只有当格式化后的值与当前值不同时才设置
+        if (formattedValue !== currentValue) {
+          const position = svgEditor.getPosition();
+          svgEditor.setValue(formattedValue);
+          // 恢复光标位置
+          if (position) {
+            svgEditor.setPosition(position);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Formatting SVG editor fails:', error);
+      // 出错时尝试使用我们的自定义SVG格式化
+      try {
+        const currentValue = svgEditor.getValue();
+        const formattedValue = formatSvgCode(currentValue);
+        if (formattedValue !== currentValue) {
+          const position = svgEditor.getPosition();
+          svgEditor.setValue(formattedValue);
+          if (position) {
+            svgEditor.setPosition(position);
+          }
+        }
+      } catch (e) {
+        console.error('Alternate formatting method also fails:', e);
+      }
+    }
   }
 }
 
@@ -183,6 +258,11 @@ watch(selectedSyntax, (newValue) => {
     monaco.editor.setModelLanguage(model, getEditorLanguage())
     code.value = placeholders[newValue]
     declarativeEditor.setValue(code.value)
+    
+    // 语法变化后格式化文档
+    setTimeout(() => {
+      formatDeclarativeEditor()
+    }, 300)
   }
 })
 
@@ -243,7 +323,7 @@ const formatSvgCode = (svgString) => {
     const formattedSvg = format(doc.documentElement, 0)
     return formattedSvg.trim()
   } catch (error) {
-    console.error('格式化SVG代码时出错:', error)
+    console.error('Error formatting SVG code:', error)
     return svgString // 如果格式化失败，返回原始字符串
   }
 }
@@ -259,6 +339,10 @@ const updatePreview = () => {
     // 确保SVG编辑器内容同步
     if (svgEditor && svgEditor.getValue() !== formattedSvg) {
       svgEditor.setValue(formattedSvg)
+      // 更新后格式化
+      setTimeout(() => {
+        formatSvgEditor()
+      }, 300)
     }
     setupZoomAndPan()
   })
@@ -738,6 +822,20 @@ watch(svgOutput, async () => {
 
 // 组件挂载时初始化
 onMounted(() => {
+  // 配置Monaco Editor对HTML/XML的格式化支持
+  monaco.languages.registerDocumentFormattingEditProvider('xml', {
+    provideDocumentFormattingEdits: (model) => {
+      const text = model.getValue();
+      const formattedText = formatSvgCode(text);
+      return [
+        {
+          range: model.getFullModelRange(),
+          text: formattedText
+        }
+      ];
+    }
+  });
+  
   selectedSyntax.value = 'vega'
   code.value = placeholders[selectedSyntax.value]
   nextTick(() => {
@@ -786,6 +884,10 @@ const handleSvgContentUpdated = async (event) => {
     // 更新SVG编辑器内容
     if (svgEditor) {
       svgEditor.setValue(formattedSvg)
+      // 内容更新后格式化
+      setTimeout(() => {
+        formatSvgEditor()
+      }, 300)
     }
 
     // 更新预览区域

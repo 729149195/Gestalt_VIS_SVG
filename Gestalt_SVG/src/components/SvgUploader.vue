@@ -425,7 +425,11 @@ const enableTrackMode = () => {
         clickedElements.clear();
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (event) => {
+        if (isMouseDown && clickedElements.size > 0) {
+            // 如果已经选中了元素，阻止事件冒泡以避免触发点击事件
+            event.stopPropagation();
+        }
         isMouseDown = false;
     };
 
@@ -532,8 +536,10 @@ const handleSvgClick = (event) => {
     const target = event.target;
     if (target.tagName.toLowerCase() === 'svg' ||
         (target.tagName.toLowerCase() === 'g' && target.classList.contains('zoom-wrapper'))) {
-        // 如果点击的是空白区域，清空所有选中的节点
-        store.dispatch('clearSelectedNodes');
+        // 只有在非多选模式下才清空所有选中的节点
+        if (!isTracking.value) {
+            store.dispatch('clearSelectedNodes');
+        }
         return;
     }
 

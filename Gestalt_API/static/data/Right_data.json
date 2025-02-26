@@ -1,56 +1,106 @@
 {
-    "144.0-222.8": {
+    "61.4-195.3": {
         "tags": [
+            "rect_45",
+            "rect_44"
+        ],
+        "total": {
+            "rect": 2
+        }
+    },
+    "195.3-329.2": {
+        "tags": [
+            "rect_43",
+            "rect_42",
+            "rect_41",
+            "rect_40",
+            "rect_39",
+            "rect_38"
+        ],
+        "total": {
+            "rect": 6
+        }
+    },
+    "329.2-463.1": {
+        "tags": [
+            "rect_37",
+            "rect_36",
+            "rect_35",
+            "rect_34",
+            "rect_33",
+            "rect_32"
+        ],
+        "total": {
+            "rect": 6
+        }
+    },
+    "463.1-597.0": {
+        "tags": [
+            "rect_31",
+            "rect_30",
+            "rect_29",
+            "rect_28",
+            "rect_27",
+            "rect_26",
+            "rect_25"
+        ],
+        "total": {
+            "rect": 7
+        }
+    },
+    "597.0-730.8": {
+        "tags": [
+            "rect_24",
+            "rect_23",
+            "rect_22",
+            "rect_21",
+            "rect_20",
+            "rect_19"
+        ],
+        "total": {
+            "rect": 6
+        }
+    },
+    "730.8-864.7": {
+        "tags": [
+            "rect_18",
+            "rect_17",
+            "rect_16",
+            "rect_15",
+            "rect_14",
+            "rect_13"
+        ],
+        "total": {
+            "rect": 6
+        }
+    },
+    "864.7-998.6": {
+        "tags": [
+            "rect_12",
             "rect_11",
-            "rect_10"
-        ],
-        "total": {
-            "rect": 2
-        }
-    },
-    "222.8-301.5": {
-        "tags": [
+            "rect_10",
             "rect_9",
-            "rect_8"
+            "rect_8",
+            "rect_7"
         ],
         "total": {
-            "rect": 2
+            "rect": 6
         }
     },
-    "380.2-459.0": {
+    "998.6-1132.5": {
         "tags": [
-            "rect_7",
-            "rect_6"
-        ],
-        "total": {
-            "rect": 2
-        }
-    },
-    "459.0-537.8": {
-        "tags": [
+            "rect_6",
             "rect_5",
-            "rect_4"
-        ],
-        "total": {
-            "rect": 2
-        }
-    },
-    "616.5-695.2": {
-        "tags": [
+            "rect_4",
             "rect_3",
-            "rect_2"
-        ],
-        "total": {
-            "rect": 2
-        }
-    },
-    "695.2-774.0": {
-        "tags": [
+            "rect_2",
             "rect_1",
-            "rect"
+            "rect",
+            "line"
         ],
         "total": {
-            "rect": 2
+            "rect": 7,
+            "line": 1
         }
     }
 }

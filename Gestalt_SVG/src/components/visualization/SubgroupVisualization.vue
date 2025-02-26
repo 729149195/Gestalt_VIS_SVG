@@ -5,17 +5,9 @@
             <span class="scroll-hint">← Scroll horizontally to see more patterns →</span>
             <span class="scroll-hint">Click to view the model pattern</span>
         </div>
-        <div v-if="currentPage === 1" class="core-view-container">
+        <div class="core-view-container">
             <CoreSubgroupVisualization />
         </div>
-
-        <!-- 显示维度组合视图 -->
-        <!-- <div v-else class="graph-grid">
-            <div v-for="(dims, index) in currentDimensions" :key="getDimensionKey(dims)" class="graph-item">
-                <div class="graph-title">{{ formatDimensions(dims) }}</div>
-                <div :ref="el => { if (el) graphContainers[index] = el }" class="graph-container"></div>
-            </div>
-        </div> -->
     </div>
 </template>
 
@@ -31,14 +23,9 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 const checkbox = ref(false);
-const currentPage = ref(1);
-const graphContainers = ref([]);
-const isSelecting = ref(false);
-let selectionRect = null;
-let selectionStart = { x: 0, y: 0 };
-const originalSvgContent = ref(''); // 添加存储原始SVG内容的ref
+const originalSvgContent = ref(''); // 存储原始SVG内容的ref
 
-// 添加获取原始SVG内容的函数
+// 获取原始SVG内容的函数
 async function fetchOriginalSvg() {
     try {
         const response = await fetch('http://127.0.0.1:5000/get_svg');
@@ -49,7 +36,7 @@ async function fetchOriginalSvg() {
     }
 }
 
-// 添加创建缩略图的函数
+// 创建缩略图的函数
 function createThumbnail(nodeData) {
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(originalSvgContent.value, 'image/svg+xml');
@@ -79,103 +66,6 @@ function createThumbnail(nodeData) {
     svgElement.setAttribute('height', '100%');
 
     return svgElement.outerHTML;
-}
-
-// 生成所有可能的维度组合
-const allDimensions = computed(() => {
-    const baseDimensions = [0, 1, 2, 3];
-    let combinations = [];
-
-    // 添加单维度组合
-    combinations.push(...baseDimensions.map(d => [d]));
-
-    // 添加双维度组合
-    for (let i = 0; i < baseDimensions.length; i++) {
-        for (let j = i + 1; j < baseDimensions.length; j++) {
-            combinations.push([baseDimensions[i], baseDimensions[j]]);
-        }
-    }
-
-    // 添加三维度组合
-    for (let i = 0; i < baseDimensions.length; i++) {
-        for (let j = i + 1; j < baseDimensions.length; j++) {
-            for (let k = j + 1; k < baseDimensions.length; k++) {
-                combinations.push([baseDimensions[i], baseDimensions[j], baseDimensions[k]]);
-            }
-        }
-    }
-
-    // 添加四维度组合
-    combinations.push(baseDimensions);
-
-    return combinations;
-});
-
-// 计算当前页面显示的维度组合
-const currentDimensions = computed(() => {
-    if (currentPage.value === 1) return [];
-    const startIndex = (currentPage.value - 2) * 6;
-    return allDimensions.value.slice(startIndex, startIndex + 6);
-});
-
-// 格式化维度显示
-function formatDimensions(dims) {
-    return dims.map(dim => `z_${dim + 1}`).join('，');
-}
-
-// 获取维度组合的唯一键
-function getDimensionKey(dims) {
-    return dims.join('');
-}
-
-// 处理页面变化
-async function handlePageChange(page) {
-    currentPage.value = page;
-    if (page === 1) return;
-
-    // 清空现有的图表容器
-    graphContainers.value = [];
-    // 等待 DOM 更新
-    await nextTick();
-    // 重新加载当前页的图表
-    await loadAndRenderAllGraphs();
-}
-
-// 修改加载和渲染函数
-async function loadAndRenderAllGraphs() {
-    try {
-        await nextTick();
-        await delay(300);
-
-        for (let i = 0; i < currentDimensions.value.length; i++) {
-            try {
-                const dims = currentDimensions.value[i];
-                const dimKey = getDimensionKey(dims);
-                const data = await d3.json(`http://127.0.0.1:5000/static/data/subgraphs/subgraph_dimension_${dimKey}.json`);
-                const container = graphContainers.value[i];
-
-                if (!container) {
-                    console.error(`Container for dimensions ${dims} not found`);
-                    continue;
-                }
-
-                await delay(100);
-
-                const width = container.clientWidth || 600;
-                const height = container.clientHeight || 400;
-
-                if (width <= 0 || height <= 0) {
-                    console.warn(`Container ${i} dimensions not ready, using default values`);
-                }
-
-                renderGraph(container, data);
-            } catch (error) {
-                console.error(`Error loading data for dimensions ${currentDimensions.value[i]}:`, error);
-            }
-        }
-    } catch (error) {
-        console.error('Error in loadAndRenderAllGraphs:', error);
-    }
 }
 
 // 在processGraphData函数之前添加新的处理函数
@@ -286,7 +176,7 @@ function processGraphData(graphData) {
     };
 }
 
-// 修改createContextMenu函数，移除展开功能
+// 创建上下文菜单
 function createContextMenu(svg, x, y, node, simulation) {
     // 移除可能存在的旧菜单
     d3.selectAll('.context-menu').remove();
@@ -329,7 +219,7 @@ function createContextMenu(svg, x, y, node, simulation) {
     });
 }
 
-// 修改remergeNodes函数
+// 重新聚合节点函数
 function remergeNodes(node, simulation) {
     const currentNodes = simulation.nodes();
     const currentLinks = simulation.force('link').links();
@@ -393,6 +283,7 @@ function remergeNodes(node, simulation) {
     updateVisualization(simulation);
 }
 
+// 更新可视化
 function updateVisualization(simulation) {
     const svg = d3.select(simulation.container);
     const g = svg.select('g');
@@ -503,7 +394,7 @@ function updateVisualization(simulation) {
 }
 
 function renderGraph(container, graphData) {
-    // 理图数据
+    // 处理图数据
     const processedData = processGraphData(graphData);
 
     // 确保容器和数据都存在
@@ -547,11 +438,6 @@ function renderGraph(container, graphData) {
     if (!checkbox.value) {
         svg.call(zoom);
     }
-
-    // 添加鼠标事件监听
-    svg.on('mousedown', (event) => onMouseDown(event, svg))
-        .on('mousemove', (event) => onMouseMove(event, svg))
-        .on('mouseup', (event) => onMouseUp(event, svg));
 
     const g = svg.append('g');
 
@@ -697,165 +583,17 @@ function renderGraph(container, graphData) {
     }
 }
 
-function clearSelectedNodes() {
-    store.dispatch('clearSelectedNodes');
-
-    graphContainers.value.forEach((container) => {
-        d3.select(container)
-            .selectAll('.node-group rect')
-            .attr('stroke', '#69b3a2');
-    });
-}
-
-watch(selectedNodeIds, () => {
-    nextTick(() => {
-        graphContainers.value.forEach((container) => {
-            const svg = d3.select(container).select('svg');
-            svg.selectAll('.node-group')
-                .select('rect')
-                .attr('stroke', (d) => {
-                    if (d.isGroup) {
-                        return d.originalNodes.every(originalNode =>
-                            selectedNodeIds.value.includes(originalNode.name.split('/').pop())
-                        ) ? '#ff6347' : '#69b3a2';
-                    } else {
-                        const nodeName = d.name.split('/').pop();
-                        return selectedNodeIds.value.includes(nodeName) ? '#ff6347' : '#69b3a2';
-                    }
-                });
-        });
-    });
-});
-
-function onMouseDown(event, svg) {
-    if (!checkbox.value) return;
-
-    isSelecting.value = true;
-    const point = d3.pointer(event);
-    selectionStart = { x: point[0], y: point[1] };
-
-    if (!selectionRect) {
-        selectionRect = svg.append('rect')
-            .attr('class', 'selection')
-            .attr('x', selectionStart.x)
-            .attr('y', selectionStart.y)
-            .attr('width', 0)
-            .attr('height', 0);
-    }
-}
-
-function onMouseMove(event, svg) {
-    if (!isSelecting.value) return;
-
-    const point = d3.pointer(event);
-    const x = Math.min(selectionStart.x, point[0]);
-    const y = Math.min(selectionStart.y, point[1]);
-    const width = Math.abs(selectionStart.x - point[0]);
-    const height = Math.abs(selectionStart.y - point[1]);
-
-    selectionRect
-        .attr('x', x)
-        .attr('y', y)
-        .attr('width', width)
-        .attr('height', height);
-}
-
-function onMouseUp(event, svg) {
-    if (!isSelecting.value) return;
-
-    isSelecting.value = false;
-    const selectionBox = selectionRect.node().getBBox();
-    selectNodesInBox(selectionBox, svg);
-    selectionRect.remove();
-    selectionRect = null;
-}
-
-function selectNodesInBox(selectionBox, svg) {
-    const selectedNodes = [];
-    const transform = d3.zoomTransform(svg.node());
-    const adjustedSelectionBox = {
-        x: (selectionBox.x - transform.x) / transform.k,
-        y: (selectionBox.y - transform.y) / transform.k,
-        width: selectionBox.width / transform.k,
-        height: selectionBox.height / transform.k,
-    };
-
-    svg.selectAll('circle').each(function (d) {
-        const cx = d.x;
-        const cy = d.y;
-
-        if (cx >= adjustedSelectionBox.x && cx <= adjustedSelectionBox.x + adjustedSelectionBox.width &&
-            cy >= adjustedSelectionBox.y && cy <= adjustedSelectionBox.y + adjustedSelectionBox.height) {
-            selectedNodes.push(d);
-        }
-    });
-
-    const nodeIds = selectedNodes.map(node => node.name.split('/').pop());
-    store.commit('UPDATE_SELECTED_NODES', { nodeIds, group: null });
-}
-
+// 处理键盘按键事件
 function handleKeyDown(event) {
     if (event.key === 'c' || event.key === 'C') {
         checkbox.value = !checkbox.value;
-        graphContainers.value.forEach((container) => {
-            const svg = d3.select(container).select('svg');
-            if (checkbox.value) {
-                disableZoom(svg);
-            } else {
-                enableZoom(svg);
-            }
-        });
     }
-}
-
-function disableZoom(svg) {
-    svg.on('.zoom', null);
-    svg.style('cursor', 'crosshair');
-}
-
-function enableZoom(svg) {
-    const zoom = d3.zoom()
-        .scaleExtent([0.1, 10])
-        .on('zoom', (event) => {
-            svg.select('g').attr('transform', event.transform);
-        });
-
-    svg.call(zoom);
-    svg.style('cursor', 'default');
-}
-
-// 添加工具提示相关的响应式变量
-const tooltipStyle = ref({
-    opacity: 0,
-    top: '0px',
-    left: '0px'
-});
-const tooltipText = ref('');
-const pageTooltip = ref(null);
-
-// 添加工具提示显示函数
-function showPageTooltip(event, page) {
-    const text = page === 1 ? '核心聚类视图' : `第 ${page-1} 页维度组合`;
-    tooltipText.value = text;
-    tooltipStyle.value = {
-        opacity: 1,
-        top: `${event.clientY}px`,
-        left: `${event.clientX - 100}px`
-    };
-}
-
-// 添加工具提示隐藏函数
-function hidePageTooltip() {
-    tooltipStyle.value.opacity = 0;
 }
 
 // 修改onMounted钩子
 onMounted(async () => {
     try {
         await fetchOriginalSvg(); // 首先获取原始SVG内容
-        await nextTick();
-        await delay(100);
-        await loadAndRenderAllGraphs();
         window.addEventListener('keydown', handleKeyDown);
     } catch (error) {
         console.error('Error in onMounted:', error);
@@ -869,8 +607,8 @@ onUnmounted(() => {
 <style scoped>
 .force-graph-container {
     position: relative;
-    width: 100%;  /* 设置固定宽度 */
-    margin: 0 auto;  /* 水平居中 */
+    width: 100%;
+    margin: 0 auto;
     height: calc(100vh - 120px);
     max-height: 900px;
     background: rgba(255, 255, 255, 0.9);
@@ -914,149 +652,13 @@ onUnmounted(() => {
     margin-bottom: 2px;
 }
 
-.controls {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 10;
-}
-
-.control-button {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background-color: #55C000 !important;
-    border-color: #55C000 !important;
-    color: white !important;
-    border-radius: 8px !important;
-    padding: 8px 16px !important;
-    font-size: 14px !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-.control-button:hover {
-    background-color: #4CAF00 !important;
-    border-color: #4CAF00 !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-}
-
-.graph-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 400px);  /* 设置固定列宽 */
-    justify-content: center;  /* 网格水平居中 */
-    gap: 20px;
-    padding: 10px;
-    height: 100%;
-    overflow: auto;
-    min-height: 0;
-}
-
-.graph-item {
-    width: 400px;  /* 设置固定宽度 */
-    display: flex;
-    flex-direction: column;
-    border: 1px solid rgba(200, 200, 200, 0.3);
-    border-radius: 8px;
-    background: #ffffff;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    height: 350px;
-    min-height: 350px;
-}
-
-.graph-item:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-    border: 1px solid rgba(180, 180, 180, 0.4);
-}
-
-.graph-title {
-    padding: 12px;
-    font-weight: bold;
-    background-color: #f5f7fa;
-    color: #303133;
-    border-bottom: 1px solid rgba(200, 200, 200, 0.3);
-}
-
-.graph-container {
-    flex: 1;
-    min-height: 300px;
-    position: relative;
-}
-
 .core-view-container {
     flex: 1;
     overflow: auto;
     height: 100%;
     min-height: 0;
-    width: 1260px;  /* 设置固定宽度，留出padding空间 */
-    margin: 0 auto;  /* 水平居中 */
-}
-
-.pagination-wrapper {
-    display: none;
-}
-
-/* 添加侧边书签导航样式 */
-.side-pagination {
-    position: fixed;
-    right: 5px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.pagination-dots {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(200, 200, 200, 0.3);
-}
-
-.pagination-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.pagination-dot:hover {
-    background-color: rgba(0, 0, 0, 0.4);
-    transform: scale(1.2);
-}
-
-.pagination-dot.active {
-    background-color: #55C000;
-    width: 6px;
-    height: 6px;
-}
-
-/* 页面提示工具提示样式 */
-.page-tooltip {
-    position: fixed;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    white-space: nowrap;
+    width: 1260px;
+    margin: 0 auto;
 }
 
 .title {
