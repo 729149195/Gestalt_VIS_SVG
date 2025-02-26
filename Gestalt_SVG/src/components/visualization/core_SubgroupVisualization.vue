@@ -608,6 +608,7 @@ function renderGraph(container, graphData, useCache = false) {
 // 添加数据源URL
 const MAPPING_DATA_URL = "http://127.0.0.1:5000/average_equivalent_mapping";
 const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag";
+const NORMAL_DATA_URL = "http://127.0.0.1:5000/normalized_init_json";
 
 // 特征名称映射
 const featureNameMap = {
@@ -641,7 +642,8 @@ const equivalentWeightsData = ref(null);
 
 // 生成分析文字的函数
 const generateAnalysis = (nodeData) => {
-    if (!analysisData.value || !equivalentWeightsData.value) return '';
+    // 使用normalizedData而不是analysisData和equivalentWeightsData
+    if (!normalizedData.value || normalizedData.value.length === 0) return '';
 
     let nodesToAnalyze = [];
     
@@ -659,80 +661,122 @@ const generateAnalysis = (nodeData) => {
         nodesToAnalyze = [...nodeData.originalNodes];
     }
     
-    // 获取这些元素的权重数据
-    const nodeWeights = {};
-    nodesToAnalyze.forEach(nodeId => {
-        const fullPath = nodeId.startsWith('svg/') ? nodeId : `svg/${nodeId}`;
-        if (equivalentWeightsData.value[fullPath]) {
-            nodeWeights[fullPath] = equivalentWeightsData.value[fullPath];
+    if (nodesToAnalyze.length === 0) return '';
+
+    // 1. 将所有节点分为高亮组和非高亮组
+    const highlightedFeatures = [];
+    const nonHighlightedFeatures = [];
+
+    // 遍历normalized数据
+    normalizedData.value.forEach(item => {
+        // 标准化ID格式以便比较
+        const normalizedItemId = item.id;
+        
+        // 检查当前元素是否是高亮元素
+        const isHighlighted = nodesToAnalyze.some(analyzeNode => {
+            // 移除开头的 'svg/' 并标准化分析节点的路径
+            const normalizedAnalyzeNode = analyzeNode.replace(/^svg\//, '');
+            return normalizedItemId === `svg/${normalizedAnalyzeNode}` || 
+                   normalizedItemId === normalizedAnalyzeNode;
+        });
+
+        if (isHighlighted) {
+            highlightedFeatures.push(item.features);
         } else {
-            const altPath = nodeId.replace(/^svg\//, '');
-            if (equivalentWeightsData.value[`svg/${altPath}`]) {
-                nodeWeights[fullPath] = equivalentWeightsData.value[`svg/${altPath}`];
-            }
+            nonHighlightedFeatures.push(item.features);
         }
     });
 
-    if (Object.keys(nodeWeights).length === 0) {
+    // 如果没有高亮元素或非高亮元素，返回空字符串
+    if (highlightedFeatures.length === 0 || nonHighlightedFeatures.length === 0) {
         return '';
     }
 
-    // 使用现有的分析逻辑继续处理
-    const inputDimensions = analysisData.value.input_dimensions;
-    const outputDimensions = analysisData.value.output_dimensions;
-    const dimensionCount = outputDimensions.length;
-    const featureCount = inputDimensions.length;
-    const averageWeights = Array(dimensionCount).fill().map(() => Array(featureCount).fill(0));
-
-    Object.values(nodeWeights).forEach(weights => {
-        weights.forEach((dimWeights, dimIndex) => {
-            dimWeights.forEach((weight, featureIndex) => {
-                averageWeights[dimIndex][featureIndex] += weight / Object.keys(nodeWeights).length;
-            });
-        });
-    });
-
-    const featureMap = new Map();
-    averageWeights.forEach((dimensionWeights, dimIndex) => {
-        dimensionWeights.forEach((weight, featureIndex) => {
-            const featureName = inputDimensions[featureIndex];
-            const displayName = featureNameMap[featureName] || featureName;
-            const absWeight = Math.abs(weight);
-            
-            if (!featureMap.has(displayName) || absWeight > Math.abs(featureMap.get(displayName).weight)) {
-                featureMap.set(displayName, { weight, absWeight });
-            }
-        });
-    });
-
-    let sortedFeatures = Array.from(featureMap.entries())
-        .sort((a, b) => b[1].absWeight - a[1].absWeight)
-        .filter(([_, {absWeight}]) => absWeight > 0.1);
-
-    if (sortedFeatures.length > 1) {
-        const weightDiffs = [];
-        for (let i = 1; i < sortedFeatures.length; i++) {
-            const diff = sortedFeatures[i-1][1].absWeight - sortedFeatures[i][1].absWeight;
-            weightDiffs.push({
-                index: i,
-                diff: diff
-            });
-        }
-
-        const maxDiff = weightDiffs.reduce((max, curr) => curr.diff > max.diff ? curr : max);
+    // 2. 计算每个特征的统计数据
+    const featureScores = [];
+    const featureCount = highlightedFeatures[0].length;
+    
+    for (let featureIndex = 0; featureIndex < featureCount; featureIndex++) {
+        // 提取高亮组和非高亮组的当前特征值
+        const highlightedValues = highlightedFeatures.map(features => features[featureIndex]);
+        const nonHighlightedValues = nonHighlightedFeatures.map(features => features[featureIndex]);
         
-        if (maxDiff.diff > sortedFeatures[0][1].absWeight * 0.2 && maxDiff.index <= 3) {
-            sortedFeatures = sortedFeatures.slice(0, maxDiff.index);
+        // 计算高亮组和非高亮组的平均值
+        const highlightedMean = highlightedValues.reduce((sum, val) => sum + val, 0) / highlightedValues.length;
+        const nonHighlightedMean = nonHighlightedValues.reduce((sum, val) => sum + val, 0) / nonHighlightedValues.length;
+        
+        // 计算差异性 - 高亮组和非高亮组平均值的差异
+        const difference = Math.abs(highlightedMean - nonHighlightedMean);
+        
+        // 计算内聚性 - 高亮组内部值的方差（值越小表示内聚性越高）
+        let cohesion = 0;
+        
+        if (highlightedValues.length === 1) {
+            // 单个元素时，内聚性最高
+            cohesion = 1;
         } else {
-            sortedFeatures = sortedFeatures.slice(0, 3);
+            // 计算高亮组的方差，并转换为内聚性分数（方差越小，内聚性越高）
+            const highlightedVariance = highlightedValues.reduce((sum, val) => {
+                return sum + Math.pow(val - highlightedMean, 2);
+            }, 0) / highlightedValues.length;
+            
+            // 转换方差为内聚性分数（使用指数衰减）
+            cohesion = Math.exp(-5 * highlightedVariance);
         }
+        
+        // 计算该特征的最终得分
+        const featureScore = difference * 0.6 + cohesion * 0.4;
+        
+        // 获取特征名称
+        // 定义特征索引到名称的映射
+        const featureIndexToName = [
+            'tag', 'opacity', 'fill_h_cos', 'fill_h_sin', 'fill_s_n', 'fill_l_n', 
+            'stroke_h_cos', 'stroke_h_sin', 'stroke_s_n', 'stroke_l_n', 'stroke_width',
+            'bbox_left_n', 'bbox_right_n', 'bbox_top_n', 'bbox_bottom_n', 
+            'bbox_mds_1', 'bbox_mds_2', 'bbox_center_x_n', 'bbox_center_y_n', 
+            'bbox_width_n', 'bbox_height_n', 'bbox_fill_area'
+        ];
+        
+        const featureName = featureIndexToName[featureIndex] || `feature_${featureIndex}`;
+        const displayName = featureNameMap[featureName] || featureName;
+        
+        // 修复特征名称的格式，去除额外的空格
+        const cleanDisplayName = displayName.trim();
+        
+        featureScores.push({
+            index: featureIndex,
+            name: cleanDisplayName,
+            score: featureScore,
+            difference: difference,
+            cohesion: cohesion
+        });
     }
     
-    return sortedFeatures.map(([name, {weight}]) => {
-        const absWeight = Math.abs(weight).toFixed(2);
-        const color = weight > 0 ? '#1E88E5' : '#1E88E5';
+    // 使用Set来保存已处理的特征名，确保唯一性
+    const uniqueFeatureNames = new Set();
+    
+    // 3. 完全按重要性对特征进行排序和去重
+    const sortedFeatures = featureScores
+        .sort((a, b) => b.score - a.score)
+        // 使用Map对象来存储每个特征名称的最高分
+        .reduce((map, feature) => {
+            // 如果该特征名称尚未添加或当前特征得分更高，则更新
+            if (!map.has(feature.name) || feature.score > map.get(feature.name).score) {
+                map.set(feature.name, feature);
+            }
+            return map;
+        }, new Map())
+        // 转换为数组
+        .values();
+    
+    // 取前三个最重要的且唯一的特征
+    const topFeatures = Array.from(sortedFeatures).slice(0, 3);
+    
+    // 4. 生成HTML，确保特征标签唯一
+    return topFeatures.map(feature => {
+        const color = '#1E88E5';
         return `<span class="feature-tag" style="color: ${color}; border-color: ${color}20; background-color: ${color}08">
-            ${name} 
+            ${feature.name}
         </span>`;
     }).join(' ');
 };
@@ -756,6 +800,7 @@ const fetchAnalysisData = async () => {
 
 // 首先添加一个ref来存储特征数据
 const clusterFeatures = ref(null);
+const normalizedData = ref(null);
 
 // 在loadAndRenderGraph函数中添加获取特征数据的逻辑
 async function loadAndRenderGraph() {
@@ -763,26 +808,30 @@ async function loadAndRenderGraph() {
         loading.value = true;
         isInitialRender.value = true;
         
-        const [svgResponse, graphResponse, featuresResponse] = await Promise.all([
+        // 移除fetchAnalysisData()调用，不再需要获取这些数据
+        const [svgResponse, graphResponse, featuresResponse, normalDataResponse] = await Promise.all([
             fetch('http://127.0.0.1:5000/get_svg'),
             fetch('http://127.0.0.1:5000/static/data/subgraphs/subgraph_dimension_all.json'),
             fetch('http://127.0.0.1:5000/cluster_features'),
-            fetchAnalysisData()
+            fetch(NORMAL_DATA_URL)
         ]);
         
-        const [svgContent, data, featuresData] = await Promise.all([
+        const [svgContent, data, featuresData, normalData] = await Promise.all([
             svgResponse.text(),
             graphResponse.json(),
-            featuresResponse.json()
+            featuresResponse.json(),
+            normalDataResponse.json()
         ]);
         
         // 检查数据是否更新
         if (originalSvgContent.value !== svgContent || 
             JSON.stringify(graphData.value) !== JSON.stringify(data) ||
-            JSON.stringify(clusterFeatures.value) !== JSON.stringify(featuresData)) {
+            JSON.stringify(clusterFeatures.value) !== JSON.stringify(featuresData) ||
+            JSON.stringify(normalizedData.value) !== JSON.stringify(normalData)) {
             
             isDataUpdated.value = true;
             clusterFeatures.value = featuresData;
+            normalizedData.value = normalData;
             originalSvgContent.value = svgContent;
             graphData.value = data;
             
@@ -933,7 +982,7 @@ function getHighlightedElementsStats(nodeData) {
 
 // 修改注意力概率计算函数
 const calculateAttentionProbability = (nodeData) => {
-    if (!clusterFeatures.value) return 0;
+    if (!normalizedData.value || normalizedData.value.length === 0) return 0.1;
 
     try {
         let nodesToAnalyze = [];
@@ -954,14 +1003,16 @@ const calculateAttentionProbability = (nodeData) => {
 
         if (nodesToAnalyze.length === 0) return 0.1;
 
-        // 2. 将所有节点分为高亮组和非高亮组
+        // 1. 将所有节点分为高亮组和非高亮组
         const highlightedFeatures = [];
         const nonHighlightedFeatures = [];
 
-        // 修改这里的路径匹配逻辑
-        clusterFeatures.value.forEach(item => {
-            // 标准化路径格式
+        // 遍历normalized数据
+        normalizedData.value.forEach(item => {
+            // 标准化ID格式以便比较
             const normalizedItemId = item.id;
+            
+            // 检查当前元素是否是高亮元素
             const isHighlighted = nodesToAnalyze.some(analyzeNode => {
                 // 移除开头的 'svg/' 并标准化分析节点的路径
                 const normalizedAnalyzeNode = analyzeNode.replace(/^svg\//, '');
@@ -976,58 +1027,88 @@ const calculateAttentionProbability = (nodeData) => {
             }
         });
 
+        // 如果没有高亮元素或没有非高亮元素，返回默认值
         if (highlightedFeatures.length === 0 || nonHighlightedFeatures.length === 0) {
             return 0.1;
         }
 
-        // 3. 计算高亮组的平均特征向量
+        // 2. 计算高亮组的平均特征向量
         const highlightedMean = highlightedFeatures[0].map((_, featureIndex) => {
             return highlightedFeatures.reduce((sum, features) => 
                 sum + features[featureIndex], 0) / highlightedFeatures.length;
         });
 
-        // 4. 计算非高亮组的平均特征向量
+        // 3. 计算非高亮组的平均特征向量
         const nonHighlightedMean = nonHighlightedFeatures[0].map((_, featureIndex) => {
             return nonHighlightedFeatures.reduce((sum, features) => 
                 sum + features[featureIndex], 0) / nonHighlightedFeatures.length;
         });
 
-        // 5. 计算两组之间的欧氏距离
-        const euclideanDistance = Math.sqrt(
+        // 4. 计算两组之间的欧氏距离（差异性）
+        const betweenGroupDistance = Math.sqrt(
             highlightedMean.reduce((sum, value, index) => {
                 const diff = value - nonHighlightedMean[index];
                 return sum + (diff * diff);
             }, 0)
         );
 
-        // 6. 计算组内的平均距离（衡量组内聚集程度）
-        const avgIntraDistance = highlightedFeatures.reduce((sum, features) => {
-            const distance = Math.sqrt(
-                features.reduce((s, value, index) => {
-                    const diff = value - highlightedMean[index];
-                    return s + (diff * diff);
-                }, 0)
-            );
-            return sum + distance;
-        }, 0) / highlightedFeatures.length;
-
-        // 7. 调整评分计算
-        const score = euclideanDistance / (avgIntraDistance + 0.1);
+        // 5. 计算高亮组内部的平均欧氏距离（内聚性的反面）
+        let withinGroupDistance = 0;
         
-        // 调整sigmoid函数的参数以获得更好的分布
-        const sigmoid = x => 1 / (1 + Math.exp(-3 * (x - 0.5)));
-        const normalizedScore = 0.1 + sigmoid(score) * 0.8;
+        // 如果只有一个高亮元素，内聚度为最高（内部距离为0）
+        if (highlightedFeatures.length === 1) {
+            withinGroupDistance = 0;
+        } else {
+            // 计算高亮组内的所有点对之间的平均距离
+            const distanceSum = highlightedFeatures.reduce((totalSum, features1, index1) => {
+                return totalSum + highlightedFeatures.slice(index1 + 1).reduce((pairSum, features2) => {
+                    // 计算两个特征向量之间的欧氏距离
+                    const pairDistance = Math.sqrt(
+                        features1.reduce((sum, value, idx) => {
+                            const diff = value - features2[idx];
+                            return sum + (diff * diff);
+                        }, 0)
+                    );
+                    return pairSum + pairDistance;
+                }, 0);
+            }, 0);
 
-        // 调整节点数量因子的影响
-        const nodeCountFactor = Math.min(highlightedFeatures.length / 5, 1); // 改为5个节点达到最大影响
-        const finalScore = normalizedScore * (0.7 + nodeCountFactor * 0.3); // 增加节点数量的影响权重
+            // 计算点对数量: n(n-1)/2
+            const numPairs = (highlightedFeatures.length * (highlightedFeatures.length - 1)) / 2;
+            withinGroupDistance = numPairs > 0 ? distanceSum / numPairs : 0;
+        }
 
-        return Math.min(Math.max(finalScore, 0.1), 0.9);
-
+        // 6. 计算关注概率分数
+        // 当内聚度高（withinGroupDistance小）和差异性高（betweenGroupDistance大）时，关注概率应该高
+        
+        // 归一化内聚度（值越小表示内聚度越高）
+        // 减小指数系数以提高内聚度得分
+        const cohesionFactor = Math.exp(-2 * withinGroupDistance); // 从-3改为-2，使得内聚度得分更高
+        
+        // 归一化差异度 - 降低归一化分母以增大差异度得分
+        const differentiationFactor = Math.min(betweenGroupDistance, 2) / 2; // 从3改为2
+        
+        // 提高基础分数
+        const baseScore = Math.max(0.3, differentiationFactor * 0.6 + cohesionFactor * 0.4); // 设置最小基础分为0.3
+        
+        // 考虑元素数量因子
+        // 单个元素默认内聚度最高
+        let nodeCountFactor = 1.0;
+        if (highlightedFeatures.length > 1) {
+            // 随着节点数量增加，适当提高权重，范围在0.8-1.2之间
+            nodeCountFactor = 0.8 + 0.4 * Math.min(highlightedFeatures.length / 4, 1);
+        }
+        
+        // 调整最终分数 - 更积极的缩放
+        const finalScore = baseScore * nodeCountFactor;
+        
+        // 映射到0.2-0.95范围，整体提高最小值和最大值
+        return Math.min(Math.max(0.2 + finalScore * 0.75, 0.2), 0.95);
+        
     } catch (error) {
         console.error('Error calculating attention probability:', error);
         console.error('Error details:', error.stack);
-        return 0.1;
+        return 0.2; // 提高默认值
     }
 };
 

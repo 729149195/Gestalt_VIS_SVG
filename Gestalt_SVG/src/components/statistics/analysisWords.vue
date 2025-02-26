@@ -50,13 +50,13 @@ import maxstic from '../visualization/maxstic.vue'
 import { useStore } from 'vuex'
 
 // 数据源URL
-const MAPPING_DATA_URL = "http://127.0.0.1:5000/average_equivalent_mapping";
-const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag";
+// const MAPPING_DATA_URL = "http://127.0.0.1:5000/average_equivalent_mapping";
+// const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag";
 const NORMAL_DATA_URL = "http://127.0.0.1:5000/normalized_init_json";
 
 // 特征名称映射
 const featureNameMap = {
-    'tag': 'color',
+    'tag': 'shape',
     'opacity': 'opacity',
     'fill_h_cos': 'fill color',
     'fill_h_sin': 'fill color',
@@ -125,325 +125,458 @@ const isFeatureSectionScrolledToBottom = ref(true);
 const isMiddleSectionScrolledToBottom = ref(true);
 
 // 生成分析文字的函数
-const generateAnalysis = (dataMapping, dataEquivalentWeights, isSelectedNodes = false) => {
-    if (!dataMapping || !dataEquivalentWeights) return isSelectedNodes ? '等待选中节点...' : '等待分析...';
-
-    const inputDimensions = dataMapping.input_dimensions;
-    const outputDimensions = dataMapping.output_dimensions;
-    const weights = dataMapping.weights;
-
-    // 检查数据结构是否完整
-    if (!Array.isArray(inputDimensions) || !Array.isArray(weights) || weights.length === 0) {
-        return isSelectedNodes ? '无法分析选中节点的数据' : '数据结构不完整';
+const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds = []) => {
+    if (!normalData || !Array.isArray(normalData) || normalData.length === 0) {
+        return isSelectedNodes ? '等待选中节点...' : '等待分析...';
     }
 
-    // 创建一个Map来存储每个特征的最大绝对权重
-    const featureMaxWeights = new Map();
+    // 如果是选中节点分析但没有选中节点
+    if (isSelectedNodes && (!selectedNodeIds || selectedNodeIds.length === 0)) {
+        return '<div class="no-selection">请选择节点查看分析...</div>';
+    }
 
-    // 遍历权重数组
-    weights.forEach(dimensionWeights => {
-        if (Array.isArray(dimensionWeights)) {
-            dimensionWeights.forEach((weight, featureIndex) => {
-                if (featureIndex < inputDimensions.length) {
-                    const featureName = inputDimensions[featureIndex];
-                    
-                    // 跳过 "tag" 特征
-                    if (featureName === 'tag') {
-                        return;
+    // 获取特征数量
+    const featureCount = normalData[0]?.features?.length || 0;
+    if (featureCount === 0) {
+        return '<div class="no-selection">找不到有效的特征数据</div>';
+    }
+    
+    // 创建特征索引到名称的映射
+    // 因为normalized_init_json.json中没有特征名称，所以我们使用featureNameMap中的索引位置映射
+    const featureIndices = Object.keys(featureNameMap).map((key, index) => ({
+        index,
+        name: featureNameMap[key] || key
+    }));
+    
+    // 将相同特征名称的索引分组
+    const featureGroups = {};
+    featureIndices.forEach(({index, name}) => {
+        if (!featureGroups[name]) {
+            featureGroups[name] = [];
+        }
+        featureGroups[name].push(index);
+    });
+    
+    // 创建特征统计对象
+    let featureStats = {};
+    
+    // 初始化特征统计数据
+    Object.keys(featureGroups).forEach(displayName => {
+        featureStats[displayName] = {
+            values: [],
+            selectedValues: [],
+            unselectedValues: [],
+            featureIndices: featureGroups[displayName],
+            hasNonZeroValues: false,          // 添加标记，记录该特征是否存在非零值
+            hasNonZeroSelectedValues: false,  // 添加标记，记录选中元素中该特征是否存在非零值
+            hasNonZeroUnselectedValues: false // 添加标记，记录未选中元素中该特征是否存在非零值
+        };
+    });
+    
+    // 收集所有特征值 - 对于每个特征组，我们取各索引特征值的平均值
+    normalData.forEach(node => {
+        const isSelected = selectedNodeIds.some(id => 
+            node.id === id || node.id.endsWith(`/${id}`)
+        );
+        
+        Object.keys(featureStats).forEach(displayName => {
+            const featureIndices = featureStats[displayName].featureIndices;
+            
+            // 只有在索引有效时才计算
+            if (featureIndices.length > 0 && featureIndices[0] < node.features.length) {
+                // 计算特征组的平均值
+                const sum = featureIndices.reduce((acc, index) => {
+                    // 确保索引有效
+                    if (index < node.features.length) {
+                        return acc + Math.abs(node.features[index]);
                     }
-                    
-                    // 检查该特征是否所有元素都为0
-                    let allZero = true;
-                    if (rawFeatureData.value) {
-                        for (const node of rawFeatureData.value) {
-                            if (node.features[featureIndex] !== 0) {
-                                allZero = false;
-                                break;
-                            }
-                        }
+                    return acc;
+                }, 0);
+                
+                const value = sum / featureIndices.length;
+                
+                // 添加到所有值数组
+                featureStats[displayName].values.push(value);
+                
+                // 检查是否有非零值
+                if (value > 0) {
+                    featureStats[displayName].hasNonZeroValues = true;
+                }
+                
+                // 根据是否选中添加到相应数组
+                if (isSelected) {
+                    featureStats[displayName].selectedValues.push(value);
+                    // 检查选中元素中是否有非零值
+                    if (value > 0) {
+                        featureStats[displayName].hasNonZeroSelectedValues = true;
                     }
-                    
-                    // 如果所有元素都为0，则跳过该特征
-                    if (allZero) {
-                        return;
-                    }
-                    
-                    const displayName = featureNameMap[featureName] || featureName;
-                    const absWeight = Math.abs(weight);
-                    
-                    // 使用displayName作为键，如果当前权重更大，则更新
-                    if (!featureMaxWeights.has(displayName) || absWeight > featureMaxWeights.get(displayName).absWeight) {
-                        featureMaxWeights.set(displayName, {
-                            weight: weight,
-                            absWeight: absWeight,
-                            originalName: featureName // 保存原始特征名以便追踪
-                        });
+                } else {
+                    featureStats[displayName].unselectedValues.push(value);
+                    // 检查未选中元素中是否有非零值
+                    if (value > 0) {
+                        featureStats[displayName].hasNonZeroUnselectedValues = true;
                     }
                 }
-            });
+            }
+        });
+    });
+    
+    // 计算每个特征的统计数据
+    Object.keys(featureStats).forEach(displayName => {
+        const feature = featureStats[displayName];
+        
+        // 跳过没有值的特征
+        if (feature.values.length === 0) {
+            delete featureStats[displayName];
+            return;
+        }
+        
+        // 计算全局统计量
+        const allValues = feature.values;
+        const mean = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+        const variance = allValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / allValues.length;
+        const stdDev = Math.sqrt(variance);
+        
+        feature.mean = mean;
+        feature.variance = variance;
+        feature.stdDev = stdDev;
+        // 计算区分度，并限制最大值为1，确保不会导致超过5颗星
+        feature.distinctiveness = Math.min(1, stdDev / (Math.abs(mean) + 0.0001)); // 避免除以0，并限制最大值
+        
+        // 添加特征类型优先级，用于相同星级时的排序
+        feature.typePriority = getFeatureTypePriority(displayName);
+        
+        // 如果是选中节点分析，还需要计算选中和未选中之间的差异
+        if (isSelectedNodes && feature.selectedValues.length > 0 && feature.unselectedValues.length > 0) {
+            const selectedMean = feature.selectedValues.reduce((sum, val) => sum + val, 0) / feature.selectedValues.length;
+            const unselectedMean = feature.unselectedValues.reduce((sum, val) => sum + val, 0) / feature.unselectedValues.length;
+            
+            feature.selectedMean = selectedMean;
+            feature.unselectedMean = unselectedMean;
+            
+            // 计算选中和未选中之间的差异
+            feature.meanDifference = selectedMean - unselectedMean;
+            
+            // 计算差异的显著性 - 简化版本，降低显著性阈值
+            // 使用简化方法，用差异值直接作为重要程度的指标
+            feature.significance = Math.min(5, Math.abs(feature.meanDifference) * 5); // 限制最大值为5
+            
+            // 设置一个最小显著性值，确保所有特征都有一定的显著性
+            if (feature.significance < 0.5) {
+                feature.significance = 0.5;
+            }
         }
     });
-
-    // 转换为数组并排序，分成正相关和负相关两组
-    const features = Array.from(featureMaxWeights.entries())
-        .filter(([_, {absWeight}]) => absWeight > 0.1); // 只保留权重绝对值大于0.1的特征
-
-    const positiveFeatures = features
-        .filter(([_, {weight}]) => weight > 0)
-        .sort((a, b) => b[1].absWeight - a[1].absWeight);
-
-    const negativeFeatures = features
-        .filter(([_, {weight}]) => weight < 0)
-        .sort((a, b) => b[1].absWeight - a[1].absWeight);
-
-    // 如果没有找到任何特征，返回提示信息
-    if (features.length === 0) {
-        return '<div class="no-selection">没有找到显著的特征关系</div>';
-    }
-
-    // 生成HTML
-    let analysis = '<div class="feature-columns">';
     
-    // 根据是否是选中节点的分析来决定列的顺序
+    // 转换特征统计为数组，以便排序
+    let featureArray = Object.entries(featureStats)
+        // 不在初始阶段过滤全为0的特征，我们会在后续针对不同部分应用不同的过滤规则
+        //.filter(([_, stats]) => stats.hasNonZeroValues) 
+        .map(([name, stats]) => ({
+            name,
+            ...stats
+        }));
+    
+    // 根据是否为选中节点分析选择不同的排序标准
     if (isSelectedNodes) {
-        // 选中节点分析时，交换顺序：正相关列在左边，负相关列在右边
+        // 根据选中和未选中之间差异的显著性排序
+        // 移除significance过滤，确保所有特征都能被显示
+        //featureArray = featureArray.filter(feature => feature.significance !== undefined);
         
-        // 正相关列 - 放在第一列（左侧）
+        // 分成正差异和负差异，为Used features部分过滤全为0的特征，但Suggest Features部分不过滤
+        const positiveFeatures = featureArray
+            .filter(feature => feature.meanDifference > 0 && feature.hasNonZeroSelectedValues) // Used features需要过滤全零特征
+            .sort((a, b) => {
+                // 首先按显著性排序
+                if (Math.abs(a.significance - b.significance) > 0.001) {
+                    return b.significance - a.significance;
+                }
+                // 显著性相同时，按特征类型优先级排序
+                return b.typePriority - a.typePriority;
+            })
+            .slice(0, 20); // 增加到20个
+            
+        const negativeFeatures = featureArray
+            .filter(feature => feature.meanDifference < 0) // Suggest Features不过滤全零特征
+            .sort((a, b) => {
+                // 首先按显著性排序
+                if (Math.abs(a.significance - b.significance) > 0.001) {
+                    return b.significance - a.significance;
+                }
+                // 显著性相同时，按特征类型优先级排序
+                return b.typePriority - a.typePriority;
+            })
+            .slice(0, 20); // 增加到20个
+            
+        // 如果某一类特征太少，尝试补充显示更多的另一类特征
+        if (positiveFeatures.length < 5 && negativeFeatures.length > 10) {
+            // 如果正差异特征少于5个，则多显示一些负差异特征
+            const moreNegativeFeatures = featureArray
+                .filter(feature => feature.meanDifference < 0) // Suggest Features不过滤全零特征
+                .sort((a, b) => {
+                    // 首先按显著性排序
+                    if (Math.abs(a.significance - b.significance) > 0.001) {
+                        return b.significance - a.significance;
+                    }
+                    // 显著性相同时，按特征类型优先级排序
+                    return b.typePriority - a.typePriority;
+                })
+                .slice(0, 25); // 增加到25个
+                
+            // 替换原有的负差异特征数组
+            negativeFeatures.splice(0, negativeFeatures.length, ...moreNegativeFeatures);
+        } else if (negativeFeatures.length < 5 && positiveFeatures.length > 10) {
+            // 如果负差异特征少于5个，则多显示一些正差异特征
+            const morePositiveFeatures = featureArray
+                .filter(feature => feature.meanDifference > 0 && feature.hasNonZeroSelectedValues) // Used features需要过滤全零特征
+                .sort((a, b) => {
+                    // 首先按显著性排序
+                    if (Math.abs(a.significance - b.significance) > 0.001) {
+                        return b.significance - a.significance;
+                    }
+                    // 显著性相同时，按特征类型优先级排序
+                    return b.typePriority - a.typePriority;
+                })
+                .slice(0, 25); // 增加到25个
+                
+            // 替换原有的正差异特征数组
+            positiveFeatures.splice(0, positiveFeatures.length, ...morePositiveFeatures);
+        }
+        
+        // 如果仍然没有足够的特征(特例情况)，则取全部特征并平分
+        if (positiveFeatures.length + negativeFeatures.length < 10) {
+            // 按显著性对所有特征排序，为Used features准备的特征需要过滤全零值，为Suggest Features准备的不需要
+            const allPositiveFeatures = featureArray
+                .filter(feature => feature.meanDifference > 0 && feature.hasNonZeroSelectedValues)
+                .sort((a, b) => {
+                    // 首先按显著性排序
+                    if (Math.abs(a.significance - b.significance) > 0.001) {
+                        return b.significance - a.significance;
+                    }
+                    // 显著性相同时，按特征类型优先级排序
+                    return b.typePriority - a.typePriority;
+                });
+                
+            const allNegativeFeatures = featureArray
+                .filter(feature => feature.meanDifference < 0)
+                .sort((a, b) => {
+                    // 首先按显著性排序
+                    if (Math.abs(a.significance - b.significance) > 0.001) {
+                        return b.significance - a.significance;
+                    }
+                    // 显著性相同时，按特征类型优先级排序
+                    return b.typePriority - a.typePriority;
+                });
+                
+            // 替换原有特征数组
+            positiveFeatures.splice(0, positiveFeatures.length, ...allPositiveFeatures);
+            negativeFeatures.splice(0, negativeFeatures.length, ...allNegativeFeatures);
+        }
+
+        // 生成HTML
+        let analysis = '<div class="feature-columns">';
+        
+        // 正差异特征（选中元素特有的特征）- Used Features
         analysis += '<div class="feature-column positive">';
         analysis += `<div class="column-title">Used features</div>`;
         
-        positiveFeatures.forEach(([name, {absWeight}]) => {
-            // 根据权重计算星星数量
-            const filledStars = Math.min(5, Math.ceil(absWeight * 5));
-            const emptyStars = 5 - filledStars;
-            
-            let starsHtml = '';
-            // 添加实心星星
-            for (let i = 0; i < filledStars; i++) {
-                starsHtml += '<span class="star filled">★</span>';
-            }
-            // 添加空心星星
-            for (let i = 0; i < emptyStars; i++) {
-                starsHtml += '<span class="star empty">☆</span>';
-            }
-            
-            analysis += `
-                <div class="feature-item">
-                    <span class="feature-tag" style="color: #E53935; border-color: #E5393520; background-color: #E5393508">
-                        ${name}
-                    </span>
-                    <span class="feature-influence" style="color: #E53935">
-                        ${starsHtml}
-                    </span>
-                </div>
-            `;
-        });
+        if (positiveFeatures.length > 0) {
+            positiveFeatures.forEach(feature => {
+                // 根据显著性计算星星数量
+                const filledStars = Math.min(5, Math.ceil(feature.significance));
+                const emptyStars = 5 - filledStars;
+                
+                let starsHtml = '';
+                // 添加实心星星 - 确保不超过5个星星
+                for (let i = 0; i < filledStars && i < 5; i++) {
+                    starsHtml += '<span class="star filled">★</span>';
+                }
+                // 添加空心星星
+                for (let i = 0; i < emptyStars && i < (5 - filledStars); i++) {
+                    starsHtml += '<span class="star empty">☆</span>';
+                }
+                
+                analysis += `
+                    <div class="feature-item">
+                        <span class="feature-tag" style="color: #666666; border-color: #66666620; background-color: #66666608">
+                            ${feature.name}
+                        </span>
+                        <span class="feature-influence" style="color: #666666">
+                            ${starsHtml}
+                        </span>
+                    </div>
+                `;
+            });
+        } else {
+            analysis += `<div class="no-selection">没有发现显著特征</div>`;
+        }
+        
         analysis += '</div>';
         
-        // 负相关列 - 放在第二列（右侧）
+        // 负差异特征（选中元素缺乏的特征）- Suggest Features
         analysis += '<div class="feature-column negative">';
         analysis += `<div class="column-title">Suggest Features</div>`;
         
-        negativeFeatures.forEach(([name, {absWeight}]) => {
-            // 根据权重计算星星数量
-            const filledStars = Math.min(5, Math.ceil(absWeight * 5));
-            const emptyStars = 5 - filledStars;
-            
-            let starsHtml = '';
-            // 添加实心星星
-            for (let i = 0; i < filledStars; i++) {
-                starsHtml += '<span class="star filled">★</span>';
-            }
-            // 添加空心星星
-            for (let i = 0; i < emptyStars; i++) {
-                starsHtml += '<span class="star empty">☆</span>';
-            }
-            
-            analysis += `
-                <div class="feature-item">
-                    <span class="feature-tag" style="color: #1E88E5; border-color: #1E88E520; background-color: #1E88E508">
-                        ${name}
-                    </span>
-                    <span class="feature-influence" style="color: #1E88E5">
-                        ${starsHtml}
-                    </span>
-                </div>
-            `;
-        });
-        analysis += '</div>';
-    } else {
-        // 默认情况：保持原来的顺序 - 负相关列在左，正相关列在右
+        if (negativeFeatures.length > 0) {
+            negativeFeatures.forEach(feature => {
+                // 根据显著性计算星星数量
+                const filledStars = Math.min(5, Math.ceil(feature.significance));
+                const emptyStars = 5 - filledStars;
+                
+                let starsHtml = '';
+                // 添加实心星星 - 确保不超过5个星星
+                for (let i = 0; i < filledStars && i < 5; i++) {
+                    starsHtml += '<span class="star filled">★</span>';
+                }
+                // 添加空心星星
+                for (let i = 0; i < emptyStars && i < (5 - filledStars); i++) {
+                    starsHtml += '<span class="star empty">☆</span>';
+                }
+                
+                analysis += `
+                    <div class="feature-item">
+                        <span class="feature-tag" style="color: #666666; border-color: #66666620; background-color: #66666608">
+                            ${feature.name}
+                        </span>
+                        <span class="feature-influence" style="color: #666666">
+                            ${starsHtml}
+                        </span>
+                    </div>
+                `;
+            });
+        } else {
+            analysis += `<div class="no-selection">没有发现建议特征</div>`;
+        }
         
-        // 负相关列 - 放在第一列（左侧）
+        analysis += '</div>';
+        analysis += '</div>';
+        
+        return analysis;
+    } else {
+        // 全局分析：根据特征的突出程度（区分度）排序
+        featureArray.sort((a, b) => {
+            // 首先按区分度排序
+            if (Math.abs(a.distinctiveness - b.distinctiveness) > 0.001) {
+                return b.distinctiveness - a.distinctiveness;
+            }
+            // 区分度相同时，按特征类型优先级排序
+            return b.typePriority - a.typePriority;
+        });
+        
+        // 分离最突出和最不突出的特征，Used Features过滤全零特征，Available features不过滤
+        const mostDistinctive = featureArray
+            .filter(feature => feature.hasNonZeroValues) // Used Features需要过滤全零特征
+            .slice(0, 10); // 修改为显示10个
+            
+        const leastDistinctive = featureArray
+            //.filter(feature => feature.hasNonZeroValues) // Available features不过滤全零特征
+            .slice(-10).reverse(); // 修改为显示10个
+        
+        // 生成HTML
+        let analysis = '<div class="feature-columns">';
+        
+        // 最突出的特征 - Used Features
         analysis += '<div class="feature-column negative">';
         analysis += `<div class="column-title">Used Features</div>`;
         
-        negativeFeatures.forEach(([name, {absWeight}]) => {
-            // 根据权重计算星星数量
-            const filledStars = Math.min(5, Math.ceil(absWeight * 5));
-            const emptyStars = 5 - filledStars;
-            
-            let starsHtml = '';
-            // 添加实心星星
-            for (let i = 0; i < filledStars; i++) {
-                starsHtml += '<span class="star filled">★</span>';
-            }
-            // 添加空心星星
-            for (let i = 0; i < emptyStars; i++) {
-                starsHtml += '<span class="star empty">☆</span>';
-            }
-            
-            analysis += `
-                <div class="feature-item">
-                    <span class="feature-tag" style="color: #1E88E5; border-color: #1E88E520; background-color: #1E88E508">
-                        ${name}
-                    </span>
-                    <span class="feature-influence" style="color: #1E88E5">
-                        ${starsHtml}
-                    </span>
-                </div>
-            `;
-        });
+        if (mostDistinctive.length > 0) {
+            mostDistinctive.forEach(feature => {
+                // 根据区分度计算星星数量
+                const filledStars = Math.min(5, Math.ceil(feature.distinctiveness * 5));
+                const emptyStars = 5 - filledStars;
+                
+                let starsHtml = '';
+                // 添加实心星星 - 确保不超过5个星星
+                for (let i = 0; i < filledStars && i < 5; i++) {
+                    starsHtml += '<span class="star filled">★</span>';
+                }
+                // 添加空心星星
+                for (let i = 0; i < emptyStars && i < (5 - filledStars); i++) {
+                    starsHtml += '<span class="star empty">☆</span>';
+                }
+                
+                analysis += `
+                    <div class="feature-item">
+                        <span class="feature-tag" style="color: #666666; border-color: #66666620; background-color: #66666608">
+                            ${feature.name}
+                        </span>
+                        <span class="feature-influence" style="color: #666666">
+                            ${starsHtml}
+                        </span>
+                    </div>
+                `;
+            });
+        } else {
+            analysis += `<div class="no-selection">没有发现显著特征</div>`;
+        }
+        
         analysis += '</div>';
         
-        // 正相关列 - 放在第二列（右侧）
+        // 最不突出的特征 - Available Features
         analysis += '<div class="feature-column positive">';
         analysis += `<div class="column-title">Available features</div>`;
         
-        positiveFeatures.forEach(([name, {absWeight}]) => {
-            // 根据权重计算星星数量
-            const filledStars = Math.min(5, Math.ceil(absWeight * 5));
-            const emptyStars = 5 - filledStars;
-            
-            let starsHtml = '';
-            // 添加实心星星
-            for (let i = 0; i < filledStars; i++) {
-                starsHtml += '<span class="star filled">★</span>';
-            }
-            // 添加空心星星
-            for (let i = 0; i < emptyStars; i++) {
-                starsHtml += '<span class="star empty">☆</span>';
-            }
-            
-            analysis += `
-                <div class="feature-item">
-                    <span class="feature-tag" style="color: #E53935; border-color: #E5393520; background-color: #E5393508">
-                        ${name}
-                    </span>
-                    <span class="feature-influence" style="color: #E53935">
-                        ${starsHtml}
-                    </span>
-                </div>
-            `;
-        });
+        if (leastDistinctive.length > 0) {
+            leastDistinctive.forEach(feature => {
+                // 对于最不突出的特征，使用反向计算星星，多的星星表示更值得利用
+                const reverseDistinctiveness = 1 - feature.distinctiveness;
+                const filledStars = Math.min(5, Math.ceil(reverseDistinctiveness * 5));
+                const emptyStars = 5 - filledStars;
+                
+                let starsHtml = '';
+                // 添加实心星星 - 确保不超过5个星星
+                for (let i = 0; i < filledStars && i < 5; i++) {
+                    starsHtml += '<span class="star filled">★</span>';
+                }
+                // 添加空心星星
+                for (let i = 0; i < emptyStars && i < (5 - filledStars); i++) {
+                    starsHtml += '<span class="star empty">☆</span>';
+                }
+                
+                analysis += `
+                    <div class="feature-item">
+                        <span class="feature-tag" style="color: #666666; border-color: #66666620; background-color: #66666608">
+                            ${feature.name}
+                        </span>
+                        <span class="feature-influence" style="color: #666666">
+                            ${starsHtml}
+                        </span>
+                    </div>
+                `;
+            });
+        } else {
+            analysis += `<div class="no-selection">没有发现可用特征</div>`;
+        }
+        
         analysis += '</div>';
+        analysis += '</div>';
+        
+        return analysis;
     }
-    
-    analysis += '</div>';
-    return analysis;
 };
 
 // 获取数据并生成分析
 const fetchDataAndGenerateAnalysis = async () => {
     try {
-        // 并行获取所有数据
-        const [responseMapping, responseEquivalentWeights, responseNormal] = await Promise.all([
-            axios.get(MAPPING_DATA_URL),
-            axios.get(EQUIVALENT_WEIGHTS_URL),
-            axios.get(NORMAL_DATA_URL)
-        ]);
+        // 只获取正则化数据，不再需要其他两个API数据
+        const response = await axios.get(NORMAL_DATA_URL);
 
-        if (!responseMapping.data || !responseEquivalentWeights.data || !responseNormal.data) {
+        if (!response.data) {
             throw new Error('网络响应有问题');
         }
 
         // 保存原始特征数据
-        rawFeatureData.value = responseNormal.data;
+        rawFeatureData.value = response.data;
 
-        // 生成全局分析文字
-        analysisContent.value = generateAnalysis(responseMapping.data, responseEquivalentWeights.data, false);
+        // 获取选中节点的ID
+        const selectedNodeIds = store.state.selectedNodes.nodeIds || [];
+
+        // 生成全局分析文字 - 不需要传入选中节点ID
+        analysisContent.value = generateAnalysis(response.data, false);
         
-        // 获取选中节点的分析数据
-        const selectedNodeIds = store.state.selectedNodes.nodeIds;
+        // 生成选中节点的分析 - 传入选中节点ID
         if (selectedNodeIds && selectedNodeIds.length > 0) {
-            // 从equivalent_weights_by_tag中获取选中节点的权重数据
-            const selectedNodesWeights = {};
-            selectedNodeIds.forEach(nodeId => {
-                // 在所有权重数据中查找匹配的节点ID
-                const matchingKey = Object.keys(responseEquivalentWeights.data).find(key => 
-                    key.endsWith(`/${nodeId}`)  // 使用endsWith来匹配节点ID
-                );
-                
-                if (matchingKey) {
-                    selectedNodesWeights[matchingKey] = responseEquivalentWeights.data[matchingKey];
-                }
-            });
-
-            if (Object.keys(selectedNodesWeights).length > 0) {
-                // 计算每个特征的最大绝对值权重
-                const maxWeights = [];
-                const dimensions = responseMapping.data.input_dimensions.length;
-                
-                // 初始化最大权重数组
-                for (let i = 0; i < dimensions; i++) {
-                    maxWeights[i] = {
-                        value: 0,  // 实际权重值
-                        absValue: 0  // 绝对值
-                    };
-                }
-
-                // 遍历所有选中节点的权重
-                Object.values(selectedNodesWeights).forEach(nodeWeights => {
-                    nodeWeights.forEach(row => {
-                        row.forEach((weight, index) => {
-                            const absWeight = Math.abs(weight);
-                            // 如果当前权重的绝对值大于已记录的最大绝对值
-                            if (absWeight > maxWeights[index].absValue) {
-                                maxWeights[index] = {
-                                    value: weight,
-                                    absValue: absWeight
-                                };
-                            }
-                        });
-                    });
-                });
-
-                // 创建选中节点的分析数据
-                const selectedData = {
-                    ...responseMapping.data,
-                    weights: [maxWeights.map(w => w.value)]  // 使用最大权重值
-                };
-
-                // 为选中节点创建过滤后的原始特征数据
-                const filteredRawFeatureData = [];
-                
-                // 只保留选中的节点数据
-                if (rawFeatureData.value) {
-                    selectedNodeIds.forEach(nodeId => {
-                        const matchingNode = rawFeatureData.value.find(node => 
-                            node.id === nodeId || node.id.endsWith(`/${nodeId}`)
-                        );
-                        
-                        if (matchingNode) {
-                            filteredRawFeatureData.push(matchingNode);
-                        }
-                    });
-                }
-                
-                // 使用临时变量保存原始的 rawFeatureData.value
-                const originalRawFeatureData = rawFeatureData.value;
-                
-                // 将 rawFeatureData.value 临时替换为过滤后的数据
-                rawFeatureData.value = filteredRawFeatureData;
-                
-                // 生成选中节点的分析
-                selectedNodesAnalysis.value = generateAnalysis(selectedData, responseEquivalentWeights.data, true);
-                
-                // 还原原始的 rawFeatureData.value
-                rawFeatureData.value = originalRawFeatureData;
-            } else {
-                selectedNodesAnalysis.value = '<div class="no-selection">无法找到选中节点的权重数据</div>';
-            }
+            selectedNodesAnalysis.value = generateAnalysis(response.data, true, selectedNodeIds);
         } else {
             selectedNodesAnalysis.value = '<div class="no-selection">请选择节点查看分析...</div>';
         }
@@ -577,6 +710,22 @@ function showNodeList(node) {
         store.commit('UPDATE_SELECTED_NODES', { nodeIds: nodeNames, group: null });
     } catch (error) {
         console.error('获取高亮节点时出错:', error);
+    }
+}
+
+// 添加获取特征类型优先级的函数
+function getFeatureTypePriority(featureName) {
+    // 颜色特征优先级最高
+    if (featureName.includes('color')) {
+        return 3;
+    }
+    // 位置特征优先级次之
+    else if (featureName.includes('position')) {
+        return 2;
+    }
+    // 其他特征优先级最低
+    else {
+        return 1;
     }
 }
 </script>
@@ -867,7 +1016,6 @@ function showNodeList(node) {
 :deep(.feature-columns) {
     display: flex;
     gap: 24px;
-    padding: 12px;
     max-height: 100%;
     overflow-y: auto;
 }
