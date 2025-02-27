@@ -1087,4 +1087,33 @@ function getFeatureTypePriority(featureName) {
     font-size: 14px;
     font-style: italic;
 }
+
+/* 添加自定义滚动条样式 */
+.analysis-content::-webkit-scrollbar,
+:deep(.feature-columns::-webkit-scrollbar) {
+    width: 6px;
+    height: 6px;
+}
+
+.analysis-content::-webkit-scrollbar-track,
+:deep(.feature-columns::-webkit-scrollbar-track) {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 3px;
+}
+
+.analysis-content::-webkit-scrollbar-thumb,
+:deep(.feature-columns::-webkit-scrollbar-thumb) {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+    transition: background 0.3s;
+}
+
+.analysis-content::-webkit-scrollbar-thumb:hover,
+:deep(.feature-columns::-webkit-scrollbar-thumb:hover) {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.section:hover .analysis-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+}
 </style>

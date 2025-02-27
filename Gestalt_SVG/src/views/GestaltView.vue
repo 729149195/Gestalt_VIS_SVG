@@ -1,24 +1,34 @@
- <template>
+<template>
     <div class="main">
-        <div class="left">
-            <div class="left-top">
+        <div class="left" :style="{ width: leftWidth + '%' }">
+            <div class="left-top" :style="{ height: leftTopHeight + '%' }">
                 <div class="fill-height">
                     <CodeToSvg />
                 </div>
+                <div class="resize-handle horizontal" @mousedown="startResizeLeftVertical"></div>
             </div>
-            <div class="left-bottom">
+            <div class="left-bottom" :style="{ height: (100 - leftTopHeight) + '%' }">
                 <div class="svgZoom">
                     <SvgUploader @file-uploaded="handleFileUploaded" />
                 </div>
             </div>
+            <div class="resize-handle vertical" @mousedown="startResizeHorizontal"></div>
         </div>
-        <div class="right">
+        <div class="right" :style="{ width: (100 - leftWidth) + '%' }">
             <div class="fill-height datas">
                 <div v-if="file" class="data-cards">
                     <div class="maxtistic">
-                        <SubgroupVisualization v-if="file" :key="componentKey2" class="subgroup-visualization"/>
-                        <analysisWords title="Feature dimension mapping analysis" :update-key="componentKey2" class="analysis-words"/>
-                        <StatisticsContainer :component-key="componentKey4" title="Analysis and Suggestions" class="main-card" />
+                        <div class="subgroup-section" :style="{ height: subgroupHeight + '%' }">
+                            <SubgroupVisualization v-if="file" :key="componentKey2" class="subgroup-visualization" />
+                        </div>
+                        <div class="resize-handle horizontal resize-right1" @mousedown="startResizeRightVertical1"></div>
+                        <div class="analysis-section" :style="{ height: analysisHeight + '%' }">
+                            <analysisWords title="Feature dimension mapping analysis" :update-key="componentKey2" class="analysis-words" />
+                        </div>
+                        <div class="resize-handle horizontal resize-right2" @mousedown="startResizeRightVertical2"></div>
+                        <div class="statistics-section" :style="{ height: statisticsHeight + '%' }">
+                            <StatisticsContainer :component-key="componentKey4" title="SVG Statistics" class="main-card" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -27,7 +37,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import SubgroupVisualization from '../components/visualization/SubgroupVisualization.vue';
 import SvgUploader from '../components/SvgUploader.vue';
 import analysisWords from '@/components/statistics/analysisWords.vue';
@@ -40,6 +50,158 @@ const componentKey2 = ref(1)
 const componentKey4 = ref(2)
 const componentKey3 = ref(3)
 
+// 区域大小设置
+const leftWidth = ref(50) // 左侧宽度百分比
+const leftTopHeight = ref(45) // 左上区域高度百分比
+const subgroupHeight = ref(35) // 右侧子组可视化区域高度百分比
+const analysisHeight = ref(25) // 分析文字区域高度百分比
+const statisticsHeight = ref(40) // 统计区域高度百分比
+
+// 记录调整状态 - 改回普通变量，避免响应式问题
+let isResizing = false;
+let currentResize = '';
+let startX = 0;
+let startY = 0;
+let startWidth = 0;
+let startHeight = 0;
+
+// 开始水平调整大小（左右分隔线）
+const startResizeHorizontal = (e) => {
+    isResizing = true;
+    currentResize = 'horizontal';
+    startX = e.clientX;
+    startWidth = leftWidth.value;
+    
+    // 添加全局事件监听
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'ew-resize';
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+// 开始左侧垂直调整大小（上下分隔线）
+const startResizeLeftVertical = (e) => {
+    isResizing = true;
+    currentResize = 'leftVertical';
+    startY = e.clientY;
+    startHeight = leftTopHeight.value;
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'ns-resize';
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+// 开始右侧第一个垂直调整（子组可视化和分析文字之间）
+const startResizeRightVertical1 = (e) => {
+    isResizing = true;
+    currentResize = 'rightVertical1';
+    startY = e.clientY;
+    startHeight = subgroupHeight.value;
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'ns-resize';
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+// 开始右侧第二个垂直调整（分析文字和统计之间）
+const startResizeRightVertical2 = (e) => {
+    isResizing = true;
+    currentResize = 'rightVertical2';
+    startY = e.clientY;
+    startHeight = analysisHeight.value;
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'ns-resize';
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+// 处理鼠标移动
+const handleMouseMove = (e) => {
+    if (!isResizing) return;
+
+    if (currentResize === 'horizontal') {
+        // 计算左侧宽度百分比变化
+        const container = document.querySelector('.main');
+        const containerWidth = container.offsetWidth;
+        const delta = e.clientX - startX;
+        const newWidth = startWidth + (delta / containerWidth * 100);
+        // 限制最小/最大宽度
+        leftWidth.value = Math.max(20, Math.min(80, newWidth));
+    } 
+    else if (currentResize === 'leftVertical') {
+        // 计算左上区域高度百分比变化
+        const container = document.querySelector('.left');
+        const containerHeight = container.offsetHeight;
+        const rect = container.getBoundingClientRect();
+        const relativeY = e.clientY - rect.top;
+        const newHeight = (relativeY / containerHeight) * 100;
+        // 限制最小/最大高度
+        leftTopHeight.value = Math.max(20, Math.min(80, newHeight));
+    }
+    else if (currentResize === 'rightVertical1') {
+        // 调整子组可视化区域和分析文字之间的分割
+        const container = document.querySelector('.maxtistic');
+        const containerHeight = container.offsetHeight;
+        const rect = container.getBoundingClientRect();
+        const relativeY = e.clientY - rect.top;
+        const newHeight = (relativeY / containerHeight) * 100;
+        
+        // 更新高度并保持总和为100%
+        subgroupHeight.value = Math.max(20, Math.min(70, newHeight));
+        // 计算剩余空间并分配给分析区域和统计区域
+        const remaining = 100 - subgroupHeight.value;
+        // 保持分析区域和统计区域的比例
+        const ratio = analysisHeight.value / (analysisHeight.value + statisticsHeight.value);
+        analysisHeight.value = Math.max(10, Math.min(40, remaining * ratio));
+        statisticsHeight.value = remaining - analysisHeight.value;
+    }
+    else if (currentResize === 'rightVertical2') {
+        // 调整分析文字和统计区域之间的分割
+        const container = document.querySelector('.maxtistic');
+        const containerHeight = container.offsetHeight;
+        const rect = container.getBoundingClientRect();
+        
+        // 两个分隔点之间的距离占总高度的百分比
+        const relativeY = e.clientY - rect.top;
+        const percentY = (relativeY / containerHeight) * 100;
+        
+        // 更新分析区域高度，并计算统计区域的高度
+        const newAnalysisHeight = percentY - subgroupHeight.value;
+        analysisHeight.value = Math.max(10, Math.min(40, newAnalysisHeight));
+        statisticsHeight.value = 100 - subgroupHeight.value - analysisHeight.value;
+    }
+    
+    // 防止事件冒泡和默认行为
+    e.stopPropagation();
+    e.preventDefault();
+}
+
+// 处理鼠标松开
+const handleMouseUp = (e) => {
+    if (!isResizing) return;
+    
+    isResizing = false;
+    currentResize = '';
+    
+    // 移除全局事件监听器
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'default';
+    
+    // 防止事件冒泡和默认行为
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+}
+
 const handleFileUploaded = () => {
     componentKey.value += 1;
     componentKey2.value += 1;
@@ -48,7 +210,7 @@ const handleFileUploaded = () => {
     file.value = true;
 };
 
-// 组件加时清空 uploadSvg 目录
+// 组件加载时清空 uploadSvg 目录
 onMounted(async () => {
     try {
         const response = await fetch('http://127.0.0.1:5000/clear_upload_folder', {
@@ -60,6 +222,21 @@ onMounted(async () => {
     } catch (error) {
         console.error('Error emptying upload folder:', error);
     }
+    
+    // 确保在组件卸载时清理任何可能的事件监听器
+    window.addEventListener('beforeunload', cleanupEvents);
+});
+
+// 清理所有事件监听器
+const cleanupEvents = () => {
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
+}
+
+// 组件卸载前清理事件监听器
+onBeforeUnmount(() => {
+    cleanupEvents();
+    window.removeEventListener('beforeunload', cleanupEvents);
 });
 </script>
 
@@ -71,6 +248,7 @@ onMounted(async () => {
     padding: 12px;
     box-sizing: border-box;
     gap: 12px;
+    position: relative;
 }
 
 .main,
@@ -82,21 +260,21 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    width: 90%;
     height: 100%;
     gap: 12px;
+    position: relative;
 }
 
 .left-bottom {
     display: flex;
     gap: 12px;
-    height: 55%;
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
 }
 
 .left-bottom:hover {
@@ -110,24 +288,64 @@ onMounted(async () => {
 }
 
 .left-top {
-    height: 45%;
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
 }
 
+/* 调整大小的分隔线样式 */
+.resize-handle {
+    position: absolute;
+    background-color: transparent;
+    z-index: 100;
+    transition: background-color 0.2s;
+}
+
+.resize-handle.vertical {
+    cursor: ew-resize;
+    width: 12px;
+    height: 100%;
+    top: 0;
+    right: -6px; /* 调整到left容器的右侧边缘 */
+    z-index: 1000;
+}
+
+.resize-handle.horizontal {
+    cursor: ns-resize;
+    height: 12px;
+    width: 100%;
+    left: 0;
+    bottom: -6px;
+    z-index: 101;
+}
+
+.resize-right1 {
+    top: calc(35% - 6px);
+    bottom: auto;
+}
+
+.resize-right2 {
+    top: calc(60% - 6px);
+    bottom: auto;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+    background-color: rgba(0, 120, 255, 0.3);
+}
 
 .right {
-    width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
     background-color: transparent;
+    position: relative;
 }
 
 .datas {
@@ -138,6 +356,7 @@ onMounted(async () => {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     overflow: hidden;
+    position: relative;
 }
 
 .datas:hover {
@@ -197,36 +416,45 @@ onMounted(async () => {
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
     padding: 4px;
+    position: relative;
 }
 
 .maxtistic>* {
     border-radius: 12px;
 }
 
+/* 为了解决右侧面板的布局问题，添加子区域容器 */
+.subgroup-section,
+.analysis-section,
+.statistics-section {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.subgroup-visualization,
+.analysis-words,
+.main-card {
+    height: 100%;
+    width: 100%;
+}
+
 /* 只为 SubgroupVisualization 和 maxstic 添加悬浮效果 */
-.maxtistic>SubgroupVisualization:hover,
-.maxtistic>maxstic:hover {
+.maxtistic .subgroup-visualization:hover,
+.maxtistic .maxstic:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
 }
 
-.maxtistic>analysisWords {
+.maxtistic .analysis-words {
     background-color: transparent !important;
     box-shadow: none !important;
 }
 
-.maxtistic>analysisWords:hover {
+.maxtistic .analysis-words:hover {
     transform: none !important;
-}
-
-.maxtistic>maxstic {
-    height: 40%;
-}
-
-.maxtistic>SubgroupVisualization {
-    height: 60%;
 }
 
 .main-card {
@@ -239,7 +467,6 @@ onMounted(async () => {
     border: 1px solid rgba(200, 200, 200, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    height: 40%;
 }
 
 .position-card {
@@ -249,7 +476,6 @@ onMounted(async () => {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(200, 200, 200, 0.3);
     padding: 12px;
-    height: 48%;
 }
 
 .position-card:hover {
@@ -299,13 +525,5 @@ onMounted(async () => {
   z-index: 10;
   letter-spacing: -0.01em;
   opacity: 0.8;
-}
-
-.subgroup-visualization{
-    height: 45%;
-}
-
-.analysis-words{
-    height: 25%;
 }
 </style>

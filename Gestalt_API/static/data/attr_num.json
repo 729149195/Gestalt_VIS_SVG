@@ -1,11 +1,11 @@
 [
     {
         "attribute": "id",
-        "num": 50
+        "num": 48
     },
     {
         "attribute": "tag_name",
-        "num": 50
+        "num": 48
     },
     {
         "attribute": "height",
@@ -26,10 +26,6 @@
     {
         "attribute": "fill",
         "num": 3
-    },
-    {
-        "attribute": "aria-label",
-        "num": 2
     },
     {
         "attribute": "font-family",
@@ -56,27 +52,7 @@
         "num": 1
     },
     {
-        "attribute": "stroke",
-        "num": 1
-    },
-    {
-        "attribute": "transform",
-        "num": 1
-    },
-    {
-        "attribute": "x1",
-        "num": 1
-    },
-    {
-        "attribute": "x2",
-        "num": 1
-    },
-    {
-        "attribute": "y1",
-        "num": 1
-    },
-    {
-        "attribute": "y2",
+        "attribute": "aria-label",
         "num": 1
     }
 ]

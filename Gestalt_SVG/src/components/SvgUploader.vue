@@ -627,8 +627,8 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-style-input :deep(.v-field--focused) {
-    border-color: #55C000;
-    box-shadow: 0 0 0 2px rgba(85, 192, 0, 0.2);
+    border-color: #1E90FF;
+    box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
 }
 
 .mac-style-selector {
@@ -698,20 +698,20 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-style-list-item:hover {
-    background-color: rgba(85, 192, 0, 0.05);
+    background-color: rgba(30, 144, 255, 0.05);
 }
 
 .mac-style-checkbox :deep(.v-selection-control) {
-    color: #55C000;
+    color: #1E90FF;
 }
 
 .mac-style-button {
-    background: #55C000 !important;
+    background: #1E90FF !important;
     border-radius: 8px;
     color: white;
     font-weight: 500;
     letter-spacing: 0.3px;
-    box-shadow: 0 2px 8px rgba(85, 192, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(30, 144, 255, 0.2);
     transition: all 0.3s ease;
     text-transform: none;
     height: 36px;
@@ -719,13 +719,13 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-style-button:hover {
-    background: #4CAF00 !important;
+    background: #1A7FE5 !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(85, 192, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
 }
 
 .mac-style-button:disabled {
-    background: rgba(85, 192, 0, 0.5) !important;
+    background: rgba(30, 144, 255, 0.5) !important;
     box-shadow: none;
 }
 
@@ -775,8 +775,8 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-style-track-button.active-mode {
-    background: #55C000 !important;
-    border-color: #55C000;
+    background: #1E90FF !important;
+    border-color: #1E90FF;
     color: white;
 }
 
@@ -816,7 +816,7 @@ watch(() => analyzing.value, (newValue) => {
 
 .mac-upload-container {
     background: rgba(255, 255, 255, 0.95);
-    border: 1px dashed rgba(85, 192, 0, 0.3);
+    border: 1px dashed rgba(30, 144, 255, 0.3);
     border-radius: 8px;
     padding: 8px 12px;
     text-align: center;
@@ -830,7 +830,7 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-upload-container:hover {
-    border-color: rgba(85, 192, 0, 0.6);
+    border-color: rgba(30, 144, 255, 0.6);
     background: rgba(255, 255, 255, 0.98);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -848,7 +848,7 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .upload-icon {
-    color: #55C000;
+    color: #1E90FF;
     opacity: 0.8;
     transition: all 0.3s ease;
     font-size: 30px !important;
@@ -875,7 +875,7 @@ watch(() => analyzing.value, (newValue) => {
 .file-info {
     margin-left: auto;
     padding: 4px 8px;
-    background: rgba(85, 192, 0, 0.1);
+    background: rgba(30, 144, 255, 0.1);
     border-radius: 4px;
     display: flex;
     gap: 6px;
@@ -942,8 +942,8 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 :deep(.v-progress-linear__determinate) {
-    background: linear-gradient(90deg, #55C000, #4CAF00);
-    box-shadow: 0 1px 3px rgba(85, 192, 0, 0.2);
+    background: linear-gradient(90deg, #1E90FF, #1A7FE5);
+    box-shadow: 0 1px 3px rgba(30, 144, 255, 0.2);
     transition: all 0.3s ease;
 }
 

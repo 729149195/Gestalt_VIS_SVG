@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick, onUnmounted } from 'vue'
+import { ref, watch, onMounted, nextTick, onUnmounted, computed } from 'vue'
 import * as monaco from 'monaco-editor'
 import * as d3 from 'd3'
 import { syntaxOptions, placeholders } from '@/config/codeToSvgConfig'
@@ -71,6 +71,7 @@ import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
+import { useStore } from 'vuex'
 
 // 配置 Monaco Editor 的 Web Worker
 window.MonacoEnvironment = {
@@ -102,6 +103,10 @@ const previewContainer = ref(null)
 let declarativeEditor = null
 let svgEditor = null
 
+// 从Vuex获取selectedNodes
+const store = useStore()
+const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds)
+
 // Monaco Editor配置
 const declarativeEditorOptions = {
   theme: 'vs',
@@ -117,7 +122,7 @@ const declarativeEditorOptions = {
   wordWrap: 'on',
   scrollbar: {
     vertical: 'visible',
-    horizontal: 'visible'
+    horizontal: 'auto'
   },
   lineHeight: 20,
   padding: {
@@ -172,6 +177,8 @@ const initEditors = () => {
     // 初始化后延迟格式化文档
     setTimeout(() => {
       formatDeclarativeEditor()
+      // 确保编辑器已布局
+      declarativeEditor.layout()
     }, 300)
   }
 
@@ -194,6 +201,18 @@ const initEditors = () => {
     // 初始化后延迟格式化文档
     setTimeout(() => {
       formatSvgEditor()
+      // 确保编辑器已布局
+      svgEditor.layout()
+      
+      // 强制更新编辑器配置
+      svgEditor.updateOptions({
+        wordWrap: 'on',
+        scrollBeyondLastLine: false,
+        scrollbar: {
+          vertical: 'visible',
+          horizontal: 'hidden' // 完全隐藏横向滚动条
+        }
+      })
     }, 300)
   }
 }
@@ -368,9 +387,6 @@ const generateSvg = async () => {
         break
       case 'highcharts':
         await handleHighchartsCode()
-        break
-      case 'matplotlib':
-        await handleMatplotlibCode()
         break
     }
     // 更新SVG编辑器的内容
@@ -700,18 +716,54 @@ const handleMatplotlibCode = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code: code.value })
+      body: JSON.stringify({ 
+        code: code.value,
+        // 添加额外信息帮助后端正确处理
+        options: {
+          format: 'svg',
+          dpi: 100,
+          bbox_inches: 'tight',
+          transparent: true
+        }
+      })
     })
 
     if (!response.ok) {
-      throw new Error('后端API调用失败')
+      const errorText = await response.text();
+      console.error('Matplotlib API响应错误:', errorText);
+      throw new Error(`后端API调用失败: ${response.status} ${response.statusText}`);
     }
 
-    const svgData = await response.text()
-    svgCode.value = svgData
-    svgOutput.value = svgData
+    // 先将响应读取为文本，只读取一次
+    const responseText = await response.text();
+    
+    // 尝试将文本解析为JSON
+    try {
+      const result = JSON.parse(responseText);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      if (result.svg) {
+        // 处理SVG数据
+        svgCode.value = result.svg;
+        svgOutput.value = result.svg;
+      } else {
+        throw new Error('返回的数据中没有SVG内容');
+      }
+    } catch (jsonError) {
+      // 如果不是有效的JSON，检查是否是有效的SVG
+      if (responseText.trim().startsWith('<svg') || responseText.trim().startsWith('<?xml')) {
+        svgCode.value = responseText;
+        svgOutput.value = responseText;
+      } else {
+        console.error('无法解析响应:', responseText.substring(0, 100) + '...');
+        throw new Error('返回的不是有效的SVG或JSON内容');
+      }
+    }
   } catch (error) {
-    throw new Error(`Matplotlib错误: ${error.message}`)
+    console.error('Matplotlib处理错误:', error);
+    throw new Error(`Matplotlib错误: ${error.message}`);
   }
 }
 
@@ -848,13 +900,45 @@ onMounted(() => {
 
   // 添加事件监听器
   window.addEventListener('svg-content-updated', handleSvgContentUpdated)
+  
+  // 添加窗口大小改变事件监听
+  window.addEventListener('resize', handleWindowResize)
 })
+
+// 添加窗口大小变化处理函数
+const handleWindowResize = debounce(() => {
+  nextTick(() => {
+    if (declarativeEditor) {
+      declarativeEditor.layout()
+      
+      // 强制更新配置
+      declarativeEditor.updateOptions({
+        wordWrap: 'on',
+        scrollbar: {
+          horizontal: 'hidden'
+        }
+      })
+    }
+    if (svgEditor) {
+      svgEditor.layout()
+      
+      // 强制更新配置
+      svgEditor.updateOptions({
+        wordWrap: 'on',
+        scrollbar: {
+          horizontal: 'hidden'
+        }
+      })
+    }
+  })
+}, 100)
 
 // 组件卸载时清理
 onUnmounted(() => {
   declarativeEditor?.dispose()
   svgEditor?.dispose()
   window.removeEventListener('svg-content-updated', handleSvgContentUpdated)
+  window.removeEventListener('resize', handleWindowResize)
 })
 
 // 处理从SvgUploader接收到的新SVG内容
@@ -999,14 +1083,140 @@ watch(isDeclarativeMode, (newValue) => {
     } else {
       svgEditor?.layout();
     }
+    
+    // 强制调整编辑器大小以适应容器
+    setTimeout(() => {
+      if (newValue) {
+        declarativeEditor?.layout();
+      } else {
+        svgEditor?.layout();
+      }
+    }, 50);
   });
 });
+
+// 添加监听selectedNodes变化的函数，当变化时高亮代码
+watch(selectedNodeIds, (newSelectedNodeIds) => {
+  // 确保编辑器已初始化
+  if (!declarativeEditor) return;
+  
+  // 清除旧的装饰
+  const oldDecorations = declarativeEditor.getModel()?.getAllDecorations() || [];
+  declarativeEditor.deltaDecorations(
+    oldDecorations.map(d => d.id),
+    []
+  );
+  
+  if (!newSelectedNodeIds.length) return;
+  
+  // 在代码中查找这些ID并高亮显示
+  const model = declarativeEditor.getModel();
+  if (!model) return;
+  
+  const decorations = [];
+  const content = model.getValue();
+  const lines = content.split('\n');
+  
+  // 检查每一行是否包含任何选中的节点ID
+  lines.forEach((line, index) => {
+    // 对于每个选中的节点ID，检查当前行是否包含它
+    for (const nodeId of newSelectedNodeIds) {
+      // 提取不包含路径前缀的纯ID
+      const pureId = nodeId.includes('/') ? nodeId.split('/').pop() : nodeId;
+      
+      // 搜索id="nodeId"或者id='nodeId'这样的模式
+      if (line.includes(`id="${pureId}"`) || line.includes(`id='${pureId}'`)) {
+        // 创建一个高亮装饰
+        decorations.push({
+          range: new monaco.Range(index + 1, 1, index + 1, line.length + 1),
+          options: {
+            isWholeLine: true,
+            className: 'highlighted-line',
+            inlineClassName: 'highlighted-text'
+          }
+        });
+        // 找到一个匹配后就跳出当前节点ID的循环
+        break;
+      }
+    }
+  });
+  
+  // 应用高亮装饰
+  if (decorations.length > 0) {
+    declarativeEditor.deltaDecorations([], decorations);
+    
+    // 滚动到第一个高亮行
+    if (decorations.length > 0) {
+      declarativeEditor.revealLineInCenter(decorations[0].range.startLineNumber);
+    }
+  }
+}, { immediate: true });
+
+// 同样监听SVG编辑器
+watch(selectedNodeIds, (newSelectedNodeIds) => {
+  // 确保编辑器已初始化
+  if (!svgEditor) return;
+  
+  // 清除旧的装饰
+  const oldDecorations = svgEditor.getModel()?.getAllDecorations() || [];
+  svgEditor.deltaDecorations(
+    oldDecorations.map(d => d.id),
+    []
+  );
+  
+  if (!newSelectedNodeIds.length) return;
+  
+  // 在SVG代码中查找这些ID并高亮显示
+  const model = svgEditor.getModel();
+  if (!model) return;
+  
+  const decorations = [];
+  const content = model.getValue();
+  const lines = content.split('\n');
+  
+  // 检查每一行是否包含任何选中的节点ID
+  lines.forEach((line, index) => {
+    // 对于每个选中的节点ID，检查当前行是否包含它
+    for (const nodeId of newSelectedNodeIds) {
+      // 提取不包含路径前缀的纯ID
+      const pureId = nodeId.includes('/') ? nodeId.split('/').pop() : nodeId;
+      
+      // 搜索id="nodeId"或者id='nodeId'这样的模式
+      if (line.includes(`id="${pureId}"`) || line.includes(`id='${pureId}'`)) {
+        // 创建一个高亮装饰
+        decorations.push({
+          range: new monaco.Range(index + 1, 1, index + 1, line.length + 1),
+          options: {
+            isWholeLine: true,
+            className: 'highlighted-line',
+            inlineClassName: 'highlighted-text'
+          }
+        });
+        // 找到一个匹配后就跳出当前节点ID的循环
+        break;
+      }
+    }
+  });
+  
+  // 应用高亮装饰
+  if (decorations.length > 0) {
+    svgEditor.deltaDecorations([], decorations);
+    
+    // 滚动到第一个高亮行
+    if (decorations.length > 0) {
+      svgEditor.revealLineInCenter(decorations[0].range.startLineNumber);
+    }
+  }
+}, { immediate: true });
 </script>
 
 <style scoped>
 .code-to-svg-container {
   display: flex;
   height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .editors-container {
@@ -1015,6 +1225,8 @@ watch(isDeclarativeMode, (newValue) => {
   flex-direction: column;
   height: 100%;
   position: relative;
+  min-width: 0;
+  width: 100%;
 }
 
 .editor-section {
@@ -1022,6 +1234,8 @@ watch(isDeclarativeMode, (newValue) => {
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  min-width: 0;
+  width: 100%;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -1047,12 +1261,58 @@ watch(isDeclarativeMode, (newValue) => {
   flex-shrink: 0;
   padding: 12px;
   border-bottom: 1px solid rgba(200, 200, 200, 0.3);
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .left-tools {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .left-tools {
+    margin-bottom: 8px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .side-mode-switch {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  :deep(.el-button) {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .title {
+    font-size: 14px;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .left-tools {
+    gap: 6px;
+  }
+  
+  :deep(.el-button) {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .syntax-selector {
+    width: 100px;
+  }
 }
 
 .syntax-selector {
@@ -1100,34 +1360,36 @@ watch(isDeclarativeMode, (newValue) => {
   background-color: #ffffff;
   margin: 0;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+  width: 100%;
 }
 
 .editor-wrapper {
   width: 100%;
   height: 100%;
   min-height: 200px;
+  overflow: hidden;
 }
 
 :deep(.el-button) {
   margin-left: 0;
   border-radius: 8px;
-  background: #55C000 !important;
-  border-color: #55C000;
+  background: #1E90FF !important;
+  border-color: #1E90FF;
   color: white;
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(85, 192, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(30, 144, 255, 0.2);
 }
 
 :deep(.el-button:hover) {
-  background: #4CAF00 !important;
-  border-color: #4CAF00;
+  background: #1A7FE5 !important;
+  border-color: #1A7FE5;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(85, 192, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
 }
 
 :deep(.el-button:active) {
   transform: translateY(1px);
-  box-shadow: 0 2px 6px rgba(85, 192, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(30, 144, 255, 0.2);
 }
 
 :deep(.el-select) {
@@ -1143,8 +1405,8 @@ watch(isDeclarativeMode, (newValue) => {
   }
 
   .el-input__wrapper.is-focus {
-    border-color: #55C000;
-    box-shadow: 0 0 0 2px rgba(85, 192, 0, 0.2);
+    border-color: #1E90FF;
+    box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
   }
 }
 
@@ -1184,11 +1446,11 @@ watch(isDeclarativeMode, (newValue) => {
 
 .mode-tab:hover {
   color: #333;
-  background: rgba(85, 192, 0, 0.1);
+  background: rgba(30, 144, 255, 0.1);
 }
 
 .mode-tab.active {
-  background: #55C000;
+  background: #1E90FF;
   color: white;
 }
 
@@ -1213,7 +1475,7 @@ watch(isDeclarativeMode, (newValue) => {
 }
 
 :global(.custom-message.el-message--success .el-message__icon) {
-  color: #55C000 !important;
+  color: #1E90FF !important;
   font-size: 16px !important;
 }
 
@@ -1234,5 +1496,49 @@ watch(isDeclarativeMode, (newValue) => {
   color: #1d1d1f;
   letter-spacing: -0.01em;
   opacity: 0.8;
+}
+
+/* 添加高亮样式 */
+:deep(.highlighted-line) {
+  background-color: rgba(30, 144, 255, 0.15);
+  border-left: 3px solid #1E90FF;
+}
+
+:deep(.highlighted-text) {
+  font-weight: bold;
+  color: #0066CC;
+}
+
+.editor-transition {
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+:deep(.monaco-editor .monaco-scrollable-element) {
+  overflow: auto !important;
+}
+
+:deep(.monaco-editor .scrollbar) {
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+:deep(.monaco-editor .scrollbar:hover) {
+  opacity: 1;
+}
+
+/* 隐藏不必要的水平滚动条 */
+:deep(.monaco-editor .scrollbar.horizontal) {
+  display: none !important;
+}
+
+/* 确保长行自动换行 */
+:deep(.monaco-editor .view-line) {
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+}
+
+:deep(.monaco-editor) {
+  width: 100% !important;
+  overflow: hidden !important;
 }
 </style>

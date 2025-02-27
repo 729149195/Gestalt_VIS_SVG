@@ -24,51 +24,51 @@ export const syntaxOptions = [
     label: "Highcharts",
     value: "highcharts",
     description: "商业级别图表，适合创建专业级数据可视化",
-  },
-  {
-    label: "Matplotlib",
-    value: "matplotlib",
-    description: "科学绘图、需要较高自定义，适合创建科学图表",
-  },
+  }
+  // {
+  //   label: "Matplotlib",
+  //   value: "matplotlib",
+  //   description: "科学绘图、需要较高自定义，适合创建科学图表",
+  // },
 ];
 
 // 示例代码配置
 export const placeholders = {
-  // ECharts 示例
+  // ECharts example
   echarts: `{
   "title": {
-    "text": "销售数据分析",
-    "subtext": "虚拟数据"
+    "text": "Sales Data Analysis",
+    "subtext": "Virtual Data"
   },
   "tooltip": {
     "trigger": "axis"
   },
   "legend": {
-    "data": ["销售额", "利润"]
+    "data": ["Sales", "Profit"]
   },
   "xAxis": {
     "type": "category",
-    "data": ["一月", "二月", "三月", "四月", "五月", "六月"]
+    "data": ["January", "February", "March", "April", "May", "June"]
   },
   "yAxis": [
     {
       "type": "value",
-      "name": "销售额"
+      "name": "Sales"
     },
     {
       "type": "value",
-      "name": "利润",
+      "name": "Profit",
       "position": "right"
     }
   ],
   "series": [
     {
-      "name": "销售额",
+      "name": "Sales",
       "type": "line",
       "data": [2900, 3500, 3200, 4100, 4800, 5300]
     },
     {
-      "name": "利润",
+      "name": "Profit",
       "type": "bar",
       "yAxisIndex": 1,
       "data": [5000, 6800, 5900, 8100, 9600, 11000]
@@ -76,7 +76,7 @@ export const placeholders = {
   ]
 }`,
 
-  // Vega 示例
+  // Vega example
   vega: `{
   "$schema": "https://vega.github.io/schema/vega/v5.json",
   "width": 400,
@@ -87,12 +87,12 @@ export const placeholders = {
     {
       "name": "table",
       "values": [
-        {"x": "一月", "y": 28},
-        {"x": "二月", "y": 55},
-        {"x": "三月", "y": 43},
-        {"x": "四月", "y": 91},
-        {"x": "五月", "y": 81},
-        {"x": "六月", "y": 53}
+        {"x": "January", "y": 28},
+        {"x": "February", "y": 55},
+        {"x": "March", "y": 43},
+        {"x": "April", "y": 91},
+        {"x": "May", "y": 81},
+        {"x": "June", "y": 53}
       ]
     }
   ],
@@ -126,8 +126,8 @@ export const placeholders = {
   ],
 
   "axes": [
-    { "orient": "bottom", "scale": "xscale", "title": "月份" },
-    { "orient": "left", "scale": "yscale", "title": "销售额" }
+    { "orient": "bottom", "scale": "xscale", "title": "Month" },
+    { "orient": "left", "scale": "yscale", "title": "Sales" }
   ],
 
   "marks": [
@@ -171,34 +171,34 @@ export const placeholders = {
   ],
 
   "title": {
-    "text": "月度销售数据",
+    "text": "Monthly Sales Data",
     "anchor": "middle",
     "fontSize": 16,
     "frame": "group"
   }
 }`,
 
-  // Vega-Lite 示例
+  // Vega-Lite example
   "vega-lite": `{
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "description": "多维度销售数据分析",
+  "description": "Multi-dimensional Sales Data Analysis",
   "width": 400,
   "height": 300,
   "data": {
     "values": [
-      {"月份": "一月", "销售额": 2800, "利润": 1400, "类型": "A类"},
-      {"月份": "二月", "销售额": 3500, "利润": 1800, "类型": "A类"},
-      {"月份": "三月", "销售额": 3200, "利润": 1600, "类型": "B类"},
-      {"月份": "四月", "销售额": 4100, "利润": 2100, "类型": "B类"},
-      {"月份": "五月", "销售额": 4800, "利润": 2400, "类型": "A类"},
-      {"月份": "六月", "销售额": 5300, "利润": 2700, "类型": "B类"}
+      {"Month": "January", "Sales": 2800, "Profit": 1400, "Type": "Type A"},
+      {"Month": "February", "Sales": 3500, "Profit": 1800, "Type": "Type A"},
+      {"Month": "March", "Sales": 3200, "Profit": 1600, "Type": "Type B"},
+      {"Month": "April", "Sales": 4100, "Profit": 2100, "Type": "Type B"},
+      {"Month": "May", "Sales": 4800, "Profit": 2400, "Type": "Type A"},
+      {"Month": "June", "Sales": 5300, "Profit": 2700, "Type": "Type B"}
     ]
   },
   "encoding": {
     "x": {
-      "field": "月份",
+      "field": "Month",
       "type": "nominal",
-      "axis": {"title": "月份"}
+      "axis": {"title": "Month"}
     }
   },
   "layer": [
@@ -210,9 +210,9 @@ export const placeholders = {
       },
       "encoding": {
         "y": {
-          "field": "销售额",
+          "field": "Sales",
           "type": "quantitative",
-          "axis": {"title": "销售额"}
+          "axis": {"title": "Sales"}
         }
       }
     },
@@ -224,9 +224,9 @@ export const placeholders = {
       },
       "encoding": {
         "y": {
-          "field": "利润",
+          "field": "Profit",
           "type": "quantitative",
-          "axis": {"title": "利润", "titleColor": "#2196F3"}
+          "axis": {"title": "Profit", "titleColor": "#2196F3"}
         }
       }
     }
@@ -245,7 +245,7 @@ export const placeholders = {
     }
   }
 }`,
-  // D3.js 示例
+  // D3.js example
   d3: `const width = 400;
 const height = 300;
 const margin = { top: 20, right: 20, bottom: 30, left: 40 };
@@ -255,7 +255,7 @@ const svg = d3.select(container)
   .attr('width', width)
   .attr('height', height);
 
-// 创建数据
+// Create data
 const data = [
   { name: 'A', value: 30 },
   { name: 'B', value: 45 },
@@ -264,7 +264,7 @@ const data = [
   { name: 'E', value: 35 }
 ];
 
-// 创建比例尺
+// Create scales
 const x = d3.scaleBand()
   .domain(data.map(d => d.name))
   .range([margin.left, width - margin.right])
@@ -275,7 +275,7 @@ const y = d3.scaleLinear()
   .nice()
   .range([height - margin.bottom, margin.top]);
 
-// 添加坐标轴
+// Add axes
 svg.append('g')
   .attr('transform', \`translate(0,\${height - margin.bottom})\`)
   .call(d3.axisBottom(x));
@@ -284,7 +284,7 @@ svg.append('g')
   .attr('transform', \`translate(\${margin.left},0)\`)
   .call(d3.axisLeft(y));
 
-// 添加柱状图
+// Add bars
 svg.selectAll('rect')
   .data(data)
   .join('rect')
@@ -294,37 +294,37 @@ svg.selectAll('rect')
   .attr('height', d => y(0) - y(d.value))
   .attr('fill', '#4CAF50');`,
 
-  // Highcharts 示例
+  // Highcharts example
   highcharts: `{
   "chart": {
     "type": "column"
   },
   "title": {
-    "text": "年度销售业绩"
+    "text": "Annual Sales Performance"
   },
   "xAxis": {
-    "categories": ["一季度", "二季度", "三季度", "四季度"]
+    "categories": ["Q1", "Q2", "Q3", "Q4"]
   },
   "yAxis": [
     {
       "title": {
-        "text": "销售额 (万元)"
+        "text": "Sales (10,000)"
       }
     },
     {
       "title": {
-        "text": "利润率 (%)"
+        "text": "Profit Rate (%)"
       },
       "opposite": true
     }
   ],
   "series": [
     {
-      "name": "销售额",
+      "name": "Sales",
       "data": [49.9, 71.5, 106.4, 129.2]
     },
     {
-      "name": "利润率",
+      "name": "Profit Rate",
       "type": "spline",
       "yAxis": 1,
       "data": [15.9, 17.2, 19.7, 20.5]
@@ -332,29 +332,40 @@ svg.selectAll('rect')
   ]
 }`,
 
-  // Matplotlib 示例
-  matplotlib: `import matplotlib.pyplot as plt
-import numpy as np
+//   // Matplotlib example
+//   matplotlib: `import matplotlib.pyplot as plt
+// import numpy as np
+// from io import BytesIO
 
-# 创建数据
-x = np.linspace(0, 10, 100)
-y1 = np.sin(x)
-y2 = np.cos(x)
+// # 设置渲染后端为Agg（非交互式后端，适合生成图像文件）
+// plt.switch_backend('Agg')
 
-# 创建图表
-plt.figure(figsize=(10, 6))
-plt.plot(x, y1, label='sin(x)', color='#4CAF50')
-plt.plot(x, y2, label='cos(x)', color='#2196F3')
-plt.fill_between(x, y1, alpha=0.3, color='#4CAF50')
-plt.fill_between(x, y2, alpha=0.3, color='#2196F3')
+// # 创建数据
+// x = np.linspace(0, 10, 100)
+// y1 = np.sin(x)
+// y2 = np.cos(x)
 
-# 添加标签和标题
-plt.xlabel('X 轴')
-plt.ylabel('Y 轴')
-plt.title('三角函数图表')
-plt.legend()
-plt.grid(True, linestyle='--', alpha=0.7)
+// # 创建图表
+// fig, ax = plt.subplots(figsize=(10, 6))
+// ax.plot(x, y1, label='sin(x)', color='#4CAF50')
+// ax.plot(x, y2, label='cos(x)', color='#2196F3')
+// ax.fill_between(x, y1, alpha=0.3, color='#4CAF50')
+// ax.fill_between(x, y2, alpha=0.3, color='#2196F3')
 
-# 保存为SVG
-plt.savefig('output.svg', format='svg', bbox_inches='tight')`,
+// # 添加标签和标题
+// ax.set_xlabel('X Axis')
+// ax.set_ylabel('Y Axis')
+// ax.set_title('Trigonometric Functions Chart')
+// ax.legend()
+// ax.grid(True, linestyle='--', alpha=0.7)
+
+// # 使用BytesIO而不是直接保存文件
+// buf = BytesIO()
+// fig.savefig(buf, format='svg', bbox_inches='tight')
+// plt.close(fig)  # 确保关闭图表释放资源
+
+// # 返回SVG内容（在后端API中使用）
+// buf.seek(0)
+// svg_content = buf.getvalue().decode('utf-8')
+// # 不需要直接返回，后端API会处理这个结果`,
 };

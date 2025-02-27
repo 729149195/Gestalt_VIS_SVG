@@ -1,6 +1,32 @@
 <template>
   <div class="statistics-container">
     <span class="title">{{ title }}</span>
+    
+    <!-- 添加排序按钮 -->
+    <button class="sort-button" @click="toggleSortOrder">
+      <span class="sort-icon">
+        <svg v-if="sortAscending" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M7 14l5-5 5 5H7z" fill="currentColor"/>
+        </svg>
+        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M7 10l5 5 5-5H7z" fill="currentColor"/>
+        </svg>
+      </span>
+      <span>{{ sortAscending ? 'Diversity Asc' : 'Diversity Desc' }}</span>
+    </button>
+    
+    <!-- 添加图例说明 -->
+    <div class="legend-container" v-if="!isLoading">
+      <div class="legend-item">
+        <div class="legend-color blue"></div>
+        <span class="legend-text">Pattern Statistics</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color gray"></div>
+        <span class="legend-text">Other Statistics</span>
+      </div>
+    </div>
+    
     <div v-if="isLoading" class="loading-indicator">
       <div class="loading-spinner"></div>
       <div class="loading-text">Data loading...</div>
@@ -8,7 +34,7 @@
     <div v-else class="statistics-cards">
       <template v-for="(component, index) in sortedComponents" :key="index">
         <v-card v-if="component.hasData" class="position-card">
-          <div class="variance-info">Diversity  {{ component.variance.toFixed(2) }}</div>
+          <!-- <div class="variance-info">Diversity  {{ component.variance.toFixed(2) }}</div> -->
           <component :is="component.component" 
                     :position="component.props?.position" 
                     :title="component.props?.title" 
@@ -39,6 +65,7 @@ const props = defineProps({
 
 const componentsData = ref([]);
 const isLoading = ref(true); // 添加loading状态
+const sortAscending = ref(true); // 添加排序状态，默认为正序（从小到大）
 
 // 定义所有可能的组件配置
 const allComponents = [
@@ -253,8 +280,16 @@ const calculateVarianceFromArray = (values) => {
 const sortedComponents = computed(() => {
   return [...componentsData.value]
     .filter(comp => comp.hasData)
-    .sort((a, b) => b.variance - a.variance);
+    .sort((a, b) => sortAscending.value 
+      ? a.variance - b.variance  // 正序：从小到大
+      : b.variance - a.variance  // 倒序：从大到小
+    );
 });
+
+// 切换排序顺序
+const toggleSortOrder = () => {
+  sortAscending.value = !sortAscending.value;
+};
 
 // 组件挂载时获取数据
 onMounted(async () => {
@@ -299,6 +334,54 @@ watch(() => props.componentKey, async () => {
   z-index: 10;
   letter-spacing: -0.01em;
   opacity: 0.8;
+}
+
+/* 添加排序按钮样式 */
+.sort-button {
+  position: absolute;
+  top: 7px;
+  right: 250px; /* 位置在标题右侧 */
+  height: 26px;
+  padding: 0px 10px 0px 6px;
+  font-size: 12px;
+  border-radius: 13px;
+  background-color: #f1f3f4;
+  color: #202124;
+  border: none;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.1);
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-weight: 500;
+  min-width: 105px;
+  letter-spacing: 0.01em;
+}
+
+.sort-button span {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.sort-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f6368;
+}
+
+.sort-button:hover {
+  background-color: #e8eaed;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.2);
+}
+
+.sort-button:active {
+  background-color: #dadce0;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.15);
 }
 
 .position-card {
@@ -354,5 +437,39 @@ watch(() => props.componentKey, async () => {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.legend-container {
+  display: flex;
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 10;
+  gap: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.legend-color.blue {
+  background-color: #60a5fa;
+}
+
+.legend-color.gray {
+  background-color: #e5e7eb;
+}
+
+.legend-text {
+  font-size: 12px;
+  color: #666;
 }
 </style> 

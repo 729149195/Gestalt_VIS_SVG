@@ -3,7 +3,7 @@
         <span class="title">Graphical Patterns List</span>
         <div class="hints-container">
             <span class="scroll-hint">← Scroll horizontally to see more patterns →</span>
-            <span class="scroll-hint">Click to view the model pattern</span>
+            <span class="scroll-hint">Click to view the pattern</span>
         </div>
         <div class="core-view-container">
             <CoreSubgroupVisualization />
@@ -12,13 +12,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
 import CoreSubgroupVisualization from './core_SubgroupVisualization.vue';
-
-// 添加延迟函数
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
@@ -657,8 +654,8 @@ onUnmounted(() => {
     overflow: auto;
     height: 100%;
     min-height: 0;
-    width: 1260px;
-    margin: 0 auto;
+    width: 100%;
+    padding: 0 16px;
 }
 
 .title {

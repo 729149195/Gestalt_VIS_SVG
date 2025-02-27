@@ -6,7 +6,6 @@ import community.community_louvain as community_louvain
 from collections import Counter, defaultdict
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import NearestNeighbors
 
 def load_features_from_json(json_file_path):
     """从JSON文件加载特征数据"""
@@ -20,6 +19,57 @@ def load_features_from_json(json_file_path):
         features.append(item['features'])
     
     return identifiers, np.array(features)
+
+def calculate_gmm(features):
+    """
+    通用的GMM计算函数
+    
+    Args:
+        features: 特征数据，shape为(n_samples, n_features)
+    
+    Returns:
+        best_gmm: 最佳GMM模型
+        bic_scores: BIC评分列表
+        is_single_cluster: 是否所有数据点相同
+        scaled_features: 标准化后的特征数据
+    """
+    # 标准化特征
+    scaler = StandardScaler()
+    scaled_features = scaler.fit_transform(features)
+    
+    # 检查数据是否都相同
+    if np.all(scaled_features == scaled_features[0]):
+        print("所有数据点相同，归为一个聚类")
+        return None, [], True, scaled_features
+    
+    # 根据数据量动态调整最大聚类数
+    max_components = min(5, len(features) - 1)
+    if max_components < 2:
+        max_components = 2
+    
+    n_components_range = range(2, max_components + 1)
+    bic_scores = []
+    gmm_models = []
+    
+    # 尝试不同的聚类数
+    for n_components in n_components_range:
+        # 使用更稳定的参数配置
+        gmm = GaussianMixture(
+            n_components=n_components,
+            random_state=42,
+            max_iter=200,
+            tol=1e-4,
+            reg_covar=1e-6  # 增加协方差矩阵的正则化
+        )
+        gmm.fit(scaled_features)
+        bic_scores.append(gmm.bic(scaled_features))
+        gmm_models.append(gmm)
+    
+    # 选择BIC最小的模型
+    best_idx = np.argmin(bic_scores)
+    best_gmm = gmm_models[best_idx]
+    
+    return best_gmm, bic_scores, False, scaled_features
 
 def calculate_metrics(features):
     """计算数据的分散度和聚集性
@@ -46,37 +96,14 @@ def calculate_metrics(features):
     dimension_dispersions = (q3 - q1) / ranges
     dispersion = np.mean(dimension_dispersions)
     
+    # 使用通用GMM函数计算局部聚集性
+    best_gmm, _, is_single_cluster, _ = calculate_gmm(features)
+    
+    # 如果所有数据点相同，聚集性为1
+    if is_single_cluster:
+        return dispersion, 1.0
+    
     # 计算局部聚集性 (使用GMM组件的方差)
-    # 标准化数据
-    scaler = StandardScaler()
-    scaled_features = scaler.fit_transform(features)
-    
-    # 使用GMM进行聚类
-    max_components = min(5, len(features) - 1)
-    if max_components < 2:
-        max_components = 2
-    
-    n_components_range = range(2, max_components + 1)
-    bic = []
-    gmm_models = []
-    
-    for n_components in n_components_range:
-        gmm = GaussianMixture(
-            n_components=n_components,
-            random_state=42,
-            max_iter=200,
-            tol=1e-4,
-            reg_covar=1e-6
-        )
-        gmm.fit(scaled_features)
-        bic.append(gmm.bic(scaled_features))
-        gmm_models.append(gmm)
-    
-    # 选择BIC最小的模型
-    best_idx = np.argmin(bic)
-    best_gmm = gmm_models[best_idx]
-    
-    # 计算局部聚集性
     variances = best_gmm.covariances_.reshape(-1)  # 展平协方差矩阵
     weights = 1 / (variances + 1e-6)  # 避免除以零
     total_weight = np.sum(weights)
@@ -128,9 +155,64 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
     
     selected_features = features[:, dimensions]
     
-    # 评估维度组合
-    evaluation_result, metrics = evaluate_dimension_combination(selected_features)
-    dispersion, clustering = metrics
+    # 对于GMM方法，提前计算GMM，用于评估和聚类
+    if clustering_method.lower() == 'gmm':
+        # 计算GMM，仅进行一次
+        best_gmm, bic_scores, is_single_cluster, scaled_features = calculate_gmm(selected_features)
+        
+        # 计算分散度 (与calculate_metrics函数类似)
+        sorted_features = np.sort(selected_features, axis=0)
+        q1 = np.percentile(sorted_features, 25, axis=0)
+        q3 = np.percentile(sorted_features, 75, axis=0)
+        min_vals = np.min(sorted_features, axis=0)
+        max_vals = np.max(sorted_features, axis=0)
+        
+        # 避免除以零
+        ranges = max_vals - min_vals
+        ranges[ranges == 0] = 1  # 防止除以零
+        
+        # 计算每个维度的分散度
+        dimension_dispersions = (q3 - q1) / ranges
+        dispersion = np.mean(dimension_dispersions)
+        
+        # 计算聚集性
+        if is_single_cluster:
+            clustering = 1.0
+        else:
+            variances = best_gmm.covariances_.reshape(-1)  # 展平协方差矩阵
+            weights = 1 / (variances + 1e-6)  # 避免除以零
+            total_weight = np.sum(weights)
+            normalized_weights = weights / total_weight
+            
+            clustering = np.sum(normalized_weights * (1 - np.sqrt(variances)))
+    else:
+        # 对于非GMM方法，使用原有的评估方式
+        evaluation_result, metrics = evaluate_dimension_combination(selected_features)
+        dispersion, clustering = metrics
+    
+    # 使用计算出的指标评估维度组合
+    if clustering > 0.7:  # 高聚集
+        if dispersion > 0.7:
+            evaluation_result = "保留(多类别特征)"
+        elif dispersion > 0.3:
+            evaluation_result = "保留(多类别特征)"
+        else:
+            evaluation_result = "需要检查(区分不明显)"
+    elif clustering > 0.3:  # 中等聚集
+        if dispersion > 0.7:
+            evaluation_result = "可能保留(需要检查)"
+        elif dispersion > 0.3:
+            evaluation_result = "需要检查(需要进一步分析)"
+        else:
+            evaluation_result = "可能过滤(区分不明显)"
+    else:  # 低聚集
+        if dispersion > 0.7:
+            evaluation_result = "过滤(纯噪声)"
+        elif dispersion > 0.3:
+            evaluation_result = "过滤(杂乱无规律)"
+        else:
+            evaluation_result = "过滤(无区分度)"
+    
     print(f"维度评估结果: {evaluation_result}")
     print(f"分散度: {dispersion:.3f}, 聚集性: {clustering:.3f}")
     
@@ -163,50 +245,16 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
         
         communities = community_louvain.best_partition(G)
     
-    # GMM方法
+    # GMM方法 - 使用之前计算的GMM模型
     elif clustering_method.lower() == 'gmm':
-        # 标准化特征
-        scaler = StandardScaler()
-        scaled_features = scaler.fit_transform(selected_features)
-        
-        # 检查数据是否都相同
-        if np.all(scaled_features == scaled_features[0]):
+        # 如果所有数据点相同
+        if is_single_cluster:
             communities = {identifiers[i]: 0 for i in range(len(identifiers))}
-            print("所有数据点相同，归为一个聚类")
-            return communities
-
-        # 根据数据量动态调整最大聚类数
-        max_components = min(5, len(identifiers) - 1)
-        if max_components < 2:
-            max_components = 2
-        
-        n_components_range = range(2, max_components + 1)
-        bic = []
-        gmm_models = []
-        
-        # 尝试不同的聚类数
-        for n_components in n_components_range:
-            # 使用更稳定的参数配置
-            gmm = GaussianMixture(
-                n_components=n_components,
-                random_state=42,
-                max_iter=200,
-                tol=1e-4,
-                reg_covar=1e-6  # 增加协方差矩阵的正则化
-            )
-            gmm.fit(scaled_features)
-            bic.append(gmm.bic(scaled_features))
-            gmm_models.append(gmm)
-        
-        # 选择BIC最小的模型
-        best_idx = np.argmin(bic)
-        best_gmm = gmm_models[best_idx]
-        
-        # 使用最佳模型进行聚类
-        cluster_labels = best_gmm.fit_predict(scaled_features)
-        
-        # 转换为与Louvain方法相同的格式
-        communities = {identifiers[i]: int(cluster_labels[i]) for i in range(len(identifiers))}
+        else:
+            # 已经有了之前计算的结果，直接使用
+            cluster_labels = best_gmm.predict(scaled_features)
+            # 转换为与Louvain方法相同的格式
+            communities = {identifiers[i]: int(cluster_labels[i]) for i in range(len(identifiers))}
     
     print(f"聚类完成，社区数量: {len(set(communities.values()))}")
     print(f"社区分布: {sorted(Counter(communities.values()).items())}")

@@ -1100,7 +1100,28 @@ const calculateAttentionProbability = (nodeData) => {
         }
         
         // 调整最终分数 - 更积极的缩放
-        const finalScore = baseScore * nodeCountFactor;
+        let finalScore = baseScore * nodeCountFactor;
+        
+        // 新增：考虑面积因素
+        // bbox_fill_area 在特征向量中的索引是19
+        const AREA_INDEX = 19;
+        
+        // 计算所有元素的平均面积（包括高亮和非高亮元素）
+        const allFeatures = [...highlightedFeatures, ...nonHighlightedFeatures];
+        const allElementsAvgArea = allFeatures.reduce((sum, features) => 
+            sum + features[AREA_INDEX], 0) / allFeatures.length;
+            
+        // 计算高亮元素的平均面积
+        const highlightedAvgArea = highlightedFeatures.reduce((sum, features) => 
+            sum + features[AREA_INDEX], 0) / highlightedFeatures.length;
+        
+        // 使用所有元素平均面积的0.4倍作为阈值
+        const areaThreshold = allElementsAvgArea * 1.3;
+        
+        // 如果高亮元素的平均面积小于阈值，显著降低显著性
+        if (highlightedAvgArea < areaThreshold) {
+            finalScore = finalScore / 3;
+        }
         
         // 映射到0.2-0.95范围，整体提高最小值和最大值
         return Math.min(Math.max(0.2 + finalScore * 0.75, 0.2), 0.95);
@@ -1131,6 +1152,29 @@ function updateScrollShadows() {
     // 当未滚动到最右侧时显示右侧阴影
     showRightShadow.value = scrollLeft < maxScrollLeft - 10;
 }
+
+// 添加窗口大小改变事件处理
+let resizeTimeout;
+function handleResize() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        updateScrollShadows();
+    }, 100);
+}
+
+// 在组件挂载时添加窗口调整大小的监听器
+onMounted(() => {
+    window.addEventListener('resize', handleResize);
+    nextTick(() => {
+        updateScrollShadows();
+    });
+});
+
+// 在组件卸载时移除监听器
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+    clearTimeout(resizeTimeout);
+});
 </script>
 
 <style scoped>
@@ -1154,7 +1198,7 @@ function updateScrollShadows() {
     position: absolute;
     top: 0;
     height: 100%;
-    width: 200px;
+    width: 120px;
     z-index: 10;
     pointer-events: none;
     opacity: 0;
@@ -1181,12 +1225,15 @@ function updateScrollShadows() {
     padding: 16px;
     gap: 16px;
     overflow-x: auto;
-    scroll-behavior: auto;
+    scroll-behavior: smooth;
     scrollbar-width: none;
     -ms-overflow-style: none;
     cursor: grab;
     user-select: none;
     -webkit-overflow-scrolling: touch;
+    width: 100%;
+    box-sizing: border-box;
+    flex-wrap: nowrap;
 }
 
 .cards-wrapper::-webkit-scrollbar {
@@ -1194,7 +1241,10 @@ function updateScrollShadows() {
 }
 
 .card {
-    flex: 0 0 400px;
+    flex: 0 0 auto;
+    width: min(400px, calc(100% - 32px));
+    max-width: 400px;
+    min-width: 280px;
     height: 100%;
     background: #ffffff;
     border-radius: 12px;
@@ -1205,6 +1255,13 @@ function updateScrollShadows() {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .card {
+        width: calc(100% - 32px);
+        min-width: 240px;
+    }
 }
 
 .card:hover {

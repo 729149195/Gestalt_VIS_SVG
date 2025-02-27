@@ -270,10 +270,10 @@ const render = (data) => {
     svg.append("text")
         .attr("transform", "rotate(-90)")
         .attr("y", marginLeft / 3)
-        .attr("x", 0 - (height - marginBottom) / 2)
+        .attr("x", 0 - (height - marginBottom) / 1.7)
         .style("text-anchor", "middle")
-        .style("font-size", "14px")
-        .text("Element Number");
+        .style("font-size", "12px")
+        .text("Count");
 
     zoom(svg);
     
