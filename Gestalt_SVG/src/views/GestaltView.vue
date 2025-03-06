@@ -1,5 +1,37 @@
 <template>
     <div class="main">
+        <!-- 添加系统介绍对话框 -->
+        <el-dialog v-model="dialogVisible" width="600px" :show-close="true" :close-on-click-modal="false" :close-on-press-escape="true" class="intro-dialog">
+            <div class="dialog-content">
+                <div class="intro-header">
+                    <div class="intro-icon">
+                        <i class="el-icon-view"></i>
+                    </div>
+                    <h2 style="font-size: 1.8em; font-weight: 600; color: #885F35;">Welcome to Gestalt Visualization System</h2>
+                </div>
+
+                <div class="intro-description">
+                    <p> This system simulates human visual perception behavior, recognizing different graphic patterns. It provides diverse visual perception results to help visualization creators (both professional and non-professional) discover potential graphic patterns.</p>
+                    <p> In addition, the system supports interactive and easy-to-understand perceptual modelling mechanisms such as:</p>
+
+                </div>
+                <div class="intro-features">
+                    <ul>
+                        <li><span class="feature-icon">✦</span> Graphic pattern highlight analysis</li>
+                        <li><span class="feature-icon">✦</span> Contributing visual feature ranking</li>
+                        <li><span class="feature-icon">✦</span> Quantitative perception probability of graphic patterns</li>
+                        <li><span class="feature-icon">✦</span> Sortable difference statistics</li>
+                        <li><span class="feature-icon">✦</span> Support for iterative modification of source code and analysis</li>
+                    </ul>
+                </div>
+            </div>
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button type="primary" @click="dialogVisible = false" color="#885F35" style="width: 100%;">Get Started</el-button>
+                </div>
+            </template>
+        </el-dialog>
+
         <div class="left" :style="{ width: leftWidth + '%' }">
             <div class="left-top" :style="{ height: leftTopHeight + '%' }">
                 <div class="fill-height">
@@ -44,6 +76,9 @@ import analysisWords from '@/components/statistics/analysisWords.vue';
 import CodeToSvg from '@/components/visualization/CodeToSvg.vue';
 import StatisticsContainer from '@/components/statistics/StatisticsContainer.vue';
 
+// 添加 dialog 控制变量
+const dialogVisible = ref(true)
+
 const file = ref(null)
 const componentKey = ref(0)
 const componentKey2 = ref(1)
@@ -71,7 +106,7 @@ const startResizeHorizontal = (e) => {
     currentResize = 'horizontal';
     startX = e.clientX;
     startWidth = leftWidth.value;
-    
+
     // 添加全局事件监听
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
@@ -86,7 +121,7 @@ const startResizeLeftVertical = (e) => {
     currentResize = 'leftVertical';
     startY = e.clientY;
     startHeight = leftTopHeight.value;
-    
+
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     document.body.style.cursor = 'ns-resize';
@@ -100,7 +135,7 @@ const startResizeRightVertical1 = (e) => {
     currentResize = 'rightVertical1';
     startY = e.clientY;
     startHeight = subgroupHeight.value;
-    
+
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     document.body.style.cursor = 'ns-resize';
@@ -114,7 +149,7 @@ const startResizeRightVertical2 = (e) => {
     currentResize = 'rightVertical2';
     startY = e.clientY;
     startHeight = analysisHeight.value;
-    
+
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     document.body.style.cursor = 'ns-resize';
@@ -134,7 +169,7 @@ const handleMouseMove = (e) => {
         const newWidth = startWidth + (delta / containerWidth * 100);
         // 限制最小/最大宽度
         leftWidth.value = Math.max(20, Math.min(80, newWidth));
-    } 
+    }
     else if (currentResize === 'leftVertical') {
         // 计算左上区域高度百分比变化
         const container = document.querySelector('.left');
@@ -152,7 +187,7 @@ const handleMouseMove = (e) => {
         const rect = container.getBoundingClientRect();
         const relativeY = e.clientY - rect.top;
         const newHeight = (relativeY / containerHeight) * 100;
-        
+
         // 更新高度并保持总和为100%
         subgroupHeight.value = Math.max(20, Math.min(70, newHeight));
         // 计算剩余空间并分配给分析区域和统计区域
@@ -167,17 +202,17 @@ const handleMouseMove = (e) => {
         const container = document.querySelector('.maxtistic');
         const containerHeight = container.offsetHeight;
         const rect = container.getBoundingClientRect();
-        
+
         // 两个分隔点之间的距离占总高度的百分比
         const relativeY = e.clientY - rect.top;
         const percentY = (relativeY / containerHeight) * 100;
-        
+
         // 更新分析区域高度，并计算统计区域的高度
         const newAnalysisHeight = percentY - subgroupHeight.value;
         analysisHeight.value = Math.max(10, Math.min(40, newAnalysisHeight));
         statisticsHeight.value = 100 - subgroupHeight.value - analysisHeight.value;
     }
-    
+
     // 防止事件冒泡和默认行为
     e.stopPropagation();
     e.preventDefault();
@@ -186,15 +221,15 @@ const handleMouseMove = (e) => {
 // 处理鼠标松开
 const handleMouseUp = (e) => {
     if (!isResizing) return;
-    
+
     isResizing = false;
     currentResize = '';
-    
+
     // 移除全局事件监听器
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
     document.body.style.cursor = 'default';
-    
+
     // 防止事件冒泡和默认行为
     if (e) {
         e.stopPropagation();
@@ -222,7 +257,7 @@ onMounted(async () => {
     } catch (error) {
         console.error('Error emptying upload folder:', error);
     }
-    
+
     // 确保在组件卸载时清理任何可能的事件监听器
     window.addEventListener('beforeunload', cleanupEvents);
 });
@@ -310,7 +345,8 @@ onBeforeUnmount(() => {
     width: 12px;
     height: 100%;
     top: 0;
-    right: -6px; /* 调整到left容器的右侧边缘 */
+    right: -6px;
+    /* 调整到left容器的右侧边缘 */
     z-index: 1000;
 }
 
@@ -514,16 +550,148 @@ onBeforeUnmount(() => {
 }
 
 .title {
-  position: absolute;
-  top: 12px;
-  left: 16px;
-  font-size: 16px;
-  font-weight: bold;
-  color: #885F35;
-  margin: 0;
-  padding: 0;
-  z-index: 10;
-  letter-spacing: -0.01em;
-  opacity: 0.8;
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #885F35;
+    margin: 0;
+    padding: 0;
+    z-index: 10;
+    letter-spacing: -0.01em;
+    opacity: 0.8;
+}
+
+/* 添加对话框相关样式 */
+.intro-dialog :deep(.el-dialog__header) {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    margin-right: 0;
+}
+
+.intro-dialog :deep(.el-dialog__title) {
+    font-size: 20px;
+    font-weight: 600;
+    color: #885F35;
+}
+
+.intro-dialog :deep(.el-dialog__body) {
+    padding: 24px;
+}
+
+.intro-dialog :deep(.el-dialog__footer) {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dialog-content {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+
+.intro-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.intro-icon {
+    font-size: 40px;
+    color: #885F35;
+    margin-bottom: 16px;
+}
+
+.intro-header h2 {
+    font-size: 22px;
+    color: #333;
+    margin: 0;
+}
+
+.intro-description {
+    margin-bottom: 10px;
+    line-height: 1.6;
+    font-size: 16px;
+    color: #333;
+    text-align: justify;
+    text-indent: 2em;
+    font-weight: 500;
+}
+
+.intro-description p {
+    text-indent: 2em;
+    margin: 0;
+}
+
+.intro-features {
+    background: rgba(136, 95, 53, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-align: justify;
+}
+
+.intro-features h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #885F35;
+    font-size: 18px;
+}
+
+.intro-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.intro-features li {
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+.feature-icon {
+    color: #885F35;
+    font-size: 18px;
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.intro-terminology {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.intro-terminology h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #333;
+    font-size: 18px;
+}
+
+.term {
+    margin-bottom: 16px;
+}
+
+.term h4 {
+    margin: 0 0 8px 0;
+    color: #885F35;
+    font-size: 16px;
+}
+
+.term p {
+    margin: 0;
+    color: #666;
+    line-height: 1.5;
+    text-align: justify;
+    text-indent: 2em;
+}
+
+.dialog-footer {
+    display: flex;
+    justify-content: flex-end;
 }
 </style>
