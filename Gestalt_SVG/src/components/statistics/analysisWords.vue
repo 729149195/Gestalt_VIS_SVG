@@ -1,13 +1,13 @@
 <template>
   <div class="analysis-words-container">
     <!-- 修改按钮图标为更合适的展开图标 -->
-    <button class="apple-button-corner" @click="showDrawer = true">
+    <!-- <button class="apple-button-corner" @click="showDrawer = true">
       <div class="arrow-wrapper">
         <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </div>
-    </button>
+    </button> -->
     
     <div class="sections-container">
       <div class="section-wrapper">
@@ -31,7 +31,7 @@
     </div>
     
     <!-- 使用 Teleport 将抽屉传送到 body -->
-    <Teleport to="body">
+    <!-- <Teleport to="body">
       <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
       <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
         <button class="close-button" @click="showDrawer = false">×</button>
@@ -39,7 +39,7 @@
           <maxstic :key="componentKey" />
         </div>
       </div>
-    </Teleport>
+    </Teleport> -->
   </div>
 </template>
 
@@ -49,9 +49,6 @@ import axios from 'axios'
 import maxstic from '../visualization/maxstic.vue'
 import { useStore } from 'vuex'
 
-// 数据源URL
-// const MAPPING_DATA_URL = "http://127.0.0.1:5000/average_equivalent_mapping";
-// const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag";
 const NORMAL_DATA_URL = "http://127.0.0.1:5000/normalized_init_json";
 
 // 特征名称映射
@@ -408,7 +405,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 `;
             });
         } else {
-            analysis += `<div class="no-selection">没有发现显著特征</div>`;
+            analysis += `<div class="no-selection">No distinguishing features found</div>`;
         }
         
         analysis += '</div>';
@@ -445,7 +442,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 `;
             });
         } else {
-            analysis += `<div class="no-selection">没有发现建议特征</div>`;
+            analysis += `<div class="no-selection">No recommended features found</div>`;
         }
         
         analysis += '</div>';
@@ -507,7 +504,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 `;
             });
         } else {
-            analysis += `<div class="no-selection">没有发现显著特征</div>`;
+            analysis += `<div class="no-selection">No distinguishing features found</div>`;
         }
         
         analysis += '</div>';
@@ -545,7 +542,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 `;
             });
         } else {
-            analysis += `<div class="no-selection">没有发现可用特征</div>`;
+            analysis += `<div class="no-selection">No usable features found</div>`;
         }
         
         analysis += '</div>';
@@ -562,7 +559,7 @@ const fetchDataAndGenerateAnalysis = async () => {
         const response = await axios.get(NORMAL_DATA_URL);
 
         if (!response.data) {
-            throw new Error('网络响应有问题');
+            throw new Error('Problems with network response');
         }
 
         // 保存原始特征数据
@@ -578,12 +575,12 @@ const fetchDataAndGenerateAnalysis = async () => {
         if (selectedNodeIds && selectedNodeIds.length > 0) {
             selectedNodesAnalysis.value = generateAnalysis(response.data, true, selectedNodeIds);
         } else {
-            selectedNodesAnalysis.value = '<div class="no-selection">请选择节点查看分析...</div>';
+            selectedNodesAnalysis.value = '<div class="no-selection">Please select a node to view the analysis...</div>';
         }
     } catch (error) {
-        console.error('获取数据失败:', error);
-        analysisContent.value = '分析生成失败，请重试';
-        selectedNodesAnalysis.value = '分析生成失败，请重试';
+        console.error('Failed to get data:', error);
+        analysisContent.value = 'Analysis generation failed, please try again';
+        selectedNodesAnalysis.value = 'Analysis generation failed, please try again';
     }
 };
 

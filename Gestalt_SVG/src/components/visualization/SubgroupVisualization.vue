@@ -1,13 +1,10 @@
 <template>
     <div class="force-graph-container">
         <span class="title">Graphical Patterns List</span>
-        <div class="hints-container">
-            <span class="scroll-hint">← Scroll horizontally to see more patterns →</span>
-            <span class="scroll-hint">Click to view the pattern</span>
-        </div>
         <div class="core-view-container">
             <CoreSubgroupVisualization />
         </div>
+        
     </div>
 </template>
 

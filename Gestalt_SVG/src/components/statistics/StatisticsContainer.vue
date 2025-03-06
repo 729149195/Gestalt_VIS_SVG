@@ -1,6 +1,6 @@
 <template>
   <div class="statistics-container">
-    <span class="title">{{ title }}</span>
+    <span class="title">SVG Statistics</span>
     
     <!-- 添加排序按钮 -->
     <button class="sort-button" @click="toggleSortOrder">
@@ -424,7 +424,7 @@ watch(() => props.componentKey, async () => {
   height: 40px;
   border: 4px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  border-top-color: #3498db;
+  border-top-color: #885F35;
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 10px;
 }
@@ -461,7 +461,7 @@ watch(() => props.componentKey, async () => {
 }
 
 .legend-color.blue {
-  background-color: #60a5fa;
+  background-color: #885F35;
 }
 
 .legend-color.gray {

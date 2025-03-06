@@ -335,7 +335,7 @@ onBeforeUnmount(() => {
 
 .resize-handle:hover,
 .resize-handle:active {
-    background-color: rgba(0, 120, 255, 0.3);
+    background-color: rgba(136, 95, 53, 0.3);
 }
 
 .right {
@@ -519,7 +519,7 @@ onBeforeUnmount(() => {
   left: 16px;
   font-size: 16px;
   font-weight: bold;
-  color: #1d1d1f;
+  color: #885F35;
   margin: 0;
   padding: 0;
   z-index: 10;

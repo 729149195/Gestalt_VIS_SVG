@@ -585,7 +585,7 @@ svg {
 
 }
 .links {
-    stroke: #333;
+    stroke: #885F35;
     stroke-opacity: 0.6;
 }
 
@@ -596,13 +596,13 @@ svg {
 
 .hulls {
     fill: none;
-    stroke: #c0c0c0;
+    stroke: #885F35;
 }
 
 .selection {
-    fill: #55C000;
+    fill: #885F35;
     fill-opacity: 0.2;
-    stroke: #55C000;
+    stroke: #885F35;
     stroke-width: 1px;
 }
 

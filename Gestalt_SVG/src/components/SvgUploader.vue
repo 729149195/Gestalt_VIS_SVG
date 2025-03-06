@@ -6,8 +6,7 @@
                 <div class="upload-content">
                     <v-icon size="32" class="upload-icon">mdi-cloud-upload-outline</v-icon>
                     <div class="upload-text">
-                        <span class="primary-text">Drag and drop SVG file here</span>
-                        <span class="secondary-text">Or click to select a file</span>
+                        <span class="primary-text">Drag or select a SVG file here</span>
                     </div>
                     <div v-if="file" class="file-info">
                         <span class="file-name">{{ file.name }}</span>
@@ -16,11 +15,9 @@
                 </div>
             </div>
         </div>
-
-        <!-- 进度条组件 - 移到元素选择列表前面 -->
         <div v-if="analyzing" class="progress-card">
             <div class="progress-label">{{ currentStep }}</div>
-            <v-progress-linear :model-value="progress" color="primary" height="6" rounded :striped="false" bg-color="rgba(85, 192, 0, 0.1)">
+            <v-progress-linear :model-value="progress" color="primary" height="6" rounded :striped="false" bg-color="rgba(136, 95, 53, 0.1)">
                 <template v-slot:default="{ value }">
                     <div class="progress-value">{{ Math.ceil(value) }}%</div>
                 </template>
@@ -264,7 +261,7 @@ const analyzeSvg = () => {
             if (response.data.success) {
                 return fetchProcessedSvg();
             } else {
-                throw new Error(response.data.error || '分析失败');
+                throw new Error(response.data.error || 'Failure to analyse');
             }
         })
         .then(() => {
@@ -277,7 +274,7 @@ const analyzeSvg = () => {
             emit('file-uploaded');
         })
         .catch(error => {
-            console.error('分析过程出错:', error);
+            console.error('Error in the analysis process:', error);
         })
         .finally(() => {
             analyzing.value = false;
@@ -526,7 +523,7 @@ const updateNodeOpacity = () => {
             node.style.transition = 'opacity 0.3s ease';
         });
     } catch (error) {
-        console.error('更新节点透明度时出错:', error);
+        console.error('Error updating node transparency:', error);
     }
 };
 
@@ -627,8 +624,8 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-style-input :deep(.v-field--focused) {
-    border-color: #1E90FF;
-    box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
+    border-color: rgba(136, 95, 53, 0.35);
+    box-shadow: 0 0 0 2px rgba(136, 95, 53, 0.15);
 }
 
 .mac-style-selector {
@@ -698,20 +695,20 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-style-list-item:hover {
-    background-color: rgba(30, 144, 255, 0.05);
+    background-color: rgba(136, 95, 53, 0.05);
 }
 
 .mac-style-checkbox :deep(.v-selection-control) {
-    color: #1E90FF;
+    color: #885F35;
 }
 
 .mac-style-button {
-    background: #1E90FF !important;
+    background: #885F35 !important;
     border-radius: 8px;
     color: white;
     font-weight: 500;
     letter-spacing: 0.3px;
-    box-shadow: 0 2px 8px rgba(30, 144, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(136, 95, 53, 0.2);
     transition: all 0.3s ease;
     text-transform: none;
     height: 36px;
@@ -719,13 +716,13 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-style-button:hover {
-    background: #1A7FE5 !important;
+    background: #7A5530 !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(136, 95, 53, 0.3);
 }
 
 .mac-style-button:disabled {
-    background: rgba(30, 144, 255, 0.5) !important;
+    background: rgba(136, 95, 53, 0.5) !important;
     box-shadow: none;
 }
 
@@ -750,34 +747,25 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-style-track-button {
+    background: rgba(136, 95, 53, 0.1) !important;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.9) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(200, 200, 200, 0.3);
+    color: #885F35;
+    font-weight: 500;
+    letter-spacing: 0.3px;
     transition: all 0.3s ease;
+    text-transform: none;
     height: 36px;
-    padding: 0 10px;
-    min-width: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-}
-
-.selection-text {
-    font-size: 13px;
+    margin-left: 8px;
+    min-width: 50px;
 }
 
 .mac-style-track-button:hover {
-    background: rgba(250, 250, 250, 0.95) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: rgba(136, 95, 53, 0.2) !important;
 }
 
 .mac-style-track-button.active-mode {
-    background: #1E90FF !important;
-    border-color: #1E90FF;
-    color: white;
+    background-color: #885F35 !important;
+    color: white !important;
 }
 
 .copy-cursor {
@@ -816,7 +804,7 @@ watch(() => analyzing.value, (newValue) => {
 
 .mac-upload-container {
     background: rgba(255, 255, 255, 0.95);
-    border: 1px dashed rgba(30, 144, 255, 0.3);
+    border: 1px dashed rgba(136, 95, 53, 0.3);
     border-radius: 8px;
     padding: 8px 12px;
     text-align: center;
@@ -830,7 +818,7 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-upload-container:hover {
-    border-color: rgba(30, 144, 255, 0.6);
+    border-color: rgba(136, 95, 53, 0.6);
     background: rgba(255, 255, 255, 0.98);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -848,7 +836,7 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .upload-icon {
-    color: #1E90FF;
+    color: #885F35;
     opacity: 0.8;
     transition: all 0.3s ease;
     font-size: 30px !important;
@@ -867,15 +855,11 @@ watch(() => analyzing.value, (newValue) => {
     color: #1d1d1f;
 }
 
-.secondary-text {
-    font-size: 14px;
-    color: #86868b;
-}
 
 .file-info {
     margin-left: auto;
     padding: 4px 8px;
-    background: rgba(30, 144, 255, 0.1);
+    background: rgba(136, 95, 53, 0.1);
     border-radius: 4px;
     display: flex;
     gap: 6px;
@@ -883,9 +867,10 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .file-name {
+    font-size: 14px;
     font-weight: 500;
-    color: #1d1d1f;
-    font-size: 12px;
+    color: #885F35;
+    margin-right: 8px;
 }
 
 .file-size {
@@ -942,8 +927,8 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 :deep(.v-progress-linear__determinate) {
-    background: linear-gradient(90deg, #1E90FF, #1A7FE5);
-    box-shadow: 0 1px 3px rgba(30, 144, 255, 0.2);
+    background: linear-gradient(90deg, rgba(136, 95, 53, 0.35), rgba(136, 95, 53, 0.35));
+    box-shadow: 0 1px 3px rgba(136, 95, 53, 0.35);
     transition: all 0.3s ease;
 }
 

@@ -8,7 +8,7 @@
             <div class="scroll-shadow scroll-shadow-left" :class="{ 'shadow-visible': showLeftShadow }"></div>
             <div class="scroll-shadow scroll-shadow-right" :class="{ 'shadow-visible': showRightShadow }"></div>
             
-            <div class="cards-wrapper" ref="cardsWrapper" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @mouseleave="endDrag" @scroll="updateScrollShadows">
+            <div class="cards-wrapper" ref="cardsWrapper" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @mouseleave="endDrag" @scroll="handleScroll">
                 <div v-for="node in flattenedNodes" 
                      :key="node.id" 
                      class="card"
@@ -56,11 +56,28 @@
                                 </span>
                             </template>
                         </div>
+                        <div class="visual-encodings">
+                            Used visual encodings:
+                        </div>
                         <div class="analysis-content" v-html="generateAnalysis(node)"></div>
                         <div class="attention-probability">
                             {{ (calculateAttentionProbability(node) * 100).toFixed(3) }}%
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- 添加自定义滚动条 -->
+            <div class="custom-scrollbar-container">
+                <div 
+                    class="custom-scrollbar-track"
+                    @mousedown="startScrollbarDrag"
+                >
+                    <div 
+                        class="custom-scrollbar-thumb" 
+                        ref="scrollbarThumb"
+                        :style="{ width: thumbWidth + 'px', left: thumbPosition + 'px' }"
+                    ></div>
                 </div>
             </div>
         </div>
@@ -78,12 +95,20 @@ const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 const graphContainer = ref(null);
 const cardsContainer = ref(null);
 const cardsWrapper = ref(null);
+const scrollbarThumb = ref(null);
 const graphData = ref(null);
 const nodes = ref([]);
 const originalSvgContent = ref('');
 const loading = ref(true);
 const currentPages = ref(new Map());
 const elementStats = ref(new Map());
+
+// 添加滚动条相关的状态
+const thumbWidth = ref(100);
+const thumbPosition = ref(0);
+const isScrollbarDragging = ref(false);
+const scrollbarStartX = ref(0);
+const scrollbarInitialLeft = ref(0);
 
 // 添加缩略图缓存
 const thumbnailCache = new Map();
@@ -546,8 +571,8 @@ function renderGraph(container, graphData, useCache = false) {
     const containerElement = d3.select(container);
     containerElement.selectAll('svg').remove();
 
-    const cardWidth = 368;
-    const cardHeight = container.clientHeight - 120;
+    const cardWidth = container.clientWidth;
+    const cardHeight = container.clientHeight;
 
     const svg = containerElement
         .append('svg')
@@ -562,13 +587,13 @@ function renderGraph(container, graphData, useCache = false) {
     const nodeData = graphData.nodes[0];
     if (!nodeData) return;
 
-    const padding = 16;
-    const availableWidth = cardWidth - (padding * 2);
-    const availableHeight = cardHeight - (padding * 2);
+    const padding = 0;
+    const availableWidth = cardWidth;
+    const availableHeight = cardHeight;
 
     const coreNode = g.append('g')
         .attr('class', 'node')
-        .attr('transform', `translate(${padding},${padding})`);
+        .attr('transform', `translate(0,0)`);
 
     const foreignObject = coreNode.append('foreignObject')
         .attr('width', availableWidth)
@@ -580,8 +605,6 @@ function renderGraph(container, graphData, useCache = false) {
         .style('width', '100%')
         .style('height', '100%')
         .style('overflow', 'hidden')
-        .style('border-radius', '6px')
-        .style('background', '#fafafa')
         .style('display', 'flex')
         .style('align-items', 'center')
         .style('justify-content', 'center');
@@ -593,8 +616,8 @@ function renderGraph(container, graphData, useCache = false) {
     const thumbnailSvg = div.select('svg').node();
     if (thumbnailSvg) {
         const bbox = thumbnailSvg.getBBox();
-        const padding = 20;
-        thumbnailSvg.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
+        const viewPadding = 5;
+        thumbnailSvg.setAttribute('viewBox', `${bbox.x - viewPadding} ${bbox.y - viewPadding} ${bbox.width + viewPadding * 2} ${bbox.height + viewPadding * 2}`);
         thumbnailSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         
         // 在SVG渲染完成后更新统计信息
@@ -774,8 +797,8 @@ const generateAnalysis = (nodeData) => {
     
     // 4. 生成HTML，确保特征标签唯一
     return topFeatures.map(feature => {
-        const color = '#1E88E5';
-        return `<span class="feature-tag" style="color: ${color}; border-color: ${color}20; background-color: ${color}08">
+        const color = '#885F35';
+        return `<span class="feature-tag" style="color: ${color}; border: 1px solid ${color}20; background-color: ${color}08">
             ${feature.name}
         </span>`;
     }).join(' ');
@@ -907,21 +930,168 @@ function renderAllCards() {
     processBatch();
 }
 
+// 处理滚动事件，更新滚动条位置
+function handleScroll() {
+    updateScrollShadows();
+    updateScrollbarThumb();
+}
+
+// 更新滚动条滑块位置和大小
+function updateScrollbarThumb() {
+    if (!cardsWrapper.value || !scrollbarThumb.value) return;
+    
+    const container = cardsWrapper.value;
+    const scrollTrack = container.parentElement.querySelector('.custom-scrollbar-track');
+    
+    if (!scrollTrack) return;
+    
+    const trackWidth = scrollTrack.clientWidth;
+    const containerWidth = container.clientWidth;
+    const scrollWidth = container.scrollWidth;
+    
+    // 计算滑块宽度比例 (可视区域宽度 / 内容总宽度)
+    const thumbWidthRatio = containerWidth / scrollWidth;
+    
+    // 计算滑块位置比例 (当前滚动位置 / 最大滚动距离)
+    const maxScroll = scrollWidth - containerWidth;
+    const scrollRatio = container.scrollLeft / maxScroll;
+    
+    // 设置滑块宽度 (最小宽度为30px)
+    thumbWidth.value = Math.max(thumbWidthRatio * trackWidth, 30);
+    
+    // 计算滑块可移动的最大距离
+    const maxThumbPosition = trackWidth - thumbWidth.value;
+    
+    // 设置滑块位置
+    thumbPosition.value = scrollRatio * maxThumbPosition;
+}
+
+// 开始拖动滚动条
+function startScrollbarDrag(e) {
+    if (!cardsWrapper.value) return;
+    
+    // 如果点击的是滑块，则开始拖动
+    if (e.target.classList.contains('custom-scrollbar-thumb')) {
+        isScrollbarDragging.value = true;
+        scrollbarStartX.value = e.clientX;
+        scrollbarInitialLeft.value = thumbPosition.value;
+        
+        // 添加全局鼠标事件监听器
+        document.addEventListener('mousemove', onScrollbarDrag);
+        document.addEventListener('mouseup', endScrollbarDrag);
+    } else {
+        // 如果点击的是轨道，则直接跳转到该位置
+        const track = e.currentTarget;
+        const trackRect = track.getBoundingClientRect();
+        const clickPosition = e.clientX - trackRect.left;
+        
+        // 计算点击位置相对于轨道的比例
+        const trackWidth = track.clientWidth;
+        const clickRatio = clickPosition / trackWidth;
+        
+        // 计算对应的滚动位置
+        const container = cardsWrapper.value;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        const newScrollPosition = clickRatio * maxScroll;
+        
+        // 设置滚动位置
+        container.scrollTo({
+            left: newScrollPosition,
+            behavior: 'smooth'
+        });
+    }
+    
+    e.preventDefault();
+}
+
+// 拖动滚动条
+function onScrollbarDrag(e) {
+    if (!isScrollbarDragging.value || !cardsWrapper.value) return;
+    
+    const container = cardsWrapper.value;
+    const track = container.parentElement.querySelector('.custom-scrollbar-track');
+    
+    if (!track) return;
+    
+    // 计算拖动距离
+    const deltaX = e.clientX - scrollbarStartX.value;
+    
+    // 计算新的滑块位置
+    const trackWidth = track.clientWidth;
+    const maxThumbPosition = trackWidth - thumbWidth.value;
+    const newThumbPosition = Math.max(0, Math.min(scrollbarInitialLeft.value + deltaX, maxThumbPosition));
+    
+    // 计算对应的滚动位置比例
+    const scrollRatio = newThumbPosition / maxThumbPosition;
+    
+    // 计算实际滚动位置
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const newScrollPosition = scrollRatio * maxScroll;
+    
+    // 设置滚动位置
+    container.scrollLeft = newScrollPosition;
+    
+    // 更新滑块位置
+    thumbPosition.value = newThumbPosition;
+    
+    e.preventDefault();
+}
+
+// 结束拖动滚动条
+function endScrollbarDrag() {
+    isScrollbarDragging.value = false;
+    
+    // 移除全局鼠标事件监听器
+    document.removeEventListener('mousemove', onScrollbarDrag);
+    document.removeEventListener('mouseup', endScrollbarDrag);
+}
+
+// 添加更新滚动阴影的方法
+function updateScrollShadows() {
+    if (!cardsWrapper.value) return;
+    
+    const container = cardsWrapper.value;
+    const scrollLeft = container.scrollLeft;
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    
+    // 当滚动位置大于0时显示左侧阴影
+    showLeftShadow.value = scrollLeft > 10;
+    
+    // 当未滚动到最右侧时显示右侧阴影
+    showRightShadow.value = scrollLeft < maxScrollLeft - 10;
+}
+
 onMounted(async () => {
     await loadAndRenderGraph();
     
-    // 初始化阴影状态
+    // 初始化阴影状态和滚动条
     nextTick(() => {
         updateScrollShadows();
+        updateScrollbarThumb();
     });
     
-    // 添加窗口调整大小时更新阴影的监听器
-    window.addEventListener('resize', updateScrollShadows);
+    // 添加窗口调整大小时更新阴影和滚动条的监听器
+    window.addEventListener('resize', handleResize);
 });
 
-// 在组件卸载时移除事件监听器
+// 添加窗口大小改变事件处理
+let resizeTimeout;
+function handleResize() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        updateScrollShadows();
+        updateScrollbarThumb();
+    }, 100);
+}
+
+// 在组件卸载时移除监听器
 onUnmounted(() => {
-    window.removeEventListener('resize', updateScrollShadows);
+    window.removeEventListener('resize', handleResize);
+    clearTimeout(resizeTimeout);
+    
+    // 确保移除滚动条拖动的事件监听器
+    document.removeEventListener('mousemove', onScrollbarDrag);
+    document.removeEventListener('mouseup', endScrollbarDrag);
 });
 
 // 监听选中节点的变化 - 优化为仅在真正改变选中状态时才重绘
@@ -1137,44 +1307,6 @@ const calculateAttentionProbability = (nodeData) => {
 const getStats = (node) => {
     return elementStats.value.get(node.id) || {};
 };
-
-// 添加更新滚动阴影的方法
-function updateScrollShadows() {
-    if (!cardsWrapper.value) return;
-    
-    const container = cardsWrapper.value;
-    const scrollLeft = container.scrollLeft;
-    const maxScrollLeft = container.scrollWidth - container.clientWidth;
-    
-    // 当滚动位置大于0时显示左侧阴影
-    showLeftShadow.value = scrollLeft > 10;
-    
-    // 当未滚动到最右侧时显示右侧阴影
-    showRightShadow.value = scrollLeft < maxScrollLeft - 10;
-}
-
-// 添加窗口大小改变事件处理
-let resizeTimeout;
-function handleResize() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        updateScrollShadows();
-    }, 100);
-}
-
-// 在组件挂载时添加窗口调整大小的监听器
-onMounted(() => {
-    window.addEventListener('resize', handleResize);
-    nextTick(() => {
-        updateScrollShadows();
-    });
-});
-
-// 在组件卸载时移除监听器
-onUnmounted(() => {
-    window.removeEventListener('resize', handleResize);
-    clearTimeout(resizeTimeout);
-});
 </script>
 
 <style scoped>
@@ -1191,6 +1323,8 @@ onUnmounted(() => {
     height: 100%;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* 添加滚动阴影指示器样式 */
@@ -1221,8 +1355,8 @@ onUnmounted(() => {
 
 .cards-wrapper {
     display: flex;
-    height: 100%;
-    padding: 16px;
+    flex: 1;
+    padding: 16px 16px 8px 16px;
     gap: 16px;
     overflow-x: auto;
     scroll-behavior: smooth;
@@ -1240,6 +1374,37 @@ onUnmounted(() => {
     display: none;
 }
 
+/* 自定义滚动条样式 */
+.custom-scrollbar-container {
+    width: 100%;
+    height: 12px;
+    padding: 0 16px 8px 16px;
+    box-sizing: border-box;
+}
+
+.custom-scrollbar-track {
+    width: 100%;
+    height: 6px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+}
+
+.custom-scrollbar-thumb {
+    position: absolute;
+    height: 100%;
+    background-color: rgba(136, 95, 53, 0.5);
+    border-radius: 2px;
+    cursor: grab;
+    transition: background-color 0.2s;
+}
+
+.custom-scrollbar-thumb:hover,
+.custom-scrollbar-thumb:active {
+    background-color: rgba(136, 95, 53, 0.7);
+}
+
 .card {
     flex: 0 0 auto;
     width: min(400px, calc(100% - 32px));
@@ -1248,7 +1413,7 @@ onUnmounted(() => {
     height: 100%;
     background: #ffffff;
     border-radius: 12px;
-    border: 1.5px solid #1a73e8;
+    border: 1.5px solid #885F35;
     display: flex;
     flex-direction: column;
     transition: all 0.2s ease;
@@ -1266,35 +1431,35 @@ onUnmounted(() => {
 
 .card:hover {
     transform: translateY(-2px);
-    border-color: #1967d2;
-    box-shadow: 0 4px 6px rgba(60, 64, 67, 0.15);
+    border-color: #7A5530;
+    box-shadow: 0 4px 6px rgba(136, 95, 53, 0.15);
 }
 
 .card-core {
-    border-color: #1a73e8;
+    border-color: #885F35;
 }
 
 .card-core:hover {
-    border-color: #1967d2;
-    box-shadow: 0 4px 6px rgba(60, 64, 67, 0.15);
+    border-color: #7A5530;
+    box-shadow: 0 4px 6px rgba(136, 95, 53, 0.15);
 }
 
 .card-extension {
-    border-color: #34A853;
+    border-color: #885F35;
 }
 
 .card-extension:hover {
-    border-color: #2E7D32;
-    box-shadow: 0 4px 6px rgba(46, 125, 50, 0.15);
+    border-color: #7A5530;
+    box-shadow: 0 4px 6px rgba(136, 95, 53, 0.15);
 }
 
 .card.has-extension {
-    border-color: #1a73e8;
+    border-color: #885F35;
 }
 
 .card.has-extension:hover {
-    border-color: #1967d2;
-    box-shadow: 0 4px 6px rgba(60, 64, 67, 0.15);
+    border-color: #7A5530;
+    box-shadow: 0 4px 6px rgba(136, 95, 53, 0.15);
 }
 
 .extension-indicator {
@@ -1310,7 +1475,7 @@ onUnmounted(() => {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     z-index: 2;
     backdrop-filter: blur(4px);
-    border: 1px solid rgba(52, 168, 83, 0.15);
+    border: 1px solid rgba(136, 95, 53, 0.15);
     transition: all 0.2s ease;
 }
 
@@ -1322,7 +1487,7 @@ onUnmounted(() => {
 .extension-count {
     font-size: 13px;
     font-weight: 600;
-    color: #34A853;
+    color: #885F35;
     min-width: 16px;
     text-align: center;
 }
@@ -1365,7 +1530,7 @@ onUnmounted(() => {
 
 .navigation-buttons :deep(.v-btn) {
     background: transparent !important;
-    color: #3c4043 !important;
+    color: #885F35 !important;
     min-width: 32px !important;
     width: 32px !important;
     height: 32px !important;
@@ -1374,11 +1539,11 @@ onUnmounted(() => {
 }
 
 .navigation-buttons :deep(.v-btn:hover) {
-    background: rgba(60, 64, 67, 0.08) !important;
+    background: rgba(136, 95, 53, 0.08) !important;
 }
 
 .navigation-buttons :deep(.v-btn:active) {
-    background: rgba(60, 64, 67, 0.12) !important;
+    background: rgba(136, 95, 53, 0.12) !important;
 }
 
 .navigation-buttons :deep(.v-btn--disabled) {
@@ -1393,7 +1558,7 @@ onUnmounted(() => {
 .card-svg-container {
     flex: 1;
     min-height: 0;
-    padding: 12px;
+    padding: 0;
     border-bottom: 1px solid #e8eaed;
     pointer-events: none;
     display: flex;
@@ -1405,7 +1570,8 @@ onUnmounted(() => {
 .card-svg-container svg {
     width: 100%;
     height: 100%;
-    display: block;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 .card-info {
@@ -1413,21 +1579,21 @@ onUnmounted(() => {
     padding: 8px 12px;
     background: #f8f9fa;
     border-bottom-left-radius: 12px;
-    border-bottom-right-radius: 12px;
-    max-height: 80px;
+    max-height: 90px;
     overflow-y: auto;
     position: relative;
     padding-right: 120px;
+    border-top: 1px solid rgba(136, 95, 53, 0.2);
 }
 
 .highlight-stats {
-    font-size: 12px;
+    font-size: 14px;
     color: #5f6368;
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
+    font-weight: 500;
     align-items: center;
-    margin-bottom: 4px;
 }
 
 .highlight-stats span {
@@ -1437,19 +1603,29 @@ onUnmounted(() => {
     font-weight: 500;
 }
 
+.visual-encodings {
+    font-size: 14px;
+    color: #5f6368;
+    font-weight: 500;
+    display: block;
+}
+
 .analysis-content {
-    margin-top: 4px;
+    margin-top: 2px;
     font-size: 14px;
     line-height: 1.4;
     gap: 4px;
     padding-right: 8px;
     max-width: calc(100% - 40px);
+    display: flex;
+    flex-wrap: wrap;
+    color: #885F35;
 }
 
 :deep(.feature-tag) {
     border-radius: 4px;
     padding: 2px 6px;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 500;
     display: inline-flex;
     align-items: center;
@@ -1457,6 +1633,10 @@ onUnmounted(() => {
     height: 20px;
     margin-right: 4px;
     margin-bottom: 2px;
+    margin-top: 2px;
+    background-color: rgba(136, 95, 53, 0.08);
+    color: #885F35;
+    border: 1px solid rgba(136, 95, 53, 0.2);
 }
 
 /* 删除不再需要的样式 */
@@ -1485,7 +1665,7 @@ onUnmounted(() => {
     width: 40px;
     height: 40px;
     border: 3px solid #f3f3f3;
-    border-top: 3px solid #1a73e8;
+    border-top: 3px solid #885F35;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -1501,11 +1681,11 @@ onUnmounted(() => {
     right: 12px;
     font-size: 20px;
     font-weight: 600;
-    color: #1a73e8;
+    color: #885F35;
     padding: 4px 8px;
     border-radius: 6px;
-    background: rgba(26, 115, 232, 0.08);
-    border: 1px solid rgba(26, 115, 232, 0.2);
+    background: rgba(136, 95, 53, 0.08);
+    border: 1px solid rgba(136, 95, 53, 0.2);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
@@ -1516,9 +1696,9 @@ onUnmounted(() => {
 }
 
 .card-extension .attention-probability {
-    color: #34A853;
-    background: rgba(52, 168, 83, 0.08);
-    border: 1px solid rgba(52, 168, 83, 0.2);
+    color: #885F35;
+    background: rgba(136, 95, 53, 0.08);
+    border: 1px solid rgba(136, 95, 53, 0.2);
 }
 </style>
 

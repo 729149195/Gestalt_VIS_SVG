@@ -6,7 +6,7 @@
         <div class="section-header">
           <div class="left-tools">
             <span class="title">SVG Editor</span>
-            <el-button type="primary" @click="generateAndUpload">Generate</el-button>
+            <el-button type="primary" @click="generateAndUpload">Upload</el-button>
             <el-button @click="copyCode">Copy</el-button>
             <el-button @click="downloadSvg">Download</el-button>
           </div>
@@ -21,7 +21,7 @@
             </el-select>
             <div class="mode-tabs">
               <div class="mode-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
-                Code
+                Syntax
               </div>
               <div class="mode-tab" :class="{ active: !isDeclarativeMode }" @click="isDeclarativeMode = false">
                 SVG
@@ -39,14 +39,14 @@
         <div class="section-header">
           <div class="left-tools">
             <span class="title">SVG Editor</span>
-            <el-button type="primary" @click="generateAndUpload">Generate</el-button>
+            <el-button type="primary" @click="generateAndUpload">Upload</el-button>
             <el-button @click="copyCode">Copy</el-button>
             <el-button @click="downloadSvg">Download</el-button>
           </div>
           <div class="side-mode-switch">
             <div class="mode-tabs">
               <div class="mode-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
-                Code
+                Syntax
               </div>
               <div class="mode-tab" :class="{ active: !isDeclarativeMode }" @click="isDeclarativeMode = false">
                 SVG
@@ -157,12 +157,42 @@ const getEditorLanguage = () => {
 
 // 初始化编辑器
 const initEditors = () => {
+  // 自定义编辑器主题
+  monaco.editor.defineTheme('gestaltTheme', {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      { token: 'comment', foreground: '6A9955' },
+      { token: 'keyword', foreground: '885F35', fontStyle: 'bold' },
+      { token: 'string', foreground: 'A67C4A' },  // 调整字符串颜色为更亮的棕色
+      { token: 'number', foreground: '8A6B47' },  // 保持数字颜色
+      { token: 'attribute.name', foreground: '5D4126' }, // 调整属性名颜色为更深的棕色
+      { token: 'tag', foreground: '7D5A32' }      // 调整标签颜色为中等棕色
+    ],
+    colors: {
+      'editor.foreground': '#000000',
+      'editor.background': '#FFFFFF',
+      'editor.selectionBackground': 'rgba(136, 95, 53, 0.35)',
+      'editor.lineHighlightBackground': 'rgba(136, 95, 53, 0.05)',
+      'editorCursor.foreground': '#885F35',
+      'editorLineNumber.foreground': '#AAAAAA',
+      'editorLineNumber.activeForeground': '#885F35',
+      'editorIndentGuide.background': '#EEEEEE',
+      'editorIndentGuide.activeBackground': 'rgba(136, 95, 53, 0.3)',
+      'editor.selectionHighlightBorder': 'rgba(136, 95, 53, 0.3)',
+      'editorLink.activeForeground': '#7A5530',    // 保持链接高亮颜色
+      'editorBracketMatch.background': 'rgba(136, 95, 53, 0.2)', // 保持括号匹配高亮
+      'editorBracketMatch.border': 'rgba(136, 95, 53, 0.4)'      // 保持括号匹配边框
+    }
+  });
+
   // 初始化声明式编辑器
   if (declarativeEditorContainer.value && !declarativeEditor) {
     declarativeEditor = monaco.editor.create(declarativeEditorContainer.value, {
       ...declarativeEditorOptions,
       value: code.value,
-      language: getEditorLanguage()
+      language: getEditorLanguage(),
+      theme: 'gestaltTheme'
     })
 
     declarativeEditor.onDidChangeModelContent(() => {
@@ -186,7 +216,8 @@ const initEditors = () => {
   if (svgEditorContainer.value && !svgEditor) {
     svgEditor = monaco.editor.create(svgEditorContainer.value, {
       ...svgEditorOptions,
-      value: svgCode.value
+      value: svgCode.value,
+      theme: 'gestaltTheme'
     })
 
     svgEditor.onDidChangeModelContent(() => {
@@ -223,7 +254,7 @@ const formatDeclarativeEditor = () => {
     try {
       declarativeEditor.getAction('editor.action.formatDocument')?.run()
     } catch (error) {
-      console.error('格式化声明式代码编辑器失败:', error)
+      console.error('Formatting declarative code editor fails:', error)
     }
   }
 }
@@ -394,10 +425,10 @@ const generateSvg = async () => {
       svgEditor.setValue(svgCode.value)
     }
   } catch (error) {
-    console.error('生成错误:', error)
-    ElMessage.error('生成过程中发生错误')
+    console.error('generate an error:', error)
+    ElMessage.error('An error occurred during generation')
     const errorSvg = `<svg width="200" height="50">
-      <text x="10" y="20" fill="red">生成错误: ${error.message}</text>
+      <text x="10" y="20" fill="red">generate an error: ${error.message}</text>
     </svg>`
     svgCode.value = errorSvg
     svgOutput.value = errorSvg
@@ -437,7 +468,7 @@ const handleEChartsCode = async () => {
     try {
       option = typeof code.value === 'string' ? JSON.parse(code.value) : code.value
     } catch (e) {
-      throw new Error('JSON解析错误: ' + e.message)
+      throw new Error('JSON parsing error: ' + e.message)
     }
 
     // 确保必要的配置项存在并处理默认值
@@ -463,7 +494,7 @@ const handleEChartsCode = async () => {
     try {
       chart.setOption(option)
     } catch (e) {
-      throw new Error('设置图表配置失败: ' + e.message)
+      throw new Error('Failed to set up chart configuration: ' + e.message)
     }
 
     // 等待图表渲染完成
@@ -472,7 +503,7 @@ const handleEChartsCode = async () => {
     // 获取SVG内容
     const svgElement = container.querySelector('svg')
     if (!svgElement) {
-      throw new Error('无法获取SVG元素')
+      throw new Error('Unable to fetch SVG elements')
     }
 
     try {
@@ -511,11 +542,11 @@ const handleEChartsCode = async () => {
       svgCode.value = svg
       svgOutput.value = svg
     } catch (e) {
-      throw new Error('SVG处理错误: ' + e.message)
+      throw new Error('SVG Processing Errors: ' + e.message)
     }
   } catch (error) {
-    console.error('ECharts错误:', error)
-    throw new Error(`ECharts错误: ${error.message}`)
+    console.error('ECharts error:', error)
+    throw new Error(`ECharts error: ${error.message}`)
   }
 }
 
@@ -644,7 +675,7 @@ const handleHighchartsCode = async () => {
       },
       accessibility: {
         enabled: true,
-        description: '图表描述'
+        description: 'Chart Description'
       },
       plotOptions: {
         series: {
@@ -702,8 +733,8 @@ const handleHighchartsCode = async () => {
     svgCode.value = svgElement.outerHTML
     svgOutput.value = svgElement.outerHTML
   } catch (error) {
-    console.error('Highcharts错误:', error)
-    throw new Error(`Highcharts错误: ${error.message}`)
+    console.error('Highcharts error:', error)
+    throw new Error(`Highcharts error: ${error.message}`)
   }
 }
 
@@ -749,7 +780,7 @@ const handleMatplotlibCode = async () => {
         svgCode.value = result.svg;
         svgOutput.value = result.svg;
       } else {
-        throw new Error('返回的数据中没有SVG内容');
+        throw new Error('No SVG content in the returned data');
       }
     } catch (jsonError) {
       // 如果不是有效的JSON，检查是否是有效的SVG
@@ -757,13 +788,13 @@ const handleMatplotlibCode = async () => {
         svgCode.value = responseText;
         svgOutput.value = responseText;
       } else {
-        console.error('无法解析响应:', responseText.substring(0, 100) + '...');
-        throw new Error('返回的不是有效的SVG或JSON内容');
+        console.error('Unable to parse response:', responseText.substring(0, 100) + '...');
+        throw new Error('Returns not valid SVG or JSON content');
       }
     }
   } catch (error) {
-    console.error('Matplotlib处理错误:', error);
-    throw new Error(`Matplotlib错误: ${error.message}`);
+    console.error('Matplotlib handling errors:', error);
+    throw new Error(`Matplotlib error: ${error.message}`);
   }
 }
 
@@ -771,13 +802,13 @@ const handleMatplotlibCode = async () => {
 const copyCode = () => {
   navigator.clipboard.writeText(svgCode.value)
     .then(() => ElMessage({
-      message: 'SVG代码已复制到剪贴板',
+      message: 'SVG code has been copied to the clipboard',
       type: 'success',
       position: 'top-right',
       customClass: 'custom-message'
     }))
     .catch(() => ElMessage({
-      message: '复制失败',
+      message: 'Reproduction Failure',
       type: 'error',
       position: 'top-right',
       customClass: 'custom-message'
@@ -1022,7 +1053,7 @@ const generateAndUpload = async () => {
 
     if (!contentToUpload) {
       ElMessage({
-        message: '没有可上传的SVG内容',
+        message: 'No uploadable SVG content',
         type: 'warning',
         position: 'top-right',
         customClass: 'custom-message'
@@ -1051,7 +1082,7 @@ const generateAndUpload = async () => {
 
     if (result.success) {
       ElMessage({
-        message: 'SVG已成功上传到分析器',
+        message: 'SVG has been successfully uploaded to the analyser',
         type: 'success',
         position: 'top-right',
         customClass: 'custom-message'
@@ -1059,12 +1090,12 @@ const generateAndUpload = async () => {
       // 触发全局事件，通知SvgUploader组件刷新
       window.dispatchEvent(new CustomEvent('svg-uploaded', { detail: { filename: file.name } }))
     } else {
-      throw new Error(result.error || '上传失败')
+      throw new Error(result.error || 'Upload Failed')
     }
   } catch (error) {
-    console.error('生成或上传错误:', error)
+    console.error('Generation or upload errors:', error)
     ElMessage({
-      message: '操作失败: ' + error.message,
+      message: 'failure of an operation: ' + error.message,
       type: 'error',
       position: 'top-right',
       customClass: 'custom-message'
@@ -1295,7 +1326,7 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
   }
   
   .title {
-    font-size: 14px;
+    font-size: 1.5em;
     margin-left: 0;
   }
 }
@@ -1373,18 +1404,18 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :deep(.el-button) {
   margin-left: 0;
   border-radius: 8px;
-  background: #1E90FF !important;
-  border-color: #1E90FF;
+  background: #885F35 !important;
+  border-color: #885F35;
   color: white;
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(30, 144, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(136, 95, 53, 0.2);
 }
 
 :deep(.el-button:hover) {
-  background: #1A7FE5 !important;
-  border-color: #1A7FE5;
+  background: #7A5530 !important;
+  border-color: #7A5530;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(136, 95, 53, 0.3);
 }
 
 :deep(.el-button:active) {
@@ -1446,11 +1477,11 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 
 .mode-tab:hover {
   color: #333;
-  background: rgba(30, 144, 255, 0.1);
+  background: rgba(136, 95, 53, 0.1);
 }
 
 .mode-tab.active {
-  background: #1E90FF;
+  background: #885F35;
   color: white;
 }
 
@@ -1475,7 +1506,7 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 }
 
 :global(.custom-message.el-message--success .el-message__icon) {
-  color: #1E90FF !important;
+  color: #885F35 !important;
   font-size: 16px !important;
 }
 
@@ -1500,13 +1531,80 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 
 /* 添加高亮样式 */
 :deep(.highlighted-line) {
-  background-color: rgba(30, 144, 255, 0.15);
-  border-left: 3px solid #1E90FF;
+  background-color: rgba(136, 95, 53, 0.15);
+  border-left: 3px solid #885F35;
 }
 
 :deep(.highlighted-text) {
   font-weight: bold;
-  color: #0066CC;
+  color: #885F35;
+}
+
+/* 自定义选中文本的样式 */
+:deep(.monaco-editor .selected-text) {
+  background-color: rgba(136, 95, 53, 0.35) !important;
+}
+
+:deep(.monaco-editor .cursor) {
+  background-color: #885F35 !important;
+  border-color: #885F35 !important;
+}
+
+/* 覆盖所有可能的红色高亮 */
+:deep(.monaco-editor .line-delete),
+:deep(.monaco-editor .line-insert),
+:deep(.monaco-editor .monaco-diff-editor .line-insert),
+:deep(.monaco-editor .monaco-diff-editor .line-delete),
+:deep(.monaco-editor .monaco-diff-editor .char-insert),
+:deep(.monaco-editor .monaco-diff-editor .char-delete),
+:deep(.monaco-editor .current-line-highlight),
+:deep(.monaco-editor .current-line),
+:deep(.monaco-editor .view-overlays .current-line),
+:deep(.monaco-editor .margin-view-overlays .current-line-margin),
+:deep(.monaco-editor .view-overlays .line-highlight) {
+  background-color: rgba(136, 95, 53, 0.15) !important;
+  border-left-color: #885F35 !important;
+}
+
+/* 确保所有高亮文本使用棕色 */
+:deep(.monaco-editor .findMatch),
+:deep(.monaco-editor .currentFindMatch),
+:deep(.monaco-editor .selectionHighlight),
+:deep(.monaco-editor .wordHighlight),
+:deep(.monaco-editor .wordHighlightStrong) {
+  background-color: rgba(136, 95, 53, 0.35) !important;
+  border-color: rgba(136, 95, 53, 0.5) !important;
+}
+
+/* 修改行号前后的红色标记为棕色 */
+:deep(.monaco-editor .margin .margin-view-overlays .line-numbers),
+:deep(.monaco-editor .margin-view-overlays .line-numbers) {
+  color: rgba(136, 95, 53, 0.8) !important;
+}
+
+:deep(.monaco-editor .margin .margin-view-overlays .cldr.folding),
+:deep(.monaco-editor .margin .margin-view-overlays .cldr) {
+  color: #885F35 !important;
+}
+
+:deep(.monaco-editor .glyph-margin .cgmr) {
+  background-color: #885F35 !important;
+}
+
+:deep(.monaco-editor .margin .margin-view-overlays .line-numbers.active-line-number) {
+  color: #885F35 !important;
+  font-weight: bold;
+}
+
+/* 修改断点和错误标记颜色 */
+:deep(.monaco-editor .breakpoint-glyph-margin),
+:deep(.monaco-editor .breakpoint) {
+  background-color: #885F35 !important;
+}
+
+:deep(.monaco-editor .error-glyph-margin),
+:deep(.monaco-editor .error) {
+  background-color: rgba(136, 95, 53, 0.7) !important;
 }
 
 .editor-transition {
@@ -1540,5 +1638,145 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :deep(.monaco-editor) {
   width: 100% !important;
   overflow: hidden !important;
+}
+
+/* 全局样式覆盖，确保没有红色高亮 */
+:global(.monaco-editor .line-delete),
+:global(.monaco-editor .line-insert),
+:global(.monaco-editor .current-line),
+:global(.monaco-editor .view-overlays .current-line),
+:global(.monaco-editor .margin-view-overlays .current-line-margin),
+:global(.monaco-editor .view-overlays .line-highlight) {
+  background-color: rgba(136, 95, 53, 0.15) !important;
+  border-left-color: #885F35 !important;
+}
+
+:global(.monaco-editor .findMatch),
+:global(.monaco-editor .currentFindMatch),
+:global(.monaco-editor .selectionHighlight),
+:global(.monaco-editor .wordHighlight),
+:global(.monaco-editor .wordHighlightStrong) {
+  background-color: rgba(136, 95, 53, 0.35) !important;
+  border-color: rgba(136, 95, 53, 0.5) !important;
+}
+
+:global(.monaco-editor .selected-text) {
+  background-color: rgba(136, 95, 53, 0.35) !important;
+}
+
+/* 全局覆盖行号前后的红色标记 */
+:global(.monaco-editor .margin .margin-view-overlays .line-numbers),
+:global(.monaco-editor .margin-view-overlays .line-numbers) {
+  color: rgba(136, 95, 53, 0.8) !important;
+}
+
+:global(.monaco-editor .margin .margin-view-overlays .cldr.folding),
+:global(.monaco-editor .margin .margin-view-overlays .cldr) {
+  color: #885F35 !important;
+}
+
+:global(.monaco-editor .glyph-margin .cgmr) {
+  background-color: #885F35 !important;
+}
+
+:global(.monaco-editor .margin .margin-view-overlays .line-numbers.active-line-number) {
+  color: #885F35 !important;
+  font-weight: bold;
+}
+
+:global(.monaco-editor .breakpoint-glyph-margin),
+:global(.monaco-editor .breakpoint) {
+  background-color: #885F35 !important;
+}
+
+:global(.monaco-editor .error-glyph-margin),
+:global(.monaco-editor .error) {
+  background-color: rgba(136, 95, 53, 0.7) !important;
+}
+
+/* 修改行装饰器和标记颜色 */
+:global(.monaco-editor .decorationsOverviewRuler .decorationsOverviewRuler-red),
+:global(.monaco-editor .decorationsOverviewRuler .decorationsOverviewRuler-error),
+:global(.monaco-editor .decorationsOverviewRuler .decorationsOverviewRuler-warning) {
+  background-color: #885F35 !important;
+}
+
+:global(.monaco-editor .contentWidgets .codicon-error),
+:global(.monaco-editor .contentWidgets .codicon-warning) {
+  color: #885F35 !important;
+}
+
+:global(.monaco-editor .squiggly-error),
+:global(.monaco-editor .squiggly-warning),
+:global(.monaco-editor .squiggly-info) {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 3' enable-background='new 0 0 6 3' height='3' width='6'%3E%3Cg fill='%23885F35'%3E%3Cpolygon points='5.5,0 2.5,3 1.1,3 4.1,0'/%3E%3Cpolygon points='4,0 6,2 6,0.6 5.4,0'/%3E%3Cpolygon points='0,2 1,3 2.4,3 0,0.6'/%3E%3C/g%3E%3C/svg%3E") repeat-x bottom left !important;
+}
+
+/* 修改行号前的红色标记 */
+:global(.monaco-editor .margin-view-overlays .cgmr.codicon-circle-filled),
+:global(.monaco-editor .margin-view-overlays .cgmr.codicon-error),
+:global(.monaco-editor .margin-view-overlays .cgmr.codicon-warning),
+:global(.monaco-editor .margin-view-overlays .cgmr.codicon-info) {
+  color: #885F35 !important;
+}
+
+/* 修改行内装饰器 */
+:global(.monaco-editor .inline-decoration),
+:global(.monaco-editor .inline-decoration.error),
+:global(.monaco-editor .inline-decoration.warning),
+:global(.monaco-editor .inline-decoration.info) {
+  color: #885F35 !important;
+  border-color: #885F35 !important;
+}
+
+/* 修改行号前的红色圆点 */
+:global(.monaco-editor .margin-view-overlays .cgmr),
+:global(.monaco-editor .margin-view-overlays .cgmr.codicon-circle-filled),
+:global(.monaco-editor .margin-view-overlays .cgmr.codicon-circle-outline) {
+  color: #885F35 !important;
+  background-color: transparent !important;
+}
+
+/* 修改行号前的红色箭头 */
+:global(.monaco-editor .margin-view-overlays .cgmr.codicon-chevron-right),
+:global(.monaco-editor .margin-view-overlays .cgmr.codicon-chevron-down) {
+  color: #885F35 !important;
+}
+
+/* 添加XML/HTML属性名和值的特殊样式 */
+:deep(.monaco-editor .mtk5),  /* 通常是属性名 */
+:deep(.monaco-editor .mtk12), /* 通常是属性值 */
+:deep(.monaco-editor .mtk13) {
+  color: #5D4126 !important; /* 属性名颜色 - 深棕色 */
+}
+
+:deep(.monaco-editor .mtk4),  /* 通常是字符串/属性值 */
+:deep(.monaco-editor .mtk6),
+:deep(.monaco-editor .mtk7) {
+  color: #A67C4A !important; /* 属性值颜色 - 浅棕色 */
+}
+
+/* 确保标签名称使用中等棕色 */
+:deep(.monaco-editor .mtk3),
+:deep(.monaco-editor .mtk10) {
+  color: #7D5A32 !important; /* 标签名颜色 - 中等棕色 */
+}
+
+/* 全局覆盖XML/HTML属性名和值的样式 */
+:global(.monaco-editor .mtk5),
+:global(.monaco-editor .mtk12),
+:global(.monaco-editor .mtk13) {
+  color: #5D4126 !important; /* 深棕色 */
+}
+
+:global(.monaco-editor .mtk4),
+:global(.monaco-editor .mtk6),
+:global(.monaco-editor .mtk7) {
+  color: #A67C4A !important; /* 浅棕色 */
+}
+
+:global(.monaco-editor .mtk3),
+:global(.monaco-editor .mtk10) {
+  color: #7D5A32 !important; /* 中等棕色 */
 }
 </style>
