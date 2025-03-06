@@ -5,7 +5,7 @@
             <div class="legend">
                 <div class="legend-item">
                     <div class="legend-probability-sample">XX.XXX%</div>
-                    <span class="legend-text">Perceptual Probability</span>
+                    <span class="legend-text">Visual Salience</span>
                 </div>
             </div>
         </div>
@@ -664,9 +664,9 @@ onUnmounted(() => {
 }
 
 .legend-text {
-    font-size: 14px;
-    color: #5f6368;
-    font-weight: 500;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
 }
 
 /* 添加提示容器样式 */

@@ -263,7 +263,7 @@ const roundedRectPath = (d, x, y, maxWidth) => {
 }
 
 .title {
-  top: 16px;
+  top: 1.1em;
   left: 16px;
   font-size: 14px;
   font-weight: bold;

@@ -297,7 +297,7 @@ const renderChart = (dataset) => {
 
 <style scoped>
 .title {
-  top: 12px;
+  top: 1.2em;
   left: 16px;
   font-size: 14px;
   font-weight: bold;

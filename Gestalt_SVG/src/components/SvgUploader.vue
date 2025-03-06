@@ -27,7 +27,23 @@
         <!-- 添加元素类型选择列表 -->
         <div v-if="visibleElements.length > 0" class="element-selector mac-style-selector" :class="{ 'collapsed': !isListExpanded }">
             <div class="selector-header" @click="toggleList">
-                <h3 class="mac-style-title">Select elements:</h3>
+                <div class="title-container">
+                    <h3 class="mac-style-title">Select elements</h3>
+                    <div class="selection-mode-container">
+                        <div class="selection-mode-buttons">
+                            <el-tooltip class="box-item" effect="dark" content="Select elements by clicking them one by one" placement="top-start"><v-btn @click.stop="setSelectionMode('clicking')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'clicking' }">
+                                    <v-icon small>mdi-cursor-default-click</v-icon>
+                                    <span class="selection-text">Clicking</span>
+                                </v-btn></el-tooltip>
+                            <el-tooltip class="box-item" effect="dark" content="Select multiple elements by dragging across them" placement="top-start">
+                                <v-btn @click.stop="setSelectionMode('lasso')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'lasso' }">
+                                    <v-icon small>mdi-gesture</v-icon>
+                                    <span class="selection-text">Lasso</span>
+                                </v-btn>
+                            </el-tooltip>
+                        </div>
+                    </div>
+                </div>
                 <v-icon class="expand-icon" :class="{ 'rotated': isListExpanded }">
                     mdi-chevron-down
                 </v-icon>
@@ -41,11 +57,8 @@
             </div>
             <div class="button-container">
                 <v-btn color="primary" class="mac-style-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
-                    {{ analyzing ? 'Simulating...' : 'Simulated perception' }}
+                    {{ analyzing ? 'Simulating...' : 'Simulate perception' }}
                 </v-btn>
-                <!-- <v-btn @click="toggleTrackMode" class="track mac-style-track-button" :class="{ 'active-mode': isTracking }" :title="'Multiple Selection Mode'">
-                    <span class="selection-text">Multi</span>
-                </v-btn> -->
             </div>
         </div>
 
@@ -111,6 +124,13 @@ const formatFileSize = (bytes) => {
 // 添加事件监听
 onMounted(() => {
     window.addEventListener('svg-uploaded', handleSvgUploaded)
+
+    // 初始化时设置默认的鼠标样式
+    nextTick(() => {
+        if (svgContainer.value) {
+            svgContainer.value.classList.add('click-cursor');
+        }
+    });
 })
 
 // 在组件卸载时移除事件监听
@@ -491,6 +511,20 @@ const setupSvgInteractions = () => {
 
     // 添加缩放效果
     addZoomEffectToSvg();
+
+    // 根据当前选择模式设置鼠标样式
+    nextTick(() => {
+        const container = document.querySelector('.svg-container');
+        if (container) {
+            if (selectionMode.value === 'lasso') {
+                container.classList.add('lasso-cursor');
+                container.classList.remove('click-cursor');
+            } else {
+                container.classList.add('click-cursor');
+                container.classList.remove('lasso-cursor');
+            }
+        }
+    });
 };
 
 // 更新节点透明度
@@ -533,10 +567,8 @@ const handleSvgClick = (event) => {
     const target = event.target;
     if (target.tagName.toLowerCase() === 'svg' ||
         (target.tagName.toLowerCase() === 'g' && target.classList.contains('zoom-wrapper'))) {
-        // 只有在非多选模式下才清空所有选中的节点
-        if (!isTracking.value) {
-            store.dispatch('clearSelectedNodes');
-        }
+        // 无论是否在多选模式下，点击空白区域都清空所有选中的节点
+        store.dispatch('clearSelectedNodes');
         return;
     }
 
@@ -589,6 +621,37 @@ watch(() => analyzing.value, (newValue) => {
         isListExpanded.value = false;
     }
 });
+
+// 添加选择模式变量和方法
+const selectionMode = ref('clicking'); // 默认为点击选择模式
+
+const setSelectionMode = (mode) => {
+    selectionMode.value = mode;
+
+    if (mode === 'lasso') {
+        if (!isTracking.value) {
+            toggleTrackMode(); // 启用多选模式
+        }
+        // 添加lasso模式的鼠标样式
+        nextTick(() => {
+            if (svgContainer.value) {
+                svgContainer.value.classList.add('lasso-cursor');
+                svgContainer.value.classList.remove('click-cursor');
+            }
+        });
+    } else {
+        if (isTracking.value) {
+            toggleTrackMode(); // 禁用多选模式
+        }
+        // 添加clicking模式的鼠标样式
+        nextTick(() => {
+            if (svgContainer.value) {
+                svgContainer.value.classList.add('click-cursor');
+                svgContainer.value.classList.remove('lasso-cursor');
+            }
+        });
+    }
+};
 
 </script>
 
@@ -652,6 +715,13 @@ watch(() => analyzing.value, (newValue) => {
     user-select: none;
 }
 
+.title-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
 .expand-icon {
     transition: transform 0.3s ease;
     opacity: 0.6;
@@ -676,10 +746,11 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .mac-style-title {
-    font-size: 1.3em;
+    font-size: 1.1em;
     font-weight: 500;
     color: #1d1d1f;
-    margin-bottom: 12px;
+    margin-bottom: 0;
+    white-space: nowrap;
 }
 
 .mac-style-list {
@@ -937,5 +1008,77 @@ watch(() => analyzing.value, (newValue) => {
     gap: 8px;
     align-items: center;
     margin-top: 16px;
+}
+
+.selection-mode-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    padding: 3px 6px;
+    border: 1px solid rgba(136, 95, 53, 0.15);
+}
+
+.selection-mode-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #885F35;
+    white-space: nowrap;
+}
+
+.selection-mode-buttons {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.selection-mode-btn {
+    background: rgba(136, 95, 53, 0.1) !important;
+    border-radius: 6px;
+    color: #885F35;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+    text-transform: none;
+    height: 28px;
+    min-width: 36px;
+    padding: 0 6px !important;
+}
+
+.selection-mode-btn:hover {
+    background: rgba(136, 95, 53, 0.2) !important;
+}
+
+.selection-mode-btn.active-mode {
+    background-color: #885F35 !important;
+    color: white !important;
+}
+
+.selection-mode-btn.active-mode .selection-text {
+    color: white;
+}
+
+.selection-mode-btn .v-icon {
+    margin-right: 4px;
+    font-size: 16px;
+}
+
+.selection-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: inherit;
+}
+
+.copy-cursor {
+    cursor: copy !important;
+}
+
+.lasso-cursor {
+    cursor: crosshair !important;
+}
+
+.click-cursor {
+    cursor: pointer !important;
 }
 </style>

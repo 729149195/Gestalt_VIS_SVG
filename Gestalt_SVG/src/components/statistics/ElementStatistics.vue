@@ -320,7 +320,7 @@ const render = (data) => {
 }
 
 .title {
-  top: 12px;
+  top: 1.1em;
   left: 16px;
   font-size: 14px;
   font-weight: bold;
