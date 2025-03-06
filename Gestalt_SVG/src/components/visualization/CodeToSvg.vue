@@ -6,9 +6,9 @@
         <div class="section-header">
           <div class="left-tools">
             <span class="title">SVG Editor</span>
-            <el-button type="primary" @click="generateAndUpload">Upload</el-button>
-            <el-button @click="copyCode">Copy</el-button>
-            <el-button @click="downloadSvg">Download</el-button>
+            <el-button type="primary" @click="generateAndUpload" class="larger-text-btn">Upload</el-button>
+            <el-button @click="copyCode" class="larger-text-btn">Copy</el-button>
+            <el-button @click="downloadSvg" class="larger-text-btn">Download</el-button>
           </div>
           <div class="side-mode-switch">
             <el-select v-model="selectedSyntax" placeholder="选择生成式语法" class="syntax-selector" popper-class="syntax-selector-dropdown">
@@ -20,10 +20,10 @@
               </el-option>
             </el-select>
             <div class="mode-tabs">
-              <div class="mode-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
+              <div class="mode-tab larger-text-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
                 Syntax
               </div>
-              <div class="mode-tab" :class="{ active: !isDeclarativeMode }" @click="isDeclarativeMode = false">
+              <div class="mode-tab larger-text-tab" :class="{ active: !isDeclarativeMode }" @click="isDeclarativeMode = false">
                 SVG
               </div>
             </div>
@@ -39,16 +39,16 @@
         <div class="section-header">
           <div class="left-tools">
             <span class="title">SVG Editor</span>
-            <el-button type="primary" @click="generateAndUpload">Upload</el-button>
-            <el-button @click="copyCode">Copy</el-button>
-            <el-button @click="downloadSvg">Download</el-button>
+            <el-button type="primary" @click="generateAndUpload" class="larger-text-btn">Upload</el-button>
+            <el-button @click="copyCode" class="larger-text-btn">Copy</el-button>
+            <el-button @click="downloadSvg" class="larger-text-btn">Download</el-button>
           </div>
           <div class="side-mode-switch">
             <div class="mode-tabs">
-              <div class="mode-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
+              <div class="mode-tab larger-text-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
                 Syntax
               </div>
-              <div class="mode-tab" :class="{ active: !isDeclarativeMode }" @click="isDeclarativeMode = false">
+              <div class="mode-tab larger-text-tab" :class="{ active: !isDeclarativeMode }" @click="isDeclarativeMode = false">
                 SVG
               </div>
             </div>
@@ -109,14 +109,17 @@ const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds)
 
 // Monaco Editor配置
 const declarativeEditorOptions = {
-  theme: 'vs',
+  theme: 'gestaltTheme',
   fontSize: 14,
   lineNumbers: 'on',
   roundedSelection: false,
   scrollBeyondLastLine: false,
   readOnly: false,
   minimap: {
-    enabled: true
+    enabled: true,
+    renderCharacters: true,
+    maxColumn: 120,
+    scale: 1
   },
   automaticLayout: true,
   wordWrap: 'on',
@@ -167,7 +170,16 @@ const initEditors = () => {
       { token: 'string', foreground: 'A67C4A' },  // 调整字符串颜色为更亮的棕色
       { token: 'number', foreground: '8A6B47' },  // 保持数字颜色
       { token: 'attribute.name', foreground: '5D4126' }, // 调整属性名颜色为更深的棕色
-      { token: 'tag', foreground: '7D5A32' }      // 调整标签颜色为中等棕色
+      { token: 'tag', foreground: '7D5A32' },     // 调整标签颜色为中等棕色
+      { token: 'delimiter', foreground: '885F35' }, // 添加分隔符颜色
+      { token: 'delimiter.bracket', foreground: '885F35' }, // 添加括号颜色
+      { token: 'operator', foreground: '885F35' }, // 添加操作符颜色
+      { token: 'variable', foreground: '7A5530' }, // 添加变量颜色
+      { token: 'type', foreground: '7D5A32' }, // 添加类型颜色
+      { token: 'function', foreground: '7A5530' }, // 添加函数颜色
+      { token: 'constant', foreground: '8A6B47' }, // 添加常量颜色
+      { token: 'regexp', foreground: 'A67C4A' }, // 添加正则表达式颜色
+      { token: 'metatag', foreground: '7D5A32' } // 添加元标签颜色
     ],
     colors: {
       'editor.foreground': '#000000',
@@ -182,7 +194,18 @@ const initEditors = () => {
       'editor.selectionHighlightBorder': 'rgba(136, 95, 53, 0.3)',
       'editorLink.activeForeground': '#7A5530',    // 保持链接高亮颜色
       'editorBracketMatch.background': 'rgba(136, 95, 53, 0.2)', // 保持括号匹配高亮
-      'editorBracketMatch.border': 'rgba(136, 95, 53, 0.4)'      // 保持括号匹配边框
+      'editorBracketMatch.border': 'rgba(136, 95, 53, 0.4)',     // 保持括号匹配边框
+      'minimap.background': '#FFFFFF',
+      'minimap.selectionHighlight': 'rgba(136, 95, 53, 0.5)',
+      'minimap.errorHighlight': '#885F35',
+      'minimap.warningHighlight': 'rgba(136, 95, 53, 0.7)',
+      'minimap.findMatchHighlight': 'rgba(136, 95, 53, 0.6)',
+      'minimapSlider.background': 'rgba(136, 95, 53, 0.2)',
+      'minimapSlider.hoverBackground': 'rgba(136, 95, 53, 0.4)',
+      'minimapSlider.activeBackground': 'rgba(136, 95, 53, 0.5)',
+      'minimapGutter.addedBackground': '#885F35',
+      'minimapGutter.modifiedBackground': '#885F35',
+      'minimapGutter.deletedBackground': '#885F35'
     }
   });
 
@@ -1485,6 +1508,20 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
   color: white;
 }
 
+/* 添加放大按钮文字的样式 */
+.larger-text-btn {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+}
+
+/* 添加放大模式切换标签文字的样式 */
+.larger-text-tab {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  padding: 6px 16px !important;
+}
+
 /* 全局样式，不能使用 scoped */
 :global(.custom-message) {
   min-width: 380px !important;
@@ -1522,7 +1559,7 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 
 .title {
   margin: 0 0 0 10px;
-  font-size: 16px;
+  font-size: 1.5em;
   font-weight: bold;
   color: #1d1d1f;
   letter-spacing: -0.01em;
@@ -1741,6 +1778,58 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :global(.monaco-editor .margin-view-overlays .cgmr.codicon-chevron-right),
 :global(.monaco-editor .margin-view-overlays .cgmr.codicon-chevron-down) {
   color: #885F35 !important;
+}
+
+/* 修改右侧缩略图中的颜色 */
+:global(.monaco-editor .minimap .minimap-slider),
+:global(.monaco-editor .minimap .minimap-slider .minimap-slider-horizontal) {
+  background: rgba(136, 95, 53, 0.3) !important;
+}
+
+:global(.monaco-editor .minimap .minimap-slider:hover),
+:global(.monaco-editor .minimap .minimap-slider:active) {
+  background: rgba(136, 95, 53, 0.5) !important;
+}
+
+:global(.monaco-editor .minimap-shadow-hidden),
+:global(.monaco-editor .minimap-shadow-visible) {
+  box-shadow: inset -6px 0 6px -6px rgba(136, 95, 53, 0.25) !important;
+}
+
+/* 修改缩略图中的高亮颜色 */
+:global(.monaco-editor .minimap-decorations-layer .minimap-decoration) {
+  background-color: rgba(136, 95, 53, 0.6) !important;
+}
+
+:global(.monaco-editor .minimap .minimap-decorations-layer .current-line) {
+  background-color: rgba(136, 95, 53, 0.4) !important;
+}
+
+:global(.monaco-editor .minimap .minimap-decorations-layer .selection-highlight) {
+  background-color: rgba(136, 95, 53, 0.5) !important;
+}
+
+/* 修改缩略图中的错误和警告标记 */
+:global(.monaco-editor .minimap .minimap-decorations-layer .error-decoration),
+:global(.monaco-editor .minimap .minimap-decorations-layer .warning-decoration) {
+  background-color: #885F35 !important;
+}
+
+/* 修改缩略图中的代码颜色 - 使用CSS过滤器 */
+:global(.monaco-editor .minimap) {
+  filter: sepia(0.6) hue-rotate(320deg) saturate(1.2) !important;
+}
+
+/* 确保滑块不受过滤器影响 */
+:global(.monaco-editor .minimap .minimap-slider) {
+  filter: none !important;
+  background: rgba(136, 95, 53, 0.3) !important;
+}
+
+:global(.monaco-editor .minimap .minimap-slider:hover),
+:global(.monaco-editor .minimap .minimap-slider:active) {
+  filter: none !important;
+  background: rgba(136, 95, 53, 0.5) !important;
 }
 
 /* 添加XML/HTML属性名和值的特殊样式 */

@@ -1356,7 +1356,7 @@ const getStats = (node) => {
 .cards-wrapper {
     display: flex;
     flex: 1;
-    padding: 16px 16px 8px 16px;
+    padding: 5px 0px 8px 0px;
     gap: 16px;
     overflow-x: auto;
     scroll-behavior: smooth;

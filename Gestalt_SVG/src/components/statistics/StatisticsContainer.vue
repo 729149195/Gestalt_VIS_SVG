@@ -1,6 +1,6 @@
 <template>
   <div class="statistics-container">
-    <span class="title">SVG Statistics</span>
+    <span class="title">Visual Effect Distribution</span>
     
     <!-- 添加排序按钮 -->
     <button class="sort-button" @click="toggleSortOrder">
@@ -12,18 +12,18 @@
           <path d="M7 10l5 5 5-5H7z" fill="currentColor"/>
         </svg>
       </span>
-      <span>{{ sortAscending ? 'Diversity Asc' : 'Diversity Desc' }}</span>
+      <span>{{ sortAscending ? 'Order by Variance↑' : 'Order by Variance↓' }}</span>
     </button>
     
     <!-- 添加图例说明 -->
     <div class="legend-container" v-if="!isLoading">
       <div class="legend-item">
         <div class="legend-color blue"></div>
-        <span class="legend-text">Pattern Statistics</span>
+        <span class="legend-text">Selected elements</span>
       </div>
       <div class="legend-item">
         <div class="legend-color gray"></div>
-        <span class="legend-text">Other Statistics</span>
+        <span class="legend-text">All elements</span>
       </div>
     </div>
     
@@ -72,7 +72,7 @@ const allComponents = [
   { 
     id: 'top-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'top', title: 'Elementals Top Edge' },
+    props: { position: 'top', title: 'Top Edge' },
     dataUrl: 'http://127.0.0.1:5000/top_position',
     hasData: false,
     variance: 0
@@ -80,7 +80,7 @@ const allComponents = [
   { 
     id: 'bottom-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'bottom', title: 'Elementals Bottom Edge' },
+    props: { position: 'bottom', title: 'Bottom Edge' },
     dataUrl: 'http://127.0.0.1:5000/bottom_position',
     hasData: false,
     variance: 0
@@ -88,7 +88,7 @@ const allComponents = [
   { 
     id: 'right-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'right', title: 'Elementals Right Edge' },
+    props: { position: 'right', title: 'Right Edge' },
     dataUrl: 'http://127.0.0.1:5000/right_position',
     hasData: false,
     variance: 0
@@ -96,7 +96,7 @@ const allComponents = [
   { 
     id: 'left-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'left', title: 'Elementals Left Edge' },
+    props: { position: 'left', title: 'Left Edge' },
     dataUrl: 'http://127.0.0.1:5000/left_position',
     hasData: false,
     variance: 0
@@ -317,19 +317,17 @@ watch(() => props.componentKey, async () => {
   flex-wrap: wrap;
   gap: 16px;
   padding: 10px;
-  padding-top: 40px;
   height: 100%;
   overflow-y: auto;
 }
 
 .title {
-  position: absolute;
-  top: 12px;
-  left: 16px;
-  font-size: 16px;
+  position: relative;
+  top: 5px;
+  left: 15px;
+  font-size: 1.5em;
   font-weight: bold;
   color: #1d1d1f;
-  margin: 0;
   padding: 0;
   z-index: 10;
   letter-spacing: -0.01em;
@@ -339,11 +337,12 @@ watch(() => props.componentKey, async () => {
 /* 添加排序按钮样式 */
 .sort-button {
   position: absolute;
-  top: 7px;
-  right: 250px; /* 位置在标题右侧 */
+  top: 10px;
+  right: 300px; /* 位置在标题右侧 */
   height: 26px;
   padding: 0px 10px 0px 6px;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 500;
   border-radius: 13px;
   background-color: #f1f3f4;
   color: #202124;
@@ -469,7 +468,8 @@ watch(() => props.componentKey, async () => {
 }
 
 .legend-text {
-  font-size: 12px;
+  font-size: 16px;
+  font-weight: 500;
   color: #666;
 }
 </style> 

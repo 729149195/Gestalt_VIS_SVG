@@ -43,9 +43,9 @@
                 <v-btn color="primary" class="mac-style-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
                     {{ analyzing ? 'Simulating...' : 'Simulated perception' }}
                 </v-btn>
-                <v-btn @click="toggleTrackMode" class="track mac-style-track-button" :class="{ 'active-mode': isTracking }" :title="'Multiple Selection Mode'">
+                <!-- <v-btn @click="toggleTrackMode" class="track mac-style-track-button" :class="{ 'active-mode': isTracking }" :title="'Multiple Selection Mode'">
                     <span class="selection-text">Multi</span>
-                </v-btn>
+                </v-btn> -->
             </div>
         </div>
 
@@ -666,18 +666,17 @@ watch(() => analyzing.value, (newValue) => {
     opacity: 1;
     max-height: 200px;
     overflow-y: auto;
-    margin: 12px 0;
 }
 
 .selector-content.hidden {
     opacity: 0;
     max-height: 0;
-    margin: 0;
+    margin: -10px;
     overflow: hidden;
 }
 
 .mac-style-title {
-    font-size: 16px;
+    font-size: 1.3em;
     font-weight: 500;
     color: #1d1d1f;
     margin-bottom: 12px;
@@ -705,6 +704,7 @@ watch(() => analyzing.value, (newValue) => {
 .mac-style-button {
     background: #885F35 !important;
     border-radius: 8px;
+    font-size: 1.2em;
     color: white;
     font-weight: 500;
     letter-spacing: 0.3px;
@@ -850,7 +850,7 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .primary-text {
-    font-size: 16px;
+    font-size: 1.5em;
     font-weight: 500;
     color: #1d1d1f;
 }
@@ -867,7 +867,7 @@ watch(() => analyzing.value, (newValue) => {
 }
 
 .file-name {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     color: #885F35;
     margin-right: 8px;
@@ -875,7 +875,7 @@ watch(() => analyzing.value, (newValue) => {
 
 .file-size {
     color: #86868b;
-    font-size: 11px;
+    font-size: 14px;
 }
 
 .progress-card {

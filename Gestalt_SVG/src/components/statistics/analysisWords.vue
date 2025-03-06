@@ -11,7 +11,7 @@
     
     <div class="sections-container">
       <div class="section-wrapper">
-        <div class="title">Over All Features</div>
+        <div class="title">Overview of Visual Encodings</div>
         <div class="section feature-section" ref="featureSection">
           <!-- 添加阴影遮盖器 -->
           <div class="shadow-overlay top" :class="{ active: featureSectionScrollTop > 10 }"></div>
@@ -20,7 +20,7 @@
         </div>
       </div>
       <div class="section-wrapper">
-        <div class="title">Suggests For Tagert</div>
+        <div class="title">Specific Visual Encodings</div>
         <div class="section middle-section" ref="middleSection">
           <!-- 添加阴影遮盖器 -->
           <div class="shadow-overlay top" :class="{ active: middleSectionScrollTop > 10 }"></div>
@@ -375,7 +375,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 正差异特征（选中元素特有的特征）- Used Features
         analysis += '<div class="feature-column positive">';
-        analysis += `<div class="column-title">Used features</div>`;
+        analysis += `<div class="column-title">Used Visual Encodings</div>`;
         
         if (positiveFeatures.length > 0) {
             positiveFeatures.forEach(feature => {
@@ -405,14 +405,14 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 `;
             });
         } else {
-            analysis += `<div class="no-selection">No distinguishing features found</div>`;
+            analysis += `<div class="no-selection">No visual encodings found</div>`;
         }
         
         analysis += '</div>';
         
         // 负差异特征（选中元素缺乏的特征）- Suggest Features
         analysis += '<div class="feature-column negative">';
-        analysis += `<div class="column-title">Suggest Features</div>`;
+        analysis += `<div class="column-title">Suggest Visual Encodings</div>`;
         
         if (negativeFeatures.length > 0) {
             negativeFeatures.forEach(feature => {
@@ -474,7 +474,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 最突出的特征 - Used Features
         analysis += '<div class="feature-column negative">';
-        analysis += `<div class="column-title">Used Features</div>`;
+        analysis += `<div class="column-title">Used Visual Encodings</div>`;
         
         if (mostDistinctive.length > 0) {
             mostDistinctive.forEach(feature => {
@@ -511,7 +511,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 最不突出的特征 - Available Features
         analysis += '<div class="feature-column positive">';
-        analysis += `<div class="column-title">Available features</div>`;
+        analysis += `<div class="column-title">Available Visual Encodings</div>`;
         
         if (leastDistinctive.length > 0) {
             leastDistinctive.forEach(feature => {
@@ -746,10 +746,9 @@ function getFeatureTypePriority(featureName) {
 
 /* 修改标题样式，移除绝对定位 */
 .title {
-  font-size: 16px;
+  font-size: 1.5em;
   font-weight: bold;
   color: #1d1d1f;
-  margin: 0 0 8px 0;
   padding: 0;
   letter-spacing: -0.01em;
   opacity: 0.8;
@@ -1025,7 +1024,7 @@ function getFeatureTypePriority(featureName) {
 }
 
 :deep(.column-title) {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     padding: 8px;
     margin-bottom: 4px;

@@ -88,6 +88,10 @@ const renderChart = (dataset) => {
         .padding(0.2)
         .domain(dataset.map(d => d.range));
 
+    // 设置条形的最大宽度
+    const maxBarWidth = 50; // 设置条形的最大宽度为50px
+    const actualBandwidth = Math.min(xScale.bandwidth(), maxBarWidth);
+
     const yScale = d3.scaleLinear()
         .range([height, 0])
         .domain([0, d3.max(dataset, d => d3.sum(d.totals, t => t.value))]).nice();
@@ -156,7 +160,15 @@ const renderChart = (dataset) => {
             xScale.range([0, width].map(d => transform.applyX(d)));
             g.select('.x-axis').call(d3.axisBottom(xScale));
             g.selectAll('.range').attr('transform', d => `translate(${xScale(d.range)},0)`);
-            g.selectAll('.range rect').attr('width', xScale.bandwidth());
+            
+            // 更新条形宽度，确保不超过最大宽度
+            const newBandwidth = Math.min(xScale.bandwidth(), maxBarWidth);
+            g.selectAll('.range rect').each(function() {
+                const rect = d3.select(this);
+                const barX = (xScale.bandwidth() - newBandwidth) / 2;
+                rect.attr('x', barX)
+                    .attr('width', newBandwidth);
+            });
         });
 
     svg.value.call(zoom);
@@ -207,12 +219,15 @@ const renderChart = (dataset) => {
         d.totals.forEach(t => {
             const { y, height: rectHeight } = calculateRectDimensions(t.value, yAccumulator);
             
+            // 计算条形的中心位置，使其居中显示
+            const barX = (xScale.bandwidth() - actualBandwidth) / 2;
+            
             // 背景灰色条形
             group.append('rect')
                 .attr('class', 'background-bar')
-                .attr('x', 0)
+                .attr('x', barX)
                 .attr('y', y)
-                .attr('width', xScale.bandwidth())
+                .attr('width', actualBandwidth)
                 .attr('height', rectHeight)
                 .attr('fill', '#E0E0E0') // 使用更浅的灰色
                 .attr('rx', 2)
@@ -221,9 +236,9 @@ const renderChart = (dataset) => {
             // 前景蓝色条形
             group.append('rect')
                 .attr('class', 'highlight-bar')
-                .attr('x', 0)
+                .attr('x', barX)
                 .attr('y', y + rectHeight) // 初始位置在底部
-                .attr('width', xScale.bandwidth())
+                .attr('width', actualBandwidth)
                 .attr('height', 0) // 初始高度为0
                 .attr('fill', '#885F35')
                 .attr('rx', 2)

@@ -1,6 +1,6 @@
 <template>
     <div class="statistics-container">
-        <span class="title">Fill color Statiction</span>
+        <span class="title">Fill Color</span>
         <div ref="chartContainer" class="chart-container"></div>
         <div v-if="!hasData" class="no-data-message">No Fill</div>
     </div>
@@ -136,6 +136,10 @@ const render = (data) => {
             .range([marginLeft, width - marginRight])
             .padding(0.1);
 
+        // 设置条形的最大宽度
+        const maxBarWidth = 50; // 设置条形的最大宽度为50px
+        const actualBandwidth = Math.min(x.bandwidth(), maxBarWidth);
+        
         const y = d3.scaleLinear()
             .domain([0, d3.max(data, d => d.num)]).nice()
             .range([height - marginBottom, marginTop]);
@@ -192,7 +196,7 @@ const render = (data) => {
             .attr('class', 'bar')
             .attr('fill', d => d.tag) // 使用数据中的颜色值作为填充色
             .attr('stroke', '#666')
-            .attr('d', d => roundedRectPath(d, x, y));
+            .attr('d', d => roundedRectPath(d, x, y, actualBandwidth));
 
         // 添加 y 轴图例
         svg.append("text")
@@ -209,12 +213,17 @@ const render = (data) => {
     }
 }
 
-const roundedRectPath = (d, x, y) => {
-    const x0 = x(d.tag);
+const roundedRectPath = (d, x, y, maxWidth) => {
+    const bandWidth = x.bandwidth();
+    const barWidth = maxWidth || bandWidth;
+    // 计算条形的中心位置
+    const barCenter = x(d.tag) + bandWidth / 2;
+    // 根据最大宽度计算条形的起始和结束位置
+    const x0 = barCenter - barWidth / 2;
     const y0 = y(d.num);
-    const x1 = x0 + x.bandwidth();
+    const x1 = barCenter + barWidth / 2;
     const y1 = y(0);
-    const r = Math.min(x.bandwidth(), y(0) - y(d.num)) / 8; // Radius for the rounded corners
+    const r = Math.min(barWidth, y(0) - y(d.num)) / 8; // Radius for the rounded corners
 
     return `M${x0},${y0 + r}
             Q${x0},${y0} ${x0 + r},${y0}
@@ -254,7 +263,7 @@ const roundedRectPath = (d, x, y) => {
 }
 
 .title {
-  top: 12px;
+  top: 16px;
   left: 16px;
   font-size: 14px;
   font-weight: bold;

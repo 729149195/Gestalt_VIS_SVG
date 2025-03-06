@@ -1,10 +1,18 @@
 <template>
     <div class="force-graph-container">
-        <span class="title">Graphical Patterns List</span>
+        <div class="title-container">
+            <span class="title">Graphical Patterns List</span>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-probability-sample">XX.XXX%</div>
+                    <span class="legend-text">Perceptual Probability</span>
+                </div>
+            </div>
+        </div>
         <div class="core-view-container">
             <CoreSubgroupVisualization />
         </div>
-        
+
     </div>
 </template>
 
@@ -622,6 +630,45 @@ onUnmounted(() => {
     border: 1px solid rgba(180, 180, 180, 0.4);
 }
 
+/* 添加标题容器样式 */
+.title-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 12px 16px 0 16px;
+}
+
+/* 添加图例样式 */
+.legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-probability-sample {
+    font-size: 14px;
+    font-weight: 600;
+    color: #885F35;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(136, 95, 53, 0.08);
+    border: 1px solid rgba(136, 95, 53, 0.2);
+    min-width: 70px;
+    text-align: center;
+}
+
+.legend-text {
+    font-size: 14px;
+    color: #5f6368;
+    font-weight: 500;
+}
+
 /* 添加提示容器样式 */
 .hints-container {
     position: absolute;
@@ -656,8 +703,7 @@ onUnmounted(() => {
 }
 
 .title {
-  margin: 12px 16px 0 16px;
-  font-size: 16px;
+  font-size: 1.5em;
   font-weight: bold;
   color: #1d1d1f;
   letter-spacing: -0.01em;

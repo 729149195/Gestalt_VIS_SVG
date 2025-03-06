@@ -1,6 +1,6 @@
 <template>
     <div class="statistics-container">
-        <span class="title">Type</span>
+        <span class="title">Elements Type</span>
         <div ref="chartContainer" class="chart-container"></div>
         <div v-if="!hasData" class="no-data-message">No Elements</div>
     </div>
@@ -169,6 +169,10 @@ const render = (data) => {
         .range([marginLeft, width - marginRight])
         .padding(0.1);
 
+    // 设置条形的最大宽度
+    const maxBarWidth = 50; // 设置条形的最大宽度为50px
+    const actualBandwidth = Math.min(x.bandwidth(), maxBarWidth);
+
     const y = d3.scaleLinear()
         .domain([0, d3.max(visibleData, d => d.num)]).nice()
         .range([height - marginBottom, marginTop]);
@@ -190,9 +194,14 @@ const render = (data) => {
             .extent(extent)
             .on('zoom', (event) => {
                 x.range([marginLeft, width - marginRight].map(d => event.transform.applyX(d)));
+                
+                // 更新条形宽度，确保不超过最大宽度
+                const newBandwidth = Math.min(x.bandwidth(), maxBarWidth);
+                
                 svg.selectAll('.background-bar, .highlight-bar')
-                    .attr('x', d => x(d.tag))
-                    .attr('width', x.bandwidth());
+                    .attr('x', d => x(d.tag) + (x.bandwidth() - newBandwidth) / 2)
+                    .attr('width', newBandwidth);
+                    
                 svg.selectAll('.x-axis').call(d3.axisBottom(x));
             }));
     };
@@ -239,27 +248,27 @@ const render = (data) => {
     // 添加背景灰色条形
     barGroups.append('rect')
         .attr('class', 'background-bar')
-        .attr('x', d => x(d.tag))
+        .attr('x', d => x(d.tag) + (x.bandwidth() - actualBandwidth) / 2) // 居中显示
         .attr('y', d => y(d.num))
-        .attr('width', x.bandwidth())
+        .attr('width', actualBandwidth)
         .attr('height', d => height - marginBottom - y(d.num))
         .attr('fill', '#E0E0E0')
         .attr('rx', 2)
         .attr('ry', 2)
         .each(function(d) {
             // 存储矩形的位置和尺寸信息
-            d.x = x(d.tag);
+            d.x = x(d.tag) + (x.bandwidth() - actualBandwidth) / 2;
             d.y = y(d.num);
-            d.width = x.bandwidth();
+            d.width = actualBandwidth;
             d.height = height - marginBottom - y(d.num);
         });
     
     // 添加前景蓝色条形（初始高度为0）
     barGroups.append('rect')
         .attr('class', 'highlight-bar')
-        .attr('x', d => x(d.tag))
+        .attr('x', d => x(d.tag) + (x.bandwidth() - actualBandwidth) / 2) // 居中显示
         .attr('y', d => height - marginBottom) // 初始位置在底部
-        .attr('width', x.bandwidth())
+        .attr('width', actualBandwidth)
         .attr('height', 0) // 初始高度为0
         .attr('fill', '#885F35')
         .attr('rx', 2)
