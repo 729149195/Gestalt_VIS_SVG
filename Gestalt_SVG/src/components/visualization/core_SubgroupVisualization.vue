@@ -61,7 +61,8 @@
                         </div>
                         <div class="analysis-content" v-html="generateAnalysis(node)"></div>
                         <div class="attention-probability">
-                            {{ (calculateAttentionProbability(node) * 100).toFixed(3) }}%
+                            <span class="attention-probability-label">Visual Salience</span>
+                            <span class="attention-probability-value">{{ (calculateAttentionProbability(node) * 100).toFixed(3) }}%</span>
                         </div>
                     </div>
                 </div>
@@ -1679,8 +1680,8 @@ const getStats = (node) => {
     position: absolute;
     bottom: 8px;
     right: 12px;
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 3em;
+    font-weight: 800;
     color: #885F35;
     padding: 4px 8px;
     border-radius: 6px;
@@ -1688,11 +1689,29 @@ const getStats = (node) => {
     border: 1px solid rgba(136, 95, 53, 0.2);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 4px;
-    min-width: 90px;
     justify-content: center;
+    min-width: 90px;
+    text-align: center;
+}
+
+.attention-probability-label {
+    font-size: 0.4em;
+    line-height: 1.2;
+    margin-bottom: 2px;
     white-space: nowrap;
+    opacity: 0.8;
+    width: 100%;
+    font-weight: 700;
+}
+
+.attention-probability-value {
+    font-size: 0.5em;
+    line-height: 1.2;
+    white-space: nowrap;
+    width: 100%;
+    font-weight: 800;
 }
 
 .card-extension .attention-probability {

@@ -1,6 +1,6 @@
 <template>
     <div class="statistics-container">
-        <span class="title">Fill Color</span>
+        <span class="title">Fill color</span>
         <div ref="chartContainer" class="chart-container"></div>
         <div v-if="!hasData" class="no-data-message">No Fill</div>
     </div>

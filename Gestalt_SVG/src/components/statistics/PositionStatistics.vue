@@ -1,6 +1,6 @@
 <template>
     <div class="statistics-container">
-        <span class="title">{{ title }}</span>
+        <span class="title">{{ title }} Bbox</span>
         <div ref="chartContainer" class="chart-container"></div>
     </div>
 </template>

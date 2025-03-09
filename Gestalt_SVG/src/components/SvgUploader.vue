@@ -550,7 +550,7 @@ const updateNodeOpacity = () => {
 
             // 如果有选中的节点，无论是否路径选择模式下，都使用相同的选中逻辑
             if (opacity === 1 && selectedNodeIds.value.length > 0) {
-                opacity = selectedNodeIds.value.includes(nodeId) ? 1 : 0.3;
+                opacity = selectedNodeIds.value.includes(nodeId) ? 1 : 0.1;
             }
 
             node.style.opacity = opacity;

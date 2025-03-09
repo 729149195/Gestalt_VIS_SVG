@@ -1,6 +1,6 @@
 <template>
     <div class="statistics-container">
-        <span class="title">Stroke color Statiction</span>
+        <span class="title">Stroke color</span>
         <div ref="chartContainer" class="chart-container"></div>
         <div v-if="!hasData" class="no-data-message">No Stroke</div>
     </div>

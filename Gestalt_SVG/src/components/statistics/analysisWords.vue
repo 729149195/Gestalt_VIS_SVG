@@ -375,7 +375,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 正差异特征（选中元素特有的特征）- Used Features
         analysis += '<div class="feature-column positive">';
-        analysis += `<div class="column-title">Used Visual Encodings</div>`;
+        analysis += `<div class="column-title">Used visual encodings</div>`;
         
         if (positiveFeatures.length > 0) {
             positiveFeatures.forEach(feature => {
@@ -412,7 +412,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 负差异特征（选中元素缺乏的特征）- Suggest Features
         analysis += '<div class="feature-column negative">';
-        analysis += `<div class="column-title">Suggest Visual Encodings</div>`;
+        analysis += `<div class="column-title">Suggestions for highlight pattern improvement</div>`;
         
         if (negativeFeatures.length > 0) {
             negativeFeatures.forEach(feature => {
@@ -474,7 +474,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 最突出的特征 - Used Features
         analysis += '<div class="feature-column negative">';
-        analysis += `<div class="column-title">Used Visual Encodings</div>`;
+        analysis += `<div class="column-title">Used visual encodings</div>`;
         
         if (mostDistinctive.length > 0) {
             mostDistinctive.forEach(feature => {
@@ -511,7 +511,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 最不突出的特征 - Available Features
         analysis += '<div class="feature-column positive">';
-        analysis += `<div class="column-title">Available Visual Encodings</div>`;
+        analysis += `<div class="column-title">Available visual encodings</div>`;
         
         if (leastDistinctive.length > 0) {
             leastDistinctive.forEach(feature => {

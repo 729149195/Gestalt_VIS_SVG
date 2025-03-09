@@ -2,12 +2,6 @@
     <div class="force-graph-container">
         <div class="title-container">
             <span class="title">Graphical Patterns List</span>
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-probability-sample">XX.XXX%</div>
-                    <span class="legend-text">Visual Salience</span>
-                </div>
-            </div>
         </div>
         <div class="core-view-container">
             <CoreSubgroupVisualization />

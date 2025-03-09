@@ -72,7 +72,7 @@ const allComponents = [
   { 
     id: 'top-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'top', title: 'Top Edge' },
+    props: { position: 'top', title: 'Top edge' },
     dataUrl: 'http://127.0.0.1:5000/top_position',
     hasData: false,
     variance: 0
@@ -80,7 +80,7 @@ const allComponents = [
   { 
     id: 'bottom-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'bottom', title: 'Bottom Edge' },
+    props: { position: 'bottom', title: 'Bottom edge' },
     dataUrl: 'http://127.0.0.1:5000/bottom_position',
     hasData: false,
     variance: 0
@@ -88,7 +88,7 @@ const allComponents = [
   { 
     id: 'right-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'right', title: 'Right Edge' },
+    props: { position: 'right', title: 'Right edge' },
     dataUrl: 'http://127.0.0.1:5000/right_position',
     hasData: false,
     variance: 0
@@ -96,7 +96,7 @@ const allComponents = [
   { 
     id: 'left-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'left', title: 'Left Edge' },
+    props: { position: 'left', title: 'Left edge' },
     dataUrl: 'http://127.0.0.1:5000/left_position',
     hasData: false,
     variance: 0
