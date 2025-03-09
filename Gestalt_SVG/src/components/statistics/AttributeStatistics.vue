@@ -130,12 +130,9 @@ const roundedRectPath = (d, x, y) => {
     const y0 = y(d.num);
     const x1 = x0 + x.bandwidth();
     const y1 = y(0);
-    const r = Math.min(x.bandwidth(), y(0) - y(d.num)) / 8; // Radius for the rounded corners
-
-    return `M${x0},${y0 + r}
-            Q${x0},${y0} ${x0 + r},${y0}
-            L${x1 - r},${y0}
-            Q${x1},${y0} ${x1},${y0 + r}
+    
+    return `M${x0},${y0}
+            L${x1},${y0}
             L${x1},${y1}
             L${x0},${y1}
             Z`;

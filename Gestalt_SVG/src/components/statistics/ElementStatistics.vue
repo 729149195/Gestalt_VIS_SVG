@@ -253,8 +253,6 @@ const render = (data) => {
         .attr('width', actualBandwidth)
         .attr('height', d => height - marginBottom - y(d.num))
         .attr('fill', '#E0E0E0')
-        .attr('rx', 2)
-        .attr('ry', 2)
         .each(function(d) {
             // 存储矩形的位置和尺寸信息
             d.x = x(d.tag) + (x.bandwidth() - actualBandwidth) / 2;
@@ -271,8 +269,6 @@ const render = (data) => {
         .attr('width', actualBandwidth)
         .attr('height', 0) // 初始高度为0
         .attr('fill', '#905F29')
-        .attr('rx', 2)
-        .attr('ry', 2)
         .style('opacity', 0.7);
 
     // 添加 y 轴图例

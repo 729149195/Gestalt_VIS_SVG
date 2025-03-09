@@ -225,12 +225,10 @@ const roundedRectPath = (d, x, y, maxWidth) => {
     const y0 = y(d.num);
     const x1 = barCenter + barWidth / 2;
     const y1 = y(0);
-    const r = Math.min(barWidth, y(0) - y(d.num)) / 8; // Radius for the rounded corners
-
-    return `M${x0},${y0 + r}
-            Q${x0},${y0} ${x0 + r},${y0}
-            L${x1 - r},${y0}
-            Q${x1},${y0} ${x1},${y0 + r}
+    
+    // 使用直角矩形路径
+    return `M${x0},${y0}
+            L${x1},${y0}
             L${x1},${y1}
             L${x0},${y1}
             Z`;

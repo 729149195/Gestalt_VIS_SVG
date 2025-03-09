@@ -230,8 +230,6 @@ const renderChart = (dataset) => {
                 .attr('width', actualBandwidth)
                 .attr('height', rectHeight)
                 .attr('fill', '#E0E0E0') // 使用更浅的灰色
-                .attr('rx', 2)
-                .attr('ry', 2);
             
             // 前景蓝色条形
             group.append('rect')
@@ -241,8 +239,6 @@ const renderChart = (dataset) => {
                 .attr('width', actualBandwidth)
                 .attr('height', 0) // 初始高度为0
                 .attr('fill', '#905F29')
-                .attr('rx', 2)
-                .attr('ry', 2)
                 .style('opacity', 0.7);
                 
             yAccumulator += t.value;
