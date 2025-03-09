@@ -1,13 +1,13 @@
 <template>
   <div class="analysis-words-container">
     <!-- 修改按钮图标为更合适的展开图标 -->
-    <!-- <button class="apple-button-corner" @click="showDrawer = true">
+    <button class="apple-button-corner" @click="showDrawer = true">
       <div class="arrow-wrapper">
         <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </div>
-    </button> -->
+    </button>
     
     <div class="sections-container">
       <div class="section-wrapper">
@@ -31,7 +31,7 @@
     </div>
     
     <!-- 使用 Teleport 将抽屉传送到 body -->
-    <!-- <Teleport to="body">
+    <Teleport to="body">
       <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
       <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
         <button class="close-button" @click="showDrawer = false">×</button>
@@ -39,7 +39,7 @@
           <maxstic :key="componentKey" />
         </div>
       </div>
-    </Teleport> -->
+    </Teleport>
   </div>
 </template>
 

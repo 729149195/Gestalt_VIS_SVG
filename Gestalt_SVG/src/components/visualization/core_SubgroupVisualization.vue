@@ -280,7 +280,7 @@ function createThumbnail(nodeData) {
         
         clonedSvg.querySelectorAll('*').forEach(el => {
             if (el.tagName !== 'svg' && el.tagName !== 'g') {
-                el.style.opacity = '0.2';
+                el.style.opacity = '0.05';
                 if (el.hasAttribute('fill')) {
                     el.style.fill = el.getAttribute('fill');
                 }
