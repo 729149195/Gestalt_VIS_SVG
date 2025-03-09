@@ -195,7 +195,7 @@ const render = (data) => {
             .append('path')
             .attr('class', 'bar')
             .attr('fill', d => d.tag) // 使用数据中的颜色值作为填充色
-            .attr('stroke', '#666')
+            .attr('stroke', '#905F29')
             .attr('d', d => roundedRectPath(d, x, y, actualBandwidth));
 
         // 添加 y 轴图例

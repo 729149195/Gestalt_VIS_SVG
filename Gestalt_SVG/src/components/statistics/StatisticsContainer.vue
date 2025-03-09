@@ -31,7 +31,7 @@
       <div class="loading-spinner"></div>
       <div class="loading-text">Data loading...</div>
     </div>
-    <div v-else class="statistics-cards">
+    <div v-else class="statistics-cards" :class="{'seven-items': hasSevenItems}">
       <template v-for="(component, index) in sortedComponents" :key="index">
         <v-card v-if="component.hasData" class="position-card">
           <!-- <div class="variance-info">Diversity  {{ component.variance.toFixed(2) }}</div> -->
@@ -300,6 +300,11 @@ onMounted(async () => {
 watch(() => props.componentKey, async () => {
   await fetchComponentData();
 });
+
+// 计算是否有7个组件
+const hasSevenItems = computed(() => {
+  return sortedComponents.value.length === 7;
+});
 </script>
 
 <style scoped>
@@ -319,6 +324,7 @@ watch(() => props.componentKey, async () => {
   padding: 10px;
   height: 100%;
   overflow-y: auto;
+  justify-content: flex-start;
 }
 
 .title {
@@ -384,7 +390,7 @@ watch(() => props.componentKey, async () => {
 }
 
 .position-card {
-  flex: 1 1 calc(25% - 16px);
+  flex: 0 0 calc(33.33% - 16px);
   min-width: 200px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -392,6 +398,15 @@ watch(() => props.componentKey, async () => {
   padding: 12px;
   height: 48%;
   position: relative;
+}
+
+/* 当有7个组件时的特殊布局 */
+.statistics-cards.seven-items .position-card {
+  flex: 0 0 calc(25% - 16px);
+}
+
+.statistics-cards.seven-items .position-card:nth-child(n+5) {
+  flex: 0 0 calc(33.33% - 16px);
 }
 
 .position-card:hover {
