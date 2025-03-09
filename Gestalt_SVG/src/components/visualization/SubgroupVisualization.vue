@@ -648,11 +648,11 @@ onUnmounted(() => {
 .legend-probability-sample {
     font-size: 14px;
     font-weight: 600;
-    color: #885F35;
+    color: #905F29;
     padding: 4px 8px;
     border-radius: 6px;
-    background: rgba(136, 95, 53, 0.08);
-    border: 1px solid rgba(136, 95, 53, 0.2);
+    background: rgba(144, 95, 41, 0.08);
+    border: 1px solid rgba(144, 95, 41, 0.2);
     min-width: 70px;
     text-align: center;
 }

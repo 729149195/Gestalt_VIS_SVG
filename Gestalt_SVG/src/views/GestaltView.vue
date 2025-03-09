@@ -7,7 +7,7 @@
                     <div class="intro-icon">
                         <i class="el-icon-view"></i>
                     </div>
-                    <h2 style="font-size: 1.8em; font-weight: 600; color: #885F35;">Welcome to Gestalt Visualization System</h2>
+                    <h2 style="font-size: 1.8em; font-weight: 600; color: #905F29;">Welcome to Gestalt Visualization System</h2>
                 </div>
 
                 <div class="intro-description">
@@ -27,7 +27,7 @@
             </div>
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button type="primary" @click="dialogVisible = false" color="#885F35" style="width: 100%;">Get Started</el-button>
+                    <el-button type="primary" @click="dialogVisible = false" color="#905F29" style="width: 100%;">Get Started</el-button>
                 </div>
             </template>
         </el-dialog>
@@ -371,7 +371,7 @@ onBeforeUnmount(() => {
 
 .resize-handle:hover,
 .resize-handle:active {
-    background-color: rgba(136, 95, 53, 0.3);
+    background-color: rgba(144, 95, 41, 0.3);
 }
 
 .right {
@@ -555,7 +555,7 @@ onBeforeUnmount(() => {
     left: 16px;
     font-size: 16px;
     font-weight: bold;
-    color: #885F35;
+    color: #905F29;
     margin: 0;
     padding: 0;
     z-index: 10;
@@ -573,7 +573,7 @@ onBeforeUnmount(() => {
 .intro-dialog :deep(.el-dialog__title) {
     font-size: 20px;
     font-weight: 600;
-    color: #885F35;
+    color: #905F29;
 }
 
 .intro-dialog :deep(.el-dialog__body) {
@@ -599,7 +599,7 @@ onBeforeUnmount(() => {
 
 .intro-icon {
     font-size: 40px;
-    color: #885F35;
+    color: #905F29;
     margin-bottom: 16px;
 }
 
@@ -625,7 +625,7 @@ onBeforeUnmount(() => {
 }
 
 .intro-features {
-    background: rgba(136, 95, 53, 0.05);
+    background: rgba(144, 95, 41, 0.05);
     border-radius: 12px;
     padding: 20px;
     font-size: 16px;
@@ -636,7 +636,7 @@ onBeforeUnmount(() => {
 .intro-features h3 {
     margin-top: 0;
     margin-bottom: 16px;
-    color: #885F35;
+    color: #905F29;
     font-size: 18px;
 }
 
@@ -653,7 +653,7 @@ onBeforeUnmount(() => {
 }
 
 .feature-icon {
-    color: #885F35;
+    color: #905F29;
     font-size: 18px;
     margin-right: 10px;
     display: inline-block;
@@ -678,7 +678,7 @@ onBeforeUnmount(() => {
 
 .term h4 {
     margin: 0 0 8px 0;
-    color: #885F35;
+    color: #905F29;
     font-size: 16px;
 }
 

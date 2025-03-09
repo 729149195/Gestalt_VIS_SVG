@@ -240,7 +240,7 @@ const renderChart = (dataset) => {
                 .attr('y', y + rectHeight) // 初始位置在底部
                 .attr('width', actualBandwidth)
                 .attr('height', 0) // 初始高度为0
-                .attr('fill', '#885F35')
+                .attr('fill', '#905F29')
                 .attr('rx', 2)
                 .attr('ry', 2)
                 .style('opacity', 0.7);
@@ -323,7 +323,7 @@ const renderChart = (dataset) => {
 }
 
 .tooltip strong {
-    color: #885F35;
+    color: #905F29;
 }
 
 .tooltip span {

@@ -798,7 +798,7 @@ const generateAnalysis = (nodeData) => {
     
     // 4. 生成HTML，确保特征标签唯一
     return topFeatures.map(feature => {
-        const color = '#885F35';
+        const color = '#905F29';
         return `<span class="feature-tag" style="color: ${color}; border: 1px solid ${color}20; background-color: ${color}08">
             ${feature.name}
         </span>`;
@@ -1395,7 +1395,7 @@ const getStats = (node) => {
 .custom-scrollbar-thumb {
     position: absolute;
     height: 100%;
-    background-color: rgba(136, 95, 53, 0.5);
+    background-color: rgba(144, 95, 41, 0.5);
     border-radius: 2px;
     cursor: grab;
     transition: background-color 0.2s;
@@ -1403,7 +1403,7 @@ const getStats = (node) => {
 
 .custom-scrollbar-thumb:hover,
 .custom-scrollbar-thumb:active {
-    background-color: rgba(136, 95, 53, 0.7);
+    background-color: rgba(144, 95, 41, 0.7);
 }
 
 .card {
@@ -1414,7 +1414,7 @@ const getStats = (node) => {
     height: 100%;
     background: #ffffff;
     border-radius: 12px;
-    border: 1.5px solid #885F35;
+    border: 1.5px solid #905F29;
     display: flex;
     flex-direction: column;
     transition: all 0.2s ease;
@@ -1432,35 +1432,35 @@ const getStats = (node) => {
 
 .card:hover {
     transform: translateY(-2px);
-    border-color: #7A5530;
-    box-shadow: 0 4px 6px rgba(136, 95, 53, 0.15);
+    border-color: #7F5427;
+    box-shadow: 0 4px 6px rgba(144, 95, 41, 0.15);
 }
 
 .card-core {
-    border-color: #885F35;
+    border-color: #905F29;
 }
 
 .card-core:hover {
-    border-color: #7A5530;
-    box-shadow: 0 4px 6px rgba(136, 95, 53, 0.15);
+    border-color: #7F5427;
+    box-shadow: 0 4px 6px rgba(144, 95, 41, 0.15);
 }
 
 .card-extension {
-    border-color: #885F35;
+    border-color: #905F29;
 }
 
 .card-extension:hover {
-    border-color: #7A5530;
-    box-shadow: 0 4px 6px rgba(136, 95, 53, 0.15);
+    border-color: #7F5427;
+    box-shadow: 0 4px 6px rgba(144, 95, 41, 0.15);
 }
 
 .card.has-extension {
-    border-color: #885F35;
+    border-color: #905F29;
 }
 
 .card.has-extension:hover {
-    border-color: #7A5530;
-    box-shadow: 0 4px 6px rgba(136, 95, 53, 0.15);
+    border-color: #7F5427;
+    box-shadow: 0 4px 6px rgba(144, 95, 41, 0.15);
 }
 
 .extension-indicator {
@@ -1476,7 +1476,7 @@ const getStats = (node) => {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     z-index: 2;
     backdrop-filter: blur(4px);
-    border: 1px solid rgba(136, 95, 53, 0.15);
+    border: 1px solid rgba(144, 95, 41, 0.15);
     transition: all 0.2s ease;
 }
 
@@ -1488,7 +1488,7 @@ const getStats = (node) => {
 .extension-count {
     font-size: 13px;
     font-weight: 600;
-    color: #885F35;
+    color: #905F29;
     min-width: 16px;
     text-align: center;
 }
@@ -1531,7 +1531,7 @@ const getStats = (node) => {
 
 .navigation-buttons :deep(.v-btn) {
     background: transparent !important;
-    color: #885F35 !important;
+    color: #905F29 !important;
     min-width: 32px !important;
     width: 32px !important;
     height: 32px !important;
@@ -1540,11 +1540,11 @@ const getStats = (node) => {
 }
 
 .navigation-buttons :deep(.v-btn:hover) {
-    background: rgba(136, 95, 53, 0.08) !important;
+    background: rgba(144, 95, 41, 0.08) !important;
 }
 
 .navigation-buttons :deep(.v-btn:active) {
-    background: rgba(136, 95, 53, 0.12) !important;
+    background: rgba(144, 95, 41, 0.12) !important;
 }
 
 .navigation-buttons :deep(.v-btn--disabled) {
@@ -1584,7 +1584,7 @@ const getStats = (node) => {
     overflow-y: auto;
     position: relative;
     padding-right: 120px;
-    border-top: 1px solid rgba(136, 95, 53, 0.2);
+    border-top: 1px solid rgba(144, 95, 41, 0.2);
 }
 
 .highlight-stats {
@@ -1620,7 +1620,7 @@ const getStats = (node) => {
     max-width: calc(100% - 40px);
     display: flex;
     flex-wrap: wrap;
-    color: #885F35;
+    color: #905F29;
 }
 
 :deep(.feature-tag) {
@@ -1635,9 +1635,9 @@ const getStats = (node) => {
     margin-right: 4px;
     margin-bottom: 2px;
     margin-top: 2px;
-    background-color: rgba(136, 95, 53, 0.08);
-    color: #885F35;
-    border: 1px solid rgba(136, 95, 53, 0.2);
+    background-color: rgba(144, 95, 41, 0.08);
+    color: #905F29;
+    border: 1px solid rgba(144, 95, 41, 0.2);
 }
 
 /* 删除不再需要的样式 */
@@ -1666,7 +1666,7 @@ const getStats = (node) => {
     width: 40px;
     height: 40px;
     border: 3px solid #f3f3f3;
-    border-top: 3px solid #885F35;
+    border-top: 3px solid #905F29;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -1682,11 +1682,11 @@ const getStats = (node) => {
     right: 12px;
     font-size: 3em;
     font-weight: 800;
-    color: #885F35;
+    color: #905F29;
     padding: 4px 8px;
     border-radius: 6px;
-    background: rgba(136, 95, 53, 0.08);
-    border: 1px solid rgba(136, 95, 53, 0.2);
+    background: rgba(144, 95, 41, 0.08);
+    border: 1px solid rgba(144, 95, 41, 0.2);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
@@ -1715,9 +1715,9 @@ const getStats = (node) => {
 }
 
 .card-extension .attention-probability {
-    color: #885F35;
-    background: rgba(136, 95, 53, 0.08);
-    border: 1px solid rgba(136, 95, 53, 0.2);
+    color: #905F29;
+    background: rgba(144, 95, 41, 0.08);
+    border: 1px solid rgba(144, 95, 41, 0.2);
 }
 </style>
 

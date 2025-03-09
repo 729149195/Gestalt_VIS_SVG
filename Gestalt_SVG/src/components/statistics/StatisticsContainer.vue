@@ -12,7 +12,7 @@
           <path d="M7 10l5 5 5-5H7z" fill="currentColor"/>
         </svg>
       </span>
-      <span>{{ sortAscending ? 'Order by Variance↑' : 'Order by Variance↓' }}</span>
+      <span>{{ sortAscending ? 'order by variance↑' : 'order by variance↓' }}</span>
     </button>
     
     <!-- 添加图例说明 -->
@@ -423,7 +423,7 @@ watch(() => props.componentKey, async () => {
   height: 40px;
   border: 4px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  border-top-color: #885F35;
+  border-top-color: #905F29;
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 10px;
 }
@@ -460,7 +460,7 @@ watch(() => props.componentKey, async () => {
 }
 
 .legend-color.blue {
-  background-color: #885F35;
+  background-color: #905F29;
 }
 
 .legend-color.gray {

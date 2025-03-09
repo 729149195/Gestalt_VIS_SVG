@@ -17,7 +17,7 @@
         </div>
         <div v-if="analyzing" class="progress-card">
             <div class="progress-label">{{ currentStep }}</div>
-            <v-progress-linear :model-value="progress" color="primary" height="6" rounded :striped="false" bg-color="rgba(136, 95, 53, 0.1)">
+            <v-progress-linear :model-value="progress" color="primary" height="6" rounded :striped="false" bg-color="rgba(144, 95, 41, 0.1)">
                 <template v-slot:default="{ value }">
                     <div class="progress-value">{{ Math.ceil(value) }}%</div>
                 </template>
@@ -687,8 +687,8 @@ const setSelectionMode = (mode) => {
 }
 
 .mac-style-input :deep(.v-field--focused) {
-    border-color: rgba(136, 95, 53, 0.35);
-    box-shadow: 0 0 0 2px rgba(136, 95, 53, 0.15);
+    border-color: rgba(144, 95, 41, 0.35);
+    box-shadow: 0 0 0 2px rgba(144, 95, 41, 0.15);
 }
 
 .mac-style-selector {
@@ -765,21 +765,21 @@ const setSelectionMode = (mode) => {
 }
 
 .mac-style-list-item:hover {
-    background-color: rgba(136, 95, 53, 0.05);
+    background-color: rgba(144, 95, 41, 0.05);
 }
 
 .mac-style-checkbox :deep(.v-selection-control) {
-    color: #885F35;
+    color: #905F29;
 }
 
 .mac-style-button {
-    background: #885F35 !important;
+    background: #905F29 !important;
     border-radius: 8px;
     font-size: 1.2em;
     color: white;
     font-weight: 500;
     letter-spacing: 0.3px;
-    box-shadow: 0 2px 8px rgba(136, 95, 53, 0.2);
+    box-shadow: 0 2px 8px rgba(144, 95, 41, 0.2);
     transition: all 0.3s ease;
     text-transform: none;
     height: 36px;
@@ -787,13 +787,13 @@ const setSelectionMode = (mode) => {
 }
 
 .mac-style-button:hover {
-    background: #7A5530 !important;
+    background: #7F5427 !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(136, 95, 53, 0.3);
+    box-shadow: 0 4px 12px rgba(144, 95, 41, 0.3);
 }
 
 .mac-style-button:disabled {
-    background: rgba(136, 95, 53, 0.5) !important;
+    background: rgba(144, 95, 41, 0.5) !important;
     box-shadow: none;
 }
 
@@ -818,9 +818,9 @@ const setSelectionMode = (mode) => {
 }
 
 .mac-style-track-button {
-    background: rgba(136, 95, 53, 0.1) !important;
+    background: rgba(144, 95, 41, 0.1) !important;
     border-radius: 8px;
-    color: #885F35;
+    color: #905F29;
     font-weight: 500;
     letter-spacing: 0.3px;
     transition: all 0.3s ease;
@@ -831,11 +831,11 @@ const setSelectionMode = (mode) => {
 }
 
 .mac-style-track-button:hover {
-    background: rgba(136, 95, 53, 0.2) !important;
+    background: rgba(144, 95, 41, 0.2) !important;
 }
 
 .mac-style-track-button.active-mode {
-    background-color: #885F35 !important;
+    background-color: #905F29 !important;
     color: white !important;
 }
 
@@ -875,7 +875,7 @@ const setSelectionMode = (mode) => {
 
 .mac-upload-container {
     background: rgba(255, 255, 255, 0.95);
-    border: 1px dashed rgba(136, 95, 53, 0.3);
+    border: 1px dashed rgba(144, 95, 41, 0.3);
     border-radius: 8px;
     padding: 8px 12px;
     text-align: center;
@@ -889,7 +889,7 @@ const setSelectionMode = (mode) => {
 }
 
 .mac-upload-container:hover {
-    border-color: rgba(136, 95, 53, 0.6);
+    border-color: rgba(144, 95, 41, 0.6);
     background: rgba(255, 255, 255, 0.98);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -907,7 +907,7 @@ const setSelectionMode = (mode) => {
 }
 
 .upload-icon {
-    color: #885F35;
+    color: #905F29;
     opacity: 0.8;
     transition: all 0.3s ease;
     font-size: 30px !important;
@@ -930,7 +930,7 @@ const setSelectionMode = (mode) => {
 .file-info {
     margin-left: auto;
     padding: 4px 8px;
-    background: rgba(136, 95, 53, 0.1);
+    background: rgba(144, 95, 41, 0.1);
     border-radius: 4px;
     display: flex;
     gap: 6px;
@@ -940,7 +940,7 @@ const setSelectionMode = (mode) => {
 .file-name {
     font-size: 16px;
     font-weight: 500;
-    color: #885F35;
+    color: #905F29;
     margin-right: 8px;
 }
 
@@ -998,8 +998,8 @@ const setSelectionMode = (mode) => {
 }
 
 :deep(.v-progress-linear__determinate) {
-    background: linear-gradient(90deg, rgba(136, 95, 53, 0.35), rgba(136, 95, 53, 0.35));
-    box-shadow: 0 1px 3px rgba(136, 95, 53, 0.35);
+    background: linear-gradient(90deg, rgba(144, 95, 41, 0.35), rgba(144, 95, 41, 0.35));
+    box-shadow: 0 1px 3px rgba(144, 95, 41, 0.35);
     transition: all 0.3s ease;
 }
 
@@ -1017,13 +1017,13 @@ const setSelectionMode = (mode) => {
     background: rgba(255, 255, 255, 0.8);
     border-radius: 8px;
     padding: 3px 6px;
-    border: 1px solid rgba(136, 95, 53, 0.15);
+    border: 1px solid rgba(144, 95, 41, 0.15);
 }
 
 .selection-mode-label {
     font-size: 12px;
     font-weight: 500;
-    color: #885F35;
+    color: #905F29;
     white-space: nowrap;
 }
 
@@ -1034,9 +1034,9 @@ const setSelectionMode = (mode) => {
 }
 
 .selection-mode-btn {
-    background: rgba(136, 95, 53, 0.1) !important;
+    background: rgba(144, 95, 41, 0.1) !important;
     border-radius: 6px;
-    color: #885F35;
+    color: #905F29;
     font-weight: 500;
     letter-spacing: 0.3px;
     transition: all 0.3s ease;
@@ -1047,11 +1047,11 @@ const setSelectionMode = (mode) => {
 }
 
 .selection-mode-btn:hover {
-    background: rgba(136, 95, 53, 0.2) !important;
+    background: rgba(144, 95, 41, 0.2) !important;
 }
 
 .selection-mode-btn.active-mode {
-    background-color: #885F35 !important;
+    background-color: #905F29 !important;
     color: white !important;
 }
 
