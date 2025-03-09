@@ -1709,9 +1709,10 @@ const getStats = (node) => {
 .attention-probability-value {
     font-size: 0.5em;
     line-height: 1.2;
+    color: #b4793a;
     white-space: nowrap;
     width: 100%;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .card-extension .attention-probability {

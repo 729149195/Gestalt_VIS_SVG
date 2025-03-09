@@ -166,17 +166,17 @@ const initEditors = () => {
     inherit: true,
     rules: [
       { token: 'comment', foreground: '6A9955' },
-      { token: 'keyword', foreground: '885F35', fontStyle: 'bold' },
+      { token: 'keyword', foreground: '905F29', fontStyle: 'bold' },
       { token: 'string', foreground: 'A67C4A' },  // 调整字符串颜色为更亮的棕色
       { token: 'number', foreground: '8A6B47' },  // 保持数字颜色
       { token: 'attribute.name', foreground: '5D4126' }, // 调整属性名颜色为更深的棕色
       { token: 'tag', foreground: '7D5A32' },     // 调整标签颜色为中等棕色
-      { token: 'delimiter', foreground: '885F35' }, // 添加分隔符颜色
-      { token: 'delimiter.bracket', foreground: '885F35' }, // 添加括号颜色
-      { token: 'operator', foreground: '885F35' }, // 添加操作符颜色
-      { token: 'variable', foreground: '7A5530' }, // 添加变量颜色
+      { token: 'delimiter', foreground: '905F29' }, // 添加分隔符颜色
+      { token: 'delimiter.bracket', foreground: '905F29' }, // 添加括号颜色
+      { token: 'operator', foreground: '905F29' }, // 添加操作符颜色
+      { token: 'variable', foreground: '7F5427' }, // 添加变量颜色
       { token: 'type', foreground: '7D5A32' }, // 添加类型颜色
-      { token: 'function', foreground: '7A5530' }, // 添加函数颜色
+      { token: 'function', foreground: '7F5427' }, // 添加函数颜色
       { token: 'constant', foreground: '8A6B47' }, // 添加常量颜色
       { token: 'regexp', foreground: 'A67C4A' }, // 添加正则表达式颜色
       { token: 'metatag', foreground: '7D5A32' } // 添加元标签颜色
@@ -184,28 +184,28 @@ const initEditors = () => {
     colors: {
       'editor.foreground': '#000000',
       'editor.background': '#FFFFFF',
-      'editor.selectionBackground': 'rgba(136, 95, 53, 0.35)',
-      'editor.lineHighlightBackground': 'rgba(136, 95, 53, 0.05)',
-      'editorCursor.foreground': '#885F35',
+      'editor.selectionBackground': 'rgba(144, 95, 41, 0.35)',
+      'editor.lineHighlightBackground': 'rgba(144, 95, 41, 0.05)',
+      'editorCursor.foreground': '#905F29',
       'editorLineNumber.foreground': '#AAAAAA',
-      'editorLineNumber.activeForeground': '#885F35',
+      'editorLineNumber.activeForeground': '#905F29',
       'editorIndentGuide.background': '#EEEEEE',
-      'editorIndentGuide.activeBackground': 'rgba(136, 95, 53, 0.3)',
-      'editor.selectionHighlightBorder': 'rgba(136, 95, 53, 0.3)',
-      'editorLink.activeForeground': '#7A5530',    // 保持链接高亮颜色
-      'editorBracketMatch.background': 'rgba(136, 95, 53, 0.2)', // 保持括号匹配高亮
-      'editorBracketMatch.border': 'rgba(136, 95, 53, 0.4)',     // 保持括号匹配边框
+      'editorIndentGuide.activeBackground': 'rgba(144, 95, 41, 0.3)',
+      'editor.selectionHighlightBorder': 'rgba(144, 95, 41, 0.3)',
+      'editorLink.activeForeground': '#7F5427',    // 保持链接高亮颜色
+      'editorBracketMatch.background': 'rgba(144, 95, 41, 0.2)', // 保持括号匹配高亮
+      'editorBracketMatch.border': 'rgba(144, 95, 41, 0.4)',     // 保持括号匹配边框
       'minimap.background': '#FFFFFF',
-      'minimap.selectionHighlight': 'rgba(136, 95, 53, 0.5)',
-      'minimap.errorHighlight': '#885F35',
-      'minimap.warningHighlight': 'rgba(136, 95, 53, 0.7)',
-      'minimap.findMatchHighlight': 'rgba(136, 95, 53, 0.6)',
-      'minimapSlider.background': 'rgba(136, 95, 53, 0.2)',
-      'minimapSlider.hoverBackground': 'rgba(136, 95, 53, 0.4)',
-      'minimapSlider.activeBackground': 'rgba(136, 95, 53, 0.5)',
-      'minimapGutter.addedBackground': '#885F35',
-      'minimapGutter.modifiedBackground': '#885F35',
-      'minimapGutter.deletedBackground': '#885F35'
+      'minimap.selectionHighlight': 'rgba(144, 95, 41, 0.5)',
+      'minimap.errorHighlight': '#905F29',
+      'minimap.warningHighlight': 'rgba(144, 95, 41, 0.7)',
+      'minimap.findMatchHighlight': 'rgba(144, 95, 41, 0.6)',
+      'minimapSlider.background': 'rgba(144, 95, 41, 0.2)',
+      'minimapSlider.hoverBackground': 'rgba(144, 95, 41, 0.4)',
+      'minimapSlider.activeBackground': 'rgba(144, 95, 41, 0.5)',
+      'minimapGutter.addedBackground': '#905F29',
+      'minimapGutter.modifiedBackground': '#905F29',
+      'minimapGutter.deletedBackground': '#905F29'
     }
   });
 
@@ -1427,18 +1427,18 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :deep(.el-button) {
   margin-left: 0;
   border-radius: 8px;
-  background: #885F35 !important;
-  border-color: #885F35;
+  background: #905F29 !important;
+  border-color: #905F29;
   color: white;
   font-weight: 500;
   box-shadow: 0 2px 8px rgba(136, 95, 53, 0.2);
 }
 
 :deep(.el-button:hover) {
-  background: #7A5530 !important;
-  border-color: #7A5530;
+  background: #7F5427 !important;
+  border-color: #7F5427;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(136, 95, 53, 0.3);
+  box-shadow: 0 4px 12px rgba(144, 95, 41, 0.3);
 }
 
 :deep(.el-button:active) {
@@ -1500,11 +1500,11 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 
 .mode-tab:hover {
   color: #333;
-  background: rgba(136, 95, 53, 0.1);
+  background: rgba(144, 95, 41, 0.1);
 }
 
 .mode-tab.active {
-  background: #885F35;
+  background: #905F29;
   color: white;
 }
 
@@ -1543,7 +1543,7 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 }
 
 :global(.custom-message.el-message--success .el-message__icon) {
-  color: #885F35 !important;
+  color: #905F29 !important;
   font-size: 16px !important;
 }
 
@@ -1568,23 +1568,23 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 
 /* 添加高亮样式 */
 :deep(.highlighted-line) {
-  background-color: rgba(136, 95, 53, 0.15);
-  border-left: 3px solid #885F35;
+  background-color: rgba(144, 95, 41, 0.15);
+  border-left: 3px solid #905F29;
 }
 
 :deep(.highlighted-text) {
   font-weight: bold;
-  color: #885F35;
+  color: #905F29;
 }
 
 /* 自定义选中文本的样式 */
 :deep(.monaco-editor .selected-text) {
-  background-color: rgba(136, 95, 53, 0.35) !important;
+  background-color: rgba(144, 95, 41, 0.35) !important;
 }
 
 :deep(.monaco-editor .cursor) {
-  background-color: #885F35 !important;
-  border-color: #885F35 !important;
+  background-color: #905F29 !important;
+  border-color: #905F29 !important;
 }
 
 /* 覆盖所有可能的红色高亮 */
@@ -1599,8 +1599,8 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :deep(.monaco-editor .view-overlays .current-line),
 :deep(.monaco-editor .margin-view-overlays .current-line-margin),
 :deep(.monaco-editor .view-overlays .line-highlight) {
-  background-color: rgba(136, 95, 53, 0.15) !important;
-  border-left-color: #885F35 !important;
+  background-color: rgba(144, 95, 41, 0.15) !important;
+  border-left-color: #905F29 !important;
 }
 
 /* 确保所有高亮文本使用棕色 */
@@ -1609,39 +1609,39 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :deep(.monaco-editor .selectionHighlight),
 :deep(.monaco-editor .wordHighlight),
 :deep(.monaco-editor .wordHighlightStrong) {
-  background-color: rgba(136, 95, 53, 0.35) !important;
-  border-color: rgba(136, 95, 53, 0.5) !important;
+  background-color: rgba(144, 95, 41, 0.35) !important;
+  border-color: rgba(144, 95, 41, 0.5) !important;
 }
 
 /* 修改行号前后的红色标记为棕色 */
 :deep(.monaco-editor .margin .margin-view-overlays .line-numbers),
 :deep(.monaco-editor .margin-view-overlays .line-numbers) {
-  color: rgba(136, 95, 53, 0.8) !important;
+  color: rgba(144, 95, 41, 0.8) !important;
 }
 
 :deep(.monaco-editor .margin .margin-view-overlays .cldr.folding),
 :deep(.monaco-editor .margin .margin-view-overlays .cldr) {
-  color: #885F35 !important;
+  color: #905F29 !important;
 }
 
 :deep(.monaco-editor .glyph-margin .cgmr) {
-  background-color: #885F35 !important;
+  background-color: #905F29 !important;
 }
 
 :deep(.monaco-editor .margin .margin-view-overlays .line-numbers.active-line-number) {
-  color: #885F35 !important;
+  color: #905F29 !important;
   font-weight: bold;
 }
 
 /* 修改断点和错误标记颜色 */
 :deep(.monaco-editor .breakpoint-glyph-margin),
 :deep(.monaco-editor .breakpoint) {
-  background-color: #885F35 !important;
+  background-color: #905F29 !important;
 }
 
 :deep(.monaco-editor .error-glyph-margin),
 :deep(.monaco-editor .error) {
-  background-color: rgba(136, 95, 53, 0.7) !important;
+  background-color: rgba(144, 95, 41, 0.7) !important;
 }
 
 .editor-transition {
@@ -1684,8 +1684,8 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :global(.monaco-editor .view-overlays .current-line),
 :global(.monaco-editor .margin-view-overlays .current-line-margin),
 :global(.monaco-editor .view-overlays .line-highlight) {
-  background-color: rgba(136, 95, 53, 0.15) !important;
-  border-left-color: #885F35 !important;
+  background-color: rgba(144, 95, 41, 0.15) !important;
+  border-left-color: #905F29 !important;
 }
 
 :global(.monaco-editor .findMatch),
@@ -1693,60 +1693,60 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :global(.monaco-editor .selectionHighlight),
 :global(.monaco-editor .wordHighlight),
 :global(.monaco-editor .wordHighlightStrong) {
-  background-color: rgba(136, 95, 53, 0.35) !important;
-  border-color: rgba(136, 95, 53, 0.5) !important;
+  background-color: rgba(144, 95, 41, 0.35) !important;
+  border-color: rgba(144, 95, 41, 0.5) !important;
 }
 
 :global(.monaco-editor .selected-text) {
-  background-color: rgba(136, 95, 53, 0.35) !important;
+  background-color: rgba(144, 95, 41, 0.35) !important;
 }
 
 /* 全局覆盖行号前后的红色标记 */
 :global(.monaco-editor .margin .margin-view-overlays .line-numbers),
 :global(.monaco-editor .margin-view-overlays .line-numbers) {
-  color: rgba(136, 95, 53, 0.8) !important;
+  color: rgba(144, 95, 41, 0.8) !important;
 }
 
 :global(.monaco-editor .margin .margin-view-overlays .cldr.folding),
 :global(.monaco-editor .margin .margin-view-overlays .cldr) {
-  color: #885F35 !important;
+  color: #905F29 !important;
 }
 
 :global(.monaco-editor .glyph-margin .cgmr) {
-  background-color: #885F35 !important;
+  background-color: #905F29 !important;
 }
 
 :global(.monaco-editor .margin .margin-view-overlays .line-numbers.active-line-number) {
-  color: #885F35 !important;
+  color: #905F29 !important;
   font-weight: bold;
 }
 
 :global(.monaco-editor .breakpoint-glyph-margin),
 :global(.monaco-editor .breakpoint) {
-  background-color: #885F35 !important;
+  background-color: #905F29 !important;
 }
 
 :global(.monaco-editor .error-glyph-margin),
 :global(.monaco-editor .error) {
-  background-color: rgba(136, 95, 53, 0.7) !important;
+  background-color: rgba(144, 95, 41, 0.7) !important;
 }
 
 /* 修改行装饰器和标记颜色 */
 :global(.monaco-editor .decorationsOverviewRuler .decorationsOverviewRuler-red),
 :global(.monaco-editor .decorationsOverviewRuler .decorationsOverviewRuler-error),
 :global(.monaco-editor .decorationsOverviewRuler .decorationsOverviewRuler-warning) {
-  background-color: #885F35 !important;
+  background-color: #905F29 !important;
 }
 
 :global(.monaco-editor .contentWidgets .codicon-error),
 :global(.monaco-editor .contentWidgets .codicon-warning) {
-  color: #885F35 !important;
+  color: #905F29 !important;
 }
 
 :global(.monaco-editor .squiggly-error),
 :global(.monaco-editor .squiggly-warning),
 :global(.monaco-editor .squiggly-info) {
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 3' enable-background='new 0 0 6 3' height='3' width='6'%3E%3Cg fill='%23885F35'%3E%3Cpolygon points='5.5,0 2.5,3 1.1,3 4.1,0'/%3E%3Cpolygon points='4,0 6,2 6,0.6 5.4,0'/%3E%3Cpolygon points='0,2 1,3 2.4,3 0,0.6'/%3E%3C/g%3E%3C/svg%3E") repeat-x bottom left !important;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 3' enable-background='new 0 0 6 3' height='3' width='6'%3E%3Cg fill='%23905F29'%3E%3Cpolygon points='5.5,0 2.5,3 1.1,3 4.1,0'/%3E%3Cpolygon points='4,0 6,2 6,0.6 5.4,0'/%3E%3Cpolygon points='0,2 1,3 2.4,3 0,0.6'/%3E%3C/g%3E%3C/svg%3E") repeat-x bottom left !important;
 }
 
 /* 修改行号前的红色标记 */
@@ -1754,7 +1754,7 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :global(.monaco-editor .margin-view-overlays .cgmr.codicon-error),
 :global(.monaco-editor .margin-view-overlays .cgmr.codicon-warning),
 :global(.monaco-editor .margin-view-overlays .cgmr.codicon-info) {
-  color: #885F35 !important;
+  color: #905F29 !important;
 }
 
 /* 修改行内装饰器 */
@@ -1762,57 +1762,57 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :global(.monaco-editor .inline-decoration.error),
 :global(.monaco-editor .inline-decoration.warning),
 :global(.monaco-editor .inline-decoration.info) {
-  color: #885F35 !important;
-  border-color: #885F35 !important;
+  color: #905F29 !important;
+  border-color: #905F29 !important;
 }
 
 /* 修改行号前的红色圆点 */
 :global(.monaco-editor .margin-view-overlays .cgmr),
 :global(.monaco-editor .margin-view-overlays .cgmr.codicon-circle-filled),
 :global(.monaco-editor .margin-view-overlays .cgmr.codicon-circle-outline) {
-  color: #885F35 !important;
+  color: #905F29 !important;
   background-color: transparent !important;
 }
 
 /* 修改行号前的红色箭头 */
 :global(.monaco-editor .margin-view-overlays .cgmr.codicon-chevron-right),
 :global(.monaco-editor .margin-view-overlays .cgmr.codicon-chevron-down) {
-  color: #885F35 !important;
+  color: #905F29 !important;
 }
 
 /* 修改右侧缩略图中的颜色 */
 :global(.monaco-editor .minimap .minimap-slider),
 :global(.monaco-editor .minimap .minimap-slider .minimap-slider-horizontal) {
-  background: rgba(136, 95, 53, 0.3) !important;
+  background: rgba(144, 95, 41, 0.3) !important;
 }
 
 :global(.monaco-editor .minimap .minimap-slider:hover),
 :global(.monaco-editor .minimap .minimap-slider:active) {
-  background: rgba(136, 95, 53, 0.5) !important;
+  background: rgba(144, 95, 41, 0.5) !important;
 }
 
 :global(.monaco-editor .minimap-shadow-hidden),
 :global(.monaco-editor .minimap-shadow-visible) {
-  box-shadow: inset -6px 0 6px -6px rgba(136, 95, 53, 0.25) !important;
+  box-shadow: inset -6px 0 6px -6px rgba(144, 95, 41, 0.25) !important;
 }
 
 /* 修改缩略图中的高亮颜色 */
 :global(.monaco-editor .minimap-decorations-layer .minimap-decoration) {
-  background-color: rgba(136, 95, 53, 0.6) !important;
+  background-color: rgba(144, 95, 41, 0.6) !important;
 }
 
 :global(.monaco-editor .minimap .minimap-decorations-layer .current-line) {
-  background-color: rgba(136, 95, 53, 0.4) !important;
+  background-color: rgba(144, 95, 41, 0.4) !important;
 }
 
 :global(.monaco-editor .minimap .minimap-decorations-layer .selection-highlight) {
-  background-color: rgba(136, 95, 53, 0.5) !important;
+  background-color: rgba(144, 95, 41, 0.5) !important;
 }
 
 /* 修改缩略图中的错误和警告标记 */
 :global(.monaco-editor .minimap .minimap-decorations-layer .error-decoration),
 :global(.monaco-editor .minimap .minimap-decorations-layer .warning-decoration) {
-  background-color: #885F35 !important;
+  background-color: #905F29 !important;
 }
 
 /* 修改缩略图中的代码颜色 - 使用CSS过滤器 */
@@ -1823,13 +1823,13 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 /* 确保滑块不受过滤器影响 */
 :global(.monaco-editor .minimap .minimap-slider) {
   filter: none !important;
-  background: rgba(136, 95, 53, 0.3) !important;
+  background: rgba(144, 95, 41, 0.3) !important;
 }
 
 :global(.monaco-editor .minimap .minimap-slider:hover),
 :global(.monaco-editor .minimap .minimap-slider:active) {
   filter: none !important;
-  background: rgba(136, 95, 53, 0.5) !important;
+  background: rgba(144, 95, 41, 0.5) !important;
 }
 
 /* 添加XML/HTML属性名和值的特殊样式 */
