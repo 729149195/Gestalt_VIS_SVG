@@ -64,7 +64,17 @@
 
         <div v-if="file" class="svg-container mac-style-container" ref="svgContainer">
             <div v-html="processedSvgContent"></div>
-
+        </div>
+        
+        <!-- 查看原图按钮 -->
+        <div v-if="file" class="preview-original-button" 
+            @mousedown="showOriginalSvg" 
+            @mouseup="restoreFilteredSvg"
+            @mouseleave="restoreFilteredSvg"
+            @touchstart.prevent="showOriginalSvg"
+            @touchend.prevent="restoreFilteredSvg">
+            <v-icon class="eye-icon">mdi-eye</v-icon>
+            <span class="preview-text">Press and hold to view original view</span>
         </div>
     </v-card>
 </template>
@@ -86,6 +96,8 @@ const currentTransform = ref(null);
 const nodeEventHandlers = new Map();
 const visibleElements = ref([]);
 const selectedElements = ref([]);
+// 添加原始状态标记
+const isShowingOriginal = ref(false);
 
 const emit = defineEmits(['file-uploaded'])
 
@@ -653,6 +665,63 @@ const setSelectionMode = (mode) => {
     }
 };
 
+// 添加查看原图功能
+const showOriginalSvg = () => {
+    if (!file.value || isShowingOriginal.value) return;
+    
+    isShowingOriginal.value = true;
+    
+    if (!svgContainer.value) return;
+    
+    const svg = svgContainer.value.querySelector('svg');
+    if (!svg) return;
+    
+    try {
+        const allNodes = svg.querySelectorAll('*');
+        
+        allNodes.forEach(node => {
+            if (!node.tagName || node.tagName.toLowerCase() === 'svg' ||
+                node.tagName.toLowerCase() === 'g') return;
+                
+            // 保存当前透明度以便恢复
+            node.dataset.originalOpacity = node.style.opacity;
+            
+            // 设置所有元素为完全不透明
+            node.style.opacity = 1;
+        });
+    } catch (error) {
+        console.error('Error showing original SVG:', error);
+    }
+};
+
+const restoreFilteredSvg = () => {
+    if (!file.value || !isShowingOriginal.value) return;
+    
+    isShowingOriginal.value = false;
+    
+    if (!svgContainer.value) return;
+    
+    const svg = svgContainer.value.querySelector('svg');
+    if (!svg) return;
+    
+    try {
+        const allNodes = svg.querySelectorAll('*');
+        
+        allNodes.forEach(node => {
+            if (!node.tagName || node.tagName.toLowerCase() === 'svg' ||
+                node.tagName.toLowerCase() === 'g') return;
+                
+            // 恢复到之前保存的透明度
+            if (node.dataset.originalOpacity !== undefined) {
+                node.style.opacity = node.dataset.originalOpacity;
+                delete node.dataset.originalOpacity;
+            }
+        });
+    } catch (error) {
+        console.error('Error restoring filtered SVG:', error);
+    }
+};
+
 </script>
 
 <style scoped>
@@ -1079,5 +1148,51 @@ const setSelectionMode = (mode) => {
 
 .click-cursor {
     cursor: pointer !important;
+}
+
+/* 修改查看原图按钮样式 */
+.preview-original-button {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(144, 95, 41, 0.2);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    width: auto;
+    height: auto;
+    pointer-events: auto;
+}
+
+.preview-original-button:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.preview-original-button:active {
+    background: rgba(144, 95, 41, 0.1);
+    transform: translateY(0);
+}
+
+.eye-icon {
+    color: #aa7134;
+    font-size: 20px;
+}
+
+.preview-text {
+    color: #1d1d1f;
+    font-size: 1em;
+    font-weight: 700;
 }
 </style>
