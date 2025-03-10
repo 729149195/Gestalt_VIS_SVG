@@ -375,31 +375,14 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 正差异特征（选中元素特有的特征）- Used Features
         analysis += '<div class="feature-column positive">';
-        analysis += `<div class="column-title">Used visual encodings</div>`;
+        analysis += `<div class="column-title">Used visual encodings <span class="rank-tag">rank</span></div>`;
         
         if (positiveFeatures.length > 0) {
-            positiveFeatures.forEach(feature => {
-                // 根据显著性计算星星数量
-                const filledStars = Math.min(5, Math.ceil(feature.significance));
-                const emptyStars = 5 - filledStars;
-                
-                let starsHtml = '';
-                // 添加实心星星 - 确保不超过5个星星
-                for (let i = 0; i < filledStars && i < 5; i++) {
-                    starsHtml += '<span class="star filled">★</span>';
-                }
-                // 添加空心星星
-                for (let i = 0; i < emptyStars && i < (5 - filledStars); i++) {
-                    starsHtml += '<span class="star empty">☆</span>';
-                }
-                
+            positiveFeatures.forEach((feature, index) => {
                 analysis += `
                     <div class="feature-item">
                         <span class="feature-tag" style="color: #666666; border-color: #66666620; background-color: #66666608">
                             ${feature.name}
-                        </span>
-                        <span class="feature-influence" style="color: #666666">
-                            ${starsHtml}
                         </span>
                     </div>
                 `;
@@ -474,31 +457,14 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 最突出的特征 - Used Features
         analysis += '<div class="feature-column negative">';
-        analysis += `<div class="column-title">Used visual encodings</div>`;
+        analysis += `<div class="column-title">Used visual encodings <span class="rank-tag">rank</span></div>`;
         
         if (mostDistinctive.length > 0) {
-            mostDistinctive.forEach(feature => {
-                // 根据区分度计算星星数量
-                const filledStars = Math.min(5, Math.ceil(feature.distinctiveness * 5));
-                const emptyStars = 5 - filledStars;
-                
-                let starsHtml = '';
-                // 添加实心星星 - 确保不超过5个星星
-                for (let i = 0; i < filledStars && i < 5; i++) {
-                    starsHtml += '<span class="star filled">★</span>';
-                }
-                // 添加空心星星
-                for (let i = 0; i < emptyStars && i < (5 - filledStars); i++) {
-                    starsHtml += '<span class="star empty">☆</span>';
-                }
-                
+            mostDistinctive.forEach((feature, index) => {
                 analysis += `
                     <div class="feature-item">
                         <span class="feature-tag" style="color: #666666; border-color: #66666620; background-color: #66666608">
                             ${feature.name}
-                        </span>
-                        <span class="feature-influence" style="color: #666666">
-                            ${starsHtml}
                         </span>
                     </div>
                 `;
@@ -1111,5 +1077,24 @@ function getFeatureTypePriority(featureName) {
 
 .section:hover .analysis-content::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
+}
+
+:deep(.feature-rank) {
+    font-size: 13px;
+    font-weight: 500;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+:deep(.rank-tag) {
+    background-color: rgba(102, 102, 102, 0.08);
+    border: 1px solid rgba(102, 102, 102, 0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 8px;
+    color: #666666;
+    font-size: 12px;
+    display: inline-block;
+    font-weight: 500;
 }
 </style>
