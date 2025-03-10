@@ -56,7 +56,7 @@
                 </v-list>
             </div>
             <div class="button-container">
-                <v-btn color="primary" class="mac-style-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
+                <v-btn class="mac-style-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
                     {{ analyzing ? 'Simulating...' : 'Simulate perception' }}
                 </v-btn>
             </div>
@@ -773,7 +773,7 @@ const setSelectionMode = (mode) => {
 }
 
 .mac-style-button {
-    background: #905F29 !important;
+    background: #aa7134 !important;
     border-radius: 8px;
     font-size: 1.2em;
     color: white;
@@ -907,7 +907,7 @@ const setSelectionMode = (mode) => {
 }
 
 .upload-icon {
-    color: #905F29;
+    color: #aa7134;
     opacity: 0.8;
     transition: all 0.3s ease;
     font-size: 30px !important;
@@ -940,7 +940,7 @@ const setSelectionMode = (mode) => {
 .file-name {
     font-size: 16px;
     font-weight: 500;
-    color: #905F29;
+    color: #aa7134;
     margin-right: 8px;
 }
 
@@ -1023,7 +1023,7 @@ const setSelectionMode = (mode) => {
 .selection-mode-label {
     font-size: 12px;
     font-weight: 500;
-    color: #905F29;
+    color: #aa7134;
     white-space: nowrap;
 }
 
@@ -1034,9 +1034,8 @@ const setSelectionMode = (mode) => {
 }
 
 .selection-mode-btn {
-    background: rgba(144, 95, 41, 0.1) !important;
     border-radius: 6px;
-    color: #905F29;
+    color: #aa7134;
     font-weight: 500;
     letter-spacing: 0.3px;
     transition: all 0.3s ease;
@@ -1051,7 +1050,7 @@ const setSelectionMode = (mode) => {
 }
 
 .selection-mode-btn.active-mode {
-    background-color: #905F29 !important;
+    background-color: #aa7134 !important;
     color: white !important;
 }
 
