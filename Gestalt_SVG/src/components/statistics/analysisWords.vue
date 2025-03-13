@@ -335,7 +335,7 @@
           
           // 正差异特征（选中元素特有的特征）- Used Features
           analysis += '<div class="feature-column positive">';
-          analysis += `<div class="column-title all-elements-title">Used visual effects</div>`;
+          analysis += `<div class="column-title all-elements-title">Used effects</div>`;
           
           if (significantFeatures.length > 0) {
               // 创建一个包装容器用于两列布局
@@ -501,36 +501,23 @@
           
           // 最不突出的特征 - Available Features
           analysis += '<div class="feature-column positive">';
-          analysis += `<div class="column-title">Available visual effects <span class="rank-tag">rank</span></div>`;
+          analysis += `<div class="column-title all-elements-title">Available effects <span class="rank-tag">rank</span></div>`;
           
           if (leastDistinctive.length > 0) {
+              // 创建一个包装容器用于单列布局
+              analysis += `<div class="single-column-wrapper">`;
+              
               leastDistinctive.forEach(feature => {
-                  // 对于最不突出的特征，使用反向计算星星，多的星星表示更值得利用
-                  const reverseDistinctiveness = 1 - feature.distinctiveness;
-                  const filledStars = Math.min(5, Math.ceil(reverseDistinctiveness * 5));
-                  const emptyStars = 5 - filledStars;
-                  
-                  let starsHtml = '';
-                  // 添加实心星星 - 确保不超过5个星星
-                  for (let i = 0; i < filledStars && i < 5; i++) {
-                      starsHtml += '<span class="star filled">★</span>';
-                  }
-                  // 添加空心星星
-                  for (let i = 0; i < emptyStars && i < (5 - filledStars); i++) {
-                      starsHtml += '<span class="star empty">☆</span>';
-                  }
-                  
                   analysis += `
                       <div class="feature-item">
-                          <span class="feature-tag" style="color: #666666; border-color: #66666620; background-color: #66666608">
+                          <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
                               ${feature.name}
-                          </span>
-                          <span class="feature-influence" style="color: #666666">
-                              ${starsHtml}
                           </span>
                       </div>
                   `;
               });
+              
+              analysis += `</div>`;
           } else {
               analysis += `<div class="no-selection">No usable features found</div>`;
           }
@@ -1271,5 +1258,18 @@
       width: calc(50% - 6px);
       height: 46px;
       flex: 1;
+  }
+  
+  /* 添加单列布局容器 */
+  :deep(.single-column-wrapper) {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      padding: 8px 0;
+      gap: 12px;
+  }
+  
+  :deep(.single-column-wrapper .feature-item) {
+      height: 46px;
   }
   </style>
