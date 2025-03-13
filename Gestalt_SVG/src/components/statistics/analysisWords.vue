@@ -77,8 +77,8 @@
       'bbox_right_n': 'right',
       'bbox_top_n': 'top',
       'bbox_bottom_n': 'bottom',
-      'bbox_mds_1': 'mds1',
-      'bbox_mds_2': 'mds2',
+      'bbox_mds_1': 'position',
+      'bbox_mds_2': 'position',
       'bbox_width_n': 'width',
       'bbox_height_n': 'height',
       'bbox_fill_area': 'area'
