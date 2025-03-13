@@ -31,9 +31,9 @@
                     <h3 class="mac-style-title">Select elements</h3>
                     <div class="selection-mode-container">
                         <div class="selection-mode-buttons">
-                            <el-tooltip class="box-item" effect="dark" content="Select elements by clicking them one by one" placement="top-start"><v-btn @click.stop="setSelectionMode('clicking')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'clicking' }">
+                            <el-tooltip class="box-item" effect="dark" content="Select elements by clicking them one by one" placement="top-start"><v-btn @click.stop="setSelectionMode('click')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'click' }">
                                     <v-icon small>mdi-cursor-default-click</v-icon>
-                                    <span class="selection-text">Clicking</span>
+                                    <span class="selection-text">Click</span>
                                 </v-btn></el-tooltip>
                             <el-tooltip class="box-item" effect="dark" content="Select multiple elements by dragging across them" placement="top-start">
                                 <v-btn @click.stop="setSelectionMode('lasso')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'lasso' }">
@@ -635,7 +635,7 @@ watch(() => analyzing.value, (newValue) => {
 });
 
 // 添加选择模式变量和方法
-const selectionMode = ref('clicking'); // 默认为点击选择模式
+const selectionMode = ref('click'); // 默认为点击选择模式
 
 const setSelectionMode = (mode) => {
     selectionMode.value = mode;

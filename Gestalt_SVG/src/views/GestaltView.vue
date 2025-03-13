@@ -7,27 +7,27 @@
                     <div class="intro-icon">
                         <i class="el-icon-view"></i>
                     </div>
-                    <h2 style="font-size: 1.8em; font-weight: 600; color: #905F29;">Welcome to Gestalt Visualization System</h2>
+                    <h2 style="font-size: 1.8em; font-weight: 600; color: #905F29;">欢迎使用感知模拟可视化评估系统</h2>
                 </div>
 
                 <div class="intro-description">
-                    <p> This system simulates human visual perception behavior, recognizing different graphic patterns. It provides diverse visual perception results to help visualization creators (both professional and non-professional) discover potential graphic patterns.</p>
-                    <p> In addition, the system supports interactive and easy-to-understand perceptual modelling mechanisms such as:</p>
+                    <p>本系统可以模拟人类的视觉感知行为，识别不同的图形模式。它提供多样化的视觉感知结果，帮助可视化创作者（包括专业和非专业人士）发现潜在的图形模式。</p>
+                    <p>此外，系统支持交互式、易理解的感知模拟机制，如：</p>
 
                 </div>
                 <div class="intro-features">
                     <ul>
-                        <li><span class="feature-icon">✦</span> Graphic pattern highlight analysis</li>
-                        <li><span class="feature-icon">✦</span> Contributing visual feature ranking</li>
-                        <li><span class="feature-icon">✦</span> Quantitative perception probability of graphic patterns</li>
-                        <li><span class="feature-icon">✦</span> Sortable difference statistics</li>
-                        <li><span class="feature-icon">✦</span> Support for iterative modification of source code and analysis</li>
+                        <li><span class="feature-icon">✦</span> 图形模式高亮分析</li>
+                        <li><span class="feature-icon">✦</span> 贡献视觉编码排名</li>
+                        <li><span class="feature-icon">✦</span> 图形模式的量化感知概率</li>
+                        <li><span class="feature-icon">✦</span> 可排序的差异统计</li>
+                        <li><span class="feature-icon">✦</span> 支持迭代修改源代码和分析</li>
                     </ul>
                 </div>
             </div>
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button type="primary" @click="dialogVisible = false" color="#905F29" style="width: 100%;">Get Started</el-button>
+                    <el-button type="primary" @click="dialogVisible = false" color="#905F29" style="width: 100%;">开始使用</el-button>
                 </div>
             </template>
         </el-dialog>
