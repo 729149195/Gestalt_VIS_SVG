@@ -12,7 +12,8 @@ export default createStore({
         group: null                  // 选中的组（可选）
       },
       AllVisiableNodes: [],          // 所有可见的节点 ID 列表
-      ele_num_data: null             // 元素数量数据
+      ele_num_data: null,            // 元素数量数据
+      visualSalience: 0              // 视觉显著性值
     };
   },
   mutations: {
@@ -51,6 +52,10 @@ export default createStore({
     },
     REMOVE_SELECTED_NODE(state, nodeIdToRemove) {
       state.selectedNodes.nodeIds = state.selectedNodes.nodeIds.filter(id => id !== nodeIdToRemove);
+    },
+    SET_VISUAL_SALIENCE(state, value) {
+      // 设置视觉显著性值
+      state.visualSalience = value;
     }
   },
   actions: {

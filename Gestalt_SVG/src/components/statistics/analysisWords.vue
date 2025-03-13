@@ -53,7 +53,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import axios from 'axios'
 import maxstic from '../visualization/maxstic.vue'
 import { useStore } from 'vuex'
@@ -117,6 +117,12 @@ const showDrawer = ref(false)
 
 const store = useStore()
 
+// 添加一个变量来获取高亮元素的visual salience值
+const visualSalienceValue = computed(() => {
+  // 从store中获取visualSalience值，如果不存在则默认为100
+  return store.state.visualSalience ? store.state.visualSalience * 100 : 100;
+})
+
 // 添加一个变量来存储原始特征数据
 const rawFeatureData = ref(null);
 
@@ -133,18 +139,18 @@ const isMiddleSectionScrolledToBottom = ref(true);
 // 生成分析文字的函数
 const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds = []) => {
     if (!normalData || !Array.isArray(normalData) || normalData.length === 0) {
-        return isSelectedNodes ? '等待选中节点...' : '等待分析...';
+        return isSelectedNodes ? 'Waiting for selected nodes...' : 'Waiting for analysis...';
     }
 
     // 如果是选中节点分析但没有选中节点
     if (isSelectedNodes && (!selectedNodeIds || selectedNodeIds.length === 0)) {
-        return '<div class="no-selection">请选择节点查看分析...</div>';
+        return '<div class="no-selection">Please select a node to view the analysis...</div>';
     }
 
     // 获取特征数量
     const featureCount = normalData[0]?.features?.length || 0;
     if (featureCount === 0) {
-        return '<div class="no-selection">找不到有效的特征数据</div>';
+        return '<div class="no-selection">Can not find valid feature data</div>';
     }
     
     // 创建特征索引到名称的映射
@@ -404,37 +410,51 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 负差异特征（选中元素缺乏的特征）- Suggest Features
         analysis += '<div class="feature-column negative">';
-        analysis += `<div class="column-title">Suggestions for highlight pattern improvement</div>`;
+        analysis += `<div class="column-title">Suggestions for improvement</div>`;
         
-        if (negativeFeatures.length > 0) {
-            negativeFeatures.forEach(feature => {
-                // 根据显著性计算星星数量
-                const filledStars = Math.min(5, Math.ceil(feature.significance));
-                const emptyStars = 5 - filledStars;
-                
-                let starsHtml = '';
-                // 添加实心星星 - 确保不超过5个星星
-                for (let i = 0; i < filledStars && i < 5; i++) {
-                    starsHtml += '<span class="star filled">★</span>';
-                }
-                // 添加空心星星
-                for (let i = 0; i < emptyStars && i < (5 - filledStars); i++) {
-                    starsHtml += '<span class="star empty">☆</span>';
-                }
-                
-                analysis += `
-                    <div class="feature-item">
-                        <span class="feature-tag" style="color: #666666; border-color: #66666620; background-color: #66666608">
-                            ${feature.name}
-                        </span>
-                        <span class="feature-influence" style="color: #666666">
-                            ${starsHtml}
-                        </span>
-                    </div>
-                `;
-            });
+        // 检查visual salience值是否小于70
+        if (visualSalienceValue.value < 70) {
+            if (negativeFeatures.length > 0) {
+                negativeFeatures.forEach(feature => {
+                    // 根据显著性计算星星数量
+                    const filledStars = Math.min(5, Math.ceil(feature.significance));
+                    const emptyStars = 5 - filledStars;
+                    
+                    let starsHtml = '';
+                    // 添加实心星星 - 确保不超过5个星星
+                    for (let i = 0; i < filledStars && i < 5; i++) {
+                        starsHtml += '<span class="star filled">★</span>';
+                    }
+                    // 添加空心星星
+                    for (let i = 0; i < emptyStars && i < (5 - filledStars); i++) {
+                        starsHtml += '<span class="star empty">☆</span>';
+                    }
+                    
+                    analysis += `
+                        <div class="feature-item">
+                            <span class="feature-tag" style="color: #666666; border-color: #66666620; background-color: #66666608">
+                                ${feature.name}
+                            </span>
+                            <span class="feature-influence" style="color: #666666">
+                                ${starsHtml}
+                            </span>
+                        </div>
+                    `;
+                });
+            } else {
+                analysis += `<div class="no-selection">No recommended features found</div>`;
+            }
         } else {
-            analysis += `<div class="no-selection">No recommended features found</div>`;
+            // 当visual salience值大于等于70时显示的信息，使用更紧凑的样式
+            analysis += `
+                <div class="high-salience-notice">
+                    <div class="salience-icon">✓</div>
+                    <div class="salience-content">
+                        <div class="salience-title">Visual salience is already good</div>
+                        <div class="salience-value">${visualSalienceValue.value.toFixed(1)}%</div>
+                    </div>
+                </div>
+            `;
         }
         
         analysis += '</div>';
@@ -1133,5 +1153,62 @@ function getFeatureTypePriority(featureName) {
     font-size: 12px;
     display: inline-block;
     font-weight: 500;
+}
+
+/* 添加高显著性提示的样式 */
+:deep(.high-salience-notice) {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(76, 175, 80, 0.15) 100%);
+    border: 1px solid rgba(76, 175, 80, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+:deep(.high-salience-notice:hover) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+:deep(.salience-icon) {
+    background-color: #4CAF50;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-right: 16px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+}
+
+:deep(.salience-content) {
+    flex: 1;
+}
+
+:deep(.salience-title) {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2E7D32;
+    margin-bottom: 4px;
+}
+
+:deep(.salience-value) {
+    font-size: 24px;
+    font-weight: 700;
+    color: #4CAF50;
+    margin-bottom: 4px;
+}
+
+:deep(.salience-description) {
+    font-size: 14px;
+    color: #555;
+    opacity: 0.9;
 }
 </style>

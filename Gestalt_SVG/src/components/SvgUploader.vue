@@ -903,11 +903,17 @@ const calculateVisualSalience = () => {
         // 使用sigmoid函数进行平滑映射，确保结果在0-1范围内
         const normalizedScore = Math.min(Math.max(1 / (0.8 + Math.exp(-salienceScore))));
         
+        // 计算并设置显著性值
         visualSalience.value = normalizedScore;
+        
+        // 将显著性值提交到Vuex store
+        store.commit('SET_VISUAL_SALIENCE', normalizedScore);
     } catch (error) {
-        console.error('Error calculating visual salience:', error);
-        console.error('Error details:', error.stack);
+        console.error('计算视觉显著性时出错:', error);
         visualSalience.value = 0.2;
+        
+        // 将默认显著性值提交到Vuex store
+        store.commit('SET_VISUAL_SALIENCE', 0.2);
     }
 };
 
