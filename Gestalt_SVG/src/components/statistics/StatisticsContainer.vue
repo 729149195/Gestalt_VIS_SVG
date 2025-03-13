@@ -329,15 +329,15 @@ const hasSevenItems = computed(() => {
 
 .title {
   position: relative;
-  top: 5px;
+  top: 10px;
   left: 15px;
-  font-size: 1.5em;
   font-weight: bold;
   color: #1d1d1f;
   padding: 0;
   z-index: 10;
   letter-spacing: -0.01em;
   opacity: 0.8;
+  font-size: 1.8em;
 }
 
 /* 添加排序按钮样式 */

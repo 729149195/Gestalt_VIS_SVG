@@ -697,7 +697,7 @@ onUnmounted(() => {
 }
 
 .title {
-  font-size: 1.5em;
+  font-size: 1.8em;
   font-weight: bold;
   color: #1d1d1f;
   letter-spacing: -0.01em;

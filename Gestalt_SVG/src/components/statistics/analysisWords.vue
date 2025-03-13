@@ -9,9 +9,15 @@
       </div>
     </button>
     
+    <!-- 保持大标题在顶部 -->
+    <div class="title">Assessment of Visual effects</div>
+    
     <div class="sections-container">
       <div class="section-wrapper">
-        <div class="title">Overview of Visual Encodings</div>
+        <!-- 将侧边标题放在section外部，添加旋转类 -->
+        <div class="section-header">
+          <div class="aside-label">All elements</div>
+        </div>
         <div class="section feature-section" ref="featureSection">
           <!-- 添加阴影遮盖器 -->
           <div class="shadow-overlay top" :class="{ active: featureSectionScrollTop > 10 }"></div>
@@ -20,7 +26,10 @@
         </div>
       </div>
       <div class="section-wrapper">
-        <div class="title">Specific Visual Encodings</div>
+        <!-- 将侧边标题放在section外部，添加旋转类 -->
+        <div class="section-header">
+          <div class="aside-label">Selected elements</div>
+        </div>
         <div class="section middle-section" ref="middleSection">
           <!-- 添加阴影遮盖器 -->
           <div class="shadow-overlay top" :class="{ active: middleSectionScrollTop > 10 }"></div>
@@ -712,10 +721,9 @@ function getFeatureTypePriority(featureName) {
 
 /* 修改标题样式，移除绝对定位 */
 .title {
-  font-size: 1.5em;
+  font-size: 1.8em;
   font-weight: bold;
   color: #1d1d1f;
-  padding: 0;
   letter-spacing: -0.01em;
   opacity: 0.8;
 }
@@ -731,6 +739,38 @@ function getFeatureTypePriority(featureName) {
   display: flex;
   flex-direction: column;
   flex: 1;
+  position: relative; /* 添加相对定位 */
+}
+
+/* 新增：section-header样式 */
+.section-header {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f7;
+  border-right: 1px solid rgba(200, 200, 200, 0.5);
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+/* 新增：aside-label样式 */
+.aside-label {
+  transform: rotate(-90deg);
+  white-space: nowrap;
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #333;
+  letter-spacing: 0.04em;
+  width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .section {
@@ -738,7 +778,7 @@ function getFeatureTypePriority(featureName) {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(200, 200, 200, 0.2);
-  padding: 12px;
+  padding: 12px 12px 12px 40px; /* 增加左侧padding，为旋转的侧边栏留出空间 */
   overflow: hidden; /* 修改为hidden，防止与阴影遮盖器冲突 */
   position: relative; /* 添加相对定位，作为阴影遮盖器的参考 */
 }
@@ -757,7 +797,7 @@ function getFeatureTypePriority(featureName) {
 /* 添加滚动阴影遮盖器样式 */
 .shadow-overlay {
   position: absolute;
-  left: 0;
+  left: 30px; /* 修改左侧位置，避免覆盖侧边栏 */
   right: 0;
   height: 20px;
   pointer-events: none; /* 允许鼠标事件穿透到下面的内容 */
@@ -771,7 +811,6 @@ function getFeatureTypePriority(featureName) {
   background: linear-gradient(to bottom, 
     rgba(255, 255, 255, 0.8) 0%, 
     rgba(255, 255, 255, 0) 100%);
-  border-top-left-radius: 12px;
   border-top-right-radius: 12px;
 }
 
@@ -780,7 +819,6 @@ function getFeatureTypePriority(featureName) {
   background: linear-gradient(to top, 
     rgba(255, 255, 255, 0.8) 0%, 
     rgba(255, 255, 255, 0) 100%);
-  border-bottom-left-radius: 12px;
   border-bottom-right-radius: 12px;
 }
 
@@ -993,7 +1031,6 @@ function getFeatureTypePriority(featureName) {
     font-size: 16px;
     font-weight: 600;
     padding: 8px;
-    margin-bottom: 4px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     color: #333;
     position: sticky;

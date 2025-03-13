@@ -19,7 +19,7 @@
             <div class="progress-label">{{ currentStep }}</div>
             <v-progress-linear :model-value="progress" color="primary" height="6" rounded :striped="false" bg-color="rgba(144, 95, 41, 0.1)">
                 <template v-slot:default="{ value }">
-                    <div class="progress-value">{{ Math.ceil(value) }}%</div>
+                    <div class="progress-value">{{ Math.ceil(value) }}</div>
                 </template>
             </v-progress-linear>
         </div>
@@ -44,9 +44,13 @@
                         </div>
                     </div>
                 </div>
-                <v-icon class="expand-icon" :class="{ 'rotated': isListExpanded }">
-                    mdi-chevron-down
-                </v-icon>
+                <div class="expand-toggle-container">
+                    <v-icon class="element-type-icon">mdi-shape-outline</v-icon>
+                    <span class="toggle-text">{{ isListExpanded ? 'types' : 'types' }}</span>
+                    <v-icon class="expand-icon" :class="{ 'rotated': isListExpanded }">
+                        mdi-chevron-down
+                    </v-icon>
+                </div>
             </div>
             <div class="selector-content" :class="{ 'hidden': !isListExpanded }">
                 <v-list density="compact" class="mac-style-list">
@@ -66,6 +70,15 @@
             <div v-html="processedSvgContent"></div>
         </div>
         
+        <!-- 添加视觉显著性指示器容器 -->
+        <div v-if="file" class="salience-container">
+            <!-- 添加视觉显著性指示器 -->
+            <div v-if="selectedNodeIds.length > 0" class="visual-salience-indicator" @click="showSalienceDetail">
+                <span class="salience-label">Visual salience</span>
+                <span class="salience-value">{{ (visualSalience * 100).toFixed(3) }}</span>
+            </div>
+        </div>
+        
         <!-- 查看原图按钮 -->
         <div v-if="file" class="preview-original-button" 
             @mousedown="showOriginalSvg" 
@@ -74,7 +87,7 @@
             @touchstart.prevent="showOriginalSvg"
             @touchend.prevent="restoreFilteredSvg">
             <v-icon class="eye-icon">mdi-eye</v-icon>
-            <span class="preview-text">Press and hold to view original view</span>
+            <span class="preview-text">View original view</span>
         </div>
     </v-card>
 </template>
@@ -98,6 +111,9 @@ const visibleElements = ref([]);
 const selectedElements = ref([]);
 // 添加原始状态标记
 const isShowingOriginal = ref(false);
+// 添加视觉显著性数据
+const normalizedData = ref([]);
+const visualSalience = ref(0);
 
 const emit = defineEmits(['file-uploaded'])
 
@@ -187,6 +203,9 @@ const handleSvgUploaded = async (event) => {
             filename: filename
         })
 
+        // 获取normalized数据
+        await fetchNormalizedData();
+
         if (elementsResponse.data.success) {
             visibleElements.value = elementsResponse.data.elements
             selectedElements.value = elementsResponse.data.elements.map(el => el.id)
@@ -238,6 +257,9 @@ const uploadFile = () => {
             if (response.data.success) {
                 visibleElements.value = response.data.elements;
                 selectedElements.value = response.data.elements.map(el => el.id);
+
+                // 获取normalized数据
+                await fetchNormalizedData();
 
                 // 确保DOM更新后再设置交互
                 await nextTick();
@@ -311,6 +333,8 @@ const analyzeSvg = () => {
         .finally(() => {
             analyzing.value = false;
             eventSource.close();
+            // 计算视觉显著性
+            calculateVisualSalience();
         });
 }
 
@@ -604,6 +628,8 @@ const handleSvgClick = (event) => {
 watch(selectedNodeIds, () => {
     nextTick(() => {
         updateNodeOpacity();
+        // 当选中节点变化时计算视觉显著性
+        calculateVisualSalience();
     });
 });
 
@@ -722,6 +748,198 @@ const restoreFilteredSvg = () => {
     }
 };
 
+// 获取normalized数据
+const fetchNormalizedData = async () => {
+    try {
+        const response = await fetch('http://127.0.0.1:5000/normalized_init_json');
+        if (response.ok) {
+            const data = await response.json();
+            normalizedData.value = data;
+        } else {
+            console.error('Failed to fetch normalized data');
+        }
+    } catch (error) {
+        console.error('Error fetching normalized data:', error);
+    }
+}
+
+// 计算视觉显著性
+const calculateVisualSalience = () => {
+    if (!normalizedData.value || normalizedData.value.length === 0 || selectedNodeIds.value.length === 0) {
+        visualSalience.value = 0.1;
+        return;
+    }
+
+    try {
+        // 获取当前高亮节点
+        const highlightedIds = selectedNodeIds.value;
+        
+        if (!highlightedIds || highlightedIds.length === 0) {
+            visualSalience.value = 0.1;
+            return;
+        }
+
+        // 将所有节点分为高亮组和非高亮组
+        const highlightedFeatures = [];
+        const nonHighlightedFeatures = [];
+        const highlightedIdsForComp = [];
+        const nonHighlightedIdsForComp = [];
+
+        // 遍历normalized数据
+        normalizedData.value.forEach(item => {
+            // 标准化ID格式以便比较
+            const normalizedItemId = item.id;
+            
+            // 检查当前元素是否高亮（通过ID匹配）
+            const isHighlighted = highlightedIds.some(id => {
+                // 提取ID的最后部分进行比较
+                const idParts = normalizedItemId.split('/');
+                const itemIdLastPart = idParts[idParts.length - 1];
+                return itemIdLastPart === id;
+            });
+            
+            if (isHighlighted) {
+                highlightedFeatures.push(item.features);
+                highlightedIdsForComp.push(normalizedItemId);
+            } else {
+                nonHighlightedFeatures.push(item.features);
+                nonHighlightedIdsForComp.push(normalizedItemId);
+            }
+        });
+        
+        if (highlightedFeatures.length === 0) {
+            visualSalience.value = 0.1;
+            return;
+        }
+        
+        // 余弦相似度计算函数
+        function cosineSimilarity(vecA, vecB) {
+            // 计算点积
+            let dotProduct = 0;
+            for (let i = 0; i < vecA.length; i++) {
+                dotProduct += vecA[i] * vecB[i];
+            }
+            
+            // 计算向量长度
+            let vecAMagnitude = 0;
+            let vecBMagnitude = 0;
+            for (let i = 0; i < vecA.length; i++) {
+                vecAMagnitude += vecA[i] * vecA[i];
+                vecBMagnitude += vecB[i] * vecB[i];
+            }
+            vecAMagnitude = Math.sqrt(vecAMagnitude);
+            vecBMagnitude = Math.sqrt(vecBMagnitude);
+            
+            // 避免除以零
+            if (vecAMagnitude === 0 || vecBMagnitude === 0) {
+                return 0;
+            }
+            
+            // 计算余弦相似度
+            return dotProduct / (vecAMagnitude * vecBMagnitude);
+        }
+        
+        // 计算组内元素平均相似度
+        let intraGroupSimilarity = 1.0; // 默认设置为最大值
+        
+        // 如果组内有多个元素，计算它们之间的平均相似度
+        if (highlightedFeatures.length > 1) {
+            let similaritySum = 0;
+            let pairCount = 0;
+            
+            // 计算组内所有元素对之间的相似度
+            for (let i = 0; i < highlightedFeatures.length; i++) {
+                for (let j = i + 1; j < highlightedFeatures.length; j++) {
+                    // 计算特征向量之间的余弦相似度
+                    similaritySum += cosineSimilarity(highlightedFeatures[i], highlightedFeatures[j]);
+                    pairCount++;
+                }
+            }
+            
+            // 计算平均相似度
+            intraGroupSimilarity = similaritySum / pairCount;
+        }
+        
+        // 计算组内与组外元素之间的平均相似度
+        let interGroupSimilarity = 0;
+        let interPairCount = 0;
+        
+        // 计算每个组内元素与每个组外元素之间的相似度
+        for (let i = 0; i < highlightedFeatures.length; i++) {
+            for (let j = 0; j < nonHighlightedFeatures.length; j++) {
+                // 计算特征向量之间的余弦相似度
+                interGroupSimilarity += cosineSimilarity(highlightedFeatures[i], nonHighlightedFeatures[j]);
+                interPairCount++;
+            }
+        }
+        
+        // 计算平均相似度，避免除以零
+        interGroupSimilarity = interPairCount > 0 ? interGroupSimilarity / interPairCount : 0;
+        
+        // 避免除以零，如果组间相似度为0，设置显著性为最大值
+        let salienceScore = interGroupSimilarity > 0 ? intraGroupSimilarity / interGroupSimilarity : 1.0;
+        
+        // 考虑面积因素
+        const AREA_INDEX = 19; // bbox_fill_area 在特征向量中的索引是19
+        
+        // 计算所有元素的平均面积（包括高亮和非高亮元素）
+        const allFeatures = [...highlightedFeatures, ...nonHighlightedFeatures];
+        const allElementsAvgArea = allFeatures.reduce((sum, features) => 
+            sum + features[AREA_INDEX], 0) / allFeatures.length;
+            
+        // 计算高亮元素的平均面积
+        const highlightedAvgArea = highlightedFeatures.reduce((sum, features) => 
+            sum + features[AREA_INDEX], 0) / highlightedFeatures.length;
+        
+        // 使用所有元素平均面积的1.1倍作为阈值
+        const areaThreshold = allElementsAvgArea * 1.1;
+        
+        // 如果高亮元素的平均面积小于阈值，显著降低显著性
+        if (highlightedAvgArea < areaThreshold) {
+            salienceScore = salienceScore / 3;
+        }
+        
+        // 将分数映射到0-1范围内用于显示
+        // 使用sigmoid函数进行平滑映射，确保结果在0-1范围内
+        const normalizedScore = Math.min(Math.max(1 / (0.8 + Math.exp(-salienceScore))));
+        
+        visualSalience.value = normalizedScore;
+    } catch (error) {
+        console.error('Error calculating visual salience:', error);
+        console.error('Error details:', error.stack);
+        visualSalience.value = 0.2;
+    }
+};
+
+// 显示视觉显著性详情
+const showSalienceDetail = () => {
+    console.log('视觉显著性详情:');
+    console.log(`- 当前显著性值: ${(visualSalience.value * 100).toFixed(3)}%`);
+    console.log(`- 选中元素数量: ${selectedNodeIds.value.length}`);
+    
+    // 获取选中元素的类型统计
+    const elementTypeCounts = {};
+    
+    // 尝试获取当前SVG中选中的元素
+    if (svgContainer.value) {
+        const svg = svgContainer.value.querySelector('svg');
+        if (svg) {
+            selectedNodeIds.value.forEach(id => {
+                const element = svg.getElementById(id);
+                if (element) {
+                    const tagName = element.tagName.toLowerCase();
+                    elementTypeCounts[tagName] = (elementTypeCounts[tagName] || 0) + 1;
+                }
+            });
+        }
+    }
+    
+    console.log('- 所选元素类型统计:');
+    Object.entries(elementTypeCounts).forEach(([type, count]) => {
+        console.log(`  * ${type}: ${count}个`);
+    });
+};
+
 </script>
 
 <style scoped>
@@ -768,7 +986,6 @@ const restoreFilteredSvg = () => {
     border: 1px solid rgba(200, 200, 200, 0.3);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    max-width: 400px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -782,18 +999,53 @@ const restoreFilteredSvg = () => {
     align-items: center;
     cursor: pointer;
     user-select: none;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 8px;
 }
 
 .title-container {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 12px;
+    margin-bottom: 0;
+}
+
+.expand-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(144, 95, 41, 0.08);
+    border-radius: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(144, 95, 41, 0.15);
+    margin-left: auto;
+}
+
+.expand-toggle-container:hover {
+    background: rgba(144, 95, 41, 0.12);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(144, 95, 41, 0.1);
+}
+
+.element-type-icon {
+    color: #aa7134;
+    font-size: 18px;
+}
+
+.toggle-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #aa7134;
+    white-space: nowrap;
 }
 
 .expand-icon {
     transition: transform 0.3s ease;
     opacity: 0.6;
+    font-size: 18px;
 }
 
 .expand-icon.rotated {
@@ -815,8 +1067,8 @@ const restoreFilteredSvg = () => {
 }
 
 .mac-style-title {
-    font-size: 1.1em;
-    font-weight: 500;
+    font-size: 1.2em;
+    font-weight: 600;
     color: #1d1d1f;
     margin-bottom: 0;
     white-space: nowrap;
@@ -1192,7 +1444,74 @@ const restoreFilteredSvg = () => {
 
 .preview-text {
     color: #1d1d1f;
-    font-size: 1em;
+    font-size: 1.1em;
+    font-weight: 700;
+}
+
+/* 添加视觉显著性指示器容器样式 */
+.salience-container {
+    position: relative;
+    width: 100%;
+    height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-top: 20px;
+    padding-bottom: 20px;
+}
+
+/* 添加视觉显著性指示器样式 */
+.visual-salience-indicator {
+    position: relative;
+    font-size: 2.5em;
+    font-weight: 800;
+    color: #905F29;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: rgba(144, 95, 41, 0.08);
+    border: 1px solid rgba(144, 95, 41, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    text-align: center;
+    z-index: 90;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.visual-salience-indicator:hover {
+    transform: translateY(-2px);
+    background: rgba(144, 95, 41, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.visual-salience-indicator:active {
+    transform: translateY(0);
+    background: rgba(144, 95, 41, 0.15);
+}
+
+.salience-label {
+    font-size: 0.6em;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    opacity: 0.8;
+    width: 100%;
+    font-weight: 700;
+}
+
+.salience-value {
+    font-size: 0.7em;
+    line-height: 1.2;
+    color: #b4793a;
+    white-space: nowrap;
+    width: 100%;
     font-weight: 700;
 }
 </style>

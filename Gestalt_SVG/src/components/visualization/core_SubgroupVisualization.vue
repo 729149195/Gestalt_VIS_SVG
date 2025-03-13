@@ -61,8 +61,8 @@
                         </div>
                         <div class="analysis-content" v-html="generateAnalysis(node)"></div>
                         <div class="attention-probability">
-                            <span class="attention-probability-label">Visual Salience</span>
-                            <span class="attention-probability-value">{{ (calculateAttentionProbability(node) * 100).toFixed(3) }}%</span>
+                            <span class="attention-probability-label">Visual salience</span>
+                            <span class="attention-probability-value">{{ (calculateAttentionProbability(node) * 100).toFixed(3) }}</span>
                         </div>
                     </div>
                 </div>
@@ -158,11 +158,85 @@ const flattenedNodes = computed(() => {
         }
     });
     
-    // 按照注意力概率排序
-    return [...allNodes].sort((a, b) => 
-        calculateAttentionProbability(b) - calculateAttentionProbability(a)
-    );
+    // 计算每个节点的显著性分数和总面积
+    const nodeScores = allNodes.map(node => {
+        // 获取原始分数用于排序
+        const rawScore = calculateAttentionProbability(node, true);
+        const totalArea = calculateTotalArea(node);
+        return { node, rawScore, totalArea };
+    });
+    
+    // 按照修改后的排序逻辑排序
+    nodeScores.sort((a, b) => {
+        // 如果显著性分数差值不超过0.03 (3%)，则按面积排序
+        if (Math.abs(a.rawScore - b.rawScore) <= 0.03) {
+            return b.totalArea - a.totalArea; // 面积大的排前面
+        }
+        // 否则按显著性分数排序
+        return b.rawScore - a.rawScore;
+    });
+    
+    // 返回排序后的节点数组
+    return nodeScores.map(item => item.node);
 });
+
+// 添加计算节点总面积的函数
+function calculateTotalArea(nodeData) {
+    if (!normalizedData.value || normalizedData.value.length === 0) return 0;
+    
+    try {
+        let nodesToAnalyze = [];
+        
+        if (nodeData.type === 'extension') {
+            // 对于外延节点，同时分析核心节点的内容
+            const coreIndex = parseInt(nodeData.clusterId);
+            const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
+            if (coreNode) {
+                nodesToAnalyze.push(...coreNode.originalNodes);
+            }
+            // 再添加外延节点内容
+            nodesToAnalyze.push(...nodeData.originalNodes);
+        } else {
+            // 核心节点只分析自身
+            nodesToAnalyze = [...nodeData.originalNodes];
+        }
+        
+        if (nodesToAnalyze.length === 0) return 0;
+        
+        // 提取高亮元素的特征
+        const highlightedFeatures = [];
+        
+        // 遍历normalized数据
+        normalizedData.value.forEach(item => {
+            // 标准化ID格式以便比较
+            const normalizedItemId = item.id;
+            
+            // 检查当前元素是否是高亮元素
+            const isHighlighted = nodesToAnalyze.some(analyzeNode => {
+                // 移除开头的 'svg/' 并标准化分析节点的路径
+                const normalizedAnalyzeNode = analyzeNode.replace(/^svg\//, '');
+                return normalizedItemId === `svg/${normalizedAnalyzeNode}` || 
+                       normalizedItemId === normalizedAnalyzeNode;
+            });
+            
+            if (isHighlighted) {
+                highlightedFeatures.push(item.features);
+            }
+        });
+        
+        if (highlightedFeatures.length === 0) return 0;
+        
+        // 计算总面积 - bbox_fill_area 在特征向量中的索引是19
+        const AREA_INDEX = 19;
+        const totalArea = highlightedFeatures.reduce((sum, features) => 
+            sum + features[AREA_INDEX], 0);
+            
+        return totalArea;
+    } catch (error) {
+        console.error('Error calculating total area:', error);
+        return 0;
+    }
+}
 
 // 添加扩展相关的方法
 const hasExtension = (node) => {
@@ -1152,7 +1226,7 @@ function getHighlightedElementsStats(nodeData) {
 }
 
 // 修改注意力概率计算函数
-const calculateAttentionProbability = (nodeData) => {
+const calculateAttentionProbability = (nodeData, returnRawScore = false) => {
     if (!normalizedData.value || normalizedData.value.length === 0) return 0.1;
 
     try {
@@ -1177,6 +1251,8 @@ const calculateAttentionProbability = (nodeData) => {
         // 1. 将所有节点分为高亮组和非高亮组
         const highlightedFeatures = [];
         const nonHighlightedFeatures = [];
+        const highlightedIds = [];
+        const nonHighlightedIds = [];
 
         // 遍历normalized数据
         normalizedData.value.forEach(item => {
@@ -1193,8 +1269,10 @@ const calculateAttentionProbability = (nodeData) => {
 
             if (isHighlighted) {
                 highlightedFeatures.push(item.features);
+                highlightedIds.push(normalizedItemId);
             } else {
                 nonHighlightedFeatures.push(item.features);
+                nonHighlightedIds.push(normalizedItemId);
             }
         });
 
@@ -1202,80 +1280,119 @@ const calculateAttentionProbability = (nodeData) => {
         if (highlightedFeatures.length === 0 || nonHighlightedFeatures.length === 0) {
             return 0.1;
         }
-
-        // 2. 计算高亮组的平均特征向量
-        const highlightedMean = highlightedFeatures[0].map((_, featureIndex) => {
-            return highlightedFeatures.reduce((sum, features) => 
-                sum + features[featureIndex], 0) / highlightedFeatures.length;
-        });
-
-        // 3. 计算非高亮组的平均特征向量
-        const nonHighlightedMean = nonHighlightedFeatures[0].map((_, featureIndex) => {
-            return nonHighlightedFeatures.reduce((sum, features) => 
-                sum + features[featureIndex], 0) / nonHighlightedFeatures.length;
-        });
-
-        // 4. 计算两组之间的欧氏距离（差异性）
-        const betweenGroupDistance = Math.sqrt(
-            highlightedMean.reduce((sum, value, index) => {
-                const diff = value - nonHighlightedMean[index];
-                return sum + (diff * diff);
-            }, 0)
-        );
-
-        // 5. 计算高亮组内部的平均欧氏距离（内聚性的反面）
-        let withinGroupDistance = 0;
         
-        // 如果只有一个高亮元素，内聚度为最高（内部距离为0）
-        if (highlightedFeatures.length === 1) {
-            withinGroupDistance = 0;
-        } else {
-            // 计算高亮组内的所有点对之间的平均距离
-            const distanceSum = highlightedFeatures.reduce((totalSum, features1, index1) => {
-                return totalSum + highlightedFeatures.slice(index1 + 1).reduce((pairSum, features2) => {
-                    // 计算两个特征向量之间的欧氏距离
-                    const pairDistance = Math.sqrt(
-                        features1.reduce((sum, value, idx) => {
-                            const diff = value - features2[idx];
-                            return sum + (diff * diff);
-                        }, 0)
-                    );
-                    return pairSum + pairDistance;
-                }, 0);
-            }, 0);
-
-            // 计算点对数量: n(n-1)/2
-            const numPairs = (highlightedFeatures.length * (highlightedFeatures.length - 1)) / 2;
-            withinGroupDistance = numPairs > 0 ? distanceSum / numPairs : 0;
+        // 获取元素权重信息
+        const elementWeights = equivalentWeightsData.value || {};
+        
+        // 计算加权后的特征向量
+        function getWeightedFeatures(features, elementId) {
+            // 如果没有权重数据或找不到该元素的权重，直接返回原特征
+            if (!elementWeights || !elementWeights[elementId]) {
+                return [...features];
+            }
+            
+            // 获取该元素的4个权重向量
+            const weights = elementWeights[elementId];
+            
+            // 如果权重数据格式不正确，直接返回原特征
+            if (!Array.isArray(weights) || weights.length !== 4) {
+                return [...features];
+            }
+            
+            // 将4个权重向量加起来
+            const combinedWeights = new Array(features.length).fill(0);
+            for (let i = 0; i < weights.length; i++) {
+                const weightVector = weights[i];
+                for (let j = 0; j < combinedWeights.length; j++) {
+                    combinedWeights[j] += weightVector[j] || 0;
+                }
+            }
+            
+            // 将特征向量与权重向量相乘
+            const weightedFeatures = features.map((value, index) => {
+                return value * (combinedWeights[index] || 1); // 如果权重为0或不存在，使用1
+            });
+            
+            return weightedFeatures;
         }
-
-        // 6. 计算关注概率分数
-        // 当内聚度高（withinGroupDistance小）和差异性高（betweenGroupDistance大）时，关注概率应该高
         
-        // 归一化内聚度（值越小表示内聚度越高）
-        // 减小指数系数以提高内聚度得分
-        const cohesionFactor = Math.exp(-2 * withinGroupDistance); // 从-3改为-2，使得内聚度得分更高
+        // 余弦相似度计算函数
+        function cosineSimilarity(vecA, vecB) {
+            // 计算点积
+            let dotProduct = 0;
+            for (let i = 0; i < vecA.length; i++) {
+                dotProduct += vecA[i] * vecB[i];
+            }
+            
+            // 计算向量长度
+            let vecAMagnitude = 0;
+            let vecBMagnitude = 0;
+            for (let i = 0; i < vecA.length; i++) {
+                vecAMagnitude += vecA[i] * vecA[i];
+                vecBMagnitude += vecB[i] * vecB[i];
+            }
+            vecAMagnitude = Math.sqrt(vecAMagnitude);
+            vecBMagnitude = Math.sqrt(vecBMagnitude);
+            
+            // 避免除以零
+            if (vecAMagnitude === 0 || vecBMagnitude === 0) {
+                return 0;
+            }
+            
+            // 计算余弦相似度
+            return dotProduct / (vecAMagnitude * vecBMagnitude);
+        }
         
-        // 归一化差异度 - 降低归一化分母以增大差异度得分
-        const differentiationFactor = Math.min(betweenGroupDistance, 2) / 2; // 从3改为2
+        // 计算组内元素平均相似度
+        let intraGroupSimilarity = 1.0; // 默认设置为最大值
         
-        // 提高基础分数
-        const baseScore = Math.max(0.3, differentiationFactor * 0.6 + cohesionFactor * 0.4); // 设置最小基础分为0.3
-        
-        // 考虑元素数量因子
-        // 单个元素默认内聚度最高
-        let nodeCountFactor = 1.0;
+        // 如果组内有多个元素，计算它们之间的平均相似度
         if (highlightedFeatures.length > 1) {
-            // 随着节点数量增加，适当提高权重，范围在0.8-1.2之间
-            nodeCountFactor = 0.8 + 0.4 * Math.min(highlightedFeatures.length / 4, 1);
+            let similaritySum = 0;
+            let pairCount = 0;
+            
+            // 计算组内所有元素对之间的相似度
+            for (let i = 0; i < highlightedFeatures.length; i++) {
+                for (let j = i + 1; j < highlightedFeatures.length; j++) {
+                    // 获取加权后的特征向量
+                    const weightedFeaturesA = getWeightedFeatures(highlightedFeatures[i], highlightedIds[i]);
+                    const weightedFeaturesB = getWeightedFeatures(highlightedFeatures[j], highlightedIds[j]);
+                    
+                    // 计算加权特征向量之间的余弦相似度
+                    similaritySum += cosineSimilarity(weightedFeaturesA, weightedFeaturesB);
+                    pairCount++;
+                }
+            }
+            
+            // 计算平均相似度
+            intraGroupSimilarity = similaritySum / pairCount;
         }
         
-        // 调整最终分数 - 更积极的缩放
-        let finalScore = baseScore * nodeCountFactor;
+        // 计算组内与组外元素之间的平均相似度
+        let interGroupSimilarity = 0;
+        let interPairCount = 0;
         
-        // 新增：考虑面积因素
-        // bbox_fill_area 在特征向量中的索引是19
-        const AREA_INDEX = 19;
+        // 计算每个组内元素与每个组外元素之间的相似度
+        for (let i = 0; i < highlightedFeatures.length; i++) {
+            for (let j = 0; j < nonHighlightedFeatures.length; j++) {
+                // 获取加权后的特征向量
+                const weightedFeaturesA = getWeightedFeatures(highlightedFeatures[i], highlightedIds[i]);
+                const weightedFeaturesB = getWeightedFeatures(nonHighlightedFeatures[j], nonHighlightedIds[j]);
+                
+                // 计算加权特征向量之间的余弦相似度
+                interGroupSimilarity += cosineSimilarity(weightedFeaturesA, weightedFeaturesB);
+                interPairCount++;
+            }
+        }
+        
+        // 计算平均相似度，避免除以零
+        interGroupSimilarity = interPairCount > 0 ? interGroupSimilarity / interPairCount : 0;
+        
+        // 避免除以零，如果组间相似度为0，设置显著性为最大值
+        let salienceScore = interGroupSimilarity > 0 ? intraGroupSimilarity / interGroupSimilarity : 1.0;
+        
+        // 考虑面积因素 (保留原来的面积影响因素)
+        const AREA_INDEX = 19; // bbox_fill_area 在特征向量中的索引是19
         
         // 计算所有元素的平均面积（包括高亮和非高亮元素）
         const allFeatures = [...highlightedFeatures, ...nonHighlightedFeatures];
@@ -1286,16 +1403,24 @@ const calculateAttentionProbability = (nodeData) => {
         const highlightedAvgArea = highlightedFeatures.reduce((sum, features) => 
             sum + features[AREA_INDEX], 0) / highlightedFeatures.length;
         
-        // 使用所有元素平均面积的0.4倍作为阈值
-        const areaThreshold = allElementsAvgArea * 1.3;
+        // 使用所有元素平均面积的1.3倍作为阈值
+        const areaThreshold = allElementsAvgArea * 1.1;
         
         // 如果高亮元素的平均面积小于阈值，显著降低显著性
         if (highlightedAvgArea < areaThreshold) {
-            finalScore = finalScore / 3;
+            salienceScore = salienceScore / 3;
         }
         
-        // 映射到0.2-0.95范围，整体提高最小值和最大值
-        return Math.min(Math.max(0.2 + finalScore * 0.75, 0.2), 0.95);
+        // 如果需要返回原始分数（用于排序），直接返回
+        if (returnRawScore) {
+            return salienceScore;
+        }
+        
+        // 否则，将分数映射到0-1范围内用于显示
+        // 使用sigmoid函数进行平滑映射，确保结果在0-1范围内
+        const normalizedScore = Math.min(Math.max(1 / (0.8 + Math.exp(-salienceScore))));
+        
+        return normalizedScore;
         
     } catch (error) {
         console.error('Error calculating attention probability:', error);
