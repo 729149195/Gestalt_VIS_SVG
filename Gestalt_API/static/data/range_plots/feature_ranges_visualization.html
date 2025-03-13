@@ -1,0 +1,71 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Feature Range Visualization</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+            h1, h2 {
+                color: #333;
+                text-align: center;
+            }
+            .image-container {
+                margin: 30px 0;
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+                margin: 0 auto;
+            }
+            .description {
+                margin: 15px 0;
+                line-height: 1.5;
+                color: #555;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Feature Range Visualization</h1>
+        
+        <div class="image-container">
+            <h2>Feature Q1-Q3 Range (Original Order)</h2>
+            <img src="range_plots/feature_ranges_plot.png" alt="Feature Ranges Plot">
+            <div class="description">
+                This chart shows the range between Q1 (first quartile) and Q3 (third quartile) for each feature, 
+                in their original order from the CSV file. Blue dots represent Q1 values and red dots represent Q3 values.
+            </div>
+        </div>
+        
+        <div class="image-container">
+            <h2>Feature Q1 and Q3 Values Heatmap</h2>
+            <img src="range_plots/feature_ranges_heatmap.png" alt="Feature Ranges Heatmap">
+            <div class="description">
+                This heatmap visualizes the Q1 and Q3 values for each feature. 
+                Darker colors indicate higher values. The features are shown in their original order.
+            </div>
+        </div>
+        
+        <div class="image-container">
+            <h2>Feature Q1, Q3 and IQR Distribution</h2>
+            <img src="range_plots/feature_distribution_plot.png" alt="Feature Distribution Plot">
+            <div class="description">
+                This chart shows the distribution of Q1, Q3 values and the IQR for each feature. 
+                The blue bars represent the IQR, while the blue and red dots represent Q1 and Q3 values respectively.
+                The vertical lines connect the Q1 and Q3 values for each feature. Features are shown in their original order.
+            </div>
+        </div>
+    </body>
+    </html>
+    

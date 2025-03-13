@@ -408,6 +408,10 @@ def parse_length(length_str, default_value=0.0, reference_size=16.0):
     if isinstance(length_str, (int, float)):
         return float(length_str)
 
+    # 处理 "auto" 值
+    if length_str == "auto":
+        return default_value
+
     try:
         return float(length_str)
     except ValueError:
