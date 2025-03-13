@@ -1,69 +1,93 @@
 <template>
-    <div class="analysis-words-container">
-      <!-- 修改按钮图标为更合适的展开图标 -->
-      <button class="apple-button-corner" @click="showDrawer = true">
-        <div class="arrow-wrapper">
-          <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
+  <div class="analysis-words-container">
+    <!-- 修改按钮图标为更合适的展开图标 -->
+    <button class="apple-button-corner" @click="showDrawer = true">
+      <div class="arrow-wrapper">
+        <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </div>
+    </button>
+    
+    <!-- 保持大标题在顶部 -->
+    <div class="title">Assessment of Visual effects</div>
+    
+    <div class="sections-container">
+      <div class="section-wrapper">
+        <!-- 将侧边标题放在section外部，添加旋转类 -->
+        <div class="section-header">
+          <div class="aside-label">All elements</div>
         </div>
-      </button>
-      
-      <!-- 保持大标题在顶部 -->
-      <div class="title">Assessment of Visual effects</div>
-      
-      <div class="sections-container">
-        <div class="section-wrapper">
-          <!-- 将侧边标题放在section外部，添加旋转类 -->
-          <div class="section-header">
-            <div class="aside-label">All elements</div>
-          </div>
-          <div class="section feature-section" ref="featureSection">
-            <!-- 添加阴影遮盖器 -->
-            <div class="shadow-overlay top" :class="{ active: featureSectionScrollTop > 10 }"></div>
-            <div class="shadow-overlay bottom" :class="{ active: isFeatureSectionScrollable && !isFeatureSectionScrolledToBottom }"></div>
-            <div class="analysis-content" @scroll="handleFeatureSectionScroll" v-html="analysisContent"></div>
-          </div>
-        </div>
-        <div class="section-wrapper">
-          <!-- 将侧边标题放在section外部，添加旋转类 -->
-          <div class="section-header">
-            <div class="aside-label">Selected elements</div>
-          </div>
-          <div class="section middle-section" ref="middleSection">
-            <!-- 添加阴影遮盖器 -->
-            <div class="shadow-overlay top" :class="{ active: middleSectionScrollTop > 10 }"></div>
-            <div class="shadow-overlay bottom" :class="{ active: isMiddleSectionScrollable && !isMiddleSectionScrolledToBottom }"></div>
-            <div class="analysis-content" @scroll="handleMiddleSectionScroll" v-html="selectedNodesAnalysis"></div>
-          </div>
+        <div class="section feature-section" ref="featureSection">
+          <!-- 添加阴影遮盖器 -->
+          <div class="shadow-overlay top" :class="{ active: featureSectionScrollTop > 10 }"></div>
+          <div class="shadow-overlay bottom" :class="{ active: isFeatureSectionScrollable && !isFeatureSectionScrolledToBottom }"></div>
+          <div class="analysis-content" @scroll="handleFeatureSectionScroll" v-html="analysisContent"></div>
         </div>
       </div>
-      
-      <!-- 使用 Teleport 将抽屉传送到 body -->
-      <Teleport to="body">
-        <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
-        <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
-          <button class="close-button" @click="showDrawer = false">×</button>
-          <div class="drawer-body">
-            <maxstic :key="componentKey" />
-          </div>
+      <div class="section-wrapper">
+        <!-- 将侧边标题放在section外部，添加旋转类 -->
+        <div class="section-header">
+          <div class="aside-label">Selected elements</div>
         </div>
-      </Teleport>
+        <div class="section middle-section" ref="middleSection">
+          <!-- 添加阴影遮盖器 -->
+          <div class="shadow-overlay top" :class="{ active: middleSectionScrollTop > 10 }"></div>
+          <div class="shadow-overlay bottom" :class="{ active: isMiddleSectionScrollable && !isMiddleSectionScrolledToBottom }"></div>
+          <div class="analysis-content" @scroll="handleMiddleSectionScroll" v-html="selectedNodesAnalysis"></div>
+        </div>
+      </div>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-  import axios from 'axios'
-  import maxstic from '../visualization/maxstic.vue'
-  import { useStore } from 'vuex'
-  
-  const NORMAL_DATA_URL = "http://127.0.0.1:5000/normalized_init_json";
-  
-  // 特征名称映射
-  const featureNameMap = {
-      'tag': 'shape',
-      'opacity': 'opacity',
+    
+    <!-- 使用 Teleport 将抽屉传送到 body -->
+    <Teleport to="body">
+      <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
+      <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
+        <button class="close-button" @click="showDrawer = false">×</button>
+        <div class="drawer-body">
+          <maxstic :key="componentKey" />
+        </div>
+      </div>
+    </Teleport>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import axios from 'axios'
+import maxstic from '../visualization/maxstic.vue'
+import { useStore } from 'vuex'
+
+const NORMAL_DATA_URL = "http://127.0.0.1:5000/normalized_init_json";
+
+// 添加normalData引用
+const normalData = ref([]);
+
+// 在组件挂载时获取normalized数据
+onMounted(async () => {
+  await fetchNormalizedData();
+});
+
+// 获取normalized数据的方法
+const fetchNormalizedData = async () => {
+  try {
+    const response = await fetch(NORMAL_DATA_URL);
+    if (response.ok) {
+      const data = await response.json();
+      normalData.value = data;
+      console.log('Normalized data loaded:', data.length, 'items');
+    } else {
+      console.error('Failed to fetch normalized data');
+    }
+  } catch (error) {
+    console.error('Error fetching normalized data:', error);
+  }
+};
+
+// 特征名称映射
+const featureNameMap = {
+    'tag': 'shape',
+    'opacity': 'opacity',
       'fill_h_cos': 'fill h',
       'fill_h_sin': 'fill h',
       'fill_s_n': 'fill s',
@@ -72,230 +96,534 @@
       'stroke_h_sin': 'stroke h',
       'stroke_s_n': 'stroke s',
       'stroke_l_n': 'stroke l',
-      'stroke_width': 'stroke width',
+    'stroke_width': 'stroke width',
       'bbox_left_n': 'left',
       'bbox_right_n': 'right',
       'bbox_top_n': 'top',
       'bbox_bottom_n': 'bottom',
-      'bbox_mds_1': 'position',
-      'bbox_mds_2': 'position',
+    'bbox_mds_1': 'position',
+    'bbox_mds_2': 'position',
       'bbox_width_n': 'width',
       'bbox_height_n': 'height',
-      'bbox_fill_area': 'area'
+    'bbox_fill_area': 'area'
+};
+  
+  // 添加冲突组定义
+  const conflictGroups = [
+    ['bbox_width_n', 'bbox_height_n', 'bbox_fill_area'], // width, height, area
+    ['bbox_width_n', 'bbox_left_n', 'bbox_right_n'], // width, left, right
+    ['bbox_height_n', 'bbox_bottom_n', 'bbox_top_n'], // height, bottom, top
+    ['opacity', 'fill_h_cos', 'fill_h_sin', 'fill_s_n', 'fill_l_n'], // opacity, fill_h, fill_s, fill_l
+    ['opacity', 'stroke_h_cos', 'stroke_h_sin', 'stroke_s_n', 'stroke_l_n'] // opacity, stroke_h, stroke_s, stroke_l
+  ];
+  
+  // 冲突组的优先选择
+  const conflictPriority = {
+    'bbox_width_n,bbox_height_n,bbox_fill_area': 'bbox_fill_area',
+    'bbox_width_n,bbox_left_n,bbox_right_n': 'bbox_width_n',
+    'bbox_height_n,bbox_bottom_n,bbox_top_n': 'bbox_height_n',
+    'opacity,fill_h_cos,fill_h_sin,fill_s_n,fill_l_n': 'fill_h_cos', // 使用 h
+    'opacity,stroke_h_cos,stroke_h_sin,stroke_s_n,stroke_l_n': 'stroke_h_cos' // 使用 h
   };
   
-  const props = defineProps({
-    title: {
-      type: String,
-      default: 'analysis'
-    },
-    updateKey: {
-      type: Number,
-      default: 0
+  // 特征范围数据
+  const featureRanges = {
+    'tag': { q1: 0.0, q3: 0.75 },
+    'opacity': { q1: 1.0, q3: 1.0 },
+    'fill_h_cos': { q1: 0.1008768404960534, q3: 1.0 },
+    'fill_h_sin': { q1: 0.3080825490934995, q3: 0.7198673605029529 },
+    'fill_s_n': { q1: 0.3767441860465117, q3: 0.9905660377358492 },
+    'fill_l_n': { q1: 0.4431372549019607, q3: 0.6490196078431373 },
+    'stroke_h_cos': { q1: 0.0, q3: 1.0 },
+    'stroke_h_sin': { q1: 0.0, q3: 0.5 },
+    'stroke_s_n': { q1: 0.0, q3: 0.0 },
+    'stroke_l_n': { q1: 0.0, q3: 0.9019607843137256 },
+    'stroke_width': { q1: 0.0, q3: 1.0 },
+    'bbox_left_n': { q1: 0.1700821463926025, q3: 0.7009512482895623 },
+    'bbox_right_n': { q1: 0.2615399988211845, q3: 0.7912006955511051 },
+    'bbox_top_n': { q1: 0.2225495009000163, q3: 0.7075862438588656 },
+    'bbox_bottom_n': { q1: 0.3553200379395416, q3: 0.8390126925474379 },
+    'bbox_mds_1': { q1: 0.2453260137673291, q3: 0.6793675638847467 },
+    'bbox_mds_2': { q1: 0.23974945944996515, q3: 0.6508568491206108 },
+    'bbox_width_n': { q1: 0.0085288401560059, q3: 0.07933976748484305 },
+    'bbox_height_n': { q1: 0.0169208864753878, q3: 0.11552492906364 },
+    'bbox_fill_area': { q1: 0.2244767308351871, q3: 0.6076265041279574 }
+  };
+  
+  // 检查特征是否在冲突组中
+  function getConflictGroup(featureKey) {
+    for (const group of conflictGroups) {
+      if (group.includes(featureKey)) {
+        return group;
+      }
     }
-  })
+    return null;
+  }
   
-  // 添加一个计算组件key的ref
-  const componentKey = ref(0)
+  // 检查特征是否与高多样性特征冲突
+  function isConflictWithHighDiversity(featureKey, diverseFeatures) {
+    const group = getConflictGroup(featureKey);
+    if (!group) return false;
+    
+    // 检查该组中是否有高多样性特征
+    for (const key of group) {
+      if (key !== featureKey && diverseFeatures.some(f => f.key === key)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
   
-  // 监听 updateKey 的变化
-  watch(() => props.updateKey, (newVal) => {
-    componentKey.value = newVal
-    // 重新获取数据
-    fetchDataAndGenerateAnalysis()
-  })
+  // 获取冲突组中的优先特征
+  function getPriorityFeature(group) {
+    const groupKey = group.join(',');
+    return conflictPriority[groupKey] || group[0];
+  }
   
-  const emit = defineEmits(['scroll'])
-  
+  // 计算视觉显著性
+  const calculateVisualSalience = (selectedNodes, allNodes) => {
+    if (!selectedNodes || selectedNodes.length === 0 || !allNodes || allNodes.length === 0) {
+      return 0.1;
+    }
+
+    try {
+      // 将所有节点分为高亮组和非高亮组
+      const highlightedFeatures = [];
+      const nonHighlightedFeatures = [];
+      
+      // 遍历所有节点
+      allNodes.forEach(item => {
+        // 检查当前元素是否在选中列表中
+        const isHighlighted = selectedNodes.some(node => 
+          node.id === item.id || item.id.endsWith(`/${node.id}`)
+        );
+        
+        if (isHighlighted) {
+          highlightedFeatures.push(item.features);
+        } else {
+          nonHighlightedFeatures.push(item.features);
+        }
+      });
+      
+      if (highlightedFeatures.length === 0) {
+        return 0.1;
+      }
+      
+      // 余弦相似度计算函数
+      function cosineSimilarity(vecA, vecB) {
+        // 计算点积
+        let dotProduct = 0;
+        for (let i = 0; i < vecA.length; i++) {
+          dotProduct += vecA[i] * vecB[i];
+        }
+        
+        // 计算向量长度
+        let vecAMagnitude = 0;
+        let vecBMagnitude = 0;
+        for (let i = 0; i < vecA.length; i++) {
+          vecAMagnitude += vecA[i] * vecA[i];
+          vecBMagnitude += vecB[i] * vecB[i];
+        }
+        vecAMagnitude = Math.sqrt(vecAMagnitude);
+        vecBMagnitude = Math.sqrt(vecBMagnitude);
+        
+        // 避免除以零
+        if (vecAMagnitude === 0 || vecBMagnitude === 0) {
+          return 0;
+        }
+        
+        // 计算余弦相似度
+        return dotProduct / (vecAMagnitude * vecBMagnitude);
+      }
+      
+      // 计算组内元素平均相似度
+      let intraGroupSimilarity = 1.0; // 默认设置为最大值
+      
+      // 如果组内有多个元素，计算它们之间的平均相似度
+      if (highlightedFeatures.length > 1) {
+        let similaritySum = 0;
+        let pairCount = 0;
+        
+        // 计算组内所有元素对之间的相似度
+        for (let i = 0; i < highlightedFeatures.length; i++) {
+          for (let j = i + 1; j < highlightedFeatures.length; j++) {
+            // 计算特征向量之间的余弦相似度
+            similaritySum += cosineSimilarity(highlightedFeatures[i], highlightedFeatures[j]);
+            pairCount++;
+          }
+        }
+        
+        // 计算平均相似度
+        intraGroupSimilarity = pairCount > 0 ? similaritySum / pairCount : 1.0;
+      }
+      
+      // 计算组内与组外元素之间的平均相似度
+      let interGroupSimilarity = 0;
+      let interPairCount = 0;
+      
+      // 计算每个组内元素与每个组外元素之间的相似度
+      for (let i = 0; i < highlightedFeatures.length; i++) {
+        for (let j = 0; j < nonHighlightedFeatures.length; j++) {
+          // 计算特征向量之间的余弦相似度
+          interGroupSimilarity += cosineSimilarity(highlightedFeatures[i], nonHighlightedFeatures[j]);
+          interPairCount++;
+        }
+      }
+      
+      // 计算平均相似度，避免除以零
+      interGroupSimilarity = interPairCount > 0 ? interGroupSimilarity / interPairCount : 0;
+      
+      // 避免除以零，如果组间相似度为0，设置显著性为最大值
+      let salienceScore = interGroupSimilarity > 0 ? intraGroupSimilarity / interGroupSimilarity : 1.0;
+      
+      // 考虑面积因素
+      const AREA_INDEX = 19; // bbox_fill_area 在特征向量中的索引是19
+      
+      // 计算所有元素的平均面积（包括高亮和非高亮元素）
+      const allFeatures = [...highlightedFeatures, ...nonHighlightedFeatures];
+      const allElementsAvgArea = allFeatures.reduce((sum, features) => 
+        sum + features[AREA_INDEX], 0) / allFeatures.length;
+        
+      // 计算高亮元素的平均面积
+      const highlightedAvgArea = highlightedFeatures.reduce((sum, features) => 
+        sum + features[AREA_INDEX], 0) / highlightedFeatures.length;
+      
+      // 使用所有元素平均面积的1.1倍作为阈值
+      const areaThreshold = allElementsAvgArea * 1.1;
+      
+      // 如果高亮元素的平均面积小于阈值，显著降低显著性
+      if (highlightedAvgArea < areaThreshold) {
+        salienceScore = salienceScore / 3;
+      }
+      
+      // 将分数映射到0-1范围内用于显示
+      // 使用sigmoid函数进行平滑映射，确保结果在0-1范围内
+      const normalizedScore = Math.min(Math.max(1 / (0.8 + Math.exp(-salienceScore))), 1);
+      
+      return normalizedScore;
+    } catch (error) {
+      console.error('计算视觉显著性时出错:', error);
+      return 0.2;
+    }
+  };
+
+  // 预测修改特征后的视觉显著性
+  const predictVisualSalience = (selectedNodes, allNodes, featureKey, newValue = null) => {
+    if (!selectedNodes || selectedNodes.length === 0 || !allNodes || allNodes.length === 0) {
+      return 0.1;
+    }
+
+    try {
+      // 创建深拷贝以避免修改原始数据
+      const modifiedNodes = JSON.parse(JSON.stringify(allNodes));
+      
+      // 找到特征在特征向量中的索引
+      const featureIndex = getFeatureIndex(featureKey);
+      if (featureIndex === -1) {
+        return 0.1; // 如果找不到特征索引，返回默认值
+      }
+      
+      // 如果没有提供新值，则根据featureRanges的q1和q3选择最合适的值
+      if (newValue === null && featureRanges[featureKey]) {
+        // 找出高亮组元素
+        const highlightedNodes = modifiedNodes.filter(node => 
+          selectedNodes.some(selectedNode => 
+            selectedNode.id === node.id || node.id.endsWith(`/${selectedNode.id}`)
+          )
+        );
+        
+        // 计算高亮组中该特征的平均值
+        let featureSum = 0;
+        let featureCount = 0;
+        
+        highlightedNodes.forEach(node => {
+          if (node.features && featureIndex < node.features.length) {
+            featureSum += node.features[featureIndex];
+            featureCount++;
+          }
+        });
+        
+        const featureAvg = featureCount > 0 ? featureSum / featureCount : 0;
+        
+        // 获取q1和q3值
+        const q1 = featureRanges[featureKey].q1;
+        const q3 = featureRanges[featureKey].q3;
+        
+        // 计算与平均值的差距，选择差距较大的值
+        const distanceToQ1 = Math.abs(featureAvg - q1);
+        const distanceToQ3 = Math.abs(featureAvg - q3);
+        
+        // 选择距离平均值最远的值
+        newValue = distanceToQ1 > distanceToQ3 ? q1 : q3;
+        
+        console.log(`特征 ${featureKey} 的平均值是 ${featureAvg}，选择 ${distanceToQ1 > distanceToQ3 ? 'q1' : 'q3'} 值: ${newValue}`);
+      }
+      
+      // 修改选中节点的特征值
+      for (const node of modifiedNodes) {
+        if (selectedNodes.some(selectedNode => 
+          selectedNode.id === node.id || node.id.endsWith(`/${selectedNode.id}`)
+        )) {
+          // 修改特征值
+          if (node.features && featureIndex < node.features.length) {
+            node.features[featureIndex] = newValue;
+          }
+        }
+      }
+      
+      // 使用修改后的数据计算视觉显著性
+      return calculateVisualSalience(selectedNodes, modifiedNodes);
+    } catch (error) {
+      console.error('预测视觉显著性时出错:', error);
+      return 0.2;
+    }
+  };
+
+  // 获取特征在特征向量中的索引
+  const getFeatureIndex = (featureKey) => {
+    // 特征索引映射
+    const featureIndices = {
+      'tag': 0,
+      'opacity': 1,
+      'fill_h_cos': 2,
+      'fill_h_sin': 3,
+      'fill_s_n': 4,
+      'fill_l_n': 5,
+      'stroke_h_cos': 6,
+      'stroke_h_sin': 7,
+      'stroke_s_n': 8,
+      'stroke_l_n': 9,
+      'stroke_width': 10,
+      'bbox_left_n': 11,
+      'bbox_right_n': 12,
+      'bbox_top_n': 13,
+      'bbox_bottom_n': 14,
+      'bbox_mds_1': 15,
+      'bbox_mds_2': 16,
+      'bbox_width_n': 17,
+      'bbox_height_n': 18,
+      'bbox_fill_area': 19
+    };
+    
+    return featureIndices[featureKey] !== undefined ? featureIndices[featureKey] : -1;
+};
+
+const props = defineProps({
+  title: {
+    type: String,
+    default: 'analysis'
+  },
+  updateKey: {
+    type: Number,
+    default: 0
+  }
+})
+
+// 添加一个计算组件key的ref
+const componentKey = ref(0)
+
+// 监听 updateKey 的变化
+watch(() => props.updateKey, (newVal) => {
+  componentKey.value = newVal
+  // 重新获取数据
+  fetchDataAndGenerateAnalysis()
+})
+
+const emit = defineEmits(['scroll'])
+
   const analysisContent = ref('Waiting for analysis...')
   const selectedNodesAnalysis = ref('Waiting for selected nodes...')
-  
-  // 将 showDialog 改名为 showDrawer
-  const showDrawer = ref(false)
-  
-  const store = useStore()
-  
-  // 添加一个变量来获取高亮元素的visual salience值
-  const visualSalienceValue = computed(() => {
-    // 从store中获取visualSalience值，如果不存在则默认为100
-    return store.state.visualSalience ? store.state.visualSalience * 100 : 100;
-  })
-  
-  // 添加一个变量来存储原始特征数据
-  const rawFeatureData = ref(null);
-  
-  // 添加滚动相关的状态
-  const featureSection = ref(null);
-  const middleSection = ref(null);
-  const featureSectionScrollTop = ref(0);
-  const middleSectionScrollTop = ref(0);
-  const isFeatureSectionScrollable = ref(false);
-  const isMiddleSectionScrollable = ref(false);
-  const isFeatureSectionScrolledToBottom = ref(true);
-  const isMiddleSectionScrolledToBottom = ref(true);
-  
-  // 生成分析文字的函数
-  const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds = []) => {
-      if (!normalData || !Array.isArray(normalData) || normalData.length === 0) {
-          return isSelectedNodes ? 'Waiting for selected nodes...' : 'Waiting for analysis...';
-      }
-  
-      // 如果是选中节点分析但没有选中节点
-      if (isSelectedNodes && (!selectedNodeIds || selectedNodeIds.length === 0)) {
-          return '<div class="no-selection">Please select a node to view the analysis...</div>';
-      }
-  
-      // 获取特征数量
-      const featureCount = normalData[0]?.features?.length || 0;
-      if (featureCount === 0) {
-          return '<div class="no-selection">Can not find valid feature data</div>';
-      }
-      
-      // 创建特征索引到名称的映射
-      // 因为normalized_init_json.json中没有特征名称，所以我们使用featureNameMap中的索引位置映射
-      const featureIndices = Object.keys(featureNameMap).map((key, index) => ({
-          index,
+
+// 将 showDialog 改名为 showDrawer
+const showDrawer = ref(false)
+
+const store = useStore()
+
+// 添加一个变量来获取高亮元素的visual salience值
+const visualSalienceValue = computed(() => {
+  // 从store中获取visualSalience值，如果不存在则默认为100
+  return store.state.visualSalience ? store.state.visualSalience * 100 : 100;
+})
+
+// 添加计算属性获取selectedNodeIds
+const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds || []);
+
+// 添加一个变量来存储原始特征数据
+const rawFeatureData = ref(null);
+
+// 添加滚动相关的状态
+const featureSection = ref(null);
+const middleSection = ref(null);
+const featureSectionScrollTop = ref(0);
+const middleSectionScrollTop = ref(0);
+const isFeatureSectionScrollable = ref(false);
+const isMiddleSectionScrollable = ref(false);
+const isFeatureSectionScrolledToBottom = ref(true);
+const isMiddleSectionScrolledToBottom = ref(true);
+
+// 生成分析文字的函数
+const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds = []) => {
+    if (!normalData || !Array.isArray(normalData) || normalData.length === 0) {
+        return isSelectedNodes ? 'Waiting for selected nodes...' : 'Waiting for analysis...';
+    }
+
+    // 如果是选中节点分析但没有选中节点
+    if (isSelectedNodes && (!selectedNodeIds || selectedNodeIds.length === 0)) {
+        return '<div class="no-selection">Please select a node to view the analysis...</div>';
+    }
+
+    // 获取特征数量
+    const featureCount = normalData[0]?.features?.length || 0;
+    if (featureCount === 0) {
+        return '<div class="no-selection">Can not find valid feature data</div>';
+    }
+    
+    // 创建特征索引到名称的映射
+    // 因为normalized_init_json.json中没有特征名称，所以我们使用featureNameMap中的索引位置映射
+    const featureIndices = Object.keys(featureNameMap).map((key, index) => ({
+        index,
           name: featureNameMap[key] || key,
           key: key // 保存原始key
-      }));
-      
-      // 将相同特征名称的索引分组
-      const featureGroups = {};
+    }));
+    
+    // 将相同特征名称的索引分组
+    const featureGroups = {};
       featureIndices.forEach(({index, name, key}) => {
-          if (!featureGroups[name]) {
+        if (!featureGroups[name]) {
               featureGroups[name] = {
                   indices: [],
                   keys: []
               };
-          }
+        }
           featureGroups[name].indices.push(index);
           featureGroups[name].keys.push(key);
-      });
-      
-      // 创建特征统计对象
-      let featureStats = {};
-      
-      // 初始化特征统计数据
-      Object.keys(featureGroups).forEach(displayName => {
-          featureStats[displayName] = {
-              values: [],
-              selectedValues: [],
-              unselectedValues: [],
+    });
+    
+    // 创建特征统计对象
+    let featureStats = {};
+    
+    // 初始化特征统计数据
+    Object.keys(featureGroups).forEach(displayName => {
+        featureStats[displayName] = {
+            values: [],
+            selectedValues: [],
+            unselectedValues: [],
               featureIndices: featureGroups[displayName].indices,
               featureKeys: featureGroups[displayName].keys,
-              hasNonZeroValues: false,          // 添加标记，记录该特征是否存在非零值
-              hasNonZeroSelectedValues: false,  // 添加标记，记录选中元素中该特征是否存在非零值
+            hasNonZeroValues: false,          // 添加标记，记录该特征是否存在非零值
+            hasNonZeroSelectedValues: false,  // 添加标记，记录选中元素中该特征是否存在非零值
               hasNonZeroUnselectedValues: false, // 添加标记，记录未选中元素中该特征是否存在非零值
               variance: 0,                      // 添加方差，用于衡量多样性
               meanDifference: 0                 // 添加均值差异，用于衡量选中与未选中的差异
-          };
-      });
-      
-      // 收集所有特征值 - 对于每个特征组，我们取各索引特征值的平均值
-      normalData.forEach(node => {
-          const isSelected = selectedNodeIds.some(id => 
-              node.id === id || node.id.endsWith(`/${id}`)
-          );
+        };
+    });
+    
+    // 收集所有特征值 - 对于每个特征组，我们取各索引特征值的平均值
+    normalData.forEach(node => {
+        const isSelected = selectedNodeIds.some(id => 
+            node.id === id || node.id.endsWith(`/${id}`)
+        );
+        
+        Object.keys(featureStats).forEach(displayName => {
+            const featureIndices = featureStats[displayName].featureIndices;
+            
+            // 只有在索引有效时才计算
+            if (featureIndices.length > 0 && featureIndices[0] < node.features.length) {
+                // 计算特征组的平均值
+                const sum = featureIndices.reduce((acc, index) => {
+                    // 确保索引有效
+                    if (index < node.features.length) {
+                        return acc + Math.abs(node.features[index]);
+                    }
+                    return acc;
+                }, 0);
+                
+                const value = sum / featureIndices.length;
+                
+                // 添加到所有值数组
+                featureStats[displayName].values.push(value);
+                
+                // 检查是否有非零值
+                if (value > 0) {
+                    featureStats[displayName].hasNonZeroValues = true;
+                }
+                
+                // 根据是否选中添加到相应数组
+                if (isSelected) {
+                    featureStats[displayName].selectedValues.push(value);
+                    // 检查选中元素中是否有非零值
+                    if (value > 0) {
+                        featureStats[displayName].hasNonZeroSelectedValues = true;
+                    }
+                } else {
+                    featureStats[displayName].unselectedValues.push(value);
+                    // 检查未选中元素中是否有非零值
+                    if (value > 0) {
+                        featureStats[displayName].hasNonZeroUnselectedValues = true;
+                    }
+                }
+            }
+        });
+    });
+    
+    // 计算每个特征的统计数据
+    Object.keys(featureStats).forEach(displayName => {
+        const feature = featureStats[displayName];
+        
+        // 跳过没有值的特征
+        if (feature.values.length === 0) {
+            delete featureStats[displayName];
+            return;
+        }
+        
+        // 计算全局统计量
+        const allValues = feature.values;
+        const mean = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+        const variance = allValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / allValues.length;
+        const stdDev = Math.sqrt(variance);
+        
+        feature.mean = mean;
+        feature.variance = variance;
+        feature.stdDev = stdDev;
           
-          Object.keys(featureStats).forEach(displayName => {
-              const featureIndices = featureStats[displayName].featureIndices;
-              
-              // 只有在索引有效时才计算
-              if (featureIndices.length > 0 && featureIndices[0] < node.features.length) {
-                  // 计算特征组的平均值
-                  const sum = featureIndices.reduce((acc, index) => {
-                      // 确保索引有效
-                      if (index < node.features.length) {
-                          return acc + Math.abs(node.features[index]);
-                      }
-                      return acc;
-                  }, 0);
-                  
-                  const value = sum / featureIndices.length;
-                  
-                  // 添加到所有值数组
-                  featureStats[displayName].values.push(value);
-                  
-                  // 检查是否有非零值
-                  if (value > 0) {
-                      featureStats[displayName].hasNonZeroValues = true;
-                  }
-                  
-                  // 根据是否选中添加到相应数组
-                  if (isSelected) {
-                      featureStats[displayName].selectedValues.push(value);
-                      // 检查选中元素中是否有非零值
-                      if (value > 0) {
-                          featureStats[displayName].hasNonZeroSelectedValues = true;
-                      }
-                  } else {
-                      featureStats[displayName].unselectedValues.push(value);
-                      // 检查未选中元素中是否有非零值
-                      if (value > 0) {
-                          featureStats[displayName].hasNonZeroUnselectedValues = true;
-                      }
-                  }
-              }
-          });
-      });
-      
-      // 计算每个特征的统计数据
-      Object.keys(featureStats).forEach(displayName => {
-          const feature = featureStats[displayName];
-          
-          // 跳过没有值的特征
-          if (feature.values.length === 0) {
-              delete featureStats[displayName];
-              return;
-          }
-          
-          // 计算全局统计量
-          const allValues = feature.values;
-          const mean = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
-          const variance = allValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / allValues.length;
-          const stdDev = Math.sqrt(variance);
-          
-          feature.mean = mean;
-          feature.variance = variance;
-          feature.stdDev = stdDev;
-          
-          // 计算区分度，并限制最大值为1，确保不会导致超过5颗星
-          feature.distinctiveness = Math.min(1, stdDev / (Math.abs(mean) + 0.0001)); // 避免除以0，并限制最大值
-          
-          // 添加特征类型优先级，用于相同星级时的排序
-          feature.typePriority = getFeatureTypePriority(displayName);
-          
-          // 如果是选中节点分析，还需要计算选中和未选中之间的差异
-          if (isSelectedNodes && feature.selectedValues.length > 0 && feature.unselectedValues.length > 0) {
-              const selectedMean = feature.selectedValues.reduce((sum, val) => sum + val, 0) / feature.selectedValues.length;
-              const unselectedMean = feature.unselectedValues.reduce((sum, val) => sum + val, 0) / feature.unselectedValues.length;
-              
-              feature.selectedMean = selectedMean;
-              feature.unselectedMean = unselectedMean;
-              
-              // 计算选中和未选中之间的差异
+        // 计算区分度，并限制最大值为1，确保不会导致超过5颗星
+        feature.distinctiveness = Math.min(1, stdDev / (Math.abs(mean) + 0.0001)); // 避免除以0，并限制最大值
+        
+        // 添加特征类型优先级，用于相同星级时的排序
+        feature.typePriority = getFeatureTypePriority(displayName);
+        
+        // 如果是选中节点分析，还需要计算选中和未选中之间的差异
+        if (isSelectedNodes && feature.selectedValues.length > 0 && feature.unselectedValues.length > 0) {
+            const selectedMean = feature.selectedValues.reduce((sum, val) => sum + val, 0) / feature.selectedValues.length;
+            const unselectedMean = feature.unselectedValues.reduce((sum, val) => sum + val, 0) / feature.unselectedValues.length;
+            
+            feature.selectedMean = selectedMean;
+            feature.unselectedMean = unselectedMean;
+            
+            // 计算选中和未选中之间的差异
               feature.meanDifference = Math.abs(selectedMean - unselectedMean);
-              
-              // 计算差异的显著性 - 简化版本，降低显著性阈值
-              // 使用简化方法，用差异值直接作为重要程度的指标
-              feature.significance = Math.min(5, Math.abs(feature.meanDifference) * 5); // 限制最大值为5
-              
-              // 设置一个最小显著性值，确保所有特征都有一定的显著性
-              if (feature.significance < 0.5) {
-                  feature.significance = 0.5;
-              }
-          }
-      });
-      
-      // 转换特征统计为数组，以便排序
-      let featureArray = Object.entries(featureStats)
-          .map(([name, stats]) => ({
-              name,
-              ...stats
-          }));
-      
-      // 根据是否为选中节点分析选择不同的排序标准
-      if (isSelectedNodes) {
+            
+            // 计算差异的显著性 - 简化版本，降低显著性阈值
+            // 使用简化方法，用差异值直接作为重要程度的指标
+            feature.significance = Math.min(5, Math.abs(feature.meanDifference) * 5); // 限制最大值为5
+            
+            // 设置一个最小显著性值，确保所有特征都有一定的显著性
+            if (feature.significance < 0.5) {
+                feature.significance = 0.5;
+            }
+        }
+    });
+    
+    // 转换特征统计为数组，以便排序
+    let featureArray = Object.entries(featureStats)
+        .map(([name, stats]) => ({
+            name,
+            ...stats
+        }));
+    
+    // 根据是否为选中节点分析选择不同的排序标准
+    if (isSelectedNodes) {
           // 筛选出高亮元素相对于非高亮元素有差异的特征
           // 只保留有差异的特征（meanDifference > 0）且选中元素中有非零值的特征
           const significantFeatures = featureArray
@@ -303,20 +631,20 @@
                   feature.meanDifference > 0.001 && // 确保有明显差异
                   feature.hasNonZeroSelectedValues // 确保选中元素中有非零值
               )
-              .sort((a, b) => {
+            .sort((a, b) => {
                   // 按差异大小排序
                   return b.meanDifference - a.meanDifference;
               })
               .slice(0, 20); // 最多显示20个
           
           // 筛选出可能的改进特征，这些特征在未选中元素中有非零值，但在选中元素中没有或很少
-          const negativeFeatures = featureArray
+        const negativeFeatures = featureArray
               .filter(feature => 
                   feature.hasNonZeroUnselectedValues && // 未选中元素中有非零值
                   (!feature.hasNonZeroSelectedValues || // 选中元素中没有非零值
                    (feature.selectedMean < feature.unselectedMean)) // 或者选中元素的均值小于未选中元素
               )
-              .sort((a, b) => {
+            .sort((a, b) => {
                   // 按差异大小排序
                   if (a.hasNonZeroSelectedValues && b.hasNonZeroSelectedValues) {
                       return (b.unselectedMean - b.selectedMean) - (a.unselectedMean - a.selectedMean);
@@ -379,56 +707,187 @@
           analysis += '<div class="feature-column negative">';
           analysis += `<div class="column-title">Suggestions for improvement</div>`;
           
-          // 检查visual salience值是否小于70
+          // 检查visual salience值是否小于85
           if (visualSalienceValue.value < 85) {
-              if (negativeFeatures.length > 0) {
-                  negativeFeatures.forEach(feature => {
-                      // 根据显著性计算星星数量
-                      const filledStars = Math.min(5, Math.ceil(feature.significance));
-                      const emptyStars = 5 - filledStars;
+              // 创建三区块布局
+              analysis += `<div class="suggestions-container">`;
+              
+              // 处理冲突关系，筛选出不冲突的特征
+              const processedFeatures = [];
+              const usedConflictGroups = new Set(); // 用于记录已使用的冲突组
+              
+              // 获取全局多样性较高的特征，用于冲突检查
+              const diverseFeatures = featureArray
+                  .filter(feature => feature.variance > 0.01)
+                  .map(feature => ({
+                      key: feature.featureKeys[0],
+                      variance: feature.variance
+                  }));
+              
+              // 处理每个负差异特征
+              for (const feature of negativeFeatures) {
+                  const featureKey = feature.featureKeys[0];
+                  const group = getConflictGroup(featureKey);
+                  
+                  if (group) {
+                      // 如果特征属于某个冲突组
+                      const groupKey = group.join(',');
                       
-                      let starsHtml = '';
-                      // 添加实心星星 - 确保不超过5个星星
-                      for (let i = 0; i < filledStars && i < 5; i++) {
-                          starsHtml += '<span class="star filled">★</span>';
-                      }
-                      // 添加空心星星
-                      for (let i = 0; i < emptyStars && i < (5 - filledStars); i++) {
-                          starsHtml += '<span class="star empty">☆</span>';
+                      // 如果该冲突组已经有特征被选中，则跳过
+                      if (usedConflictGroups.has(groupKey)) {
+                          continue;
                       }
                       
-                      analysis += `
-                          <div class="feature-item">
-                              <span class="feature-tag" style="color: #666666; border-color: #66666620; background-color: #66666608">
-                                  ${feature.name}
-                              </span>
-                              <span class="feature-influence" style="color: #666666">
-                                  ${starsHtml}
-                              </span>
-                          </div>
-                      `;
-                  });
-              } else {
-                  analysis += `<div class="no-selection">No recommended features found</div>`;
+                      // 检查该组中是否有高多样性特征
+                      const hasHighDiversity = group.some(key => 
+                          diverseFeatures.some(f => f.key === key)
+                      );
+                      
+                      if (hasHighDiversity) {
+                          // 如果有高多样性特征，找出多样性最高的
+                          const highDiversityFeatures = diverseFeatures
+                              .filter(f => group.includes(f.key))
+                              .sort((a, b) => b.variance - a.variance);
+                          
+                          if (highDiversityFeatures.length > 0) {
+                              // 只保留多样性最高的特征
+                              const highestDiversityKey = highDiversityFeatures[0].key;
+                              
+                              // 如果当前特征就是多样性最高的，则保留
+                              if (featureKey === highestDiversityKey) {
+                                  processedFeatures.push(feature);
+                                  usedConflictGroups.add(groupKey);
+                              }
+                          }
+                      } else {
+                          // 如果没有高多样性特征，使用优先级规则
+                          const priorityKey = getPriorityFeature(group);
+                          
+                          // 如果当前特征是优先级最高的，则保留
+                          if (featureKey === priorityKey) {
+                              processedFeatures.push(feature);
+                              usedConflictGroups.add(groupKey);
+                          }
+                      }
+                  } else {
+                      // 如果不是冲突组中的特征，直接保留
+                      processedFeatures.push(feature);
+                  }
               }
-          } else {
-              // 当visual salience值大于等于70时显示的信息，使用更紧凑的样式
-              analysis += `
-                  <div class="high-salience-notice">
-                      <div class="salience-icon">✓</div>
-                      <div class="salience-content">
-                          <div class="salience-title">Visual salience is already good</div>
-                          <div class="salience-value">${visualSalienceValue.value.toFixed(1)}%</div>
+              
+              // 先为Reset区域选择最佳特征
+              let resetFeature = null;
+              if (processedFeatures.length > 0) {
+                  // 选择第一个特征作为Reset特征
+                  resetFeature = processedFeatures[0];
+              }
+              
+              // 显示 Add 区域的特征，排除Reset特征
+              analysis += `<div class="suggestions-add-section">`;
+              analysis += `<div class="suggestions-section-title">Add</div>`;
+              
+              if (processedFeatures.length > 0) {
+                  // 过滤掉Reset特征，最多显示5个
+                  const addFeatures = processedFeatures
+                      .filter(feature => resetFeature ? feature.name !== resetFeature.name : true)
+                      .slice(0, 5);
+                  
+                  if (addFeatures.length > 0) {
+                      addFeatures.forEach(feature => {
+                          // 计算预估显著性值
+                          const featureKey = feature.featureKeys[0];
+                          const predictedSalience = predictVisualSalience(
+                              selectedNodeIds.length > 0 ? 
+                                  selectedNodeIds.map(id => ({ id })) : 
+                                  [],
+                              normalData || [],
+                              featureKey
+                          );
+                          const formattedSalience = (predictedSalience * 100).toFixed(1);
+                          
+                          analysis += `
+                              <div class="feature-item">
+                                  <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
+                                      ${feature.name} <span class="predicted-salience">${formattedSalience}%</span>
+                                  </span>
+                              </div>
+                          `;
+                      });
+                  } else {
+                      analysis += `<div class="no-selection">No additional features found</div>`;
+                  }
+              } else {
+                  analysis += `<div class="no-selection">No suitable features found</div>`;
+              }
+              
+              analysis += `</div>`;
+              
+              // 2. Reset 区域 - 右上
+              analysis += `<div class="suggestions-right-section">`;
+              analysis += `<div class="suggestions-reset-section">`;
+              analysis += `<div class="suggestions-section-title">Reset</div>`;
+              
+              // 显示Reset特征
+              if (resetFeature) {
+                  // 计算预估显著性值
+                  const featureKey = resetFeature.featureKeys[0];
+                  const predictedSalience = predictVisualSalience(
+                      selectedNodeIds.length > 0 ? 
+                          selectedNodeIds.map(id => ({ id })) : 
+                          [],
+                      normalData || [],
+                      featureKey
+                  );
+                  const formattedSalience = (predictedSalience * 100).toFixed(1);
+                  
+                  analysis += `
+                      <div class="feature-item">
+                          <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
+                              ${resetFeature.name} <span class="predicted-salience">${formattedSalience}%</span>
+                          </span>
                       </div>
-                  </div>
-              `;
-          }
-          
-          analysis += '</div>';
-          analysis += '</div>';
-          
-          return analysis;
-      } else {
+                  `;
+              } else {
+                  analysis += `<div class="no-selection">No reset feature found</div>`;
+              }
+              
+              analysis += `</div>`;
+              
+              // 3. Stroke 区域 - 右下
+              analysis += `<div class="suggestions-stroke-section">`;
+              analysis += `<div class="suggestions-section-title">Stroke</div>`;
+              
+              // 添加固定文本
+                    analysis += `
+                        <div class="feature-item">
+                      <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
+                          Add a stroke box
+                            </span>
+                        </div>
+                    `;
+              
+              analysis += `</div>`;
+              analysis += `</div>`; // 关闭 suggestions-right-section
+              
+              analysis += `</div>`; // 关闭 suggestions-container
+            } else {
+              // 当visual salience值大于等于85时显示的信息，使用更紧凑的样式
+            analysis += `
+                <div class="high-salience-notice">
+                    <div class="salience-icon">✓</div>
+                    <div class="salience-content">
+                        <div class="salience-title">Visual salience is already good</div>
+                        <div class="salience-value">${visualSalienceValue.value.toFixed(1)}%</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        analysis += '</div>';
+        analysis += '</div>';
+        
+        return analysis;
+    } else {
           // 全局分析：根据特征的多样性（方差）排序
           // 筛选出有变化的特征（方差大于0）
           const diverseFeatures = featureArray
@@ -443,7 +902,7 @@
               .slice(0, 20); // 最多显示20个
               
           // 筛选出方差较小的特征，作为可用但未充分利用的特征
-          const leastDistinctive = featureArray
+        const leastDistinctive = featureArray
               .filter(feature => 
                   feature.variance <= 0.001 || // 方差小，变化不明显
                   !feature.hasNonZeroValues // 或者没有非零值
@@ -453,13 +912,13 @@
                   return a.variance - b.variance;
               })
               .slice(0, 10); // 最多显示10个
-          
-          // 生成HTML
-          let analysis = '<div class="feature-columns">';
-          
-          // 最突出的特征 - Used Features
-          analysis += '<div class="feature-column negative">';
-          analysis += `<div class="column-title all-elements-title">Used visual effects</div>`;
+        
+        // 生成HTML
+        let analysis = '<div class="feature-columns">';
+        
+        // 最突出的特征 - Used Features
+        analysis += '<div class="feature-column negative">';
+          analysis += `<div class="column-title all-elements-title">Used effects</div>`;
           
           if (diverseFeatures.length > 0) {
               // 创建一个包装容器用于两列布局
@@ -470,13 +929,13 @@
                   analysis += `<div class="two-column-row">`;
                   
                   // 添加第一个特征
-                  analysis += `
+                analysis += `
                       <div class="feature-item two-column-item">
                           <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
                               ${diverseFeatures[i].name}
-                          </span>
-                      </div>
-                  `;
+                        </span>
+                    </div>
+                `;
                   
                   // 如果有第二个特征，也添加它
                   if (i + 1 < diverseFeatures.length) {
@@ -493,712 +952,717 @@
               }
               
               analysis += `</div>`;
-          } else {
-              analysis += `<div class="no-selection">No distinguishing features found</div>`;
-          }
-          
-          analysis += '</div>';
-          
-          // 最不突出的特征 - Available Features
-          analysis += '<div class="feature-column positive">';
+        } else {
+            analysis += `<div class="no-selection">No distinguishing features found</div>`;
+        }
+        
+        analysis += '</div>';
+        
+        // 最不突出的特征 - Available Features
+        analysis += '<div class="feature-column positive">';
           analysis += `<div class="column-title all-elements-title">Available effects <span class="rank-tag">rank</span></div>`;
-          
-          if (leastDistinctive.length > 0) {
+        
+        if (leastDistinctive.length > 0) {
               // 创建一个包装容器用于单列布局
               analysis += `<div class="single-column-wrapper">`;
               
               leastDistinctive.forEach(feature => {
-                  analysis += `
-                      <div class="feature-item">
+                analysis += `
+                    <div class="feature-item">
                           <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                              ${feature.name}
-                          </span>
-                      </div>
-                  `;
-              });
+                            ${feature.name}
+                        </span>
+                    </div>
+                `;
+            });
               
               analysis += `</div>`;
-          } else {
-              analysis += `<div class="no-selection">No usable features found</div>`;
-          }
-          
-          analysis += '</div>';
-          analysis += '</div>';
-          
-          return analysis;
-      }
-  };
-  
-  // 获取数据并生成分析
-  const fetchDataAndGenerateAnalysis = async () => {
-      try {
-          // 只获取正则化数据，不再需要其他两个API数据
-          const response = await axios.get(NORMAL_DATA_URL);
-  
-          if (!response.data) {
-              throw new Error('Problems with network response');
-          }
-  
-          // 保存原始特征数据
-          rawFeatureData.value = response.data;
-  
-          // 获取选中节点的ID
-          const selectedNodeIds = store.state.selectedNodes.nodeIds || [];
-  
-          // 生成全局分析文字 - 不需要传入选中节点ID
-          analysisContent.value = generateAnalysis(response.data, false);
-          
-          // 生成选中节点的分析 - 传入选中节点ID
-          if (selectedNodeIds && selectedNodeIds.length > 0) {
-              selectedNodesAnalysis.value = generateAnalysis(response.data, true, selectedNodeIds);
-          } else {
-              selectedNodesAnalysis.value = '<div class="no-selection">Please select a node to view the analysis...</div>';
-          }
-      } catch (error) {
-          console.error('Failed to get data:', error);
-          analysisContent.value = 'Analysis generation failed, please try again';
-          selectedNodesAnalysis.value = 'Analysis generation failed, please try again';
-      }
-  };
-  
-  // 修改监听逻辑，当选中节点变化时重新获取数据
-  watch(() => store.state.selectedNodes.nodeIds, () => {
-      fetchDataAndGenerateAnalysis();
-  }, { deep: true, immediate: true });
-  
-  // 更新滚动处理函数，分别处理两个滚动区域
-  const handleFeatureSectionScroll = (event) => {
-      const target = event.target;
-      featureSectionScrollTop.value = target.scrollTop;
-      
-      // 检查是否可滚动
-      isFeatureSectionScrollable.value = target.scrollHeight > target.clientHeight;
-      
-      // 检查是否滚动到底部
-      isFeatureSectionScrolledToBottom.value = Math.abs(
-          target.scrollHeight - target.clientHeight - target.scrollTop
-      ) < 2;
-      
-      // 保持原有的滚动事件传递
-      emit('scroll', {
-          scrollTop: target.scrollTop,
-          scrollHeight: target.scrollHeight
-      });
-  }
-  
-  const handleMiddleSectionScroll = (event) => {
-      const target = event.target;
-      middleSectionScrollTop.value = target.scrollTop;
-      
-      // 检查是否可滚动
-      isMiddleSectionScrollable.value = target.scrollHeight > target.clientHeight;
-      
-      // 检查是否滚动到底部
-      isMiddleSectionScrolledToBottom.value = Math.abs(
-          target.scrollHeight - target.clientHeight - target.scrollTop
-      ) < 2;
-      
-      // 保持原有的滚动事件传递
-      emit('scroll', {
-          scrollTop: target.scrollTop,
-          scrollHeight: target.scrollHeight
-      });
-  }
-  
-  // 初始化滚动检测
-  const initScrollDetection = () => {
-      // 为两个区域设置初始滚动状态
-      if (featureSection.value) {
-          const featureContent = featureSection.value.querySelector('.analysis-content');
-          if (featureContent) {
-              isFeatureSectionScrollable.value = featureContent.scrollHeight > featureContent.clientHeight;
-              isFeatureSectionScrolledToBottom.value = Math.abs(
-                  featureContent.scrollHeight - featureContent.clientHeight - featureContent.scrollTop
-              ) < 2;
-          }
-      }
-      
-      if (middleSection.value) {
-          const middleContent = middleSection.value.querySelector('.analysis-content');
-          if (middleContent) {
-              isMiddleSectionScrollable.value = middleContent.scrollHeight > middleContent.clientHeight;
-              isMiddleSectionScrolledToBottom.value = Math.abs(
-                  middleContent.scrollHeight - middleContent.clientHeight - middleContent.scrollTop
-              ) < 2;
-          }
-      }
-  }
-  
-  // 兼容旧的handleScroll函数，实际不再使用
-  const handleScroll = (event) => {
-      emit('scroll', {
-          scrollTop: event.target.scrollTop,
-          scrollHeight: event.target.scrollHeight
-      })
-  }
-  
-  // 监听 SVG 内容更新事件
-  const handleSvgUpdate = () => {
-      fetchDataAndGenerateAnalysis();
-  };
-  
-  // 监听内容变化，重新检测滚动状态
-  watch([analysisContent, selectedNodesAnalysis], () => {
-      // 在下一个渲染周期检测滚动状态
-      setTimeout(() => {
-          initScrollDetection();
-      }, 0);
-  });
-  
-  onMounted(() => {
-      window.addEventListener('svg-content-updated', handleSvgUpdate);
-      // 初始获取数据
-      fetchDataAndGenerateAnalysis();
-      
-      // 初始化滚动检测
-      setTimeout(() => {
-          initScrollDetection();
-      }, 100); // 给足够时间让内容渲染
-  });
-  
-  onUnmounted(() => {
-      window.removeEventListener('svg-content-updated', handleSvgUpdate);
-  });
-  
-  function showNodeList(node) {
-      try {
-          // 获取当前卡片中的SVG元素
-          const cardContainer = document.querySelector(`[data-node-id="${node.id}"] .card-svg-container svg`);
-          if (!cardContainer) {
-              console.error('找不到卡片SVG容器');
-              return;
-          }
-  
-          // 获取所有不透明度为1的元素（即高亮元素）
-          const highlightedElements = Array.from(cardContainer.querySelectorAll('*'))
-              .filter(el => el.style.opacity === '1' && el.id && el.tagName !== 'svg' && el.tagName !== 'g');
-  
-          // 收集这些元素的ID
-          const nodeNames = highlightedElements.map(el => el.id);
-  
-          store.commit('UPDATE_SELECTED_NODES', { nodeIds: nodeNames, group: null });
-      } catch (error) {
-          console.error('获取高亮节点时出错:', error);
-      }
-  }
-  
-  // 添加获取特征类型优先级的函数
-  function getFeatureTypePriority(featureName) {
-      // 颜色特征优先级最高
-      if (featureName.includes('color')) {
-          return 3;
-      }
-      // 位置特征优先级次之
-      else if (featureName.includes('position')) {
-          return 2;
-      }
-      // 其他特征优先级最低
-      else {
-          return 1;
-      }
-  }
-  </script>
-  
-  <style scoped>
-  .analysis-words-container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(200, 200, 200, 0.2);
-    padding: 14px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    height: 400px;
-    display: flex;
-    flex-direction: column;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    position: relative;
-  }
-  
-  /* 修改标题样式，移除绝对定位 */
-  .title {
-    font-size: 1.8em;
-    font-weight: bold;
-    color: #1d1d1f;
-    letter-spacing: -0.01em;
-    opacity: 0.8;
-  }
-  
-  .sections-container {
-    display: flex;
-    gap: 16px;
-    height: 100%;
-    overflow: hidden;
-  }
-  
-  .section-wrapper {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    position: relative; /* 添加相对定位 */
-  }
-  
-  /* 新增：section-header样式 */
-  .section-header {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 30px;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f5f5f7;
-    border-right: 1px solid rgba(200, 200, 200, 0.5);
-    border-top-left-radius: 12px;
-    border-bottom-left-radius: 12px;
-  }
-  
-  /* 新增：aside-label样式 */
-  .aside-label {
-    transform: rotate(-90deg);
-    white-space: nowrap;
-    font-size: 1.4em;
-    font-weight: 700;
-    color: #333;
-    letter-spacing: 0.04em;
-    width: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .section {
-    flex: 1;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(200, 200, 200, 0.2);
-    padding: 12px 12px 12px 40px; /* 增加左侧padding，为旋转的侧边栏留出空间 */
-    overflow: hidden; /* 修改为hidden，防止与阴影遮盖器冲突 */
-    position: relative; /* 添加相对定位，作为阴影遮盖器的参考 */
-  }
-  
-  .feature-section {
-    min-width: 0;
-  }
-  
-  .analysis-content {
-    height: 100%;
-    overflow: auto;
-    position: relative;
-    z-index: 1; /* 确保内容在阴影之上可以滚动 */
-  }
-  
-  /* 添加滚动阴影遮盖器样式 */
-  .shadow-overlay {
-    position: absolute;
-    left: 30px; /* 修改左侧位置，避免覆盖侧边栏 */
-    right: 0;
-    height: 20px;
-    pointer-events: none; /* 允许鼠标事件穿透到下面的内容 */
-    z-index: 2;
+        } else {
+            analysis += `<div class="no-selection">No usable features found</div>`;
+        }
+        
+        analysis += '</div>';
+        analysis += '</div>';
+        
+        return analysis;
+    }
+};
+
+// 获取数据并生成分析
+const fetchDataAndGenerateAnalysis = async () => {
+    try {
+        // 先确保获取最新的normalized数据
+        await fetchNormalizedData();
+        
+        if (!normalData.value || !Array.isArray(normalData.value) || normalData.value.length === 0) {
+            // 如果还没有数据，尝试从API获取
+            const response = await axios.get(NORMAL_DATA_URL);
+
+            if (!response.data) {
+                throw new Error('Problems with network response');
+            }
+
+            // 保存原始特征数据
+            normalData.value = response.data;
+        }
+
+        // 获取选中节点的ID
+        const selectedNodeIds = store.state.selectedNodes.nodeIds || [];
+
+        // 生成全局分析文字 - 不需要传入选中节点ID
+        analysisContent.value = generateAnalysis(normalData.value, false);
+        
+        // 生成选中节点的分析 - 传入选中节点ID
+        if (selectedNodeIds && selectedNodeIds.length > 0) {
+            selectedNodesAnalysis.value = generateAnalysis(normalData.value, true, selectedNodeIds);
+        } else {
+            selectedNodesAnalysis.value = '<div class="no-selection">Please select a node to view the analysis...</div>';
+        }
+    } catch (error) {
+        console.error('Failed to get data:', error);
+        analysisContent.value = 'Analysis generation failed, please try again';
+        selectedNodesAnalysis.value = 'Analysis generation failed, please try again';
+    }
+};
+
+// 修改监听逻辑，当选中节点变化时重新获取数据
+watch(() => store.state.selectedNodes.nodeIds, () => {
+    fetchDataAndGenerateAnalysis();
+}, { deep: true, immediate: true });
+
+// 更新滚动处理函数，分别处理两个滚动区域
+const handleFeatureSectionScroll = (event) => {
+    const target = event.target;
+    featureSectionScrollTop.value = target.scrollTop;
+    
+    // 检查是否可滚动
+    isFeatureSectionScrollable.value = target.scrollHeight > target.clientHeight;
+    
+    // 检查是否滚动到底部
+    isFeatureSectionScrolledToBottom.value = Math.abs(
+        target.scrollHeight - target.clientHeight - target.scrollTop
+    ) < 2;
+    
+    // 保持原有的滚动事件传递
+    emit('scroll', {
+        scrollTop: target.scrollTop,
+        scrollHeight: target.scrollHeight
+    });
+}
+
+const handleMiddleSectionScroll = (event) => {
+    const target = event.target;
+    middleSectionScrollTop.value = target.scrollTop;
+    
+    // 检查是否可滚动
+    isMiddleSectionScrollable.value = target.scrollHeight > target.clientHeight;
+    
+    // 检查是否滚动到底部
+    isMiddleSectionScrolledToBottom.value = Math.abs(
+        target.scrollHeight - target.clientHeight - target.scrollTop
+    ) < 2;
+    
+    // 保持原有的滚动事件传递
+    emit('scroll', {
+        scrollTop: target.scrollTop,
+        scrollHeight: target.scrollHeight
+    });
+}
+
+// 初始化滚动检测
+const initScrollDetection = () => {
+    // 为两个区域设置初始滚动状态
+    if (featureSection.value) {
+        const featureContent = featureSection.value.querySelector('.analysis-content');
+        if (featureContent) {
+            isFeatureSectionScrollable.value = featureContent.scrollHeight > featureContent.clientHeight;
+            isFeatureSectionScrolledToBottom.value = Math.abs(
+                featureContent.scrollHeight - featureContent.clientHeight - featureContent.scrollTop
+            ) < 2;
+        }
+    }
+    
+    if (middleSection.value) {
+        const middleContent = middleSection.value.querySelector('.analysis-content');
+        if (middleContent) {
+            isMiddleSectionScrollable.value = middleContent.scrollHeight > middleContent.clientHeight;
+            isMiddleSectionScrolledToBottom.value = Math.abs(
+                middleContent.scrollHeight - middleContent.clientHeight - middleContent.scrollTop
+            ) < 2;
+        }
+    }
+}
+
+// 兼容旧的handleScroll函数，实际不再使用
+const handleScroll = (event) => {
+    emit('scroll', {
+        scrollTop: event.target.scrollTop,
+        scrollHeight: event.target.scrollHeight
+    })
+}
+
+// 监听 SVG 内容更新事件
+const handleSvgUpdate = () => {
+    fetchDataAndGenerateAnalysis();
+};
+
+// 监听内容变化，重新检测滚动状态
+watch([analysisContent, selectedNodesAnalysis], () => {
+    // 在下一个渲染周期检测滚动状态
+    setTimeout(() => {
+        initScrollDetection();
+    }, 0);
+});
+
+onMounted(() => {
+    window.addEventListener('svg-content-updated', handleSvgUpdate);
+    // 初始获取数据
+    fetchDataAndGenerateAnalysis();
+    
+    // 初始化滚动检测
+    setTimeout(() => {
+        initScrollDetection();
+    }, 100); // 给足够时间让内容渲染
+});
+
+onUnmounted(() => {
+    window.removeEventListener('svg-content-updated', handleSvgUpdate);
+});
+
+function showNodeList(node) {
+    try {
+        // 获取当前卡片中的SVG元素
+        const cardContainer = document.querySelector(`[data-node-id="${node.id}"] .card-svg-container svg`);
+        if (!cardContainer) {
+            console.error('找不到卡片SVG容器');
+            return;
+        }
+
+        // 获取所有不透明度为1的元素（即高亮元素）
+        const highlightedElements = Array.from(cardContainer.querySelectorAll('*'))
+            .filter(el => el.style.opacity === '1' && el.id && el.tagName !== 'svg' && el.tagName !== 'g');
+
+        // 收集这些元素的ID
+        const nodeNames = highlightedElements.map(el => el.id);
+
+        store.commit('UPDATE_SELECTED_NODES', { nodeIds: nodeNames, group: null });
+    } catch (error) {
+        console.error('获取高亮节点时出错:', error);
+    }
+}
+
+// 添加获取特征类型优先级的函数
+function getFeatureTypePriority(featureName) {
+    // 颜色特征优先级最高
+    if (featureName.includes('color')) {
+        return 3;
+    }
+    // 位置特征优先级次之
+    else if (featureName.includes('position')) {
+        return 2;
+    }
+    // 其他特征优先级最低
+    else {
+        return 1;
+    }
+}
+</script>
+
+<style scoped>
+.analysis-words-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(200, 200, 200, 0.2);
+  padding: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  position: relative;
+}
+
+/* 修改标题样式，移除绝对定位 */
+.title {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #1d1d1f;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
+}
+
+.sections-container {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.section-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative; /* 添加相对定位 */
+}
+
+/* 新增：section-header样式 */
+.section-header {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f7;
+  border-right: 1px solid rgba(200, 200, 200, 0.5);
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+/* 新增：aside-label样式 */
+.aside-label {
+  transform: rotate(-90deg);
+  white-space: nowrap;
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #333;
+  letter-spacing: 0.04em;
+  width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section {
+  flex: 1;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(200, 200, 200, 0.2);
+  padding: 12px 12px 12px 40px; /* 增加左侧padding，为旋转的侧边栏留出空间 */
+  overflow: hidden; /* 修改为hidden，防止与阴影遮盖器冲突 */
+  position: relative; /* 添加相对定位，作为阴影遮盖器的参考 */
+}
+
+.feature-section {
+  min-width: 0;
+}
+
+.analysis-content {
+  height: 100%;
+  overflow: auto;
+  position: relative;
+  z-index: 1; /* 确保内容在阴影之上可以滚动 */
+}
+
+/* 添加滚动阴影遮盖器样式 */
+.shadow-overlay {
+  position: absolute;
+  left: 30px; /* 修改左侧位置，避免覆盖侧边栏 */
+  right: 0;
+  height: 20px;
+  pointer-events: none; /* 允许鼠标事件穿透到下面的内容 */
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.shadow-overlay.top {
+  top: 0;
+  background: linear-gradient(to bottom, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(255, 255, 255, 0) 100%);
+  border-top-right-radius: 12px;
+}
+
+.shadow-overlay.bottom {
+  bottom: 0;
+  background: linear-gradient(to top, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(255, 255, 255, 0) 100%);
+  border-bottom-right-radius: 12px;
+}
+
+.shadow-overlay.active {
+  opacity: 1;
+}
+
+.analysis-header {
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding-bottom: 16px;
+  flex-shrink: 0;
+}
+
+:deep(.feature-tag) {
+  background-color: rgba(0, 122, 255, 0.08);
+  border: 1px solid rgba(0, 122, 255, 0.15);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin: 0 1px;
+  color: #007AFF;
+  font-size: 13px;
+  display: inline-block;
+  font-weight: 500;
+  letter-spacing: -0.016em;
+}
+
+:deep(.dimension-analysis) {
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+:deep(.dimension-analysis:last-child) {
+  margin-bottom: 0;
+}
+
+/* 右上角按钮样式 */
+.apple-button-corner {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 122, 255, 0.08);
+  border: 1px solid rgba(0, 122, 255, 0.1);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #007AFF;
+  z-index: 10;
+  overflow: visible;
+}
+
+.apple-button-corner:hover {
+  background: rgba(0, 122, 255, 0.12);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+}
+
+.apple-button-corner:active {
+  transform: scale(0.98);
+  background: rgba(0, 122, 255, 0.15);
+}
+
+.apple-button-corner:hover{
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* 添加遮罩层样式 */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  z-index: 998;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 抽屉基础样式 */
+.side-drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 60%;
+  height: 100vh;
+  background: #fff;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 抽屉打开状态 */
+.side-drawer.drawer-open {
+  right: 0;
+}
+
+/* 抽屉头部样式 */
+.drawer-header {
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.drawer-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #1d1d1f;
+  font-weight: 500;
+}
+
+/* 抽屉内容区域样式 */
+.drawer-body {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  height: calc(100vh - 70px);
+}
+
+/* 关闭按钮样式 */
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #86868b;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 1000;
+}
+
+.close-button:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1d1d1f;
+}
+
+@keyframes fadeIn {
+  from {
     opacity: 0;
-    transition: opacity 0.3s ease;
   }
-  
-  .shadow-overlay.top {
-    top: 0;
-    background: linear-gradient(to bottom, 
-      rgba(255, 255, 255, 0.8) 0%, 
-      rgba(255, 255, 255, 0) 100%);
-    border-top-right-radius: 12px;
-  }
-  
-  .shadow-overlay.bottom {
-    bottom: 0;
-    background: linear-gradient(to top, 
-      rgba(255, 255, 255, 0.8) 0%, 
-      rgba(255, 255, 255, 0) 100%);
-    border-bottom-right-radius: 12px;
-  }
-  
-  .shadow-overlay.active {
+  to {
     opacity: 1;
   }
-  
-  .analysis-header {
-    margin-bottom: 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    padding-bottom: 16px;
-    flex-shrink: 0;
-  }
-  
-  :deep(.feature-tag) {
-    background-color: rgba(0, 122, 255, 0.08);
-    border: 1px solid rgba(0, 122, 255, 0.15);
-    border-radius: 4px;
-    padding: 1px 6px;
-    margin: 0 1px;
-    color: #007AFF;
-    font-size: 13px;
-    display: inline-block;
-    font-weight: 500;
-    letter-spacing: -0.016em;
-  }
-  
-  :deep(.dimension-analysis) {
-    margin-bottom: 10px;
-    padding: 6px 10px;
-    border-radius: 6px;
-  }
-  
-  :deep(.dimension-analysis:last-child) {
-    margin-bottom: 0;
-  }
-  
-  /* 右上角按钮样式 */
-  .apple-button-corner {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(0, 122, 255, 0.08);
-    border: 1px solid rgba(0, 122, 255, 0.1);
-    border-radius: 8px;
-    width: 36px;
-    height: 36px;
-    padding: 0;
+}
+
+/* 移除旧的对话框相关样式 */
+.fullscreen-dialog,
+.dialog-overlay,
+.dialog-content {
+  display: none;
+}
+
+/* 箭头容器和动画样式 */
+.arrow-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.arrow-icon {
+  transition: transform 0.3s ease;
+}
+
+.apple-button-corner:hover .arrow-icon {
+  transform: rotate(180deg);
+}
+
+:deep(.feature-columns) {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: #007AFF;
-    z-index: 10;
-    overflow: visible;
-  }
-  
-  .apple-button-corner:hover {
-    background: rgba(0, 122, 255, 0.12);
-    transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
-  }
-  
-  .apple-button-corner:active {
-    transform: scale(0.98);
-    background: rgba(0, 122, 255, 0.15);
-  }
-  
-  .apple-button-corner:hover{
-    opacity: 1;
-    transform: translateX(0);
-  }
-  
-  /* 添加遮罩层样式 */
-  .drawer-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(2px);
-    z-index: 998;
-    animation: fadeIn 0.3s ease-out;
-  }
-  
-  /* 抽屉基础样式 */
-  .side-drawer {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 60%;
-    height: 100vh;
-    background: #fff;
-    z-index: 999;
+    gap: 24px;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+:deep(.feature-column) {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
-  }
-  
-  /* 抽屉打开状态 */
-  .side-drawer.drawer-open {
-    right: 0;
-  }
-  
-  /* 抽屉头部样式 */
-  .drawer-header {
-    padding: 16px 24px;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
+    gap: 8px;
+}
+
+:deep(.column-title) {
+    font-size: 16px;
+    font-weight: 600;
+    padding: 8px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    color: #333;
     position: sticky;
     top: 0;
-    z-index: 10;
-  }
-  
-  .drawer-header h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #1d1d1f;
-    font-weight: 500;
-  }
-  
-  /* 抽屉内容区域样式 */
-  .drawer-body {
-    flex: 1;
-    overflow: auto;
-    padding: 24px;
-    height: calc(100vh - 70px);
-  }
-  
-  /* 关闭按钮样式 */
-  .close-button {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: #86868b;
-    cursor: pointer;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 1;
+}
+
+:deep(.feature-item) {
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    z-index: 1000;
-  }
-  
-  .close-button:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: #1d1d1f;
-  }
-  
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-  
-  /* 移除旧的对话框相关样式 */
-  .fullscreen-dialog,
-  .dialog-overlay,
-  .dialog-content {
-    display: none;
-  }
-  
-  /* 箭头容器和动画样式 */
-  .arrow-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-  }
-  
-  .arrow-icon {
-    transition: transform 0.3s ease;
-  }
-  
-  .apple-button-corner:hover .arrow-icon {
-    transform: rotate(180deg);
-  }
-  
-  :deep(.feature-columns) {
-      display: flex;
-      gap: 24px;
-      max-height: 100%;
-      overflow-y: auto;
-  }
-  
-  :deep(.feature-column) {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-  }
-  
-  :deep(.column-title) {
-      font-size: 16px;
-      font-weight: 600;
-      padding: 8px;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-      color: #333;
-      position: sticky;
-      top: 0;
-      background: rgba(255, 255, 255, 0.9);
-      z-index: 1;
-  }
-  
-  :deep(.feature-item) {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 4px 8px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.6);
-  }
+    gap: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.6);
+}
   
   /* 为 All elements 部分的 Used visual effects 添加特殊的 feature-item 样式 */
   :deep(.feature-column.negative .feature-item),
   :deep(.feature-column.positive .feature-item) {
       padding: 2px 4px;
-  }
-  
-  :deep(.feature-influence) {
-      font-size: 13px;
-      font-weight: 500;
-      margin-left: auto;
-      white-space: nowrap;
-  }
-  
-  :deep(.star) {
-      display: inline-block;
-      margin: 0 1px;
-  }
-  
-  :deep(.star.filled) {
-      font-weight: bold;
-  }
-  
-  :deep(.star.empty) {
-      opacity: 0.5;
-  }
-  
-  :deep(.feature-tag) {
-      min-width: 80px;
-      text-align: center;
-      padding: 2px 8px;
-      border-radius: 4px;
-      border-width: 1px;
-      border-style: solid;
-  }
-  
-  :deep(.no-selection) {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: #86868b;
-      font-size: 14px;
-      font-style: italic;
-  }
-  
-  /* 添加自定义滚动条样式 */
-  .analysis-content::-webkit-scrollbar,
-  :deep(.feature-columns::-webkit-scrollbar) {
-      width: 6px;
-      height: 6px;
-  }
-  
-  .analysis-content::-webkit-scrollbar-track,
-  :deep(.feature-columns::-webkit-scrollbar-track) {
-      background: rgba(0, 0, 0, 0.03);
-      border-radius: 3px;
-  }
-  
-  .analysis-content::-webkit-scrollbar-thumb,
-  :deep(.feature-columns::-webkit-scrollbar-thumb) {
-      background: rgba(0, 0, 0, 0.15);
-      border-radius: 3px;
-      transition: background 0.3s;
-  }
-  
-  .analysis-content::-webkit-scrollbar-thumb:hover,
-  :deep(.feature-columns::-webkit-scrollbar-thumb:hover) {
-      background: rgba(0, 0, 0, 0.25);
-  }
-  
-  .section:hover .analysis-content::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-  }
-  
-  :deep(.feature-rank) {
-      font-size: 13px;
-      font-weight: 500;
-      margin-left: auto;
-      white-space: nowrap;
-  }
-  
-  :deep(.rank-tag) {
-      background-color: rgba(102, 102, 102, 0.08);
-      border: 1px solid rgba(102, 102, 102, 0.15);
-      border-radius: 4px;
-      padding: 1px 6px;
-      margin-left: 8px;
-      color: #666666;
-      font-size: 12px;
-      display: inline-block;
-      font-weight: 500;
-  }
-  
-  /* 添加高显著性提示的样式 */
-  :deep(.high-salience-notice) {
-      display: flex;
-      align-items: center;
-      background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(76, 175, 80, 0.15) 100%);
-      border: 1px solid rgba(76, 175, 80, 0.2);
-      border-radius: 12px;
-      padding: 16px;
-      margin: 12px 0;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      transition: all 0.3s ease;
-  }
-  
-  :deep(.high-salience-notice:hover) {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-  
-  :deep(.salience-icon) {
-      background-color: #4CAF50;
-      color: white;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      margin-right: 16px;
-      flex-shrink: 0;
-      box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
-  }
-  
-  :deep(.salience-content) {
-      flex: 1;
-  }
-  
-  :deep(.salience-title) {
-      font-size: 16px;
-      font-weight: 600;
-      color: #2E7D32;
-      margin-bottom: 4px;
-  }
-  
-  :deep(.salience-value) {
-      font-size: 24px;
-      font-weight: 700;
-      color: #4CAF50;
-      margin-bottom: 4px;
-  }
-  
-  :deep(.salience-description) {
-      font-size: 14px;
-      color: #555;
-      opacity: 0.9;
-  }
+}
+
+:deep(.feature-influence) {
+    font-size: 13px;
+    font-weight: 500;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+:deep(.star) {
+    display: inline-block;
+    margin: 0 1px;
+}
+
+:deep(.star.filled) {
+    font-weight: bold;
+}
+
+:deep(.star.empty) {
+    opacity: 0.5;
+}
+
+:deep(.feature-tag) {
+    min-width: 80px;
+    text-align: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-style: solid;
+}
+
+:deep(.no-selection) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #86868b;
+    font-size: 14px;
+    font-style: italic;
+}
+
+/* 添加自定义滚动条样式 */
+.analysis-content::-webkit-scrollbar,
+:deep(.feature-columns::-webkit-scrollbar) {
+    width: 6px;
+    height: 6px;
+}
+
+.analysis-content::-webkit-scrollbar-track,
+:deep(.feature-columns::-webkit-scrollbar-track) {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 3px;
+}
+
+.analysis-content::-webkit-scrollbar-thumb,
+:deep(.feature-columns::-webkit-scrollbar-thumb) {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+    transition: background 0.3s;
+}
+
+.analysis-content::-webkit-scrollbar-thumb:hover,
+:deep(.feature-columns::-webkit-scrollbar-thumb:hover) {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.section:hover .analysis-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+:deep(.feature-rank) {
+    font-size: 13px;
+    font-weight: 500;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+:deep(.rank-tag) {
+    background-color: rgba(102, 102, 102, 0.08);
+    border: 1px solid rgba(102, 102, 102, 0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 8px;
+    color: #666666;
+    font-size: 12px;
+    display: inline-block;
+    font-weight: 500;
+}
+
+/* 添加高显著性提示的样式 */
+:deep(.high-salience-notice) {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(76, 175, 80, 0.15) 100%);
+    border: 1px solid rgba(76, 175, 80, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+:deep(.high-salience-notice:hover) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+:deep(.salience-icon) {
+    background-color: #4CAF50;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-right: 16px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+}
+
+:deep(.salience-content) {
+    flex: 1;
+}
+
+:deep(.salience-title) {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2E7D32;
+    margin-bottom: 4px;
+}
+
+:deep(.salience-value) {
+    font-size: 24px;
+    font-weight: 700;
+    color: #4CAF50;
+    margin-bottom: 4px;
+}
+
+:deep(.salience-description) {
+    font-size: 14px;
+    color: #555;
+    opacity: 0.9;
+}
   
   /* 添加 All elements 部分的 Used visual effects 下的 tag 特殊样式 */
   :deep(.all-elements-tag) {
@@ -1272,4 +1736,91 @@
   :deep(.single-column-wrapper .feature-item) {
       height: 46px;
   }
-  </style>
+  
+  /* 三区块布局样式 */
+  .suggestions-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+  }
+  
+  .suggestions-add-section {
+    flex: 1;
+    min-width: 200px;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    padding: 10px;
+    background-color: #fafafa;
+  }
+  
+  .suggestions-right-section {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .suggestions-reset-section,
+  .suggestions-stroke-section {
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    padding: 10px;
+    background-color: #fafafa;
+    flex: 1;
+  }
+  
+  .suggestions-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .predicted-salience {
+    font-size: 12px;
+    color: #777;
+    margin-left: 5px;
+  }
+  
+  .no-selection {
+    color: #999;
+    font-style: italic;
+    font-size: 13px;
+    padding: 5px 0;
+  }
+  
+  /* 高显著性通知样式 */
+  .high-salience-notice {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #f0f9f0;
+    border-radius: 6px;
+    border: 1px solid #d0e9d0;
+  }
+  
+  .salience-icon {
+    font-size: 18px;
+    color: #4caf50;
+    margin-right: 10px;
+  }
+  
+  .salience-content {
+    flex: 1;
+  }
+  
+  .salience-title {
+    font-weight: 600;
+    color: #2e7d32;
+    margin-bottom: 2px;
+  }
+  
+  .salience-value {
+    color: #4caf50;
+    font-size: 14px;
+}
+</style>

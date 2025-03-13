@@ -330,9 +330,11 @@ const analyzeSvg = () => {
         .catch(error => {
             console.error('Error in the analysis process:', error);
         })
-        .finally(() => {
+        .finally(async () => {
             analyzing.value = false;
             eventSource.close();
+            // 先获取最新的normalized数据，然后再计算视觉显著性
+            await fetchNormalizedData();
             // 计算视觉显著性
             calculateVisualSalience();
         });
@@ -388,9 +390,12 @@ const fetchProcessedSvg = () => {
 
             processedSvgContent.value = svgElement.outerHTML;
 
-            return nextTick(() => {
-                setupSvgInteractions();
-                addZoomEffectToSvg();
+            // 获取最新的normalized数据
+            return fetchNormalizedData().then(() => {
+                return nextTick(() => {
+                    setupSvgInteractions();
+                    addZoomEffectToSvg();
+                });
             });
         })
         .catch(error => {
@@ -625,12 +630,12 @@ const handleSvgClick = (event) => {
 };
 
 // 监听选中节点的变化
-watch(selectedNodeIds, () => {
-    nextTick(() => {
-        updateNodeOpacity();
-        // 当选中节点变化时计算视觉显著性
-        calculateVisualSalience();
-    });
+watch(selectedNodeIds, async () => {
+    await nextTick();
+    updateNodeOpacity();
+    // 当选中节点变化时，先获取最新的normalized数据，再计算视觉显著性
+    await fetchNormalizedData();
+    calculateVisualSalience();
 });
 
 // 监听selectedElements的变化
