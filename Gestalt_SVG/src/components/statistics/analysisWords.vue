@@ -1176,7 +1176,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         
         // 最不突出的特征 - Available Features
         analysis += '<div class="feature-column positive">';
-          analysis += `<div class="column-title all-elements-title">Available effects <span class="rank-tag">rank</span></div>`;
+          analysis += `<div class="column-title all-elements-title">Available effects</div>`;
         
         if (finalLeastDistinctive.length > 0) {
               // 创建一个包装容器用于单列布局

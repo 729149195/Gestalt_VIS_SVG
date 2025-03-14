@@ -6,11 +6,25 @@
         <div class="section-header">
           <div class="left-tools">
             <span class="title">SVG Editor</span>
+          </div>
+          
+          <!-- 声明式模式下的文件上传器 -->
+          <div class="header-upload-container" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleDrop">
+            <input type="file" ref="fileInput" accept=".svg" class="hidden-input" @change="handleFileChange">
+            <div class="header-upload-content">
+              <v-icon size="24" class="upload-icon">mdi-cloud-upload-outline</v-icon>
+              <span class="upload-text">Select SVG file here</span>
+              <div v-if="file" class="file-info">
+                <span class="file-name">{{ file.name }}</span>
+                <span class="file-size">{{ formatFileSize(file.size) }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="side-mode-switch">
             <el-button type="primary" @click="generateAndUpload" class="larger-text-btn">Upload</el-button>
             <el-button @click="copyCode" class="larger-text-btn">Copy</el-button>
             <el-button @click="downloadSvg" class="larger-text-btn">Download</el-button>
-          </div>
-          <div class="side-mode-switch">
             <el-select v-model="selectedSyntax" placeholder="选择生成式语法" class="syntax-selector" popper-class="syntax-selector-dropdown">
               <el-option v-for="item in syntaxOptions" :key="item.value" :label="item.label" :value="item.value">
                 <div class="syntax-option">
@@ -29,6 +43,13 @@
             </div>
           </div>
         </div>
+        
+        <!-- 进度提示卡片 - 声明式模式 -->
+        <div v-if="analyzing" class="progress-card">
+          <div class="progress-label">{{ currentStep }}</div>
+          <el-progress :percentage="progress" :show-text="false" class="upload-progress"></el-progress>
+        </div>
+        
         <div class="code-editor">
           <div class="editor-wrapper" ref="declarativeEditorContainer"></div>
         </div>
@@ -39,11 +60,25 @@
         <div class="section-header">
           <div class="left-tools">
             <span class="title">SVG Editor</span>
+          </div>
+          
+          <!-- SVG模式下的文件上传器 -->
+          <div class="header-upload-container" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleDrop">
+            <input type="file" ref="fileInput" accept=".svg" class="hidden-input" @change="handleFileChange">
+            <div class="header-upload-content">
+              <v-icon size="24" class="upload-icon">mdi-cloud-upload-outline</v-icon>
+              <span class="upload-text">Select SVG file here</span>
+              <div v-if="file" class="file-info">
+                <span class="file-name">{{ file.name }}</span>
+                <span class="file-size">{{ formatFileSize(file.size) }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="side-mode-switch">
             <el-button type="primary" @click="generateAndUpload" class="larger-text-btn">Upload</el-button>
             <el-button @click="copyCode" class="larger-text-btn">Copy</el-button>
             <el-button @click="downloadSvg" class="larger-text-btn">Download</el-button>
-          </div>
-          <div class="side-mode-switch">
             <div class="mode-tabs">
               <div class="mode-tab larger-text-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
                 Syntax
@@ -54,6 +89,13 @@
             </div>
           </div>
         </div>
+        
+        <!-- 进度提示卡片 - SVG模式 -->
+        <div v-if="analyzing" class="progress-card">
+          <div class="progress-label">{{ currentStep }}</div>
+          <el-progress :percentage="progress" :show-text="false" class="upload-progress"></el-progress>
+        </div>
+        
         <div class="code-editor">
           <div class="editor-wrapper" ref="svgEditorContainer"></div>
         </div>
@@ -72,6 +114,8 @@ import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import { useStore } from 'vuex'
+import { Upload } from '@element-plus/icons-vue'
+import axios from 'axios'
 
 // 配置 Monaco Editor 的 Web Worker
 window.MonacoEnvironment = {
@@ -106,6 +150,13 @@ let svgEditor = null
 // 从Vuex获取selectedNodes
 const store = useStore()
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds)
+
+// 文件上传相关变量
+const file = ref(null)
+const fileInput = ref(null)
+const analyzing = ref(false)
+const progress = ref(0)
+const currentStep = ref('')
 
 // Monaco Editor配置
 const declarativeEditorOptions = {
@@ -1262,6 +1313,143 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
     }
   }
 }, { immediate: true });
+
+// 处理文件输入触发
+const triggerFileInput = () => {
+  fileInput.value.click()
+}
+
+// 处理文件选择变化
+const handleFileChange = (event) => {
+  const selectedFile = event.target.files[0]
+  if (selectedFile) {
+    file.value = selectedFile
+    uploadFile()
+  }
+}
+
+// 处理文件拖放
+const handleDrop = (event) => {
+  event.preventDefault()
+  const droppedFile = event.dataTransfer.files[0]
+  if (droppedFile && droppedFile.type === 'image/svg+xml') {
+    file.value = droppedFile
+    uploadFile()
+  }
+}
+
+// 格式化文件大小
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// 上传文件
+const uploadFile = () => {
+  if (!file.value) return
+  const formData = new FormData()
+
+  // 创建新的File对象，添加uploaded_前缀
+  const newFile = new File([file.value], `uploaded_${file.value.name}`, { type: file.value.type })
+  formData.append('file', newFile)
+
+  // 显示分析状态
+  analyzing.value = true
+  progress.value = 0
+  currentStep.value = '准备处理上传文件...'
+
+  // 清除选中的节点
+  store.dispatch('clearSelectedNodes')
+
+  // 连接进度事件源
+  const eventSource = new EventSource('http://127.0.0.1:5000/progress')
+  
+  // 监听进度更新
+  eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data)
+    progress.value = data.progress
+    currentStep.value = data.step
+  }
+
+  // 监听错误
+  eventSource.onerror = () => {
+    eventSource.close()
+  }
+
+  // 上传文件
+  axios.post('http://127.0.0.1:5000/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+    .then(response => {
+      if (response.data.success) {
+        // 获取SVG内容
+        const svgContent = response.data.svgContent || ''
+        
+        // 自动切换到SVG模式
+        isDeclarativeMode.value = false
+        
+        // 使用Promise确保SVG内容加载完成
+        const loadSvgContent = async () => {
+          // 更新SVG代码
+          svgCode.value = svgContent
+          
+          // 等待DOM更新
+          await nextTick()
+          
+          // 确保SVG编辑器存在并设置内容
+          if (svgEditor) {
+            // 设置编辑器内容
+            svgEditor.setValue(svgContent)
+            
+            // 等待编辑器内容设置完成
+            await new Promise(resolve => {
+              // 检查编辑器内容是否已加载
+              const checkContent = () => {
+                const editorContent = svgEditor.getValue()
+                if (editorContent && editorContent.trim() !== '') {
+                  resolve()
+                } else {
+                  // 如果内容还未加载，继续等待
+                  setTimeout(checkContent, 100)
+                }
+              }
+              
+              // 开始检查
+              checkContent()
+            })
+            
+            // 等待额外的时间确保内容完全渲染
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
+            // 执行upload操作
+            generateAndUpload()
+          }
+        }
+        
+        // 执行加载过程
+        loadSvgContent().catch(error => {
+          console.error('Error loading SVG content:', error)
+        })
+        
+        // 触发事件通知其他组件
+        window.dispatchEvent(new CustomEvent('svg-content-updated', {
+          detail: { filename: newFile.name }
+        }))
+      }
+    })
+    .catch(error => {
+      console.error('Error in upload process:', error)
+    })
+    .finally(() => {
+      analyzing.value = false
+      eventSource.close()
+    })
+}
 </script>
 
 <style scoped>
@@ -1559,7 +1747,7 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 
 .title {
   margin: 0 0 0 10px;
-  font-size: 1.5em;
+  font-size: 1.8em;
   font-weight: bold;
   color: #1d1d1f;
   letter-spacing: -0.01em;
@@ -1867,5 +2055,400 @@ watch(selectedNodeIds, (newSelectedNodeIds) => {
 :global(.monaco-editor .mtk3),
 :global(.monaco-editor .mtk10) {
   color: #7D5A32 !important; /* 中等棕色 */
+}
+
+/* 文件上传区样式 */
+.upload-section {
+  margin-bottom: 16px;
+  width: 100%;
+  position: relative;
+}
+
+.mac-upload-zone {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+}
+
+.mac-upload-container {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px dashed rgba(144, 95, 41, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.mac-upload-container:hover {
+  border-color: rgba(144, 95, 41, 0.6);
+  background: rgba(255, 255, 255, 0.98);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.hidden-input {
+  display: none;
+}
+
+.upload-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.upload-icon {
+  color: #aa7134;
+  font-size: 24px;
+}
+
+.upload-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.primary-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.file-info {
+  margin-left: auto;
+  padding: 4px 8px;
+  background: rgba(144, 95, 41, 0.1);
+  border-radius: 4px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #aa7134;
+  margin-right: 8px;
+}
+
+.file-size {
+  color: #86868b;
+  font-size: 12px;
+}
+
+.progress-card {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(200, 200, 200, 0.3);
+  padding: 12px 16px;
+  margin-top: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.progress-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d1d1f;
+  margin-bottom: 8px;
+}
+
+.upload-progress {
+  height: 6px;
+}
+
+/* 添加SVG编辑器和上传区的并排布局 */
+.svg-editor-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.code-editor {
+  flex: 3;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+  display: flex;
+  min-height: 0;
+  background-color: #ffffff;
+  margin: 0;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 调整上传区样式以适应右侧 */
+.upload-section {
+  flex: 1;
+  min-width: 250px;
+  padding: 12px;
+  border-left: 1px solid rgba(200, 200, 200, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.mac-upload-container {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px dashed rgba(144, 95, 41, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  height: 100%;
+}
+
+.mac-upload-container:hover {
+  border-color: rgba(144, 95, 41, 0.6);
+  background: rgba(255, 255, 255, 0.98);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.upload-icon {
+  color: #aa7134;
+  font-size: 32px;
+}
+
+.upload-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.primary-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1d1d1f;
+}
+
+.file-info {
+  width: 100%;
+  padding: 8px;
+  background: rgba(144, 95, 41, 0.1);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #aa7134;
+  word-break: break-all;
+}
+
+.file-size {
+  color: #86868b;
+  font-size: 12px;
+}
+
+.progress-card {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(200, 200, 200, 0.3);
+  padding: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .svg-editor-container {
+    flex-direction: column;
+  }
+  
+  .upload-section {
+    flex: none;
+    min-height: 200px;
+    border-left: none;
+    border-top: 1px solid rgba(200, 200, 200, 0.3);
+  }
+}
+
+/* 标题栏中间的上传区样式 */
+.header-upload-container {
+  flex: 1;
+  margin: 0 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px dashed rgba(144, 95, 41, 0.3);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  min-width: 250px;
+}
+
+.header-upload-container:hover {
+  border-color: rgba(144, 95, 41, 0.6);
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.header-upload-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.upload-icon {
+  color: #aa7134;
+}
+
+.upload-text {
+  color: #1d1d1f;
+  font-size: 1.3em;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.file-info {
+  padding: 3px 8px;
+  background: rgba(144, 95, 41, 0.1);
+  border-radius: 4px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+}
+
+.file-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #aa7134;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  color: #86868b;
+  font-size: 12px;
+}
+
+.progress-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(200, 200, 200, 0.3);
+  padding: 12px 16px;
+  margin: 8px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.progress-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d1d1f;
+  margin-bottom: 8px;
+}
+
+.upload-progress {
+  height: 6px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px 12px 0 0;
+  flex-shrink: 0;
+  padding: 12px;
+  border-bottom: 1px solid rgba(200, 200, 200, 0.3);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.left-tools {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .section-header {
+    flex-wrap: wrap;
+  }
+  
+  .left-tools {
+    width: auto;
+  }
+  
+  .header-upload-container {
+    order: 1;
+    margin: 8px 0;
+    width: 100%;
+    flex: none;
+  }
+  
+  .side-mode-switch {
+    order: 2;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-upload-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  
+  .file-info {
+    margin-left: 0;
+    width: 100%;
+  }
 }
 </style>

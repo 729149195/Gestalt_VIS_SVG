@@ -1,20 +1,7 @@
 <template>
     <v-card class="fill-height mac-style-card">
-        <div class="mac-upload-zone">
-            <div class="mac-upload-container" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleDrop">
-                <input type="file" ref="fileInput" accept=".svg" class="hidden-input" @change="handleFileChange">
-                <div class="upload-content">
-                    <v-icon size="32" class="upload-icon">mdi-cloud-upload-outline</v-icon>
-                    <div class="upload-text">
-                        <span class="primary-text">Drag or select a SVG file here</span>
-                    </div>
-                    <div v-if="file" class="file-info">
-                        <span class="file-name">{{ file.name }}</span>
-                        <span class="file-size">{{ formatFileSize(file.size) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <span class="title">Visual Elements Preview</span>
+        
         <div v-if="analyzing" class="progress-card">
             <div class="progress-label">{{ currentStep }}</div>
             <v-progress-linear :model-value="progress" color="primary" height="6" rounded :striped="false" bg-color="rgba(144, 95, 41, 0.1)">
@@ -59,24 +46,20 @@
                     </v-list-item>
                 </v-list>
             </div>
-            <div class="button-container">
+            <div class="button-container" :class="{ 'collapsed-buttons': !isListExpanded }">
                 <v-btn class="mac-style-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
                     {{ analyzing ? 'Simulating...' : 'Simulate perception' }}
                 </v-btn>
+                <div  class="visual-salience-indicator" @click="showSalienceDetail">
+                    <span class="salience-label">Salience</span>
+                    <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
+                    <span class="salience-value" v-else>--.---</span>
+                </div>
             </div>
         </div>
 
         <div v-if="file" class="svg-container mac-style-container" ref="svgContainer">
             <div v-html="processedSvgContent"></div>
-        </div>
-        
-        <!-- 添加视觉显著性指示器容器 -->
-        <div v-if="file" class="salience-container">
-            <!-- 添加视觉显著性指示器 -->
-            <div v-if="selectedNodeIds.length > 0" class="visual-salience-indicator" @click="showSalienceDetail">
-                <span class="salience-label">Visual salience</span>
-                <span class="salience-value">{{ (visualSalience * 100).toFixed(3) }}</span>
-            </div>
         </div>
         
         <!-- 按钮容器 -->
@@ -148,29 +131,6 @@ const visualSalience = ref(0);
 const emit = defineEmits(['file-uploaded'])
 
 // 添加新的方法
-const fileInput = ref(null);
-
-const triggerFileInput = () => {
-    fileInput.value.click();
-};
-
-const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile) {
-        file.value = selectedFile;
-        uploadFile();
-    }
-};
-
-const handleDrop = (event) => {
-    event.preventDefault();
-    const droppedFile = event.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type === 'image/svg+xml') {
-        file.value = droppedFile;
-        uploadFile();
-    }
-};
-
 const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -248,61 +208,6 @@ const handleSvgUploaded = async (event) => {
     } catch (error) {
         console.error('Error handling upload event:', error)
     }
-}
-
-const uploadFile = () => {
-    if (!file.value) return
-    const formData = new FormData()
-
-    // 创建新的File对象，添加uploaded_前缀
-    const newFile = new File([file.value], `uploaded_${file.value.name}`, { type: file.value.type })
-    formData.append('file', newFile)
-
-    // 清除选中的节点
-    clearSelectedNodes();
-
-    // 先上传文件
-    axios.post('http://127.0.0.1:5000/upload', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    })
-        .then(response => {
-            if (response.data.success) {
-                // 触发事件通知CodeToSvg组件
-                window.dispatchEvent(new CustomEvent('svg-content-updated', {
-                    detail: { filename: newFile.name }
-                }))
-                // 立即获取并显示SVG内容
-                return fetchProcessedSvg()
-            }
-        })
-        .then(() => {
-            // 获取可见元素列表
-            return axios.post('http://127.0.0.1:5000/get_visible_elements', {
-                filename: newFile.name
-            })
-        })
-        .then(async response => {
-            if (response.data.success) {
-                visibleElements.value = response.data.elements;
-                selectedElements.value = response.data.elements.map(el => el.id);
-
-                // 获取normalized数据
-                await fetchNormalizedData();
-
-                // 确保DOM更新后再设置交互
-                await nextTick();
-                setupSvgInteractions();
-                updateNodeOpacity();
-
-                // 不再在这里触发file-uploaded事件
-                // 而是等待用户点击分析按钮后触发
-            }
-        })
-        .catch(error => {
-            console.error('Error in upload process:', error)
-        })
 }
 
 // 添加进度相关的响应式变量
@@ -618,14 +523,32 @@ const updateNodeOpacity = () => {
 
             // 基础透明度 - 根据元素类型是否被选中
             let opacity = selectedElements.value.includes(nodeType) ? 1 : 0;
+            let isHighlighted = true; // 默认为高亮状态
 
             // 如果有选中的节点，无论是否路径选择模式下，都使用相同的选中逻辑
             if (opacity === 1 && selectedNodeIds.value.length > 0) {
-                opacity = selectedNodeIds.value.includes(nodeId) ? 1 : 0.1;
+                isHighlighted = selectedNodeIds.value.includes(nodeId);
+                opacity = isHighlighted ? 1 : 0.1;
             }
 
+            // 设置透明度
             node.style.opacity = opacity;
-            node.style.transition = 'opacity 0.3s ease';
+            node.style.transition = 'opacity 0.3s ease, filter 0.3s ease';
+            
+            // 保存原始颜色属性
+            if (!node.dataset.originalFill && node.getAttribute('fill')) {
+                node.dataset.originalFill = node.getAttribute('fill');
+            }
+            if (!node.dataset.originalStroke && node.getAttribute('stroke')) {
+                node.dataset.originalStroke = node.getAttribute('stroke');
+            }
+            
+            // 对于非高亮元素，应用灰色滤镜
+            if (!isHighlighted && opacity > 0) {
+                node.style.filter = 'grayscale(100%)';
+            } else {
+                node.style.filter = 'none';
+            }
         });
     } catch (error) {
         console.error('Error updating node transparency:', error);
@@ -744,11 +667,13 @@ const showOriginalSvg = () => {
             if (!node.tagName || node.tagName.toLowerCase() === 'svg' ||
                 node.tagName.toLowerCase() === 'g') return;
                 
-            // 保存当前透明度以便恢复
+            // 保存当前透明度和滤镜以便恢复
             node.dataset.originalOpacity = node.style.opacity;
+            node.dataset.originalFilter = node.style.filter;
             
-            // 设置所有元素为完全不透明
+            // 设置所有元素为完全不透明且移除滤镜
             node.style.opacity = 1;
+            node.style.filter = 'none';
         });
     } catch (error) {
         console.error('Error showing original SVG:', error);
@@ -773,17 +698,20 @@ const showOnlySelectedElements = () => {
             if (!node.tagName || node.tagName.toLowerCase() === 'svg' ||
                 node.tagName.toLowerCase() === 'g') return;
                 
-            // 保存当前透明度以便恢复
+            // 保存当前透明度和滤镜以便恢复
             node.dataset.originalOpacity = node.style.opacity;
+            node.dataset.originalFilter = node.style.filter;
             
             // 获取节点ID
             const nodeId = node.id;
             
-            // 如果节点ID在选中列表中，设置为完全不透明，否则设置为完全透明
+            // 如果节点ID在选中列表中，设置为完全不透明且移除滤镜，否则设置为完全透明
             if (selectedNodeIds.value.includes(nodeId)) {
                 node.style.opacity = 1;
+                node.style.filter = 'none';
             } else {
                 node.style.opacity = 0;
+                // 不需要设置滤镜，因为透明度为0时不可见
             }
         });
     } catch (error) {
@@ -808,10 +736,15 @@ const restoreFilteredSvg = () => {
             if (!node.tagName || node.tagName.toLowerCase() === 'svg' ||
                 node.tagName.toLowerCase() === 'g') return;
                 
-            // 恢复到之前保存的透明度
+            // 恢复到之前保存的透明度和滤镜
             if (node.dataset.originalOpacity !== undefined) {
                 node.style.opacity = node.dataset.originalOpacity;
                 delete node.dataset.originalOpacity;
+            }
+            
+            if (node.dataset.originalFilter !== undefined) {
+                node.style.filter = node.dataset.originalFilter;
+                delete node.dataset.originalFilter;
             }
         });
     } catch (error) {
@@ -1066,8 +999,9 @@ const showSalienceDetail = () => {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 添加对折叠状态的样式 */
 .mac-style-selector.collapsed {
-    max-height: 120px;
+    padding-bottom: 16px; /* 与展开状态保持一致的底部内边距 */
 }
 
 .selector-header {
@@ -1134,13 +1068,16 @@ const showSalienceDetail = () => {
     opacity: 1;
     max-height: 200px;
     overflow-y: auto;
+    margin-bottom: 0; /* 确保内容区域不会产生额外的下边距 */
 }
 
 .selector-content.hidden {
     opacity: 0;
     max-height: 0;
-    margin: -10px;
+    margin: 0; /* 修改为0，而不是负值，避免创建负空间 */
+    padding: 0; /* 确保内边距也为0 */
     overflow: hidden;
+    margin-bottom: 0; /* 确保在折叠状态下没有下边距 */
 }
 
 .mac-style-title {
@@ -1176,11 +1113,11 @@ const showSalienceDetail = () => {
     font-size: 1.2em;
     color: white;
     font-weight: 500;
+    height: 55px;
     letter-spacing: 0.3px;
     box-shadow: 0 2px 8px rgba(144, 95, 41, 0.2);
     transition: all 0.3s ease;
     text-transform: none;
-    height: 36px;
     flex: 1;
 }
 
@@ -1223,7 +1160,6 @@ const showSalienceDetail = () => {
     letter-spacing: 0.3px;
     transition: all 0.3s ease;
     text-transform: none;
-    height: 36px;
     margin-left: 8px;
     min-width: 50px;
 }
@@ -1262,95 +1198,14 @@ const showSalienceDetail = () => {
     cursor: pointer;
 }
 
+/* 移除文件上传相关样式 */
 .mac-upload-zone {
-    flex: 0 0 auto;
-    position: relative;
-    margin-top: 16px;
-    margin-left: 16px;
-    margin-right: 16px;
-    z-index: 10;
-}
-
-.mac-upload-container {
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px dashed rgba(144, 95, 41, 0.3);
-    border-radius: 8px;
-    padding: 8px 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.mac-upload-container:hover {
-    border-color: rgba(144, 95, 41, 0.6);
-    background: rgba(255, 255, 255, 0.98);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.hidden-input {
     display: none;
-}
-
-.upload-content {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-}
-
-.upload-icon {
-    color: #aa7134;
-    opacity: 0.8;
-    transition: all 0.3s ease;
-    font-size: 30px !important;
-}
-
-.upload-text {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0px;
-}
-
-.primary-text {
-    font-size: 1.5em;
-    font-weight: 500;
-    color: #1d1d1f;
-}
-
-
-.file-info {
-    margin-left: auto;
-    padding: 4px 8px;
-    background: rgba(144, 95, 41, 0.1);
-    border-radius: 4px;
-    display: flex;
-    gap: 6px;
-    align-items: center;
-}
-
-.file-name {
-    font-size: 16px;
-    font-weight: 500;
-    color: #aa7134;
-    margin-right: 8px;
-}
-
-.file-size {
-    color: #86868b;
-    font-size: 14px;
 }
 
 .progress-card {
     position: absolute;
-    top: 90px;
-    /* 调整位置，确保在上传区域下方 */
+    top: 16px; /* 调整位置，现在不再有上传区域 */
     left: 16px;
     right: 16px;
     z-index: 100;
@@ -1405,8 +1260,10 @@ const showSalienceDetail = () => {
     display: flex;
     gap: 8px;
     align-items: center;
-    margin-top: 16px;
+    margin-top: 6px;
+    justify-content: space-between;
 }
+
 
 .selection-mode-container {
     display: flex;
@@ -1439,7 +1296,6 @@ const showSalienceDetail = () => {
     transition: all 0.3s ease;
     text-transform: none;
     height: 28px;
-    min-width: 36px;
     padding: 0 6px !important;
 }
 
@@ -1521,29 +1377,16 @@ const showSalienceDetail = () => {
     font-weight: 700;
 }
 
-/* 添加视觉显著性指示器容器样式 */
-.salience-container {
-    position: relative;
-    width: 100%;
-    height: 90px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    margin-top: 20px;
-    padding-bottom: 20px;
-}
-
-/* 添加视觉显著性指示器样式 */
+/* 修改视觉显著性指示器样式，使其与按钮高度统一 */
 .visual-salience-indicator {
     position: relative;
-    font-size: 2.5em;
+    font-size: 1.8em;
     font-weight: 800;
     color: #905F29;
     padding: 4px 12px;
     border-radius: 8px;
     background: rgba(144, 95, 41, 0.08);
     border: 1px solid rgba(144, 95, 41, 0.2);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1551,27 +1394,13 @@ const showSalienceDetail = () => {
     min-width: 120px;
     text-align: center;
     z-index: 90;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.visual-salience-indicator:hover {
-    transform: translateY(-2px);
-    background: rgba(144, 95, 41, 0.12);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.visual-salience-indicator:active {
-    transform: translateY(0);
-    background: rgba(144, 95, 41, 0.15);
-}
 
 .salience-label {
-    font-size: 0.6em;
-    line-height: 1.2;
+    font-size: 0.7em;
+    line-height: 1;
     margin-bottom: 2px;
     white-space: nowrap;
     opacity: 0.8;
@@ -1580,12 +1409,17 @@ const showSalienceDetail = () => {
 }
 
 .salience-value {
-    font-size: 0.7em;
-    line-height: 1.2;
+    font-size: 0.9em;
+    line-height: 1;
     color: #b4793a;
     white-space: nowrap;
     width: 100%;
     font-weight: 700;
+}
+
+/* 移除原来的salience-container样式 */
+.salience-container {
+    display: none;
 }
 
 /* 添加按钮容器样式 */
@@ -1638,5 +1472,14 @@ const showSalienceDetail = () => {
     color: #1d1d1f;
     font-size: 1.1em;
     font-weight: 700;
+}
+
+.title {
+  margin: 10px 10px 0 20px;
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #1d1d1f;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
 }
 </style>
