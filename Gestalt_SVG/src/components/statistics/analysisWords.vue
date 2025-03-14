@@ -899,7 +899,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     analysis += `
                         <div class="feature-item">
                                   <span class="feature-tag all-elements-tag">
-                                      ${feature.name}<span class="predicted-salience">${feature.formattedSalience}%</span>
+                                      ${feature.name}<span class="predicted-salience">${feature.formattedSalience}</span>
                             </span>
                         </div>
                     `;
@@ -936,7 +936,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   analysis += `
                       <div class="feature-item">
                           <span class="feature-tag all-elements-tag">
-                              ${resetFeature.name}<span class="predicted-salience">${formattedSalience}%</span>
+                              ${resetFeature.name}<span class="predicted-salience">${formattedSalience}</span>
                           </span>
                       </div>
                   `;
@@ -971,7 +971,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     <div class="salience-icon">✓</div>
                     <div class="salience-content">
                         <div class="salience-title">Visual salience is already good</div>
-                        <div class="salience-value">${visualSalienceValue.value.toFixed(1)}%</div>
+                        <div class="salience-value">${visualSalienceValue.value.toFixed(1)}</div>
                     </div>
                 </div>
             `;
@@ -1543,18 +1543,18 @@ function getFeatureTypePriority(featureName) {
 }
 
 :deep(.value-count) {
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  margin-left: 4px;
-  background-color: rgba(0, 0, 0, 0.05);
+  font-size: 16px; /* 从14px增加到16px */
+  font-weight: 700; /* 从600增加到700 */
+  color: #333; /* 加深颜色 */
+  margin-left: 6px;
+  background-color: rgba(0, 0, 0, 0.08);
   border-radius: 3px;
-  padding: 0px 4px;
+  padding: 0px 5px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 16px;
-  height: 16px;
+  min-width: 20px; /* 略微增加最小宽度 */
+  height: 20px; /* 略微增加高度 */
 }
 
 :deep(.dimension-analysis) {
@@ -1752,12 +1752,12 @@ function getFeatureTypePriority(featureName) {
 :deep(.feature-item) {
     display: flex;
     align-items: center;
-    padding: 1px 2px; /* 进一步减少内边距 */
+    padding: 3px 4px; /* 增加内边距 */
     border-radius: 4px;
-    margin-bottom: 2px; /* 进一步减少底部间距 */
+    margin-bottom: 4px; /* 增加底部间距 */
     background: transparent;
     transition: all 0.2s ease;
-    min-height: 28px; /* 确保最小高度 */
+    min-height: 32px; /* 增加最小高度 */
 }
   
   :deep(.feature-item:hover) {
@@ -1767,7 +1767,7 @@ function getFeatureTypePriority(featureName) {
   /* 为 All elements 部分的 Used visual effects 添加特殊的 feature-item 样式 */
   :deep(.feature-column.negative .feature-item),
   :deep(.feature-column.positive .feature-item) {
-      padding: 2px 4px;
+      padding: 3px 6px; /* 增加内边距 */
 }
 
 :deep(.feature-influence) {
@@ -1797,6 +1797,8 @@ function getFeatureTypePriority(featureName) {
     border-radius: 4px;
     border-width: 1px;
     border-style: solid;
+    font-size: 14px; /* 增加字体大小 */
+    font-weight: 500; /* 增加字重 */
 }
 
 :deep(.no-selection) {
@@ -1918,10 +1920,10 @@ function getFeatureTypePriority(featureName) {
   :deep(.all-elements-tag) {
       width: 100%;
       min-width: 100%;
-      font-size: 13px; /* 进一步减小字体大小 */
+      font-size: 16px; /* 从15px增加到16px */
       padding: 0 6px; /* 进一步减少内边距 */
       text-align: left; /* 左对齐文本 */
-      font-weight: 400; /* 减轻字重 */
+      font-weight: 600; /* 从500增加到600 */
       box-sizing: border-box;
       display: flex;
       align-items: center;
@@ -1934,7 +1936,7 @@ function getFeatureTypePriority(featureName) {
       border-radius: 4px; /* 减小圆角 */
       letter-spacing: 0;
       background-color: rgba(0, 0, 0, 0.04); /* 添加轻微的背景色 */
-      color: #666666;
+      color: #333; /* 加深字体颜色，提高对比度 */
   }
   
   :deep(.all-elements-tag:hover) {
@@ -1970,7 +1972,7 @@ function getFeatureTypePriority(featureName) {
   
   :deep(.two-column-item) {
       width: calc(50% - 6px);
-      height: 46px;
+      height: 52px; /* 增加高度 */
       flex: 1;
   }
   
@@ -2042,14 +2044,14 @@ function getFeatureTypePriority(featureName) {
   
   /* 调整标题样式 */
   :deep(.suggestions-section-title) {
-    font-size: 13px;
-    font-weight: 600;
-    color: #444;
-    margin-bottom: 2px;
-    padding-bottom: 1px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    font-size: 15px; /* 从13px增加到15px */
+    font-weight: 700; /* 从600增加到700 */
+    color: #703710; /* 颜色稍微加深 */
+    margin-bottom: 4px; /* 增加底部边距 */
+    padding-bottom: 2px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06); /* 加深底部边框 */
     position: relative;
-    line-height: 1.2;
+    line-height: 1.3; /* 增加行高 */
   }
   
   :deep(.feature-item) {
@@ -2060,15 +2062,33 @@ function getFeatureTypePriority(featureName) {
   :deep(.suggestions-add-section .feature-item),
   :deep(.suggestions-reset-section .feature-item),
   :deep(.suggestions-stroke-section .feature-item) {
-    height: 28px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+  }
+  
+  :deep(.suggestions-add-section .feature-tag),
+  :deep(.suggestions-reset-section .feature-tag),
+  :deep(.suggestions-stroke-section .feature-tag) {
+    height: 36px; 
+    display: flex;
+    align-items: center;
+    width: 100%;
+    font-size: 16px; /* 增加字体大小 */
+    font-weight: 600; /* 增加粗细 */
+    color: #333; /* 加深颜色，提高可读性 */
   }
   
   :deep(.no-selection) {
-    font-size: 11px;
-    color: #999;
-    height: 28px;
+    font-size: 15px; /* 从11px增加到15px */
+    color: #555; /* 从#999加深到#555 */
+    height: 36px; /* 从28px增加到36px，与其他元素保持一致 */
     display: flex;
     align-items: center;
+    font-weight: 500; /* 增加字体粗细 */
+    padding-left: 6px; /* 增加左侧内边距 */
+    background-color: rgba(0, 0, 0, 0.02); /* 添加轻微背景色增加可见度 */
+    border-radius: 4px;
   }
   
   /* 分隔线样式 */
@@ -2096,10 +2116,10 @@ function getFeatureTypePriority(featureName) {
   
   /* 预估显著性样式 */
   :deep(.predicted-salience) {
-    font-size: 13px;
-    font-weight: 600;
-    color: #8B4513;
-    margin-left: 4px;
+    font-size: 16px; /* 从15px增加到16px */
+    font-weight: 700; /* 从600增加到700 */
+    color: #703710; 
+    margin-left: 8px; /* 增加间距 */
     display: inline-block;
     text-align: right;
   }
