@@ -1,6 +1,6 @@
 <template>
     <div class="statistics-container">
-        <span class="title">{{ title }} Bbox</span>
+        <span class="title">Bbox-{{ title }}</span>
         <div ref="chartContainer" class="chart-container"></div>
     </div>
 </template>
@@ -293,7 +293,7 @@ const renderChart = (dataset) => {
 
 <style scoped>
 .title {
-  top: 1.2em;
+  top: 1.3em;
   left: 16px;
   font-size: 14px;
   font-weight: bold;

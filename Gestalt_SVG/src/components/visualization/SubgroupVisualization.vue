@@ -1,7 +1,7 @@
 <template>
     <div class="force-graph-container">
         <div class="title-container">
-            <span class="title">Graphical Patterns List</span>
+            <span class="title">Patterns List</span>
         </div>
         <div class="core-view-container">
             <CoreSubgroupVisualization />

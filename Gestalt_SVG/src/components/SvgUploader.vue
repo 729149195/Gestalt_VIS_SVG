@@ -48,7 +48,7 @@
             </div>
             <div class="button-container" :class="{ 'collapsed-buttons': !isListExpanded }">
                 <v-btn class="mac-style-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
-                    {{ analyzing ? 'Simulating...' : 'Simulate perception' }}
+                    {{ analyzing ? 'Simulating...' : 'Submit elements scope' }}
                 </v-btn>
                 <div  class="visual-salience-indicator" @click="showSalienceDetail">
                     <span class="salience-label">Salience</span>
@@ -1110,9 +1110,9 @@ const showSalienceDetail = () => {
 .mac-style-button {
     background: #aa7134 !important;
     border-radius: 8px;
-    font-size: 1.2em;
+    font-size: 1.4em;
     color: white;
-    font-weight: 500;
+    font-weight: bold;
     height: 55px;
     letter-spacing: 0.3px;
     box-shadow: 0 2px 8px rgba(144, 95, 41, 0.2);

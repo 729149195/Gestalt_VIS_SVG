@@ -1,13 +1,13 @@
 <template>
   <div class="analysis-words-container">
     <!-- 修改按钮图标为更合适的展开图标 -->
-    <button class="apple-button-corner" @click="showDrawer = true">
+    <!-- <button class="apple-button-corner" @click="showDrawer = true">
       <div class="arrow-wrapper">
         <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </div>
-    </button>
+    </button> -->
     
     <!-- 保持大标题在顶部 -->
     <div class="title">Assessment of Visual effects</div>
@@ -40,7 +40,7 @@
     </div>
     
     <!-- 使用 Teleport 将抽屉传送到 body -->
-    <Teleport to="body">
+    <!-- <Teleport to="body">
       <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
       <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
         <button class="close-button" @click="showDrawer = false">×</button>
@@ -48,7 +48,7 @@
           <maxstic :key="componentKey" />
         </div>
       </div>
-    </Teleport>
+    </Teleport> -->
   </div>
 </template>
 
@@ -88,19 +88,19 @@ const fetchNormalizedData = async () => {
 const featureNameMap = {
     'tag': 'shape',
     'opacity': 'opacity',
-      'fill_h_cos': 'fill h',
-      'fill_h_sin': 'fill h',
-      'fill_s_n': 'fill s',
-      'fill_l_n': 'fill l',
-      'stroke_h_cos': 'stroke h',
-      'stroke_h_sin': 'stroke h',
-      'stroke_s_n': 'stroke s',
-      'stroke_l_n': 'stroke l',
+      'fill_h_cos': 'fill hue',
+      'fill_h_sin': 'fill hue',
+      'fill_s_n': 'fill saturation',
+      'fill_l_n': 'fill lightness',
+      'stroke_h_cos': 'stroke hue',
+      'stroke_h_sin': 'stroke hue',
+      'stroke_s_n': 'stroke saturation',
+      'stroke_l_n': 'stroke lightness',
     'stroke_width': 'stroke width',
-      'bbox_left_n': 'left',
-      'bbox_right_n': 'right',
-      'bbox_top_n': 'top',
-      'bbox_bottom_n': 'bottom',
+      'bbox_left_n': 'Bbox left',
+      'bbox_right_n': 'Bbox right',
+      'bbox_top_n': 'Bbox top',
+      'bbox_bottom_n': 'Bbox bottom',
     'bbox_mds_1': 'position',
     'bbox_mds_2': 'position',
       'bbox_width_n': 'width',
@@ -113,7 +113,7 @@ const featureNameMap = {
     ['bbox_width_n', 'bbox_height_n', 'bbox_fill_area'], // width, height, area
     ['bbox_width_n', 'bbox_left_n', 'bbox_right_n'], // width, left, right
     ['bbox_height_n', 'bbox_bottom_n', 'bbox_top_n'], // height, bottom, top
-    ['opacity', 'fill_h_cos', 'fill_h_sin', 'fill_s_n', 'fill_l_n'], // opacity, fill_h, fill_s, fill_l
+    ['opacity', 'fill_h_cos', 'fill_h_sin', 'fill_s_n', 'fill_l_n'], // opacity, fill_hue, fill_saturation, fill_lightness
     ['opacity', 'stroke_h_cos', 'stroke_h_sin', 'stroke_s_n', 'stroke_l_n'] // opacity, stroke_h, stroke_s, stroke_l
   ];
   
@@ -852,7 +852,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   resetFeature = processedFeatures[0];
               }
               
-              // 显示 Add 区域的特征，排除Reset特征
+              // 显示 Add 区域的特征（左侧区域）
               analysis += `<div class="suggestions-add-section">`;
               analysis += `<div class="suggestions-section-title">Add</div>`;
               
@@ -887,8 +887,8 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                       featuresWithSalience.slice(0, 5).forEach(feature => {
                     analysis += `
                         <div class="feature-item">
-                                  <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                                      ${feature.name} <span class="predicted-salience">${feature.formattedSalience}%</span>
+                                  <span class="feature-tag all-elements-tag">
+                                      ${feature.name}<span class="predicted-salience">${feature.formattedSalience}%</span>
                             </span>
                         </div>
                     `;
@@ -900,10 +900,12 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   analysis += `<div class="no-selection">No suitable features found</div>`;
               }
               
-              analysis += `</div>`;
+              analysis += `</div>`; // 关闭左侧区域
+              
+              // 创建右侧容器，包含Reset和Stroke两个区域
+              analysis += `<div class="suggestions-right-section">`;
               
               // 2. Reset 区域 - 右上
-              analysis += `<div class="suggestions-right-section">`;
               analysis += `<div class="suggestions-reset-section">`;
               analysis += `<div class="suggestions-section-title">Reset</div>`;
               
@@ -922,8 +924,8 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   
                   analysis += `
                       <div class="feature-item">
-                          <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                              ${resetFeature.name} <span class="predicted-salience">${formattedSalience}%</span>
+                          <span class="feature-tag all-elements-tag">
+                              ${resetFeature.name}<span class="predicted-salience">${formattedSalience}%</span>
                           </span>
                       </div>
                   `;
@@ -931,7 +933,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   analysis += `<div class="no-selection">No reset feature found</div>`;
               }
               
-              analysis += `</div>`;
+              analysis += `</div>`; // 关闭Reset区域
               
               // 3. Stroke 区域 - 右下
               analysis += `<div class="suggestions-stroke-section">`;
@@ -940,14 +942,15 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               // 添加固定文本
                     analysis += `
                         <div class="feature-item">
-                      <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                          Add a  box
+                      <span class="feature-tag all-elements-tag">
+                          Add a box
                             </span>
                         </div>
                     `;
               
-              analysis += `</div>`;
-              analysis += `</div>`; // 关闭 suggestions-right-section
+              analysis += `</div>`; // 关闭Stroke区域
+              
+              analysis += `</div>`; // 关闭右侧容器
               
               analysis += `</div>`; // 关闭 suggestions-container
             } else {
@@ -1724,11 +1727,18 @@ function getFeatureTypePriority(featureName) {
 :deep(.feature-item) {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.6);
+    gap: 6px; /* 进一步减少内部间距 */
+    padding: 1px 2px; /* 进一步减少内边距 */
+    border-radius: 4px;
+    margin-bottom: 2px; /* 进一步减少底部间距 */
+    background: transparent;
+    transition: all 0.2s ease;
+    min-height: 28px; /* 确保最小高度 */
 }
+  
+  :deep(.feature-item:hover) {
+      background-color: rgba(0, 0, 0, 0.02);
+  }
   
   /* 为 All elements 部分的 Used visual effects 添加特殊的 feature-item 样式 */
   :deep(.feature-column.negative .feature-item),
@@ -1884,30 +1894,30 @@ function getFeatureTypePriority(featureName) {
   :deep(.all-elements-tag) {
       width: 100%;
       min-width: 100%;
-      font-size: 16px;
-      padding: 0 15px;
-      text-align: center;
-      font-weight: 500;
+      font-size: 13px; /* 进一步减小字体大小 */
+      padding: 0 6px; /* 进一步减少内边距 */
+      text-align: left; /* 左对齐文本 */
+      font-weight: 400; /* 减轻字重 */
       box-sizing: border-box;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between; /* 文本和百分比分两端 */
       margin: 0;
       transition: all 0.2s ease;
-      border-width: 1px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      border-width: 0;
+      box-shadow: none;
       height: 100%;
-      border-radius: 8px;
-      letter-spacing: 0.02em;
-      background-color: #f5f5f5;
+      border-radius: 4px; /* 减小圆角 */
+      letter-spacing: 0;
+      background-color: rgba(0, 0, 0, 0.04); /* 添加轻微的背景色 */
+      color: #666666;
   }
   
   :deep(.all-elements-tag:hover) {
-      background-color: #ebebeb !important;
+      background-color: rgba(0, 0, 0, 0.03) !important;
       transform: translateY(-1px);
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+      box-shadow: none;
       color: #333 !important;
-      border-color: #55555540 !important;
   }
   
   /* 添加 All elements 部分的 Used visual effects 标题样式 */
@@ -1954,121 +1964,124 @@ function getFeatureTypePriority(featureName) {
   }
   
   /* 三区块布局样式 */
-  .suggestions-container {
+  :deep(.suggestions-container) {
     display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-top: 10px;
+    flex-direction: row;
+    gap: 10px; /* 进一步减少间距 */
+    margin-top: 3px;
+    width: 100%;
+    min-height: 110px; /* 进一步减小高度 */
   }
   
-  .suggestions-add-section {
+  /* 缩小两侧区域的间距 */
+  :deep(.suggestions-add-section) {
     flex: 1;
-    min-width: 200px;
-    border: 1px solid #eaeaea;
-    border-radius: 6px;
-    padding: 10px;
-    background-color: #fafafa;
-  }
-  
-  .suggestions-right-section {
-    flex: 1;
-    min-width: 200px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .suggestions-reset-section,
-  .suggestions-stroke-section {
-    border: 1px solid #eaeaea;
-    border-radius: 6px;
-    padding: 10px;
-    background-color: #fafafa;
-    flex: 1;
-  }
-  
-  .suggestions-section-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .predicted-salience {
-    font-size: 12px;
-    color: #777;
-    margin-left: 5px;
-  }
-  
-  .no-selection {
-    color: #999;
-    font-style: italic;
-    font-size: 13px;
-    padding: 5px 0;
-  }
-  
-  /* 高显著性通知样式 */
-  .high-salience-notice {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    background-color: #f5f0e6;
-    border-radius: 6px;
-    border: 1px solid #e0d0b8;
-  }
-  
-  .salience-icon {
-    font-size: 18px;
-    color: #905F29;
-    margin-right: 10px;
-  }
-  
-  .salience-content {
-    flex: 1;
-  }
-  
-  .salience-title {
-    font-weight: 600;
-    color: #6D4A20;
-    margin-bottom: 2px;
-  }
-  
-  .salience-value {
-    color: #905F29;
-    font-size: 14px;
-}
-
-  /* 优化suggestions区域中标签的高度和显著性值的样式 */
-  :deep(.suggestions-container .feature-item) {
-    height: 46px;
-  }
-  
-  :deep(.suggestions-container .feature-tag.all-elements-tag) {
+    min-width: 48%;
+    max-width: 50%;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    background-color: transparent;
     height: 100%;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 15px;
+    flex-direction: column;
+    overflow-y: auto;
   }
   
-  :deep(.predicted-salience) {
-    font-size: 14px;
+  :deep(.suggestions-reset-section),
+  :deep(.suggestions-stroke-section) {
+    flex: 1; /* 平均分配空间 */
+    min-height: 45px; /* 进一步减小最小高度 */
+    border: none;
+    border-radius: 0;
+    padding: 0 0 0 2px; /* 进一步减小内边距 */
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  :deep(.suggestions-right-section) {
+    flex: 1;
+    min-width: 48%;
+    max-width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* 进一步减少区域间隔 */
+    height: 100%;
+    position: relative;
+    padding-left: 3px;
+  }
+  
+  :deep(.suggestions-right-section::before) {
+    background-color: rgba(0, 0, 0, 0.03); /* 更淡的分隔线 */
+  }
+  
+  /* 调整标题样式 */
+  :deep(.suggestions-section-title) {
+    font-size: 13px;
     font-weight: 600;
-    background: linear-gradient(135deg, #905F29 0%, #6D4A20 100%);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    margin-left: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: #444;
+    margin-bottom: 2px;
+    padding-bottom: 1px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    position: relative;
+    line-height: 1.2;
+  }
+  
+  :deep(.feature-item) {
+    min-height: 26px;
+    margin-bottom: 1px;
+  }
+  
+  :deep(.suggestions-add-section .feature-item),
+  :deep(.suggestions-reset-section .feature-item),
+  :deep(.suggestions-stroke-section .feature-item) {
+    height: 28px;
+  }
+  
+  :deep(.no-selection) {
+    font-size: 11px;
+    color: #999;
+    height: 28px;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* 分隔线样式 */
+  :deep(.suggestions-right-section::before) {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+  
+  /* 标题指示器 */
+  :deep(.suggestions-section-title::before) {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 20px;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.08);
+    border-radius: 0;
+  }
+  
+  /* 预估显著性样式 */
+  :deep(.predicted-salience) {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8B4513;
+    margin-left: 4px;
     display: inline-block;
-    min-width: 45px;
-    text-align: center;
+    text-align: right;
   }
   
   :deep(.feature-tag .predicted-salience) {
     position: relative;
     top: -1px;
-}
+  }
 </style>
