@@ -509,13 +509,15 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             values: [],
             selectedValues: [],
             unselectedValues: [],
-              featureIndices: featureGroups[displayName].indices,
-              featureKeys: featureGroups[displayName].keys,
+            featureIndices: featureGroups[displayName].indices,
+            featureKeys: featureGroups[displayName].keys,
             hasNonZeroValues: false,          // 添加标记，记录该特征是否存在非零值
             hasNonZeroSelectedValues: false,  // 添加标记，记录选中元素中该特征是否存在非零值
-              hasNonZeroUnselectedValues: false, // 添加标记，记录未选中元素中该特征是否存在非零值
-              variance: 0,                      // 添加方差，用于衡量多样性
-              meanDifference: 0                 // 添加均值差异，用于衡量选中与未选中的差异
+            hasNonZeroUnselectedValues: false, // 添加标记，记录未选中元素中该特征是否存在非零值
+            variance: 0,                      // 添加方差，用于衡量多样性
+            meanDifference: 0,                // 添加均值差异，用于衡量选中与未选中的差异
+            uniqueValues: new Set(),          // 添加集合，用于统计所有元素中的唯一值数量
+            uniqueSelectedValues: new Set()   // 添加集合，用于统计选中元素中的唯一值数量
         };
     });
     
@@ -544,6 +546,9 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 // 添加到所有值数组
                 featureStats[displayName].values.push(value);
                 
+                // 收集唯一值 - 以固定精度存储防止浮点误差
+                featureStats[displayName].uniqueValues.add(value.toFixed(4));
+                
                 // 检查是否有非零值
                 if (value > 0) {
                     featureStats[displayName].hasNonZeroValues = true;
@@ -552,6 +557,8 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 // 根据是否选中添加到相应数组
                 if (isSelected) {
                     featureStats[displayName].selectedValues.push(value);
+                    // 收集选中元素的唯一值
+                    featureStats[displayName].uniqueSelectedValues.add(value.toFixed(4));
                     // 检查选中元素中是否有非零值
                     if (value > 0) {
                         featureStats[displayName].hasNonZeroSelectedValues = true;
@@ -593,6 +600,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         // 添加特征类型优先级，用于相同星级时的排序
         feature.typePriority = getFeatureTypePriority(displayName);
         
+        // 计算唯一值数量
+        feature.uniqueValueCount = feature.uniqueValues.size;
+        feature.uniqueSelectedValueCount = feature.uniqueSelectedValues.size;
+        
         // 如果是选中节点分析，还需要计算选中和未选中之间的差异
         if (isSelectedNodes && feature.selectedValues.length > 0 && feature.unselectedValues.length > 0) {
             const selectedMean = feature.selectedValues.reduce((sum, val) => sum + val, 0) / feature.selectedValues.length;
@@ -602,7 +613,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             feature.unselectedMean = unselectedMean;
             
             // 计算选中和未选中之间的差异
-              feature.meanDifference = Math.abs(selectedMean - unselectedMean);
+            feature.meanDifference = Math.abs(selectedMean - unselectedMean);
             
             // 计算差异的显著性 - 简化版本，降低显著性阈值
             // 使用简化方法，用差异值直接作为重要程度的指标
@@ -747,7 +758,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 analysis += `
                       <div class="feature-item two-column-item">
                           <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                              ${processedSignificantFeatures[i].name}
+                              ${processedSignificantFeatures[i].name}<span class="value-count">${processedSignificantFeatures[i].uniqueSelectedValueCount}</span>
                         </span>
                     </div>
                 `;
@@ -757,7 +768,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                       analysis += `
                           <div class="feature-item two-column-item">
                               <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                                  ${processedSignificantFeatures[i + 1].name}
+                                  ${processedSignificantFeatures[i + 1].name}<span class="value-count">${processedSignificantFeatures[i + 1].uniqueSelectedValueCount}</span>
                               </span>
                           </div>
                       `;
@@ -1151,7 +1162,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 analysis += `
                       <div class="feature-item two-column-item">
                           <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                              ${finalDiverseFeatures[i].name}
+                              ${finalDiverseFeatures[i].name}<span class="value-count">${finalDiverseFeatures[i].uniqueValueCount}</span>
                         </span>
                     </div>
                 `;
@@ -1161,7 +1172,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                       analysis += `
                           <div class="feature-item two-column-item">
                               <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                                  ${finalDiverseFeatures[i + 1].name}
+                                  ${finalDiverseFeatures[i + 1].name}<span class="value-count">${finalDiverseFeatures[i + 1].uniqueValueCount}</span>
                               </span>
                           </div>
                       `;
@@ -1531,6 +1542,21 @@ function getFeatureTypePriority(featureName) {
   letter-spacing: -0.016em;
 }
 
+:deep(.value-count) {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin-left: 4px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+  padding: 0px 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+}
+
 :deep(.dimension-analysis) {
   margin-bottom: 10px;
   padding: 6px 10px;
@@ -1700,7 +1726,7 @@ function getFeatureTypePriority(featureName) {
 
 :deep(.feature-columns) {
     display: flex;
-    gap: 24px;
+    gap: 6px;
     max-height: 100%;
     overflow-y: auto;
 }
@@ -1709,7 +1735,6 @@ function getFeatureTypePriority(featureName) {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
 }
 
 :deep(.column-title) {
@@ -1727,7 +1752,6 @@ function getFeatureTypePriority(featureName) {
 :deep(.feature-item) {
     display: flex;
     align-items: center;
-    gap: 6px; /* 进一步减少内部间距 */
     padding: 1px 2px; /* 进一步减少内边距 */
     border-radius: 4px;
     margin-bottom: 2px; /* 进一步减少底部间距 */
