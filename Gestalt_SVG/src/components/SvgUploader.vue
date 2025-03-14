@@ -79,15 +79,45 @@
             </div>
         </div>
         
-        <!-- 查看原图按钮 -->
-        <div v-if="file" class="preview-original-button" 
-            @mousedown="showOriginalSvg" 
-            @mouseup="restoreFilteredSvg"
-            @mouseleave="restoreFilteredSvg"
-            @touchstart.prevent="showOriginalSvg"
-            @touchend.prevent="restoreFilteredSvg">
-            <v-icon class="eye-icon">mdi-eye</v-icon>
-            <span class="preview-text">View original view</span>
+        <!-- 按钮容器 -->
+        <div v-if="file" class="buttons-container">
+            <!-- 添加只显示选中元素的按钮 -->
+            <v-tooltip
+                location="top"
+                text="Show only the selected elements (hide others)"
+            >
+                <template v-slot:activator="{ props }">
+                    <div class="selected-elements-button" 
+                        v-bind="props"
+                        @mousedown="showOnlySelectedElements" 
+                        @mouseup="restoreFilteredSvg"
+                        @mouseleave="restoreFilteredSvg"
+                        @touchstart.prevent="showOnlySelectedElements"
+                        @touchend.prevent="restoreFilteredSvg">
+                        <v-icon class="filter-icon">mdi-filter-outline</v-icon>
+                        <span class="selected-text">The selected elements</span>
+                    </div>
+                </template>
+            </v-tooltip>
+            
+            <!-- 查看原图按钮 -->
+            <v-tooltip
+                location="top"
+                text="Show the original chart without any filtering"
+            >
+                <template v-slot:activator="{ props }">
+                    <div class="preview-original-button" 
+                        v-bind="props"
+                        @mousedown="showOriginalSvg" 
+                        @mouseup="restoreFilteredSvg"
+                        @mouseleave="restoreFilteredSvg"
+                        @touchstart.prevent="showOriginalSvg"
+                        @touchend.prevent="restoreFilteredSvg">
+                        <v-icon class="eye-icon">mdi-eye</v-icon>
+                        <span class="preview-text">The orignal chart</span>
+                    </div>
+                </template>
+            </v-tooltip>
         </div>
     </v-card>
 </template>
@@ -722,6 +752,42 @@ const showOriginalSvg = () => {
         });
     } catch (error) {
         console.error('Error showing original SVG:', error);
+    }
+};
+
+// 添加只显示选中元素的功能
+const showOnlySelectedElements = () => {
+    if (!file.value || isShowingOriginal.value) return;
+    
+    isShowingOriginal.value = true;
+    
+    if (!svgContainer.value) return;
+    
+    const svg = svgContainer.value.querySelector('svg');
+    if (!svg) return;
+    
+    try {
+        const allNodes = svg.querySelectorAll('*');
+        
+        allNodes.forEach(node => {
+            if (!node.tagName || node.tagName.toLowerCase() === 'svg' ||
+                node.tagName.toLowerCase() === 'g') return;
+                
+            // 保存当前透明度以便恢复
+            node.dataset.originalOpacity = node.style.opacity;
+            
+            // 获取节点ID
+            const nodeId = node.id;
+            
+            // 如果节点ID在选中列表中，设置为完全不透明，否则设置为完全透明
+            if (selectedNodeIds.value.includes(nodeId)) {
+                node.style.opacity = 1;
+            } else {
+                node.style.opacity = 0;
+            }
+        });
+    } catch (error) {
+        console.error('Error showing only selected elements:', error);
     }
 };
 
@@ -1415,9 +1481,6 @@ const showSalienceDetail = () => {
 
 /* 修改查看原图按钮样式 */
 .preview-original-button {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
     background: rgba(255, 255, 255, 0.9);
     border-radius: 8px;
     padding: 8px 12px;
@@ -1429,7 +1492,6 @@ const showSalienceDetail = () => {
     cursor: pointer;
     user-select: none;
     transition: all 0.2s ease;
-    z-index: 1000;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     width: auto;
@@ -1523,6 +1585,58 @@ const showSalienceDetail = () => {
     color: #b4793a;
     white-space: nowrap;
     width: 100%;
+    font-weight: 700;
+}
+
+/* 添加按钮容器样式 */
+.buttons-container {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+}
+
+/* 添加只显示选中元素的按钮样式 */
+.selected-elements-button {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(144, 95, 41, 0.2);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    width: auto;
+    height: auto;
+    pointer-events: auto;
+}
+
+.selected-elements-button:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.selected-elements-button:active {
+    background: rgba(144, 95, 41, 0.1);
+    transform: translateY(0);
+}
+
+.filter-icon {
+    color: #aa7134;
+    font-size: 20px;
+}
+
+.selected-text {
+    color: #1d1d1f;
+    font-size: 1.1em;
     font-weight: 700;
 }
 </style>
