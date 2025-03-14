@@ -637,6 +637,76 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               })
               .slice(0, 20); // 最多显示20个
           
+          // 处理冲突关系，筛选出不冲突的特征（used effects部分）
+          const processedSignificantFeatures = [];
+          const usedSignificantConflictGroups = new Set(); // 用于记录已使用的冲突组
+          
+          // 首先，创建一个映射，将显示名称映射到原始特征键
+          const nameToKeysMap = {};
+          for (const feature of significantFeatures) {
+              nameToKeysMap[feature.name] = feature.featureKeys;
+          }
+          
+          // 然后，创建一个映射，记录每个冲突组包含的显示名称
+          const conflictGroupToNamesMap = {};
+          for (const group of conflictGroups) {
+              const groupKey = group.join(',');
+              conflictGroupToNamesMap[groupKey] = new Set();
+              
+              // 遍历所有特征，检查它们的键是否在当前冲突组中
+              for (const feature of significantFeatures) {
+                  for (const key of feature.featureKeys) {
+                      if (group.includes(key)) {
+                          conflictGroupToNamesMap[groupKey].add(feature.name);
+                          break;
+                      }
+                  }
+              }
+          }
+          
+          // 按差异大小排序特征，以便优先选择差异最大的
+          const sortedFeatures = [...significantFeatures].sort((a, b) => b.meanDifference - a.meanDifference);
+          
+          // 处理每个特征，按差异大小从大到小
+          for (const feature of sortedFeatures) {
+              // 检查该特征是否与已选择的特征冲突
+              let hasConflict = false;
+              
+              // 遍历所有冲突组
+              for (const group of conflictGroups) {
+                  const groupKey = group.join(',');
+                  
+                  // 检查该特征的任何键是否在当前冲突组中
+                  const featureInGroup = feature.featureKeys.some(key => group.includes(key));
+                  
+                  if (featureInGroup) {
+                      // 检查该冲突组是否已经有特征被选中
+                      if (usedSignificantConflictGroups.has(groupKey)) {
+                          hasConflict = true;
+                          break;
+                      }
+                      
+                      // 如果该特征是该组中差异最大的，则选择它
+                      const groupFeatures = sortedFeatures.filter(f => 
+                          f.featureKeys.some(key => group.includes(key))
+                      );
+                      
+                      if (groupFeatures.length > 0 && groupFeatures[0] !== feature) {
+                          hasConflict = true;
+                          break;
+                      }
+                      
+                      // 标记该冲突组已被使用
+                      usedSignificantConflictGroups.add(groupKey);
+                  }
+              }
+              
+              // 如果没有冲突，则添加该特征
+              if (!hasConflict) {
+                  processedSignificantFeatures.push(feature);
+              }
+          }
+          
           // 筛选出可能的改进特征，这些特征在未选中元素中有非零值，但在选中元素中没有或很少
         const negativeFeatures = featureArray
               .filter(feature => 
@@ -644,7 +714,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   (!feature.hasNonZeroSelectedValues || // 选中元素中没有非零值
                    (feature.selectedMean < feature.unselectedMean)) // 或者选中元素的均值小于未选中元素
               )
-            .sort((a, b) => {
+                .sort((a, b) => {
                   // 按差异大小排序
                   if (a.hasNonZeroSelectedValues && b.hasNonZeroSelectedValues) {
                       return (b.unselectedMean - b.selectedMean) - (a.unselectedMean - a.selectedMean);
@@ -657,37 +727,37 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   }
               })
               .slice(0, 10); // 最多显示10个
-          
-          // 生成HTML
-          let analysis = '<div class="feature-columns">';
-          
-          // 正差异特征（选中元素特有的特征）- Used Features
-          analysis += '<div class="feature-column positive">';
+
+        // 生成HTML
+        let analysis = '<div class="feature-columns">';
+        
+        // 正差异特征（选中元素特有的特征）- Used Features
+        analysis += '<div class="feature-column positive">';
           analysis += `<div class="column-title all-elements-title">Used effects</div>`;
           
-          if (significantFeatures.length > 0) {
+          if (processedSignificantFeatures.length > 0) {
               // 创建一个包装容器用于两列布局
               analysis += `<div class="two-column-wrapper">`;
               
               // 将特征分成两组，以便两列显示
-              for (let i = 0; i < significantFeatures.length; i += 2) {
+              for (let i = 0; i < processedSignificantFeatures.length; i += 2) {
                   analysis += `<div class="two-column-row">`;
                   
                   // 添加第一个特征
-                  analysis += `
+                analysis += `
                       <div class="feature-item two-column-item">
                           <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                              ${significantFeatures[i].name}
-                          </span>
-                      </div>
-                  `;
+                              ${processedSignificantFeatures[i].name}
+                        </span>
+                    </div>
+                `;
                   
                   // 如果有第二个特征，也添加它
-                  if (i + 1 < significantFeatures.length) {
+                  if (i + 1 < processedSignificantFeatures.length) {
                       analysis += `
                           <div class="feature-item two-column-item">
                               <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                                  ${significantFeatures[i + 1].name}
+                                  ${processedSignificantFeatures[i + 1].name}
                               </span>
                           </div>
                       `;
@@ -697,15 +767,15 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               }
               
               analysis += `</div>`;
-          } else {
+        } else {
               analysis += `<div class="no-selection">No visual effects found</div>`;
-          }
-          
-          analysis += '</div>';
-          
-          // 负差异特征（选中元素缺乏的特征）- Suggest Features
-          analysis += '<div class="feature-column negative">';
-          analysis += `<div class="column-title">Suggestions for improvement</div>`;
+        }
+        
+        analysis += '</div>';
+        
+        // 负差异特征（选中元素缺乏的特征）- Suggest Features
+        analysis += '<div class="feature-column negative">';
+          analysis += `<div class="column-title all-elements-title">Suggestions for improvement</div>`;
           
           // 检查visual salience值是否小于85
           if (visualSalienceValue.value < 85) {
@@ -790,11 +860,11 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   // 过滤掉Reset特征，最多显示5个
                   const addFeatures = processedFeatures
                       .filter(feature => resetFeature ? feature.name !== resetFeature.name : true)
-                      .slice(0, 5);
+                      .slice(0, 10); // 增加到10个以便有更多选择
                   
                   if (addFeatures.length > 0) {
-                      addFeatures.forEach(feature => {
-                          // 计算预估显著性值
+                      // 为每个特征计算预估显著性值
+                      const featuresWithSalience = addFeatures.map(feature => {
                           const featureKey = feature.featureKeys[0];
                           const predictedSalience = predictVisualSalience(
                               selectedNodeIds.length > 0 ? 
@@ -803,20 +873,30 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                               normalData || [],
                               featureKey
                           );
-                          const formattedSalience = (predictedSalience * 100).toFixed(1);
-                          
-                          analysis += `
-                              <div class="feature-item">
-                                  <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                                      ${feature.name} <span class="predicted-salience">${formattedSalience}%</span>
-                                  </span>
-                              </div>
-                          `;
+                          return {
+                              ...feature,
+                              predictedSalience,
+                              formattedSalience: (predictedSalience * 100).toFixed(1)
+                          };
                       });
-                  } else {
+                      
+                      // 按预估显著性从高到低排序
+                      featuresWithSalience.sort((a, b) => b.predictedSalience - a.predictedSalience);
+                      
+                      // 最多显示5个
+                      featuresWithSalience.slice(0, 5).forEach(feature => {
+                    analysis += `
+                        <div class="feature-item">
+                                  <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
+                                      ${feature.name} <span class="predicted-salience">${feature.formattedSalience}%</span>
+                            </span>
+                        </div>
+                    `;
+                });
+            } else {
                       analysis += `<div class="no-selection">No additional features found</div>`;
-                  }
-              } else {
+            }
+        } else {
                   analysis += `<div class="no-selection">No suitable features found</div>`;
               }
               
@@ -855,13 +935,13 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               
               // 3. Stroke 区域 - 右下
               analysis += `<div class="suggestions-stroke-section">`;
-              analysis += `<div class="suggestions-section-title">Stroke</div>`;
+              analysis += `<div class="suggestions-section-title">chart notation</div>`;
               
               // 添加固定文本
                     analysis += `
                         <div class="feature-item">
                       <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                          Add a stroke box
+                          Add a  box
                             </span>
                         </div>
                     `;
@@ -898,8 +978,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               .sort((a, b) => {
                   // 按方差大小排序
                   return b.variance - a.variance;
-              })
-              .slice(0, 20); // 最多显示20个
+              });
               
           // 筛选出方差较小的特征，作为可用但未充分利用的特征
         const leastDistinctive = featureArray
@@ -910,8 +989,145 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               .sort((a, b) => {
                   // 按方差从小到大排序
                   return a.variance - b.variance;
-              })
-              .slice(0, 10); // 最多显示10个
+              });
+              
+        // 处理冲突关系，筛选出不冲突的特征
+        const processedDiverseFeatures = [];
+        const processedLeastDistinctive = [];
+        const usedConflictGroups = new Set(); // 用于记录已使用的冲突组
+        
+        // 处理多样性高的特征（Used effects）
+        for (const feature of diverseFeatures) {
+            const featureKey = feature.featureKeys[0];
+            const group = getConflictGroup(featureKey);
+            
+            if (group) {
+                // 如果特征属于某个冲突组
+                const groupKey = group.join(',');
+                
+                // 如果该冲突组已经有特征被选中，则跳过
+                if (usedConflictGroups.has(groupKey)) {
+                    continue;
+                }
+                
+                // 找出该组中多样性最高的特征
+                const highestDiversityFeature = diverseFeatures
+                    .filter(f => group.includes(f.featureKeys[0]))
+                    .sort((a, b) => b.variance - a.variance)[0];
+                
+                // 如果当前特征是多样性最高的，则保留
+                if (feature === highestDiversityFeature) {
+                    processedDiverseFeatures.push(feature);
+                    usedConflictGroups.add(groupKey);
+                }
+            } else {
+                // 如果不是冲突组中的特征，直接保留
+                processedDiverseFeatures.push(feature);
+            }
+        }
+        
+        // 重置冲突组记录，为Available effects准备
+        usedConflictGroups.clear();
+        
+        // 处理多样性低的特征（Available effects）
+        for (const feature of leastDistinctive) {
+            const featureKey = feature.featureKeys[0];
+            const group = getConflictGroup(featureKey);
+            
+            if (group) {
+                // 如果特征属于某个冲突组
+                const groupKey = group.join(',');
+                
+                // 如果该冲突组已经有特征被选中，则跳过
+                if (usedConflictGroups.has(groupKey)) {
+                    continue;
+                }
+                
+                // 使用优先级规则
+                const priorityKey = getPriorityFeature(group);
+                
+                // 如果当前特征是优先级最高的，则保留
+                if (featureKey === priorityKey) {
+                    processedLeastDistinctive.push(feature);
+                    usedConflictGroups.add(groupKey);
+                }
+            } else {
+                // 如果不是冲突组中的特征，直接保留
+                processedLeastDistinctive.push(feature);
+            }
+        }
+
+        // 重置冲突组记录，为Available effects准备
+        usedConflictGroups.clear();
+        
+        // 处理多样性低的特征（Available effects）并计算预估显著性
+        const featuresWithSalience = [];
+        
+        for (const feature of leastDistinctive) {
+            const featureKey = feature.featureKeys[0];
+            const group = getConflictGroup(featureKey);
+            
+            if (group) {
+                // 如果特征属于某个冲突组
+                const groupKey = group.join(',');
+                
+                // 如果该冲突组已经有特征被选中，则跳过
+                if (usedConflictGroups.has(groupKey)) {
+                    continue;
+                }
+                
+                // 使用优先级规则
+                const priorityKey = getPriorityFeature(group);
+                
+                // 如果当前特征是优先级最高的，则保留并计算预估显著性
+                if (featureKey === priorityKey) {
+                    // 计算预估显著性
+                    let predictedSalience = 0;
+                    if (isSelectedNodes && selectedNodeIds && selectedNodeIds.length > 0) {
+                        predictedSalience = predictVisualSalience(
+                            selectedNodeIds.map(id => ({ id })),
+                            normalData,
+                            featureKey
+                        );
+                    }
+                    
+                    // 保存特征和预估显著性
+                    featuresWithSalience.push({
+                        ...feature,
+                        predictedSalience: predictedSalience
+                    });
+                    
+                    usedConflictGroups.add(groupKey);
+                }
+            } else {
+                // 如果不是冲突组中的特征，直接保留并计算预估显著性
+                let predictedSalience = 0;
+                if (isSelectedNodes && selectedNodeIds && selectedNodeIds.length > 0) {
+                    predictedSalience = predictVisualSalience(
+                        selectedNodeIds.map(id => ({ id })),
+                        normalData,
+                        featureKey
+                    );
+                }
+                
+                // 保存特征和预估显著性
+                featuresWithSalience.push({
+                    ...feature,
+                    predictedSalience: predictedSalience
+                });
+            }
+        }
+        
+        // 按预估显著性降序排序
+        featuresWithSalience.sort((a, b) => b.predictedSalience - a.predictedSalience);
+        
+        // 使用按显著性排序后的特征
+        processedLeastDistinctive.length = 0; // 清空原数组
+        processedLeastDistinctive.push(...featuresWithSalience);
+        
+        // 限制显示数量
+        const finalDiverseFeatures = processedDiverseFeatures.slice(0, 20);
+        const finalLeastDistinctive = processedLeastDistinctive.slice(0, 10);
         
         // 生成HTML
         let analysis = '<div class="feature-columns">';
@@ -920,29 +1136,29 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         analysis += '<div class="feature-column negative">';
           analysis += `<div class="column-title all-elements-title">Used effects</div>`;
           
-          if (diverseFeatures.length > 0) {
+          if (finalDiverseFeatures.length > 0) {
               // 创建一个包装容器用于两列布局
               analysis += `<div class="two-column-wrapper">`;
               
               // 将特征分成两组，以便两列显示
-              for (let i = 0; i < diverseFeatures.length; i += 2) {
+              for (let i = 0; i < finalDiverseFeatures.length; i += 2) {
                   analysis += `<div class="two-column-row">`;
                   
                   // 添加第一个特征
                 analysis += `
                       <div class="feature-item two-column-item">
                           <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                              ${diverseFeatures[i].name}
+                              ${finalDiverseFeatures[i].name}
                         </span>
                     </div>
                 `;
                   
                   // 如果有第二个特征，也添加它
-                  if (i + 1 < diverseFeatures.length) {
+                  if (i + 1 < finalDiverseFeatures.length) {
                       analysis += `
                           <div class="feature-item two-column-item">
                               <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                                  ${diverseFeatures[i + 1].name}
+                                  ${finalDiverseFeatures[i + 1].name}
                               </span>
                           </div>
                       `;
@@ -962,11 +1178,11 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         analysis += '<div class="feature-column positive">';
           analysis += `<div class="column-title all-elements-title">Available effects <span class="rank-tag">rank</span></div>`;
         
-        if (leastDistinctive.length > 0) {
+        if (finalLeastDistinctive.length > 0) {
               // 创建一个包装容器用于单列布局
               analysis += `<div class="single-column-wrapper">`;
               
-              leastDistinctive.forEach(feature => {
+              finalLeastDistinctive.forEach(feature => {
                 analysis += `
                     <div class="feature-item">
                           <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
@@ -996,13 +1212,13 @@ const fetchDataAndGenerateAnalysis = async () => {
         
         if (!normalData.value || !Array.isArray(normalData.value) || normalData.value.length === 0) {
             // 如果还没有数据，尝试从API获取
-            const response = await axios.get(NORMAL_DATA_URL);
+        const response = await axios.get(NORMAL_DATA_URL);
 
-            if (!response.data) {
-                throw new Error('Problems with network response');
-            }
+        if (!response.data) {
+            throw new Error('Problems with network response');
+        }
 
-            // 保存原始特征数据
+        // 保存原始特征数据
             normalData.value = response.data;
         }
 
@@ -1696,8 +1912,8 @@ function getFeatureTypePriority(featureName) {
   
   /* 添加 All elements 部分的 Used visual effects 标题样式 */
   :deep(.all-elements-title) {
-      font-size: 18px;
-      padding: 10px 8px;
+      font-size: 1.1em;
+      padding: 0px 8px 8px 0;
       margin-bottom: 0;
       font-weight: 600;
       color: #444;
@@ -1798,14 +2014,14 @@ function getFeatureTypePriority(featureName) {
     display: flex;
     align-items: center;
     padding: 10px;
-    background-color: #f0f9f0;
+    background-color: #f5f0e6;
     border-radius: 6px;
-    border: 1px solid #d0e9d0;
+    border: 1px solid #e0d0b8;
   }
   
   .salience-icon {
     font-size: 18px;
-    color: #4caf50;
+    color: #905F29;
     margin-right: 10px;
   }
   
@@ -1815,12 +2031,44 @@ function getFeatureTypePriority(featureName) {
   
   .salience-title {
     font-weight: 600;
-    color: #2e7d32;
+    color: #6D4A20;
     margin-bottom: 2px;
   }
   
   .salience-value {
-    color: #4caf50;
+    color: #905F29;
     font-size: 14px;
+}
+
+  /* 优化suggestions区域中标签的高度和显著性值的样式 */
+  :deep(.suggestions-container .feature-item) {
+    height: 46px;
+  }
+  
+  :deep(.suggestions-container .feature-tag.all-elements-tag) {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+  }
+  
+  :deep(.predicted-salience) {
+    font-size: 14px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #905F29 0%, #6D4A20 100%);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    min-width: 45px;
+    text-align: center;
+  }
+  
+  :deep(.feature-tag .predicted-salience) {
+    position: relative;
+    top: -1px;
 }
 </style>
