@@ -1892,9 +1892,6 @@ function getFeatureTypePriority(featureName) {
     box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
 }
 
-:deep(.salience-content) {
-    flex: 1;
-}
 
 :deep(.salience-title) {
     font-size: 16px;
