@@ -4,9 +4,7 @@
             <div class="loading-spinner"></div>
         </div>
         <div class="cards-container" ref="cardsContainer">
-            <!-- 添加左右滚动阴影指示器 -->
-            <div class="scroll-shadow scroll-shadow-left" :class="{ 'shadow-visible': showLeftShadow }"></div>
-            <div class="scroll-shadow scroll-shadow-right" :class="{ 'shadow-visible': showRightShadow }"></div>
+            <!-- 左右滚动阴影指示器已移除 -->
             
             <div class="cards-wrapper" ref="cardsWrapper" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @mouseleave="endDrag" @scroll="handleScroll">
                 <div v-for="node in flattenedNodes" 
@@ -169,7 +167,7 @@ const flattenedNodes = computed(() => {
     // 按照修改后的排序逻辑排序
     nodeScores.sort((a, b) => {
         // 如果显著性分数差值不超过0.03 (3%)，则按面积排序
-        if (Math.abs(a.rawScore - b.rawScore) <= 0.03) {
+        if (Math.abs(a.rawScore - b.rawScore) <= 0.0) {
             return b.totalArea - a.totalArea; // 面积大的排前面
         }
         // 否则按显著性分数排序
@@ -1453,31 +1451,7 @@ const getStats = (node) => {
     flex-direction: column;
 }
 
-/* 添加滚动阴影指示器样式 */
-.scroll-shadow {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    width: 120px;
-    z-index: 10;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.scroll-shadow-left {
-    left: 0;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 100%);
-}
-
-.scroll-shadow-right {
-    right: 0;
-    background: linear-gradient(to left, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 100%);
-}
-
-.shadow-visible {
-    opacity: 1;
-}
+/* 滚动阴影指示器样式已移除 */
 
 .cards-wrapper {
     display: flex;

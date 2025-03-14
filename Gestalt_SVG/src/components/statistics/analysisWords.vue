@@ -745,6 +745,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         // 正差异特征（选中元素特有的特征）- Used Features
         analysis += '<div class="feature-column positive">';
           analysis += `<div class="column-title all-elements-title">Used effects</div>`;
+          analysis += `<div class="column-content">`; // 添加内容容器
           
           if (processedSignificantFeatures.length > 0) {
               // 创建一个包装容器用于两列布局
@@ -782,11 +783,13 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               analysis += `<div class="no-selection">No visual effects found</div>`;
         }
         
+        analysis += `</div>`; // 关闭内容容器
         analysis += '</div>';
         
         // 负差异特征（选中元素缺乏的特征）- Suggest Features
         analysis += '<div class="feature-column negative">';
           analysis += `<div class="column-title all-elements-title">Suggestions for improvement</div>`;
+          analysis += `<div class="column-content">`; // 添加内容容器
           
           // 检查visual salience值是否小于85
           if (visualSalienceValue.value < 85) {
@@ -899,7 +902,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     analysis += `
                         <div class="feature-item">
                                   <span class="feature-tag all-elements-tag">
-                                      ${feature.name}<span class="predicted-salience">${feature.formattedSalience}</span>
+                                      ${feature.name}<span class="predicted-salience">${feature.formattedSalience}%</span>
                             </span>
                         </div>
                     `;
@@ -936,7 +939,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   analysis += `
                       <div class="feature-item">
                           <span class="feature-tag all-elements-tag">
-                              ${resetFeature.name}<span class="predicted-salience">${formattedSalience}</span>
+                              ${resetFeature.name}<span class="predicted-salience">${formattedSalience}%</span>
                           </span>
                       </div>
                   `;
@@ -971,12 +974,13 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     <div class="salience-icon">✓</div>
                     <div class="salience-content">
                         <div class="salience-title">Visual salience is already good</div>
-                        <div class="salience-value">${visualSalienceValue.value.toFixed(1)}</div>
+                        <div class="salience-value">${visualSalienceValue.value.toFixed(1)}%</div>
                     </div>
                 </div>
             `;
         }
         
+        analysis += `</div>`; // 关闭内容容器
         analysis += '</div>';
         analysis += '</div>';
         
@@ -1149,6 +1153,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         // 最突出的特征 - Used Features
         analysis += '<div class="feature-column negative">';
           analysis += `<div class="column-title all-elements-title">Used effects</div>`;
+          analysis += `<div class="column-content">`; // 添加内容容器
           
           if (finalDiverseFeatures.length > 0) {
               // 创建一个包装容器用于两列布局
@@ -1186,11 +1191,13 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             analysis += `<div class="no-selection">No distinguishing features found</div>`;
         }
         
+        analysis += `</div>`; // 关闭内容容器
         analysis += '</div>';
         
         // 最不突出的特征 - Available Features
         analysis += '<div class="feature-column positive">';
           analysis += `<div class="column-title all-elements-title">Available effects</div>`;
+          analysis += `<div class="column-content">`; // 添加内容容器
         
         if (finalLeastDistinctive.length > 0) {
               // 创建一个包装容器用于单列布局
@@ -1211,6 +1218,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             analysis += `<div class="no-selection">No usable features found</div>`;
         }
         
+        analysis += `</div>`; // 关闭内容容器
         analysis += '</div>';
         analysis += '</div>';
         
@@ -1728,13 +1736,17 @@ function getFeatureTypePriority(featureName) {
     display: flex;
     gap: 6px;
     max-height: 100%;
-    overflow-y: auto;
+    overflow: hidden; /* 修改为hidden，防止整体滚动 */
+    height: 100%; /* 确保占满整个高度 */
 }
 
 :deep(.feature-column) {
     flex: 1;
     display: flex;
     flex-direction: column;
+    position: relative; /* 添加相对定位，作为sticky标题的参考 */
+    overflow: hidden; /* 防止内容溢出 */
+    height: 100%; /* 确保占满整个高度 */
 }
 
 :deep(.column-title) {
@@ -1745,8 +1757,63 @@ function getFeatureTypePriority(featureName) {
     color: #333;
     position: sticky;
     top: 0;
-    background: rgba(255, 255, 255, 0.9);
-    z-index: 1;
+    background: rgba(255, 255, 255, 0.95); /* 增加不透明度 */
+    z-index: 5; /* 确保在内容之上 */
+    backdrop-filter: blur(5px); /* 添加模糊效果增强可读性 */
+    margin-bottom: 0; /* 移除底部边距 */
+    flex-shrink: 0; /* 防止标题被压缩 */
+}
+
+/* 添加内容容器，使其可滚动而标题固定 */
+:deep(.column-content) {
+    flex: 1;
+    overflow-y: auto;
+    padding-top: 4px; /* 添加顶部内边距，与标题分开 */
+    height: calc(100% - 40px); /* 减去标题高度 */
+    scrollbar-width: thin; /* 使滚动条更细 */
+}
+
+/* 自定义滚动条样式 */
+:deep(.column-content::-webkit-scrollbar) {
+    width: 6px;
+    height: 6px;
+}
+
+:deep(.column-content::-webkit-scrollbar-track) {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 3px;
+}
+
+:deep(.column-content::-webkit-scrollbar-thumb) {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+    transition: background 0.3s;
+}
+
+:deep(.column-content::-webkit-scrollbar-thumb:hover) {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+/* 调整suggestions-section-title样式，使其不受column-content滚动影响 */
+:deep(.suggestions-section-title) {
+    position: sticky;
+    top: 0;
+    background: rgba(255, 255, 255, 0.95);
+    z-index: 4; /* 低于主标题但高于内容 */
+}
+
+/* 调整suggestions容器样式 */
+:deep(.suggestions-container) {
+    height: auto; /* 允许容器自适应高度 */
+    min-height: 0; /* 移除最小高度限制 */
+}
+
+/* 调整suggestions区域样式 */
+:deep(.suggestions-add-section),
+:deep(.suggestions-reset-section),
+:deep(.suggestions-stroke-section) {
+    max-height: none; /* 移除最大高度限制 */
+    overflow: visible; /* 允许内容溢出，由父容器控制滚动 */
 }
 
 :deep(.feature-item) {
@@ -1809,35 +1876,6 @@ function getFeatureTypePriority(featureName) {
     color: #86868b;
     font-size: 14px;
     font-style: italic;
-}
-
-/* 添加自定义滚动条样式 */
-.analysis-content::-webkit-scrollbar,
-:deep(.feature-columns::-webkit-scrollbar) {
-    width: 6px;
-    height: 6px;
-}
-
-.analysis-content::-webkit-scrollbar-track,
-:deep(.feature-columns::-webkit-scrollbar-track) {
-    background: rgba(0, 0, 0, 0.03);
-    border-radius: 3px;
-}
-
-.analysis-content::-webkit-scrollbar-thumb,
-:deep(.feature-columns::-webkit-scrollbar-thumb) {
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 3px;
-    transition: background 0.3s;
-}
-
-.analysis-content::-webkit-scrollbar-thumb:hover,
-:deep(.feature-columns::-webkit-scrollbar-thumb:hover) {
-    background: rgba(0, 0, 0, 0.25);
-}
-
-.section:hover .analysis-content::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
 }
 
 :deep(.feature-rank) {

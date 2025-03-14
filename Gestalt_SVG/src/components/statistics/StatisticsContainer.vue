@@ -12,7 +12,7 @@
           <path d="M7 10l5 5 5-5H7z" fill="currentColor"/>
         </svg>
       </span>
-      <span>{{ sortAscending ? 'order by variance↑' : 'order by variance↓' }}</span>
+      <span>{{ sortAscending ? 'Order by variance↑' : 'Order by variance↓' }}</span>
     </button>
     
     <!-- 添加图例说明 -->
