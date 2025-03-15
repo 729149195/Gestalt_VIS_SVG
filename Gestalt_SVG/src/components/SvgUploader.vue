@@ -47,7 +47,7 @@
                     <!-- 元素类型选择列表 - 始终展开 -->
                     <div v-if="visibleElements.length > 0" class="element-selector mac-style-selector">
                         <div class="selector-header">
-                            <h3 class="mac-style-title">Select elements</h3>
+                            <h3 class="mac-style-title">Select panel</h3>
                             <div class="element-type-indicator">
                                 <v-icon class="element-type-icon">mdi-shape-outline</v-icon>
                                 <span class="element-type-text">Element Types</span>
@@ -927,7 +927,7 @@ const showSalienceDetail = () => {
     flex: 1;
     gap: 12px;
     height: calc(100% - 60px);
-    margin-top: 16px;
+    padding: 12px;
 }
 
 .left-panel {
@@ -985,8 +985,8 @@ const showSalienceDetail = () => {
 }
 
 .display-svg {
-    border: 2px solid rgba(65, 105, 225, 0.2);
-    background: rgba(240, 248, 255, 0.7);
+    border: 2px solid rgba(144, 95, 41, 0.2);
+    background: rgba(255, 255, 255, 0.7);
 }
 
 .mac-style-input {

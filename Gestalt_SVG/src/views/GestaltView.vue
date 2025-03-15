@@ -53,13 +53,15 @@
                         <div class="subgroup-section" :style="{ height: subgroupHeight + '%' }">
                             <SubgroupVisualization v-if="file" :key="componentKey2" class="subgroup-visualization" />
                         </div>
-                        <div class="resize-handle horizontal resize-right1" @mousedown="startResizeRightVertical1"></div>
-                        <div class="analysis-section" :style="{ height: analysisHeight + '%' }">
-                            <analysisWords title="Feature dimension mapping analysis" :update-key="componentKey2" class="analysis-words" />
-                        </div>
-                        <div class="resize-handle horizontal resize-right2" @mousedown="startResizeRightVertical2"></div>
+                        <div class="resize-handle horizontal resize-right1" @mousedown="startResizeRightVertical1" 
+                             :style="{ top: subgroupHeight + '%', width: '100%' }"></div>
                         <div class="statistics-section" :style="{ height: statisticsHeight + '%' }">
                             <StatisticsContainer :component-key="componentKey4" title="SVG Statistics" class="main-card" />
+                        </div>
+                        <div class="resize-handle horizontal resize-right2" @mousedown="startResizeRightVertical2"
+                             :style="{ top: (subgroupHeight + statisticsHeight) + '%', width: '100%' }"></div>
+                        <div class="analysis-section" :style="{ height: analysisHeight + '%' }">
+                            <analysisWords title="Feature dimension mapping analysis" :update-key="componentKey2" class="analysis-words" />
                         </div>
                     </div>
                 </div>
@@ -143,12 +145,12 @@ const startResizeRightVertical1 = (e) => {
     e.stopPropagation();
 }
 
-// 开始右侧第二个垂直调整（分析文字和统计之间）
+// 开始右侧第二个垂直调整（统计和分析文字之间）
 const startResizeRightVertical2 = (e) => {
     isResizing = true;
     currentResize = 'rightVertical2';
     startY = e.clientY;
-    startHeight = analysisHeight.value;
+    startHeight = statisticsHeight.value;
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
@@ -181,7 +183,7 @@ const handleMouseMove = (e) => {
         leftTopHeight.value = Math.max(20, Math.min(80, newHeight));
     }
     else if (currentResize === 'rightVertical1') {
-        // 调整子组可视化区域和分析文字之间的分割
+        // 调整子组可视化区域和统计区域之间的分割
         const container = document.querySelector('.maxtistic');
         const containerHeight = container.offsetHeight;
         const rect = container.getBoundingClientRect();
@@ -190,15 +192,15 @@ const handleMouseMove = (e) => {
 
         // 更新高度并保持总和为100%
         subgroupHeight.value = Math.max(20, Math.min(70, newHeight));
-        // 计算剩余空间并分配给分析区域和统计区域
+        // 计算剩余空间并分配给统计区域和分析区域
         const remaining = 100 - subgroupHeight.value;
-        // 保持分析区域和统计区域的比例
-        const ratio = analysisHeight.value / (analysisHeight.value + statisticsHeight.value);
-        analysisHeight.value = Math.max(10, Math.min(40, remaining * ratio));
-        statisticsHeight.value = remaining - analysisHeight.value;
+        // 保持统计区域和分析区域的比例
+        const ratio = statisticsHeight.value / (statisticsHeight.value + analysisHeight.value);
+        statisticsHeight.value = Math.max(10, Math.min(40, remaining * ratio));
+        analysisHeight.value = remaining - statisticsHeight.value;
     }
     else if (currentResize === 'rightVertical2') {
-        // 调整分析文字和统计区域之间的分割
+        // 调整统计区域和分析文字之间的分割
         const container = document.querySelector('.maxtistic');
         const containerHeight = container.offsetHeight;
         const rect = container.getBoundingClientRect();
@@ -207,10 +209,10 @@ const handleMouseMove = (e) => {
         const relativeY = e.clientY - rect.top;
         const percentY = (relativeY / containerHeight) * 100;
 
-        // 更新分析区域高度，并计算统计区域的高度
-        const newAnalysisHeight = percentY - subgroupHeight.value;
-        analysisHeight.value = Math.max(10, Math.min(40, newAnalysisHeight));
-        statisticsHeight.value = 100 - subgroupHeight.value - analysisHeight.value;
+        // 更新统计区域高度，并计算分析区域的高度
+        const newStatisticsHeight = percentY - subgroupHeight.value;
+        statisticsHeight.value = Math.max(10, Math.min(40, newStatisticsHeight));
+        analysisHeight.value = 100 - subgroupHeight.value - statisticsHeight.value;
     }
 
     // 防止事件冒泡和默认行为
@@ -355,22 +357,22 @@ onBeforeUnmount(() => {
     height: 12px;
     width: 100%;
     left: 0;
-    bottom: -6px;
+    transform: translateY(-50%);
     z-index: 101;
 }
 
-.resize-right1 {
-    top: calc(35% - 6px);
-    bottom: auto;
-}
-
-.resize-right2 {
-    top: calc(60% - 6px);
-    bottom: auto;
+.resize-right1, .resize-right2 {
+    position: absolute;
+    background-color: transparent;
 }
 
 .resize-handle:hover,
 .resize-handle:active {
+    background-color: rgba(144, 95, 41, 0.3);
+}
+
+.resize-right1:hover, .resize-right2:hover,
+.resize-right1:active, .resize-right2:active {
     background-color: rgba(144, 95, 41, 0.3);
 }
 
