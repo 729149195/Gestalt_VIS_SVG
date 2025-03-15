@@ -432,8 +432,8 @@ watch(() => props.updateKey, (newVal) => {
 
 const emit = defineEmits(['scroll'])
 
-  const analysisContent = ref('Waiting for analysis...')
-  const selectedNodesAnalysis = ref('Waiting for selected nodes...')
+const analysisContent = ref('<div class="no-selection"><span>Waiting for analysis...</span></div>')
+const selectedNodesAnalysis = ref('<div class="no-selection"><span>Waiting for selected nodes...</span></div>')
 
 // 将 showDialog 改名为 showDrawer
 const showDrawer = ref(false)
@@ -442,8 +442,12 @@ const store = useStore()
 
 // 添加一个变量来获取高亮元素的visual salience值
 const visualSalienceValue = computed(() => {
-  // 从store中获取visualSalience值，如果不存在则默认为100
-  return store.state.visualSalience ? store.state.visualSalience * 100 : 100;
+  // 从store中获取visualSalience值，如果不存在则默认为0
+  // 使用toRaw确保我们获取到原始值而不是代理对象
+  const rawValue = store.state.visualSalience;
+  // 添加console.log来调试
+  console.log('visualSalience in store:', rawValue);
+  return rawValue ? rawValue * 100 : 0;
 })
 
 // 添加计算属性获取selectedNodeIds
@@ -465,18 +469,20 @@ const isMiddleSectionScrolledToBottom = ref(true);
 // 生成分析文字的函数
 const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds = []) => {
     if (!normalData || !Array.isArray(normalData) || normalData.length === 0) {
-        return isSelectedNodes ? 'Waiting for selected nodes...' : 'Waiting for analysis...';
+        return isSelectedNodes ? 
+            '<div class="no-selection"><span>Waiting for selected nodes...</span></div>' : 
+            '<div class="no-selection"><span>Waiting for analysis...</span></div>';
     }
 
     // 如果是选中节点分析但没有选中节点
     if (isSelectedNodes && (!selectedNodeIds || selectedNodeIds.length === 0)) {
-        return '<div class="no-selection">Please select a node to view the analysis...</div>';
+        return '<div class="no-selection"><span>Please select a node to view the analysis...</span></div>';
     }
 
     // 获取特征数量
     const featureCount = normalData[0]?.features?.length || 0;
     if (featureCount === 0) {
-        return '<div class="no-selection">Can not find valid feature data</div>';
+        return '<div class="no-selection"><span>Can not find valid feature data</span></div>';
     }
     
     // 创建特征索引到名称的映射
@@ -748,170 +754,156 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           analysis += `<div class="column-content">`; // 添加内容容器
           
           if (processedSignificantFeatures.length > 0) {
-              // 创建一个包装容器用于两列布局
-              analysis += `<div class="two-column-wrapper">`;
+              // 创建一个包装容器用于单列布局
+              analysis += `<div class="single-column-wrapper">`;
               
-              // 将特征分成两组，以便两列显示
-              for (let i = 0; i < processedSignificantFeatures.length; i += 2) {
-                  analysis += `<div class="two-column-row">`;
-                  
-                  // 添加第一个特征
-                analysis += `
-                      <div class="feature-item two-column-item">
+              // 使用单列布局显示特征
+              for (let i = 0; i < processedSignificantFeatures.length; i++) {
+                  analysis += `
+                      <div class="feature-item">
                           <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
                               ${processedSignificantFeatures[i].name}<span class="value-count">${processedSignificantFeatures[i].uniqueSelectedValueCount}</span>
-                        </span>
-                    </div>
-                `;
-                  
-                  // 如果有第二个特征，也添加它
-                  if (i + 1 < processedSignificantFeatures.length) {
-                      analysis += `
-                          <div class="feature-item two-column-item">
-                              <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                                  ${processedSignificantFeatures[i + 1].name}<span class="value-count">${processedSignificantFeatures[i + 1].uniqueSelectedValueCount}</span>
-                              </span>
-                          </div>
-                      `;
-                  }
-                  
-                  analysis += `</div>`;
+                          </span>
+                      </div>
+                  `;
               }
               
               analysis += `</div>`;
-        } else {
-              analysis += `<div class="no-selection">No visual effects found</div>`;
-        }
-        
-        analysis += `</div>`; // 关闭内容容器
-        analysis += '</div>';
-        
-        // 负差异特征（选中元素缺乏的特征）- Suggest Features
-        analysis += '<div class="feature-column negative">';
-          analysis += `<div class="column-title all-elements-title">Suggestions for improvement</div>`;
-          analysis += `<div class="column-content">`; // 添加内容容器
+          } else {
+              analysis += `<div class="no-selection"><span>No visual effects found</span></div>`;
+          }
           
-          // 检查visual salience值是否小于85
-          if (visualSalienceValue.value < 85) {
-              // 创建三区块布局
-              analysis += `<div class="suggestions-container">`;
-              
-              // 处理冲突关系，筛选出不冲突的特征
-              const processedFeatures = [];
-              const usedConflictGroups = new Set(); // 用于记录已使用的冲突组
-              
-              // 获取全局多样性较高的特征，用于冲突检查
-              const diverseFeatures = featureArray
-                  .filter(feature => feature.variance > 0.01)
-                  .map(feature => ({
-                      key: feature.featureKeys[0],
-                      variance: feature.variance
-                  }));
-              
-              // 处理每个负差异特征
-              for (const feature of negativeFeatures) {
-                  const featureKey = feature.featureKeys[0];
-                  const group = getConflictGroup(featureKey);
-                  
-                  if (group) {
-                      // 如果特征属于某个冲突组
-                      const groupKey = group.join(',');
-                      
-                      // 如果该冲突组已经有特征被选中，则跳过
-                      if (usedConflictGroups.has(groupKey)) {
-                          continue;
-                      }
-                      
-                      // 检查该组中是否有高多样性特征
-                      const hasHighDiversity = group.some(key => 
-                          diverseFeatures.some(f => f.key === key)
-                      );
-                      
-                      if (hasHighDiversity) {
-                          // 如果有高多样性特征，找出多样性最高的
-                          const highDiversityFeatures = diverseFeatures
-                              .filter(f => group.includes(f.key))
-                              .sort((a, b) => b.variance - a.variance);
-                          
-                          if (highDiversityFeatures.length > 0) {
-                              // 只保留多样性最高的特征
-                              const highestDiversityKey = highDiversityFeatures[0].key;
-                              
-                              // 如果当前特征就是多样性最高的，则保留
-                              if (featureKey === highestDiversityKey) {
-                                  processedFeatures.push(feature);
-                                  usedConflictGroups.add(groupKey);
-                              }
-                          }
-                      } else {
-                          // 如果没有高多样性特征，使用优先级规则
-                          const priorityKey = getPriorityFeature(group);
-                          
-                          // 如果当前特征是优先级最高的，则保留
-                          if (featureKey === priorityKey) {
-                              processedFeatures.push(feature);
-                              usedConflictGroups.add(groupKey);
-                          }
-                      }
-                  } else {
-                      // 如果不是冲突组中的特征，直接保留
-                      processedFeatures.push(feature);
-                  }
-              }
-              
-              // 先为Reset区域选择最佳特征
-              let resetFeature = null;
-              if (processedFeatures.length > 0) {
-                  // 选择第一个特征作为Reset特征
-                  resetFeature = processedFeatures[0];
-              }
-              
-              // 显示 Add 区域的特征（左侧区域）
-              analysis += `<div class="suggestions-add-section">`;
-              analysis += `<div class="suggestions-section-title">Add</div>`;
-              
-              if (processedFeatures.length > 0) {
-                  // 过滤掉Reset特征，最多显示5个
-                  const addFeatures = processedFeatures
-                      .filter(feature => resetFeature ? feature.name !== resetFeature.name : true)
-                      .slice(0, 10); // 增加到10个以便有更多选择
-                  
-                  if (addFeatures.length > 0) {
-                      // 为每个特征计算预估显著性值
-                      const featuresWithSalience = addFeatures.map(feature => {
-                          const featureKey = feature.featureKeys[0];
-                          const predictedSalience = predictVisualSalience(
-                              selectedNodeIds.length > 0 ? 
-                                  selectedNodeIds.map(id => ({ id })) : 
-                                  [],
-                              normalData || [],
-                              featureKey
-                          );
-                          return {
-                              ...feature,
-                              predictedSalience,
-                              formattedSalience: (predictedSalience * 100).toFixed(1)
-                          };
-                      });
-                      
-                      // 按预估显著性从高到低排序
-                      featuresWithSalience.sort((a, b) => b.predictedSalience - a.predictedSalience);
-                      
-                      // 最多显示5个
-                      featuresWithSalience.slice(0, 5).forEach(feature => {
+          analysis += `</div>`; // 关闭内容容器
+          analysis += '</div>';
+          
+          // 负差异特征（选中元素缺乏的特征）- Suggest Features
+          analysis += '<div class="feature-column negative">';
+            analysis += `<div class="column-title all-elements-title">Suggestions for improvement</div>`;
+            analysis += `<div class="column-content">`; // 添加内容容器
+            
+            // 检查visual salience值是否小于85
+            // 直接从store获取最新的visualSalience值，而不是使用计算属性
+            const currentVisualSalience = store.state.visualSalience * 100;
+            if (currentVisualSalience < 85) {
+                // 创建三区块布局
+                analysis += `<div class="suggestions-container">`;
+                
+                // 处理冲突关系，筛选出不冲突的特征
+                const processedFeatures = [];
+                const usedConflictGroups = new Set(); // 用于记录已使用的冲突组
+                
+                // 获取全局多样性较高的特征，用于冲突检查
+                const diverseFeatures = featureArray
+                    .filter(feature => feature.variance > 0.01)
+                    .map(feature => ({
+                        key: feature.featureKeys[0],
+                        variance: feature.variance
+                    }));
+                
+                // 处理每个负差异特征
+                for (const feature of negativeFeatures) {
+                    const featureKey = feature.featureKeys[0];
+                    const group = getConflictGroup(featureKey);
+                    
+                    if (group) {
+                        // 如果特征属于某个冲突组
+                        const groupKey = group.join(',');
+                        
+                        // 如果该冲突组已经有特征被选中，则跳过
+                        if (usedConflictGroups.has(groupKey)) {
+                            continue;
+                        }
+                        
+                        // 检查该组中是否有高多样性特征
+                        const hasHighDiversity = group.some(key => 
+                            diverseFeatures.some(f => f.key === key)
+                        );
+                        
+                        if (hasHighDiversity) {
+                            // 如果有高多样性特征，找出多样性最高的
+                            const highDiversityFeatures = diverseFeatures
+                                .filter(f => group.includes(f.key))
+                                .sort((a, b) => b.variance - a.variance);
+                            
+                            if (highDiversityFeatures.length > 0) {
+                                // 只保留多样性最高的特征
+                                const highestDiversityKey = highDiversityFeatures[0].key;
+                                
+                                // 如果当前特征就是多样性最高的，则保留
+                                if (featureKey === highestDiversityKey) {
+                                    processedFeatures.push(feature);
+                                    usedConflictGroups.add(groupKey);
+                                }
+                            }
+                        } else {
+                            // 如果没有高多样性特征，使用优先级规则
+                            const priorityKey = getPriorityFeature(group);
+                            
+                            // 如果当前特征是优先级最高的，则保留
+                            if (featureKey === priorityKey) {
+                                processedFeatures.push(feature);
+                                usedConflictGroups.add(groupKey);
+                            }
+                        }
+                    } else {
+                        // 如果不是冲突组中的特征，直接保留
+                        processedFeatures.push(feature);
+                    }
+                }
+                
+                // 先为Reset区域选择最佳特征
+                let resetFeature = null;
+                if (processedFeatures.length > 0) {
+                    // 选择第一个特征作为Reset特征
+                    resetFeature = processedFeatures[0];
+                }
+                
+                // 显示 Add 区域的特征（左侧区域）
+                analysis += `<div class="suggestions-add-section">`;
+                analysis += `<div class="suggestions-section-title">Add</div>`;
+                
+                if (processedFeatures.length > 0) {
+                    // 过滤掉Reset特征，最多显示5个
+                    const addFeatures = processedFeatures
+                        .filter(feature => resetFeature ? feature.name !== resetFeature.name : true)
+                        .slice(0, 10); // 增加到10个以便有更多选择
+                    
+                    if (addFeatures.length > 0) {
+                        // 为每个特征计算预估显著性值
+                        const featuresWithSalience = addFeatures.map(feature => {
+                            const featureKey = feature.featureKeys[0];
+                            const predictedSalience = predictVisualSalience(
+                                selectedNodeIds.length > 0 ? 
+                                    selectedNodeIds.map(id => ({ id })) : 
+                                    [],
+                                normalData || [],
+                                featureKey
+                            );
+                            return {
+                                ...feature,
+                                predictedSalience,
+                                formattedSalience: (predictedSalience * 100).toFixed(1)
+                            };
+                        });
+                        
+                        // 按预估显著性从高到低排序
+                        featuresWithSalience.sort((a, b) => b.predictedSalience - a.predictedSalience);
+                        
+                        // 最多显示5个
+                        featuresWithSalience.slice(0, 5).forEach(feature => {
                     analysis += `
                         <div class="feature-item">
                                   <span class="feature-tag all-elements-tag">
-                                      ${feature.name}<span class="predicted-salience">${feature.formattedSalience}%</span>
+                                      ${feature.name}<span class="predicted-salience">${feature.formattedSalience}</span>
                             </span>
                         </div>
                     `;
                 });
             } else {
-                      analysis += `<div class="no-selection">No additional features found</div>`;
+                      analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No additional features found</span></div>`;
             }
         } else {
-                  analysis += `<div class="no-selection">No suitable features found</div>`;
+                  analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No suitable features found</span></div>`;
               }
               
               analysis += `</div>`; // 关闭左侧区域
@@ -939,12 +931,12 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   analysis += `
                       <div class="feature-item">
                           <span class="feature-tag all-elements-tag">
-                              ${resetFeature.name}<span class="predicted-salience">${formattedSalience}%</span>
+                              ${resetFeature.name}<span class="predicted-salience">${formattedSalience}</span>
                           </span>
                       </div>
                   `;
               } else {
-                  analysis += `<div class="no-selection">No reset feature found</div>`;
+                  analysis += `<div class="no-selection"><span>No reset feature found</span></div>`;
               }
               
               analysis += `</div>`; // 关闭Reset区域
@@ -973,8 +965,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 <div class="high-salience-notice">
                     <div class="salience-icon">✓</div>
                     <div class="salience-content">
-                        <div class="salience-title">Visual salience is already good</div>
-                        <div class="salience-value">${visualSalienceValue.value.toFixed(1)}%</div>
+                        <div class="salience-row">
+                            <div class="salience-title">Visual salience is already good</div>
+                            <div class="salience-value">${currentVisualSalience.toFixed(3)}</div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1156,50 +1150,34 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           analysis += `<div class="column-content">`; // 添加内容容器
           
           if (finalDiverseFeatures.length > 0) {
-              // 创建一个包装容器用于两列布局
-              analysis += `<div class="two-column-wrapper">`;
+              // 创建一个包装容器用于单列布局
+              analysis += `<div class="single-column-wrapper">`;
               
-              // 将特征分成两组，以便两列显示
-              for (let i = 0; i < finalDiverseFeatures.length; i += 2) {
-                  analysis += `<div class="two-column-row">`;
-                  
-                  // 添加第一个特征
-                analysis += `
-                      <div class="feature-item two-column-item">
+              // 使用单列布局显示特征
+              for (let i = 0; i < finalDiverseFeatures.length; i++) {
+                  analysis += `
+                      <div class="feature-item">
                           <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
                               ${finalDiverseFeatures[i].name}<span class="value-count">${finalDiverseFeatures[i].uniqueValueCount}</span>
-                        </span>
-                    </div>
-                `;
-                  
-                  // 如果有第二个特征，也添加它
-                  if (i + 1 < finalDiverseFeatures.length) {
-                      analysis += `
-                          <div class="feature-item two-column-item">
-                              <span class="feature-tag all-elements-tag" style="color: #555555; border-color: #55555530; background-color: #f5f5f5">
-                                  ${finalDiverseFeatures[i + 1].name}<span class="value-count">${finalDiverseFeatures[i + 1].uniqueValueCount}</span>
-                              </span>
-                          </div>
-                      `;
-                  }
-                  
-                  analysis += `</div>`;
+                          </span>
+                      </div>
+                  `;
               }
               
               analysis += `</div>`;
-        } else {
-            analysis += `<div class="no-selection">No distinguishing features found</div>`;
-        }
-        
-        analysis += `</div>`; // 关闭内容容器
-        analysis += '</div>';
-        
-        // 最不突出的特征 - Available Features
-        analysis += '<div class="feature-column positive">';
-          analysis += `<div class="column-title all-elements-title">Available effects</div>`;
-          analysis += `<div class="column-content">`; // 添加内容容器
-        
-        if (finalLeastDistinctive.length > 0) {
+          } else {
+              analysis += `<div class="no-selection"><span>No distinguishing features found</span></div>`;
+          }
+          
+          analysis += `</div>`; // 关闭内容容器
+          analysis += '</div>';
+          
+          // 最不突出的特征 - Available Features
+          analysis += '<div class="feature-column positive">';
+            analysis += `<div class="column-title all-elements-title">Available effects</div>`;
+            analysis += `<div class="column-content">`; // 添加内容容器
+          
+          if (finalLeastDistinctive.length > 0) {
               // 创建一个包装容器用于单列布局
               analysis += `<div class="single-column-wrapper">`;
               
@@ -1215,7 +1193,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               
               analysis += `</div>`;
         } else {
-            analysis += `<div class="no-selection">No usable features found</div>`;
+            analysis += `<div class="no-selection"><span>No usable features found</span></div>`;
         }
         
         analysis += `</div>`; // 关闭内容容器
@@ -1254,12 +1232,12 @@ const fetchDataAndGenerateAnalysis = async () => {
         if (selectedNodeIds && selectedNodeIds.length > 0) {
             selectedNodesAnalysis.value = generateAnalysis(normalData.value, true, selectedNodeIds);
         } else {
-            selectedNodesAnalysis.value = '<div class="no-selection">Please select a node to view the analysis...</div>';
+            selectedNodesAnalysis.value = '<div class="no-selection"><span>Please select a node to view the analysis...</span></div>';
         }
     } catch (error) {
         console.error('Failed to get data:', error);
-        analysisContent.value = 'Analysis generation failed, please try again';
-        selectedNodesAnalysis.value = 'Analysis generation failed, please try again';
+        analysisContent.value = '<div class="no-selection"><span>Analysis generation failed, please try again</span></div>';
+        selectedNodesAnalysis.value = '<div class="no-selection"><span>Analysis generation failed, please try again</span></div>';
     }
 };
 
@@ -1267,6 +1245,15 @@ const fetchDataAndGenerateAnalysis = async () => {
 watch(() => store.state.selectedNodes.nodeIds, () => {
     fetchDataAndGenerateAnalysis();
 }, { deep: true, immediate: true });
+
+// 添加对 visualSalience 的监听，当它变化时重新生成分析内容
+watch(() => store.state.visualSalience, (newValue, oldValue) => {
+    console.log('visualSalience changed:', oldValue, '->', newValue);
+    // 如果有选中的节点，重新生成分析内容
+    if (store.state.selectedNodes.nodeIds && store.state.selectedNodes.nodeIds.length > 0) {
+        fetchDataAndGenerateAnalysis();
+    }
+});
 
 // 更新滚动处理函数，分别处理两个滚动区域
 const handleFeatureSectionScroll = (event) => {
@@ -1414,9 +1401,10 @@ function getFeatureTypePriority(featureName) {
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(200, 200, 200, 0.2);
-  padding: 14px;
+  padding: 10px; /* 减小内边距 */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  height: 400px;
+  height: 300px; /* 减小整体高度 */
+  width: 100%; /* 确保容器占满可用宽度 */
   display: flex;
   flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
@@ -1425,16 +1413,17 @@ function getFeatureTypePriority(featureName) {
 
 /* 修改标题样式，移除绝对定位 */
 .title {
-  font-size: 1.8em;
+  font-size: 1.5em; /* 减小字体大小 */
   font-weight: bold;
   color: #1d1d1f;
   letter-spacing: -0.01em;
   opacity: 0.8;
+  margin-bottom: 8px; /* 减小底部边距 */
 }
 
 .sections-container {
   display: flex;
-  gap: 16px;
+  gap: 10px; /* 减小间距 */
   height: 100%;
   overflow: hidden;
 }
@@ -1452,7 +1441,7 @@ function getFeatureTypePriority(featureName) {
   left: 0;
   top: 0;
   bottom: 0;
-  width: 30px;
+  width: 36px; /* 增加宽度，从24px改为36px */
   z-index: 10;
   display: flex;
   align-items: center;
@@ -1467,11 +1456,11 @@ function getFeatureTypePriority(featureName) {
 .aside-label {
   transform: rotate(-90deg);
   white-space: nowrap;
-  font-size: 1.4em;
+  font-size: 1.4em; /* 增大字体大小，从1.2em改为1.4em */
   font-weight: 700;
   color: #333;
   letter-spacing: 0.04em;
-  width: 120px;
+  width: 120px; /* 增加宽度，从100px改为120px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1482,9 +1471,9 @@ function getFeatureTypePriority(featureName) {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(200, 200, 200, 0.2);
-  padding: 12px 12px 12px 40px; /* 增加左侧padding，为旋转的侧边栏留出空间 */
-  overflow: hidden; /* 修改为hidden，防止与阴影遮盖器冲突 */
-  position: relative; /* 添加相对定位，作为阴影遮盖器的参考 */
+  padding: 8px 8px 8px 42px; /* 增加左内边距，从30px改为42px，以适应更宽的侧边栏 */
+  overflow: hidden;
+  position: relative;
 }
 
 .feature-section {
@@ -1501,7 +1490,7 @@ function getFeatureTypePriority(featureName) {
 /* 添加滚动阴影遮盖器样式 */
 .shadow-overlay {
   position: absolute;
-  left: 30px; /* 修改左侧位置，避免覆盖侧边栏 */
+  left: 42px; /* 修改左侧位置，从30px改为42px，避免覆盖侧边栏 */
   right: 0;
   height: 20px;
   pointer-events: none; /* 允许鼠标事件穿透到下面的内容 */
@@ -1551,18 +1540,18 @@ function getFeatureTypePriority(featureName) {
 }
 
 :deep(.value-count) {
-  font-size: 16px; /* 从14px增加到16px */
-  font-weight: 700; /* 从600增加到700 */
-  color: #333; /* 加深颜色 */
-  margin-left: 6px;
+  font-size: 16px; /* 增大字体大小 */
+  font-weight: 700;
+  color: #333;
+  margin-left: 6px; /* 增加左边距 */
   background-color: rgba(0, 0, 0, 0.08);
   border-radius: 3px;
-  padding: 0px 5px;
+  padding: 0px 6px; /* 增加内边距 */
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px; /* 略微增加最小宽度 */
-  height: 20px; /* 略微增加高度 */
+  min-width: 22px; /* 增加最小宽度 */
+  height: 22px; /* 增加高度 */
 }
 
 :deep(.dimension-analysis) {
@@ -1734,14 +1723,13 @@ function getFeatureTypePriority(featureName) {
 
 :deep(.feature-columns) {
     display: flex;
-    gap: 6px;
+    gap: 10px; /* 增加间距，从6px改为10px */
     max-height: 100%;
-    overflow: hidden; /* 修改为hidden，防止整体滚动 */
-    height: 100%; /* 确保占满整个高度 */
+    overflow: hidden;
+    height: 100%;
 }
 
 :deep(.feature-column) {
-    flex: 1;
     display: flex;
     flex-direction: column;
     position: relative; /* 添加相对定位，作为sticky标题的参考 */
@@ -1749,28 +1737,37 @@ function getFeatureTypePriority(featureName) {
     height: 100%; /* 确保占满整个高度 */
 }
 
+/* 修改左右两侧区域的宽度比例 */
+:deep(.feature-column.positive) {
+    flex: 1.2; /* 增加左侧Used effects区域的比例，从1改为1.2 */
+}
+
+:deep(.feature-column.negative) {
+    flex: 1.8; /* 减少右侧Available effects区域的比例，从2改为1.8 */
+}
+
 :deep(.column-title) {
-    font-size: 16px;
+    font-size: 18px; /* 增大字体大小，从16px改为18px */
     font-weight: 600;
-    padding: 8px;
+    padding: 8px; /* 增加内边距，从6px改为8px */
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     color: #333;
     position: sticky;
     top: 0;
-    background: rgba(255, 255, 255, 0.95); /* 增加不透明度 */
-    z-index: 5; /* 确保在内容之上 */
-    backdrop-filter: blur(5px); /* 添加模糊效果增强可读性 */
-    margin-bottom: 0; /* 移除底部边距 */
-    flex-shrink: 0; /* 防止标题被压缩 */
+    background: rgba(255, 255, 255, 0.95);
+    z-index: 5;
+    backdrop-filter: blur(5px);
+    margin-bottom: 0;
+    flex-shrink: 0;
 }
 
 /* 添加内容容器，使其可滚动而标题固定 */
 :deep(.column-content) {
     flex: 1;
     overflow-y: auto;
-    padding-top: 4px; /* 添加顶部内边距，与标题分开 */
-    height: calc(100% - 40px); /* 减去标题高度 */
-    scrollbar-width: thin; /* 使滚动条更细 */
+    padding-top: 2px; /* 减小顶部内边距 */
+    height: calc(100% - 30px); /* 调整高度 */
+    scrollbar-width: thin;
 }
 
 /* 自定义滚动条样式 */
@@ -1800,6 +1797,13 @@ function getFeatureTypePriority(featureName) {
     top: 0;
     background: rgba(255, 255, 255, 0.95);
     z-index: 4; /* 低于主标题但高于内容 */
+    font-size: 18px; /* 增大字体大小，从16px改为18px */
+    font-weight: 700;
+    color: #703710;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    line-height: 1.4;
 }
 
 /* 调整suggestions容器样式 */
@@ -1819,9 +1823,9 @@ function getFeatureTypePriority(featureName) {
 :deep(.feature-item) {
     display: flex;
     align-items: center;
-    padding: 3px 4px; /* 增加内边距 */
+    padding: 3px 6px; /* 增加内边距 */
     border-radius: 4px;
-    margin-bottom: 4px; /* 增加底部间距 */
+    margin-bottom: 3px; /* 增加底部间距 */
     background: transparent;
     transition: all 0.2s ease;
     min-height: 32px; /* 增加最小高度 */
@@ -1858,24 +1862,64 @@ function getFeatureTypePriority(featureName) {
 }
 
 :deep(.feature-tag) {
-    min-width: 80px;
-    text-align: center;
-    padding: 2px 8px;
+    background-color: rgba(0, 122, 255, 0.08);
+    border: 1px solid rgba(0, 122, 255, 0.15);
     border-radius: 4px;
-    border-width: 1px;
-    border-style: solid;
-    font-size: 14px; /* 增加字体大小 */
-    font-weight: 500; /* 增加字重 */
+    padding: 1px 6px;
+    margin: 0 1px;
+    color: #007AFF;
+    font-size: 14px; /* 增大字体大小，从13px改为14px */
+    display: inline-block;
+    font-weight: 500;
+    letter-spacing: -0.016em;
 }
 
 :deep(.no-selection) {
+    font-size: 15px; /* 增大字体大小 */
+    color: #777; /* 使用更柔和的灰色 */
+    min-height: 36px; /* 改为最小高度，允许内容增长 */
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    color: #86868b;
-    font-size: 14px;
-    font-style: italic;
+    font-weight: 500;
+    padding: 8px 12px; /* 增加内边距，确保文本有足够空间 */
+    background-color: transparent; /* 移除背景色 */
+    border-radius: 0; /* 移除圆角 */
+    margin: 12px 0; /* 增加上下外边距，提供更好的空间 */
+    border: none; /* 移除边框 */
+    box-shadow: none; /* 移除阴影 */
+    text-align: center;
+    letter-spacing: 0.01em; /* 增加字母间距 */
+    font-style: italic; /* 使用斜体 */
+    width: 100%; /* 确保宽度足够 */
+    box-sizing: border-box; /* 确保内边距不会增加元素总宽度 */
+    overflow: visible; /* 允许内容溢出 */
+}
+
+:deep(.no-selection span) {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap; /* 允许文本换行 */
+    justify-content: center; /* 居中对齐内容 */
+    max-width: 100%; /* 限制最大宽度 */
+    word-break: break-word; /* 允许在单词内换行 */
+}
+
+:deep(.no-selection span::before) {
+    content: '—'; /* 添加短横线作为装饰 */
+    margin-right: 8px;
+    opacity: 0.6;
+    white-space: nowrap; /* 防止装饰符号换行 */
+    flex-shrink: 0; /* 防止装饰符号被压缩 */
+}
+
+:deep(.no-selection span::after) {
+    content: '—'; /* 添加短横线作为装饰 */
+    margin-left: 8px;
+    opacity: 0.6;
+    white-space: nowrap; /* 防止装饰符号换行 */
+    flex-shrink: 0; /* 防止装饰符号被压缩 */
 }
 
 :deep(.feature-rank) {
@@ -1903,9 +1947,9 @@ function getFeatureTypePriority(featureName) {
     align-items: center;
     background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(76, 175, 80, 0.15) 100%);
     border: 1px solid rgba(76, 175, 80, 0.2);
-    border-radius: 12px;
-    padding: 16px;
-    margin: 12px 0;
+    border-radius: 8px;
+    padding: 12px; /* 增加内边距 */
+    margin: 6px 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
 }
@@ -1918,31 +1962,39 @@ function getFeatureTypePriority(featureName) {
 :deep(.salience-icon) {
     background-color: #4CAF50;
     color: white;
-    width: 36px;
-    height: 36px;
+    width: 32px; /* 增加宽度 */
+    height: 32px; /* 增加高度 */
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    margin-right: 16px;
+    font-size: 18px; /* 增加字体大小 */
+    margin-right: 12px; /* 增加右边距 */
     flex-shrink: 0;
     box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
 }
 
+:deep(.salience-content) {
+    flex: 1;
+}
+
+:deep(.salience-row) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
 :deep(.salience-title) {
-    font-size: 16px;
+    font-size: 16px; /* 增加字体大小 */
     font-weight: 600;
     color: #2E7D32;
-    margin-bottom: 4px;
 }
 
 :deep(.salience-value) {
-    font-size: 24px;
+    font-size: 22px; /* 增加字体大小 */
     font-weight: 700;
     color: #4CAF50;
-    margin-bottom: 4px;
+    margin-left: 10px; /* 添加左边距 */
 }
 
 :deep(.salience-description) {
@@ -1955,10 +2007,10 @@ function getFeatureTypePriority(featureName) {
   :deep(.all-elements-tag) {
       width: 100%;
       min-width: 100%;
-      font-size: 16px; /* 从15px增加到16px */
-      padding: 0 6px; /* 进一步减少内边距 */
+      font-size: 16px; /* 增大字体大小 */
+      padding: 0 8px; /* 增加内边距 */
       text-align: left; /* 左对齐文本 */
-      font-weight: 600; /* 从500增加到600 */
+      font-weight: 600;
       box-sizing: border-box;
       display: flex;
       align-items: center;
@@ -1983,7 +2035,7 @@ function getFeatureTypePriority(featureName) {
   
   /* 添加 All elements 部分的 Used visual effects 标题样式 */
   :deep(.all-elements-title) {
-      font-size: 1.1em;
+      font-size: 1.3em; /* 增大字体大小，从1.1em改为1.3em */
       padding: 0px 8px 8px 0;
       margin-bottom: 0;
       font-weight: 600;
@@ -1992,23 +2044,15 @@ function getFeatureTypePriority(featureName) {
   
   /* 添加两列布局容器 */
   :deep(.two-column-wrapper) {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      padding: 8px 0;
+      display: none; /* 隐藏两列布局 */
   }
   
   :deep(.two-column-row) {
-      display: flex;
-      width: 100%;
-      gap: 12px;
-      margin-bottom: 12px;
+      display: none; /* 隐藏两列行 */
   }
   
   :deep(.two-column-item) {
-      width: calc(50% - 6px);
-      height: 52px; /* 增加高度 */
-      flex: 1;
+      display: none; /* 隐藏两列项 */
   }
   
   /* 添加单列布局容器 */
@@ -2016,22 +2060,27 @@ function getFeatureTypePriority(featureName) {
       display: flex;
       flex-direction: column;
       width: 100%;
-      padding: 8px 0;
-      gap: 12px;
+      padding: 6px 0; /* 增加内边距 */
+      gap: 3px; /* 增加项目间距 */
   }
   
   :deep(.single-column-wrapper .feature-item) {
-      height: 46px;
+      height: 36px; /* 增加高度 */
+      width: 100%;
+  }
+  
+  :deep(.feature-item) {
+      margin-bottom: 0px; /* 移除底部边距，使用 gap 控制间距 */
   }
   
   /* 三区块布局样式 */
   :deep(.suggestions-container) {
     display: flex;
     flex-direction: row;
-    gap: 10px; /* 进一步减少间距 */
-    margin-top: 3px;
+    gap: 6px; /* 减小间距 */
+    margin-top: 2px;
     width: 100%;
-    min-height: 110px; /* 进一步减小高度 */
+    min-height: 80px; /* 减小最小高度 */
   }
   
   /* 缩小两侧区域的间距 */
@@ -2047,12 +2096,13 @@ function getFeatureTypePriority(featureName) {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    min-height: 100px; /* 确保最小高度足够显示提示文字 */
   }
   
   :deep(.suggestions-reset-section),
   :deep(.suggestions-stroke-section) {
     flex: 1; /* 平均分配空间 */
-    min-height: 45px; /* 进一步减小最小高度 */
+    min-height: 35px; /* 减小最小高度 */
     border: none;
     border-radius: 0;
     padding: 0 0 0 2px; /* 进一步减小内边距 */
@@ -2067,7 +2117,6 @@ function getFeatureTypePriority(featureName) {
     max-width: 50%;
     display: flex;
     flex-direction: column;
-    gap: 4px; /* 进一步减少区域间隔 */
     height: 100%;
     position: relative;
     padding-left: 3px;
@@ -2079,14 +2128,14 @@ function getFeatureTypePriority(featureName) {
   
   /* 调整标题样式 */
   :deep(.suggestions-section-title) {
-    font-size: 15px; /* 从13px增加到15px */
-    font-weight: 700; /* 从600增加到700 */
-    color: #703710; /* 颜色稍微加深 */
-    margin-bottom: 4px; /* 增加底部边距 */
+    font-size: 18px; /* 增大字体大小，从16px改为18px */
+    font-weight: 700;
+    color: #703710;
+    margin-bottom: 4px;
     padding-bottom: 2px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06); /* 加深底部边框 */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     position: relative;
-    line-height: 1.3; /* 增加行高 */
+    line-height: 1.4;
   }
   
   :deep(.feature-item) {
@@ -2097,7 +2146,7 @@ function getFeatureTypePriority(featureName) {
   :deep(.suggestions-add-section .feature-item),
   :deep(.suggestions-reset-section .feature-item),
   :deep(.suggestions-stroke-section .feature-item) {
-    height: 42px;
+    height: 36px; /* 增加高度 */
     display: flex;
     align-items: center;
   }
@@ -2105,25 +2154,61 @@ function getFeatureTypePriority(featureName) {
   :deep(.suggestions-add-section .feature-tag),
   :deep(.suggestions-reset-section .feature-tag),
   :deep(.suggestions-stroke-section .feature-tag) {
-    height: 36px; 
+    height: 32px;
     display: flex;
     align-items: center;
     width: 100%;
-    font-size: 16px; /* 增加字体大小 */
-    font-weight: 600; /* 增加粗细 */
-    color: #333; /* 加深颜色，提高可读性 */
+    font-size: 17px; /* 增大字体大小，从16px改为17px */
+    font-weight: 600;
+    color: #333;
   }
   
   :deep(.no-selection) {
-    font-size: 15px; /* 从11px增加到15px */
-    color: #555; /* 从#999加深到#555 */
-    height: 36px; /* 从28px增加到36px，与其他元素保持一致 */
+    font-size: 15px; /* 增大字体大小 */
+    color: #777; /* 使用更柔和的灰色 */
+    min-height: 36px; /* 改为最小高度，允许内容增长 */
     display: flex;
     align-items: center;
-    font-weight: 500; /* 增加字体粗细 */
-    padding-left: 6px; /* 增加左侧内边距 */
-    background-color: rgba(0, 0, 0, 0.02); /* 添加轻微背景色增加可见度 */
-    border-radius: 4px;
+    justify-content: center;
+    font-weight: 500;
+    padding: 8px 12px; /* 增加内边距，确保文本有足够空间 */
+    background-color: transparent; /* 移除背景色 */
+    border-radius: 0; /* 移除圆角 */
+    margin: 12px 0; /* 增加上下外边距，提供更好的空间 */
+    border: none; /* 移除边框 */
+    box-shadow: none; /* 移除阴影 */
+    text-align: center;
+    letter-spacing: 0.01em; /* 增加字母间距 */
+    font-style: italic; /* 使用斜体 */
+    width: 100%; /* 确保宽度足够 */
+    box-sizing: border-box; /* 确保内边距不会增加元素总宽度 */
+    overflow: visible; /* 允许内容溢出 */
+  }
+  
+  :deep(.no-selection span) {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap; /* 允许文本换行 */
+    justify-content: center; /* 居中对齐内容 */
+    max-width: 100%; /* 限制最大宽度 */
+    word-break: break-word; /* 允许在单词内换行 */
+  }
+  
+  :deep(.no-selection span::before) {
+    content: '—'; /* 添加短横线作为装饰 */
+    margin-right: 8px;
+    opacity: 0.6;
+    white-space: nowrap; /* 防止装饰符号换行 */
+    flex-shrink: 0; /* 防止装饰符号被压缩 */
+  }
+  
+  :deep(.no-selection span::after) {
+    content: '—'; /* 添加短横线作为装饰 */
+    margin-left: 8px;
+    opacity: 0.6;
+    white-space: nowrap; /* 防止装饰符号换行 */
+    flex-shrink: 0; /* 防止装饰符号被压缩 */
   }
   
   /* 分隔线样式 */
@@ -2151,10 +2236,10 @@ function getFeatureTypePriority(featureName) {
   
   /* 预估显著性样式 */
   :deep(.predicted-salience) {
-    font-size: 16px; /* 从15px增加到16px */
+    font-size: 16px; /* 增大字体大小 */
     font-weight: 700; /* 从600增加到700 */
     color: #703710; 
-    margin-left: 8px; /* 增加间距 */
+    margin-left: 8px; /* 增加左边距 */
     display: inline-block;
     text-align: right;
   }
