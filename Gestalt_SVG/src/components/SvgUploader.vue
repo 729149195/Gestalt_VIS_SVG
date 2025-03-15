@@ -31,13 +31,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="expand-toggle-container">
-                    <v-icon class="element-type-icon">mdi-shape-outline</v-icon>
-                    <span class="toggle-text">{{ isListExpanded ? 'types' : 'types' }}</span>
+                <el-tooltip class="box-item" effect="dark" content="Filter element types by click checkboxs" placement="top-start">
+                    <div class="expand-toggle-container">
+                        <v-icon class="element-type-icon">mdi-shape-outline</v-icon>
+                        <span class="toggle-text">{{ isListExpanded ? 'types' : 'types' }}</span>
                     <v-icon class="expand-icon" :class="{ 'rotated': isListExpanded }">
                         mdi-chevron-down
-                    </v-icon>
-                </div>
+                        </v-icon>
+                    </div>
+                </el-tooltip>
             </div>
             <div class="selector-content" :class="{ 'hidden': !isListExpanded }">
                 <v-list density="compact" class="mac-style-list">

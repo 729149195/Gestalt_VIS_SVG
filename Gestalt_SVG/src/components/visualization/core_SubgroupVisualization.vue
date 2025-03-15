@@ -952,6 +952,11 @@ async function loadAndRenderGraph() {
         // 初始化渲染完成
         isInitialRender.value = false;
         isDataUpdated.value = false;
+        
+        // 在数据加载和渲染完成后，更新视觉显著性数据
+        nextTick(() => {
+            updateVisualSalienceData();
+        });
     }
 }
 
@@ -1141,6 +1146,9 @@ onMounted(async () => {
     nextTick(() => {
         updateScrollShadows();
         updateScrollbarThumb();
+        
+        // 计算并更新所有卡片的视觉显著性
+        updateVisualSalienceData();
     });
     
     // 添加窗口调整大小时更新阴影和滚动条的监听器
@@ -1190,6 +1198,11 @@ watch(selectedNodeIds, (newVal, oldVal) => {
                     // 使用thumbnail缓存，减少重复渲染
                     renderGraph(container, nodeData, true);
                 }
+            });
+            
+            // 在卡片重新渲染后更新视觉显著性数据
+            nextTick(() => {
+                updateVisualSalienceData();
             });
         });
     }
@@ -1431,6 +1444,51 @@ const calculateAttentionProbability = (nodeData, returnRawScore = false) => {
 const getStats = (node) => {
     return elementStats.value.get(node.id) || {};
 };
+
+// 添加计算所有卡片视觉显著性的函数
+function updateVisualSalienceData() {
+    if (!flattenedNodes.value || flattenedNodes.value.length === 0) {
+        console.warn('没有可用的节点数据来计算视觉显著性');
+        return;
+    }
+    
+    try {
+        // 计算所有卡片的视觉显著性
+        const salienceData = flattenedNodes.value.map(node => {
+            const nodeId = node.id;
+            const salienceValue = calculateAttentionProbability(node);
+            const rawScore = calculateAttentionProbability(node, true);
+            
+            return {
+                nodeId,
+                type: node.type,
+                clusterId: node.clusterId,
+                salienceValue: (salienceValue * 100).toFixed(3), // 格式化为百分比
+                rawScore
+            };
+        });
+        
+        // 按显著性值从高到低排序
+        salienceData.sort((a, b) => b.rawScore - a.rawScore);
+        
+        // 将结果存储到Vuex store中
+        store.commit('SET_VISUAL_SALIENCE', salienceData);
+        
+        console.log('视觉显著性数据已更新:', salienceData);
+    } catch (error) {
+        console.error('计算视觉显著性时出错:', error);
+    }
+}
+
+// 在数据更新后重新计算视觉显著性
+watch(normalizedData, (newVal) => {
+    if (newVal && newVal.length > 0 && !isInitialRender.value) {
+        // 延迟执行，确保DOM已更新
+        nextTick(() => {
+            updateVisualSalienceData();
+        });
+    }
+}, { deep: true });
 </script>
 
 <style scoped>

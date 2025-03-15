@@ -13,7 +13,7 @@ export default createStore({
       },
       AllVisiableNodes: [],          // 所有可见的节点 ID 列表
       ele_num_data: null,            // 元素数量数据
-      visualSalience: 0              // 视觉显著性值
+      visualSalience: []             // 视觉显著性数组，存储所有卡片的显著性值
     };
   },
   mutations: {
@@ -54,7 +54,7 @@ export default createStore({
       state.selectedNodes.nodeIds = state.selectedNodes.nodeIds.filter(id => id !== nodeIdToRemove);
     },
     SET_VISUAL_SALIENCE(state, value) {
-      // 设置视觉显著性值
+      // 设置视觉显著性数组
       state.visualSalience = value;
     }
   },

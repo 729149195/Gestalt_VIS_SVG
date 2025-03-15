@@ -724,6 +724,9 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               }
           }
           
+          // 按uniqueSelectedValueCount从大到小排序processedSignificantFeatures
+          processedSignificantFeatures.sort((a, b) => b.uniqueSelectedValueCount - a.uniqueSelectedValueCount);
+          
           // 筛选出可能的改进特征，这些特征在未选中元素中有非零值，但在选中元素中没有或很少
         const negativeFeatures = featureArray
               .filter(feature => 
@@ -1141,6 +1144,9 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         const finalDiverseFeatures = processedDiverseFeatures.slice(0, 20);
         const finalLeastDistinctive = processedLeastDistinctive.slice(0, 10);
         
+        // 按uniqueValueCount从大到小排序finalDiverseFeatures
+        finalDiverseFeatures.sort((a, b) => b.uniqueValueCount - a.uniqueValueCount);
+        
         // 生成HTML
         let analysis = '<div class="feature-columns">';
         
@@ -1413,7 +1419,7 @@ function getFeatureTypePriority(featureName) {
 
 /* 修改标题样式，移除绝对定位 */
 .title {
-  font-size: 1.5em; /* 减小字体大小 */
+  font-size: 1.8em; /* 减小字体大小 */
   font-weight: bold;
   color: #1d1d1f;
   letter-spacing: -0.01em;
@@ -2061,7 +2067,6 @@ function getFeatureTypePriority(featureName) {
       flex-direction: column;
       width: 100%;
       padding: 6px 0; /* 增加内边距 */
-      gap: 3px; /* 增加项目间距 */
   }
   
   :deep(.single-column-wrapper .feature-item) {
