@@ -14,17 +14,58 @@ const store = useStore();
 
 // 更新了数据接口地址
 const eleURL = "http://127.0.0.1:5000/stroke_num";
+const elementStrokeColorsURL = "http://127.0.0.1:5000/element_stroke_colors"; // 新增元素描边颜色接口
 const chartContainer = ref(null);
 const hasData = ref(false);
 const rawJsonData = ref(null);
 const isInitialized = ref(false); // 添加初始化标志
+const svg = ref(null);
+const elementStrokeColors = ref({}); // 存储元素描边颜色映射
+
+// 计算选中比例的函数
+const calculateSelectedRatio = (color, selectedNodes) => {
+    if (!selectedNodes || selectedNodes.length === 0 || !elementStrokeColors.value) return 0;
+    
+    // 找出所有使用该描边颜色的元素（排除"none"）
+    const elementsWithColor = Object.keys(elementStrokeColors.value).filter(
+        element => elementStrokeColors.value[element] === color && color !== "none"
+    );
+    
+    if (elementsWithColor.length === 0) return 0;
+    
+    // 标准化选中节点格式
+    const normalizedSelectedNodes = selectedNodes.map(node => node.split('/').pop());
+    
+    // 计算交集
+    const intersection = elementsWithColor.filter(element => 
+        normalizedSelectedNodes.includes(element)
+    );
+    
+    return intersection.length / elementsWithColor.length;
+};
 
 onMounted(async () => {
     // 延迟执行数据获取，确保在父组件准备好后执行
     await nextTick();
     isInitialized.value = true;
+    await fetchElementStrokeColors(); // 先获取元素描边颜色映射
     await fetchData();
 });
+
+// 获取元素描边颜色映射
+const fetchElementStrokeColors = async () => {
+    try {
+        const response = await fetch(elementStrokeColorsURL);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        
+        const data = await response.json();
+        elementStrokeColors.value = data;
+    } catch (error) {
+        console.error('获取元素描边颜色映射时出错:', error);
+    }
+};
 
 const fetchData = async () => {
     if (!isInitialized.value) {
@@ -101,7 +142,6 @@ watch([() => chartContainer.value, () => isInitialized.value], ([newContainer, n
 });
 
 const render = (data) => {
-    
     if (!chartContainer.value) {
         console.error('渲染失败：chartContainer不存在');
         return;
@@ -146,7 +186,7 @@ const render = (data) => {
             .range([height - marginBottom, marginTop]);
 
         // 创建SVG元素
-        const svg = d3.select(container)
+        svg.value = d3.select(container)
             .append('svg')
             .attr('viewBox', `0 0 ${width} ${height}`)
             .attr('width', width)
@@ -154,7 +194,7 @@ const render = (data) => {
             .attr('style', 'max-width: 100%; height: auto;');
     
         // 添加横轴
-        svg.append('g')
+        svg.value.append('g')
             .attr('class', 'x-axis')
             .attr('transform', `translate(0,${height - marginBottom})`)
             .call(d3.axisBottom(x))
@@ -162,16 +202,24 @@ const render = (data) => {
 
         // 添加颜色圆点于x轴
         data.forEach(d => {
-            svg.select('.x-axis').append('circle')
+            // 对于"none"值，使用特殊的表示方式
+            const fillColor = d.tag === "none" ? "#ffffff" : d.tag;
+            const strokeColor = d.tag === "none" ? "#999" : "#999";
+            const strokeWidth = d.tag === "none" ? 2 : 1;
+            const strokeDasharray = d.tag === "none" ? "2,2" : "none";
+            
+            svg.value.select('.x-axis').append('circle')
                 .attr('cx', x(d.tag) + x.bandwidth() / 2)
                 .attr('cy', 15) // 轴线下方适当位置
-                .attr('r', 5)
-                .attr('fill', d.tag)
-                .attr('stroke', '#999');
+                .attr('r', 8)
+                .attr('fill', fillColor)
+                .attr('stroke', strokeColor)
+                .attr('stroke-width', strokeWidth)
+                .attr('stroke-dasharray', strokeDasharray);
         });
 
         // 添加纵轴及横线
-        const yAxis = svg.append('g')
+        const yAxis = svg.value.append('g')
             .attr('class', 'y-axis')
             .attr('transform', `translate(${marginLeft},0)`)
             .call(d3.axisLeft(y)
@@ -190,48 +238,145 @@ const render = (data) => {
                     .style('font-size', '12px');
             });
 
-        // 绘制带圆角的条形图
-        svg.selectAll('.bar')
+        // 创建颜色组
+        const colorGroups = svg.value.selectAll('.color-group')
             .data(data)
             .enter()
-            .append('path')
-            .attr('class', 'bar')
-            .attr('fill', d => d.tag) // 使用数据中的颜色值作为填充色
-            .attr('stroke', '#905F29')
-            .attr('d', d => roundedRectPath(d, x, y, actualBandwidth));
+            .append('g')
+            .attr('class', 'color-group')
+            .attr('transform', d => `translate(${x(d.tag) + x.bandwidth() / 2},0)`)
+            .attr('style', 'cursor: pointer;')
+            .on('click', (event, d) => {
+                // 如果是"none"，不执行任何操作
+                if (d.tag === "none") return;
+                
+                // 找出所有使用该描边颜色的元素
+                const elementsWithColor = Object.keys(elementStrokeColors.value).filter(
+                    element => elementStrokeColors.value[element] === d.tag
+                );
+                
+                // 标准化元素格式
+                const normalizedElements = elementsWithColor.map(element => 
+                    element.startsWith('svg/') ? element : `svg/${element}`
+                );
+                
+                // 更新选中节点
+                store.commit('UPDATE_SELECTED_NODES', { 
+                    nodeIds: normalizedElements,
+                    group: null 
+                });
+            });
+
+        // 绘制背景条形图（灰色）
+        colorGroups.append('rect')
+            .attr('class', 'background-bar')
+            .attr('x', -actualBandwidth / 2)
+            .attr('y', d => y(d.num))
+            .attr('width', actualBandwidth)
+            .attr('height', d => height - marginBottom - y(d.num))
+            .attr('fill', '#E0E0E0'); // 使用灰色作为背景
+
+        // 绘制高亮条形图（初始高度为0）
+        colorGroups.append('rect')
+            .attr('class', 'highlight-bar')
+            .attr('x', -actualBandwidth / 2)
+            .attr('y', height - marginBottom) // 初始位置在底部
+            .attr('width', actualBandwidth)
+            .attr('height', 0) // 初始高度为0
+            .attr('fill', '#905F29') // 使用与PositionStatistics相同的高亮颜色
+            .style('opacity', 0.7);
 
         // 添加 y 轴图例
-        svg.append("text")
+        svg.value.append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", marginLeft / 3)
             .attr("x", 0 - (height - marginBottom) / 2)
             .style("text-anchor", "middle")
-            .style("font-size", "14px")
-            .text("Number");
+            .style("font-size", "12px")
+            .text("Count");
+        
+        // 添加提示框
+        const tooltip = d3.select(container)
+            .append("div")
+            .attr("class", "tooltip")
+            .style("position", "absolute")
+            .style("visibility", "hidden")
+            .style("background", "white")
+            .style("border", "1px solid #ddd")
+            .style("padding", "10px")
+            .style("border-radius", "2px")
+            .style("pointer-events", "none")
+            .style("box-shadow", "0px 0px 10px rgba(0,0,0,0.1)")
+            .style("white-space", "nowrap");
+        
+        // 添加鼠标悬停事件
+        colorGroups.on('mouseover', (event, d) => {
+            // 对于"none"值，显示特殊提示
+            if (d.tag === "none") {
+                tooltip.style("visibility", "visible")
+                    .html(`<strong>Color:</strong> None (No Stroke)<br/><strong>Count:</strong> ${d.num}`);
+                
+                const tooltipHeight = tooltip.node().getBoundingClientRect().height;
+                tooltip.style("top", (event.pageY - tooltipHeight - 10) + "px")
+                    .style("left", (event.pageX + 10) + "px");
+                return;
+            }
+            
+            // 找出所有使用该描边颜色的元素
+            const elementsWithColor = Object.keys(elementStrokeColors.value).filter(
+                element => elementStrokeColors.value[element] === d.tag
+            );
+            
+            tooltip.style("visibility", "visible")
+                .html(() => {
+                    const elementsContent = elementsWithColor.slice(0, 10).map(element => `${element}<br/>`).join("");
+                    const moreElements = elementsWithColor.length > 10 ? `<br/>...and ${elementsWithColor.length - 10} more` : "";
+                    const content = `<strong>Color:</strong> ${d.tag}<br/><strong>Count:</strong> ${d.num}<br/><strong>Elements:</strong><br/>${elementsContent}${moreElements}`;
+                    return content;
+                });
+            
+            const tooltipHeight = tooltip.node().getBoundingClientRect().height;
+            tooltip.style("top", (event.pageY - tooltipHeight - 10) + "px")
+                .style("left", (event.pageX + 10) + "px");
+        })
+        .on('mouseout', () => {
+            tooltip.style("visibility", "hidden");
+        });
+        
+        // 更新选中状态的函数
+        const updateSelection = (selectedNodes) => {
+            if (!selectedNodes) return;
+            
+            colorGroups.each(function(d) {
+                // 对于"none"值，不进行高亮处理
+                if (d.tag === "none") return;
+                
+                const ratio = calculateSelectedRatio(d.tag, selectedNodes);
+                const barHeight = height - marginBottom - y(d.num);
+                
+                // 更新高亮条形的高度和位置
+                d3.select(this).select('.highlight-bar')
+                    .transition()
+                    .duration(300)
+                    .attr('height', barHeight * ratio)
+                    .attr('y', y(d.num) + barHeight * (1 - ratio));
+            });
+        };
+        
+        // 监听选中节点变化
+        watch(
+            () => store.state.selectedNodes.nodeIds,
+            (newSelectedNodes) => {
+                if (!svg.value) return;
+                updateSelection(newSelectedNodes || []);
+            },
+            { deep: true, immediate: true }
+        );
         
     } catch (error) {
         console.error('渲染StrokeStatistics图表时出错:', error);
         hasData.value = false;
     }
-}
-
-const roundedRectPath = (d, x, y, maxWidth) => {
-    const bandWidth = x.bandwidth();
-    const barWidth = maxWidth || bandWidth;
-    // 计算条形的中心位置
-    const barCenter = x(d.tag) + bandWidth / 2;
-    // 根据最大宽度计算条形的起始和结束位置
-    const x0 = barCenter - barWidth / 2;
-    const y0 = y(d.num);
-    const x1 = barCenter + barWidth / 2;
-    const y1 = y(0);
-    
-    // 使用直角矩形路径
-    return `M${x0},${y0}
-            L${x1},${y0}
-            L${x1},${y1}
-            L${x0},${y1}
-            Z`;
 };
 </script>
 
@@ -276,10 +421,19 @@ const roundedRectPath = (d, x, y, maxWidth) => {
 }
 
 /* 添加条形图样式 */
-.bar {
+.background-bar, .highlight-bar {
   transition: opacity 0.3s;
 }
-.bar:hover {
+
+.color-group:hover .background-bar {
   opacity: 0.8;
+}
+
+.tooltip strong {
+    color: #905F29;
+}
+
+.tooltip span {
+    color: black;
 }
 </style>

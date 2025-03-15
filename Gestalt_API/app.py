@@ -528,6 +528,91 @@ def top_position():
             return json_file.read(), 200, {'Content-Type': 'application/json'}
     else:
         return jsonify({'error': 'community_data_mult.json file not found'}), 404
+    
+@app.route('/element_colors', methods=['GET'])
+def element_colors():
+    try:
+        csv_path = os.path.join(app.config['DATA_FOLDER'], 'features.csv')
+        
+        if not os.path.exists(csv_path):
+            return jsonify({'error': 'features.csv file not found'}), 404
+            
+        # 读取CSV文件并提取颜色信息
+        color_data = {}
+        import csv
+        
+        with open(csv_path, 'r', encoding='utf-8') as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for row in csv_reader:
+                # 获取原始tag_name
+                original_tag_name = row['tag_name']
+                
+                # 只保留最后一个"/"后的所有字符
+                tag_name = original_tag_name.split('/')[-1]
+                
+                # 提取HSL颜色值
+                fill_h = float(row['fill_h'])
+                fill_s = float(row['fill_s'])
+                fill_l = float(row['fill_l'])
+                
+                # 检查是否有有效的颜色值（有些元素可能没有填充颜色）
+                if fill_h >= 0 and fill_s >= 0 and fill_l >= 0:
+                    # 格式化为HSL字符串
+                    hsl_color = f"hsl({round(fill_h, 1)}, {round(fill_s, 1)}%, {round(fill_l, 1)}%)"
+                    color_data[tag_name] = hsl_color
+                else:
+                    # 如果没有有效的填充颜色，使用默认值或标记为无颜色
+                    color_data[tag_name] = "none"
+        
+        return jsonify(color_data), 200
+        
+    except Exception as e:
+        print(f"获取元素颜色信息时出错: {str(e)}")
+        print(f"错误堆栈: {traceback.format_exc()}")
+        return jsonify({'error': f'Error getting element colors: {str(e)}'}), 500
+
+
+@app.route('/element_stroke_colors', methods=['GET'])
+def element_stroke_colors():
+    try:
+        csv_path = os.path.join(app.config['DATA_FOLDER'], 'features.csv')
+        
+        if not os.path.exists(csv_path):
+            return jsonify({'error': 'features.csv file not found'}), 404
+            
+        # 读取CSV文件并提取颜色信息
+        color_data = {}
+        import csv
+        
+        with open(csv_path, 'r', encoding='utf-8') as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for row in csv_reader:
+                # 获取原始tag_name
+                original_tag_name = row['tag_name']
+                
+                # 只保留最后一个"/"后的所有字符
+                tag_name = original_tag_name.split('/')[-1]
+                
+                # 提取HSL颜色值
+                stroke_h = float(row['stroke_h'])
+                stroke_s = float(row['stroke_s'])
+                stroke_l = float(row['stroke_l'])
+                
+                # 检查是否有有效的颜色值（有些元素可能没有填充颜色）
+                if stroke_h >= 0 and stroke_s >= 0 and stroke_l >= 0:
+                    # 格式化为HSL字符串
+                    hsl_color = f"hsl({round(stroke_h, 1)}, {round(stroke_s, 1)}%, {round(stroke_l, 1)}%)"
+                    color_data[tag_name] = hsl_color
+                else:
+                    # 如果没有有效的填充颜色，使用默认值或标记为无颜色
+                    color_data[tag_name] = "none"
+        
+        return jsonify(color_data), 200
+        
+    except Exception as e:
+        print(f"获取元素颜色信息时出错: {str(e)}")
+        print(f"错误堆栈: {traceback.format_exc()}")
+        return jsonify({'error': f'Error getting element colors: {str(e)}'}), 500
 
 
 @app.route('/subgraph/<int:dimension>', methods=['GET'])
@@ -1044,6 +1129,17 @@ def calculate_gmm():
 #             'success': False,
 #             'error': str(e)
 #         }), 500
+
+@app.route('/original_features', methods=['GET'])
+def original_features():
+    """获取原始的features.csv文件内容"""
+    community_data_path = os.path.join(app.config['DATA_FOLDER'], 'features.csv')
+
+    if os.path.exists(community_data_path):
+        with open(community_data_path, 'r', encoding='utf-8') as csv_file:
+            return csv_file.read(), 200, {'Content-Type': 'text/csv'}
+    else:
+        return jsonify({'error': 'features.csv file not found'}), 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
