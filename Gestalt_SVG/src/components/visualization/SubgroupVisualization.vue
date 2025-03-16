@@ -778,7 +778,7 @@ onUnmounted(() => {
 }
 
 .cluster-box {
-    width: 50px;
+    width: 16px;
     height: 16px;
     border-radius: 3px;
 }
@@ -794,7 +794,7 @@ onUnmounted(() => {
 }
 
 .cluster-arrow {
-    font-size: 1.6em;
+    font-size: 1.2em;
     color: #905F29;
     font-weight: bold;
     position: relative;
@@ -803,8 +803,8 @@ onUnmounted(() => {
 
 .cluster-labels {
     position: absolute;
-    top: -13px;
-    left: 10px;
+    top: -18px;
+    left: -10px;
     display: flex;
     width: 100%;
     justify-content: space-between;
@@ -818,7 +818,7 @@ onUnmounted(() => {
 }
 
 .correspond-label {
-    margin-left: 24px;
+    margin-left: 5px;
 }
 
 </style>

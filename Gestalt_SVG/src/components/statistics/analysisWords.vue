@@ -865,9 +865,15 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         resetFeature = processedFeatures[0];
       }
 
-      // 显示 Add 区域的特征（左侧区域）
-      analysis += `<div class="suggestions-add-section">`;
-      analysis += `<div class="suggestions-section-title">add visual encodings</div>`;
+      // 创建一个共享容器，包含add visual encodings、reset visual encodings和add annotations
+      analysis += `<div class="suggestions-shared-container">`;
+      // 移除总表头
+      // analysis += `<div class="suggestions-table-header">Suggestions</div>`;
+      
+      // 1. Add Visual Encodings 区域 - 修改为表格式行布局
+      analysis += `<div class="suggestions-table-row">`;
+      analysis += `<div class="suggestions-section-title">Add</div>`;
+      analysis += `<div class="suggestions-content-cell">`;
 
       if (processedFeatures.length > 0) {
         // 过滤掉Reset特征，最多显示5个
@@ -985,14 +991,13 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No suitable features found</span></div>`;
       }
 
-      analysis += `</div>`; // 关闭左侧区域
+      analysis += `</div>`; // 关闭内容单元格
+      analysis += `</div>`; // 关闭表格行
 
-      // 不再创建右侧容器，直接在主容器中添加 Reset 和 chart notation 区域
-      // analysis += `<div class="suggestions-right-section">`; // 移除右侧容器开始标签
-
-      // 2. Reset 区域 - 现在直接放在主容器中
-      analysis += `<div class="suggestions-reset-section" style="margin-top: -20px;">`; // 增加负边距减少空隙
-      analysis += `<div class="suggestions-section-title">Reset visual encodings</div>`;
+      // 2. Reset Visual Encodings 区域 - 修改为表格式行布局
+      analysis += `<div class="suggestions-table-row">`;
+      analysis += `<div class="suggestions-section-title">Reset</div>`;
+      analysis += `<div class="suggestions-content-cell">`;
 
       // 显示Reset特征
       if (resetFeature) {
@@ -1085,11 +1090,13 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         analysis += `<div class="no-selection"><span>No reset feature found</span></div>`;
       }
 
-      analysis += `</div>`; // 关闭Reset区域
+      analysis += `</div>`; // 关闭内容单元格
+      analysis += `</div>`; // 关闭表格行
 
-      // 3. chart notation 区域 - 现在直接放在主容器中
-      analysis += `<div class="suggestions-stroke-section" style="margin-top: 0px;">`; // 确保与上方区域间距一致
-      analysis += `<div class="suggestions-section-title">Add annotations</div>`;
+      // 3. Add Annotations 区域 - 修改为表格式行布局
+      analysis += `<div class="suggestions-table-row">`;
+      analysis += `<div class="suggestions-section-title">Annotations</div>`;
+      analysis += `<div class="suggestions-content-cell">`;
 
       // 检查高亮元素的位置关系，判断是显示"Add a box"还是"Add a link"
       const areElementsAdjacent = () => {
@@ -1185,11 +1192,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                   </div>
               `;
 
-      analysis += `</div>`; // 关闭 chart notation 区域
-
-      // analysis += `</div>`; // 移除右侧容器结束标签
-
-      analysis += `</div>`; // 关闭 suggestions-container
+      analysis += `</div>`; // 关闭内容单元格
+      analysis += `</div>`; // 关闭表格行
+      
+      analysis += `</div>`; // 关闭共享容器
     } else {
       // 当visual salience值大于等于85时显示的信息，使用更紧凑的样式
       analysis += `
@@ -1979,26 +1985,14 @@ const isMdsFeature = (featureKey) => {
 }
 
 :deep(.feature-tag) {
-  background-color: rgba(0, 122, 255, 0.08);
-  border: 1px solid rgba(0, 122, 255, 0.15);
-  border-radius: 4px;
-  padding: 1px 6px;
-  margin: 0 1px;
-  color: #007AFF;
-  font-size: 14px;
-  /* 增大字体大小，从13px改为14px */
-  display: inline-flex;
-  /* 改为 inline-flex 以支持 justify-content */
-  font-weight: 500;
-  letter-spacing: -0.016em;
-  width: 100%;
-  /* 确保占满整行 */
-  box-sizing: border-box;
-  /* 确保内边距不会增加元素总宽度 */
-  justify-content: space-between;
-  /* 在两端对齐内容 */
-  align-items: center;
-  /* 垂直居中对齐 */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background-color: transparent !important;
+  border: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
 }
 
 :deep(.value-count) {
@@ -2388,26 +2382,14 @@ const isMdsFeature = (featureKey) => {
 }
 
 :deep(.feature-tag) {
-  background-color: rgba(0, 122, 255, 0.08);
-  border: 1px solid rgba(0, 122, 255, 0.15);
-  border-radius: 4px;
-  padding: 1px 6px;
-  margin: 0 1px;
-  color: #007AFF;
-  font-size: 14px;
-  /* 增大字体大小，从13px改为14px */
-  display: inline-flex;
-  /* 改为 inline-flex 以支持 justify-content */
-  font-weight: 500;
-  letter-spacing: -0.016em;
-  width: 100%;
-  /* 确保占满整行 */
-  box-sizing: border-box;
-  /* 确保内边距不会增加元素总宽度 */
-  justify-content: space-between;
-  /* 在两端对齐内容 */
-  align-items: center;
-  /* 垂直居中对齐 */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background-color: transparent !important;
+  border: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
 }
 
 :deep(.no-selection) {
@@ -2444,42 +2426,24 @@ const isMdsFeature = (featureKey) => {
   /* 确保内边距不会增加元素总宽度 */
   overflow: visible;
   /* 允许内容溢出 */
+  padding: 10px 12px !important;
+  font-style: italic !important;
+  color: #777 !important;
+  background-color: rgba(0, 0, 0, 0.01) !important;
+  text-align: center !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 :deep(.no-selection span) {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  /* 允许文本换行 */
-  justify-content: center;
-  /* 居中对齐内容 */
-  max-width: 100%;
-  /* 限制最大宽度 */
-  word-break: break-word;
-  /* 允许在单词内换行 */
+  position: relative !important;
+  display: inline-block !important;
 }
 
-:deep(.no-selection span::before) {
-  content: '—';
-  /* 添加短横线作为装饰 */
-  margin-right: 8px;
-  opacity: 0.6;
-  white-space: nowrap;
-  /* 防止装饰符号换行 */
-  flex-shrink: 0;
-  /* 防止装饰符号被压缩 */
-}
-
+:deep(.no-selection span::before),
 :deep(.no-selection span::after) {
-  content: '—';
-  /* 添加短横线作为装饰 */
-  margin-left: 8px;
-  opacity: 0.6;
-  white-space: nowrap;
-  /* 防止装饰符号换行 */
-  flex-shrink: 0;
-  /* 防止装饰符号被压缩 */
+  content: '' !important;
+  display: none !important; /* 移除装饰线 */
 }
 
 :deep(.feature-rank) {
@@ -2813,42 +2777,33 @@ const isMdsFeature = (featureKey) => {
   /* 确保内边距不会增加元素总宽度 */
   overflow: visible;
   /* 允许内容溢出 */
+  padding: 10px 12px !important;
+  font-style: italic !important;
+  color: #777 !important;
+  background-color: rgba(0, 0, 0, 0.01) !important;
+  text-align: center !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 :deep(.no-selection span) {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
   /* 允许文本换行 */
-  justify-content: center;
+  justify-content: center !important;
   /* 居中对齐内容 */
-  max-width: 100%;
+  max-width: 100% !important;
   /* 限制最大宽度 */
-  word-break: break-word;
+  word-break: break-word !important;
   /* 允许在单词内换行 */
 }
 
-:deep(.no-selection span::before) {
-  content: '—';
-  /* 添加短横线作为装饰 */
-  margin-right: 8px;
-  opacity: 0.6;
-  white-space: nowrap;
-  /* 防止装饰符号换行 */
-  flex-shrink: 0;
-  /* 防止装饰符号被压缩 */
-}
-
+:deep(.no-selection span::before),
 :deep(.no-selection span::after) {
-  content: '—';
-  /* 添加短横线作为装饰 */
-  margin-left: 8px;
-  opacity: 0.6;
-  white-space: nowrap;
-  /* 防止装饰符号换行 */
-  flex-shrink: 0;
-  /* 防止装饰符号被压缩 */
+  content: '' !important;
+  display: none !important; /* 移除装饰线 */
 }
 
 /* 分隔线样式 */
@@ -2876,15 +2831,13 @@ const isMdsFeature = (featureKey) => {
 
 /* 预估显著性样式 */
 :deep(.predicted-salience) {
-  font-size: 16px;
-  /* 增大字体大小 */
-  font-weight: 700;
-  /* 从600增加到700 */
-  color: #703710;
-  margin-left: auto;
-  /* 将预估显著性值推到右侧 */
-  display: inline-block;
-  text-align: right;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #703710 !important;
+  background-color: rgba(112, 55, 16, 0.05) !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+  margin-left: auto !important;
 }
 
 :deep(.feature-tag .predicted-salience) {
@@ -2944,5 +2897,203 @@ const isMdsFeature = (featureKey) => {
 
 :deep(.predicted-salience) {
   margin-left: auto;
+}
+
+/* 添加共享容器样式 - 修改为纵向表格布局 */
+:deep(.suggestions-shared-container) {
+  display: flex !important;
+  flex-direction: column !important; /* 从row改为column */
+  justify-content: flex-start !important;
+  width: 100% !important;
+  gap: 0 !important; /* 移除间隙，表格形式更紧凑 */
+  margin-top: 2px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important; /* 添加表格边框 */
+  border-radius: 4px !important;
+  overflow: hidden !important; /* 确保圆角有效 */
+}
+
+/* 修改各区域样式，使它们在共享容器中纵向排列成表格形式 */
+:deep(.suggestions-add-section),
+:deep(.suggestions-reset-section),
+:deep(.suggestions-stroke-section) {
+  flex: none !important; /* 不使用flex比例 */
+  min-width: 100% !important; /* 占据全宽 */
+  max-width: 100% !important; 
+  border: none !important;
+  border-radius: 0 !important; /* 移除圆角，表格样式 */
+  padding: 0 !important; /* 移除内边距 */
+  background-color: transparent !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: visible !important; /* 允许内容溢出 */
+  margin-bottom: 0 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important; /* 添加底部边框分隔表格行 */
+}
+
+/* 最后一个区域不需要底部边框 */
+:deep(.suggestions-stroke-section) {
+  border-bottom: none !important;
+}
+
+/* 表头样式 */
+:deep(.suggestions-section-title) {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+  background-color: rgba(0, 0, 0, 0.03) !important; /* 表头背景色 */
+  padding: 8px 12px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  margin-bottom: 0 !important;
+}
+
+/* 特征项目样式，改为表格行样式 */
+:deep(.feature-item) {
+  min-height: 36px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
+  margin-bottom: 0 !important;
+  padding: 6px 12px !important;
+}
+
+:deep(.feature-item:last-child) {
+  border-bottom: none !important;
+}
+
+/* 让每个区域有独立的表格样式 */
+:deep(.suggestions-add-section) {
+  border-left: none !important;
+}
+
+:deep(.suggestions-reset-section) {
+  border-left: none !important;
+  margin-top: 0 !important;
+}
+
+:deep(.suggestions-stroke-section) {
+  border-left: none !important;
+  margin-top: 0 !important;
+}
+
+/* 移除之前的垂直布局 */
+:deep(.suggestions-container) {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+
+/* 添加共享容器样式 - 修改为表格样式 */
+:deep(.suggestions-shared-container) {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  gap: 0 !important;
+  margin-top: 2px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+}
+
+/* 表格行样式 */
+:deep(.suggestions-table-row) {
+  display: flex !important;
+  flex-direction: row !important; /* 行内水平排列 */
+  width: 100% !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+:deep(.suggestions-table-row:last-child) {
+  border-bottom: none !important;
+}
+
+/* 表头样式 - 放在左侧 */
+:deep(.suggestions-section-title) {
+  font-size: 14px !important; /* 减小字体大小 */
+  font-weight: 600 !important;
+  color: #333 !important;
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  padding: 8px 10px !important; /* 减小内边距 */
+  width: 120px !important;
+  min-width: 120px !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+  margin-bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+  word-break: break-word !important; /* 允许单词换行 */
+  line-height: 1.3 !important; /* 增加行高，使多行文本看起来更好 */
+}
+
+/* 内容单元格样式 - 放在右侧 */
+:deep(.suggestions-content-cell) {
+  flex: 1 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: visible !important;
+}
+
+/* 特征项目样式 */
+:deep(.feature-item) {
+  min-height: 36px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
+  margin-bottom: 0 !important;
+  padding: 6px 12px !important;
+}
+
+:deep(.feature-item:last-child) {
+  border-bottom: none !important;
+}
+
+/* 为表格行添加悬停效果 */
+:deep(.suggestions-table-row:hover) {
+  background-color: rgba(0, 0, 0, 0.01) !important;
+}
+
+/* 特征标签样式 */
+:deep(.feature-tag) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background-color: transparent !important;
+  border: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+}
+
+/* 移除之前的区域样式 */
+:deep(.suggestions-add-section),
+:deep(.suggestions-reset-section),
+:deep(.suggestions-stroke-section) {
+  display: none !important;
+}
+
+/* 为表格结构添加斑马纹 */
+:deep(.suggestions-table-row:nth-child(even)) {
+  background-color: rgba(0, 0, 0, 0.01) !important;
+}
+
+/* 添加共享容器样式 - 修改为表格样式 */
+:deep(.suggestions-shared-container) {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  gap: 0 !important;
+  margin-top: 2px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+}
+
+/* 添加表格标题样式 */
+:deep(.suggestions-table-header) {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  padding: 10px 12px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  margin-bottom: 0 !important;
 }
 </style>
