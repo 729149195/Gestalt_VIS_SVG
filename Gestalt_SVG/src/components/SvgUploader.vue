@@ -18,6 +18,19 @@
                 <div class="section-title">Control preview</div>
                 <div class="svg-container mac-style-container control-svg" ref="controlSvgContainer">
                     <div v-html="processedSvgContent"></div>
+                    <!-- 添加元素类型选择列表到Control preview区域 -->
+                    <div v-if="visibleElements.length > 0" class="control-element-selector">
+                        <div class="selector-content control-selector-content">
+                            <v-list density="compact" class="mac-style-list">
+                                <v-list-item v-for="element in visibleElements" :key="element.id" class="mac-style-list-item">
+                                    <v-checkbox v-model="selectedElements" :label="`${element.tag} (${element.count})`" :value="element.id" hide-details class="mac-style-checkbox"></v-checkbox>
+                                </v-list-item>
+                            </v-list>
+                        </div>
+                    </div>
+                    <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
+                        {{ analyzing ? 'Simulating...' : 'Submit elements scope' }}
+                    </v-btn>
                 </div>
             </div>
 
@@ -25,7 +38,7 @@
             <div class="right-panel">
                 <!-- 右上区域：S区 - 可高亮但不可点击的SVG -->
                 <div class="right-top-panel">
-                    <div class="section-title">Selected preview</div>
+                    <div class="section-title">Selected elements</div>
                     <div class="svg-container mac-style-container display-svg" ref="displaySvgContainer">
                         <div v-html="processedSvgContent"></div>
                     </div>
@@ -47,22 +60,8 @@
                                     <span class="selection-text">Lasso</span>
                                 </v-btn>
                             </div>
-                            <div class="element-type-indicator">
-                                <v-icon class="element-type-icon">mdi-shape-outline</v-icon>
-                                <span class="element-type-text">Element Types</span>
-                            </div>
-                        </div>
-                        <div class="selector-content">
-                            <v-list density="compact" class="mac-style-list">
-                                <v-list-item v-for="element in visibleElements" :key="element.id" class="mac-style-list-item">
-                                    <v-checkbox v-model="selectedElements" :label="`${element.tag} (${element.count})`" :value="element.id" hide-details class="mac-style-checkbox"></v-checkbox>
-                                </v-list-item>
-                            </v-list>
                         </div>
                         <div class="button-container">
-                            <v-btn class="mac-style-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
-                                {{ analyzing ? 'Simulating...' : 'Submit elements scope' }}
-                            </v-btn>
                             <div class="visual-salience-indicator" @click="showSalienceDetail">
                                 <span class="salience-label">Salience</span>
                                 <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
@@ -363,7 +362,7 @@ const addZoomEffectToSvg = (svg, enableInteraction, svgType) => {
     } else {
         // 为不可交互的SVG移除任何缩放相关监听器
         svg.on('.zoom', null);
-        
+
         // 设置初始变换以匹配控制区SVG
         const width = svg.node().getBoundingClientRect().width;
         const translateX = width * 0.05;
@@ -569,7 +568,7 @@ const setupDisplaySvgInteractions = () => {
 
     // 更新显示区节点的高亮状态
     updateDisplayNodeOpacity();
-    
+
     // 添加拖拽鼠标样式
     nextTick(() => {
         if (svgContainer) {
@@ -940,7 +939,7 @@ const showSalienceDetail = () => {
 }
 
 .left-panel {
-    flex: 1;
+    flex: 1.3;
     display: flex;
     flex-direction: column;
     background: rgba(248, 248, 248, 0.5);
@@ -971,7 +970,7 @@ const showSalienceDetail = () => {
 }
 
 .right-bottom-panel {
-    flex: 1;
+    flex: 0.6;
     background: rgba(248, 248, 248, 0.5);
     border-radius: 12px;
     border: 1px solid rgba(200, 200, 200, 0.3);
@@ -1139,12 +1138,11 @@ const showSalienceDetail = () => {
     font-size: 1.4em;
     color: white;
     font-weight: bold;
-    height: 55px;
+    height: 40px;
     letter-spacing: 0.3px;
     box-shadow: 0 2px 8px rgba(144, 95, 41, 0.2);
     transition: all 0.3s ease;
     text-transform: none;
-    flex: 1;
 }
 
 .mac-style-button:hover {
@@ -1400,5 +1398,59 @@ const showSalienceDetail = () => {
     color: #1d1d1f;
     letter-spacing: -0.01em;
     opacity: 0.8;
+}
+
+/* 添加SVG内部按钮容器样式 */
+.svg-button-container {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    z-index: 100;
+    width: auto;
+    height: auto;
+    display: block;
+    justify-content: flex-end;
+}
+
+.mac-style-container>div.svg-button-container {
+    width: auto;
+    height: auto;
+    position: absolute;
+    display: block;
+    bottom: 15px;
+    right: 15px;
+}
+
+/* 添加SVG内部按钮样式 */
+.submit-button {
+    position: absolute !important;
+    bottom: 15px !important;
+    right: 15px !important;
+    z-index: 100 !important;
+    width: auto !important;
+    margin: 0 !important;
+}
+
+/* 添加Control preview区域内的元素选择器样式 */
+.control-element-selector {
+    position: absolute !important;
+    bottom: 70px !important;
+    right: 15px !important;
+    z-index: 100 !important;
+    width: 200px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(144, 95, 41, 0.2) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    padding: 5px !important;
+    max-height: 150px !important;
+    overflow: hidden !important;
+}
+
+.control-selector-content {
+    height: 100% !important;
+    max-height: 140px !important;
+    overflow-y: auto !important;
+    margin-bottom: 0 !important;
 }
 </style>

@@ -5,8 +5,8 @@
             <div class="legend-container">
                 <div class="cluster-legend">
                     <div class="cluster-labels">
-                        <span class="cluster-label">core</span>
-                        <span class="cluster-label correspond-label">correspond</span>
+                        <span class="cluster-label">Core</span>
+                        <span class="cluster-label correspond-label">Correspond</span>
                     </div>
                     <div class="cluster-legend-item">
                         <div class="cluster-box core-box"></div>
@@ -803,7 +803,7 @@ onUnmounted(() => {
 
 .cluster-labels {
     position: absolute;
-    top: -15px;
+    top: -13px;
     left: 10px;
     display: flex;
     width: 100%;

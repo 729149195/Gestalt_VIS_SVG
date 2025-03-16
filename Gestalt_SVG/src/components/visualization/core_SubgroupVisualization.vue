@@ -4,29 +4,34 @@
         <div class="clusters-overview">
             <!-- 添加左侧标题 -->
             <div class="overview-title">List overview</div>
-            <div class="overview-wrapper">
-                <svg class="overview-svg" ref="overviewSvg">
-                    <!-- 将连接线组放在最后，确保它绘制在最上层 -->
-                    <g class="clusters-group">
-                        <g v-for="(node, index) in flattenedNodes" :key="`overview-${node.id}`" class="cluster-item" :class="{
-                            'cluster-core': node.type === 'core',
-                            'cluster-extension': node.type === 'extension'
-                            /* 移除选中状态的类，保持矩形样式不变 */
-                            /* 'cluster-selected': isNodeSelected(node) */
-                        }" :data-node-id="node.id" :data-cluster-id="node.clusterId" :data-index="index">
-                            <rect :width="itemWidth" :height="clusterItemSize" :x="index * (itemWidth + clusterItemGap)" :y="20" rx="3" ry="3" :style="{
-                                fill: getSalienceColor(node),
-                                stroke: 'none' /* 移除边框 */
-                            }" @click="handleOverviewClick(node.id, $event)" />
-                            <!-- 移除小圆点标记 -->
-                        </g>
-                    </g>
-                    <g class="connection-lines"></g>
-                </svg>
-                <!-- 添加自定义滚动条到总览条内部 -->
-                <div class="overview-scrollbar-container">
-                    <div class="custom-scrollbar-track" @mousedown="startScrollbarDrag">
-                        <div class="custom-scrollbar-thumb" ref="scrollbarThumb" :style="{ width: thumbWidth + 'px', left: thumbPosition + 'px' }"></div>
+            <!-- 使用wrapper-container包裹实际内容 -->
+            <div class="overview-wrapper-container">
+                <div class="overview-wrapper">
+                    <div class="overview-content">
+                        <svg class="overview-svg" ref="overviewSvg">
+                            <!-- 将连接线组放在最后，确保它绘制在最上层 -->
+                            <g class="clusters-group">
+                                <g v-for="(node, index) in flattenedNodes" :key="`overview-${node.id}`" class="cluster-item" :class="{
+                                    'cluster-core': node.type === 'core',
+                                    'cluster-extension': node.type === 'extension'
+                                    /* 移除选中状态的类，保持矩形样式不变 */
+                                    /* 'cluster-selected': isNodeSelected(node) */
+                                }" :data-node-id="node.id" :data-cluster-id="node.clusterId" :data-index="index">
+                                    <rect :width="clusterItemSize" :height="clusterItemSize" :x="index * (clusterItemSize + clusterItemGap)" :y="20" rx="3" ry="3" :style="{
+                                        fill: getSalienceColor(node),
+                                        stroke: 'none' /* 移除边框 */
+                                    }" @click="handleOverviewClick(node.id, $event)" />
+                                    <!-- 移除小圆点标记 -->
+                                </g>
+                            </g>
+                            <g class="connection-lines"></g>
+                        </svg>
+                        <!-- 添加自定义滚动条到总览条内部 -->
+                        <div class="overview-scrollbar-container">
+                            <div class="custom-scrollbar-track" @mousedown="startScrollbarDrag">
+                                <div class="custom-scrollbar-thumb" ref="scrollbarThumb" :style="{ width: thumbWidth + 'px', left: thumbPosition + 'px' }"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -93,11 +98,10 @@ const elementStats = ref(new Map());
 
 // 修改总览条相关的变量
 const overviewSvg = ref(null);
-const clusterItemSize = 32; // 小方块高度
-const clusterItemGap = 2;  // 小方块之间的间隔
+const clusterItemSize = 32; // 小方块高度和宽度相同，形成正方形
+const clusterItemGap = 3;  // 小方块之间的间隔，从2px修改为3px
 const overviewHeight = 50; // 总览条高度
-// 动态计算的方块宽度
-const itemWidth = ref(30); // 默认宽度，将在updateOverview中动态计算
+// 不再需要单独的itemWidth变量，使用clusterItemSize代替
 
 // 添加滚动条相关的状态
 const thumbWidth = ref(100);
@@ -378,22 +382,20 @@ const updateOverview = () => {
         const overviewWrapper = overviewSvg.value.closest('.overview-wrapper');
         if (!overviewWrapper) return;
 
-        const containerWidth = overviewWrapper.clientWidth - 20; // 减去内边距
-
-        // 根据方块数量计算每个方块的宽度
+        // 计算总宽度 - 使用正方形尺寸
         const nodeCount = flattenedNodes.value.length;
         const totalGapWidth = (nodeCount - 1) * clusterItemGap;
-        const availableWidthForItems = Math.max(containerWidth - totalGapWidth, 0);
-
-        // 计算每个方块的宽度（最小宽度为16px，从20px减小以适应更窄的总览条）
-        itemWidth.value = Math.max(Math.floor(availableWidthForItems / nodeCount), 16);
-
-        // 计算总宽度
-        const totalWidth = nodeCount * itemWidth.value + totalGapWidth;
+        const totalWidth = nodeCount * clusterItemSize + totalGapWidth;
 
         // 设置SVG的宽度
         overviewSvg.value.setAttribute('width', `${totalWidth}px`);
         overviewSvg.value.setAttribute('height', `${overviewHeight}px`);
+        
+        // 设置滚动条容器的宽度与SVG宽度相同
+        const overviewContent = overviewSvg.value.closest('.overview-content');
+        if (overviewContent) {
+            overviewContent.style.width = `${totalWidth}px`;
+        }
 
         // 绘制连接线
         drawConnectionLines();
@@ -431,11 +433,11 @@ const drawConnectionLines = () => {
 
                 if (coreIndex !== undefined) {
                     // 计算外延节点矩形的顶部中心点
-                    const extX = index * (itemWidth.value + clusterItemGap) + itemWidth.value / 2;
+                    const extX = index * (clusterItemSize + clusterItemGap) + clusterItemSize / 2;
                     const extY = 20; // 矩形的顶部y坐标
 
                     // 计算核心节点矩形的顶部中心点
-                    const coreX = coreIndex * (itemWidth.value + clusterItemGap) + itemWidth.value / 2;
+                    const coreX = coreIndex * (clusterItemSize + clusterItemGap) + clusterItemSize / 2;
                     const coreY = 20; // 矩形的顶部y坐标
 
                     // 创建一个弧线路径
@@ -1888,7 +1890,7 @@ const handleOverviewClick = (nodeId, event) => {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* 修改为flex-start，使内容左对齐 */
+    justify-content: center; /* 修改为center，使内容居中 */
     overflow: visible;
     /* 修改为visible，确保内容不被裁切 */
     position: relative;
@@ -1898,22 +1900,31 @@ const handleOverviewClick = (nodeId, event) => {
 
 /* 添加总览条标题样式 */
 .overview-title {
-    position: absolute;
-    font-size: 1.1em;
+    position: absolute; /* 改为绝对定位 */
+    font-size: 1.3em; /* 增大字号 */
     font-weight: 600;
-    top: 5px;
-    left: 0;
+    left: 20px; /* 距左边距 */
+    top: 50%; /* 垂直居中 */
+    transform: translateY(-50%); /* 垂直居中 */
     color: #905F29; /* 使用主题色 */
-    padding: 0 15px;
     white-space: nowrap;
     display: flex;
     align-items: center;
     font-family: 'Poppins', sans-serif;
-    font-weight: 600;
+    z-index: 2; /* 确保标题在其他内容之上 */
+}
+
+/* 添加一个新的容器来包裹overview-wrapper */
+.overview-wrapper-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
 }
 
 .overview-wrapper {
-    flex: 1; /* 修改为flex: 1，使其占据剩余空间 */
+    flex: 0 0 auto; /* 不伸缩，保持自身大小 */
     height: 100%;
     overflow-x: visible;
     /* 修改为visible，确保内容不被裁切 */
@@ -1922,34 +1933,41 @@ const handleOverviewClick = (nodeId, event) => {
     display: flex;
     flex-direction: column;
     /* 修改为列布局，使滚动条位于SVG下方 */
-    align-items: center;
+    align-items: center; /* 默认居中 */
     justify-content: center;
-    padding: 0 10px;
+    padding: 0;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    position: relative;
 }
 
 .overview-wrapper::-webkit-scrollbar {
     display: none;
 }
 
+.overview-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: -5px; /* 稍微上移，视觉上更居中 */
+}
+
 .overview-svg {
     height: 50px;
     /* 增加高度，确保有足够的空间显示连接线 */
     width: 100%;
-    margin-top: 10px;
-    /* 减小顶部边距 */
+    margin-top: 0; /* 调整上边距 */
     overflow: visible;
     /* 确保内容可以超出SVG边界 */
 }
 
 /* 添加总览条内滚动条容器样式 */
 .overview-scrollbar-container {
-    width: 100%;
     height: 12px;
+    width: 100%;
     box-sizing: border-box;
     margin-top: 5px;
-    /* 添加顶部间距 */
 }
 
 /* 连接线样式 */
@@ -2046,35 +2064,34 @@ const handleOverviewClick = (nodeId, event) => {
     display: none;
 }
 
-/* 自定义滚动条样式 */
-.custom-scrollbar-container {
-    width: 100%;
-    height: 12px;
-    padding: 0 16px 8px 16px;
-    box-sizing: border-box;
-}
-
+/* 自定义滚动条轨道 */
 .custom-scrollbar-track {
     width: 100%;
-    height: 6px;
-    background-color: rgba(0, 0, 0, 0.05);
+    height: 4px;
+    background: rgba(144, 95, 41, 0.1);
     border-radius: 2px;
     position: relative;
     cursor: pointer;
 }
 
+/* 自定义滚动条滑块 */
 .custom-scrollbar-thumb {
-    position: absolute;
     height: 100%;
-    background-color: rgba(144, 95, 41, 0.5);
+    background: rgba(144, 95, 41, 0.5);
     border-radius: 2px;
+    position: absolute;
+    top: 0;
     cursor: grab;
-    transition: background-color 0.2s;
+    transition: background 0.2s;
 }
 
-.custom-scrollbar-thumb:hover,
+.custom-scrollbar-thumb:hover {
+    background: rgba(144, 95, 41, 0.7);
+}
+
 .custom-scrollbar-thumb:active {
-    background-color: rgba(144, 95, 41, 0.7);
+    background: rgba(144, 95, 41, 0.8);
+    cursor: grabbing;
 }
 
 /* 卡片样式 */
