@@ -321,8 +321,7 @@ def analyze_cluster_overlaps(subgraphs_dir):
                     core_clusters.append({
                         'core_nodes': list(nodes),
                         'core_dimensions': [dimension_str],
-                        'extensions': [],
-                        'links': [link for link in graph_data['links'] if link['cluster'] == cluster_id]
+                        'extensions': []
                     })
     
     # 如果没有有效的核心聚类，返回空结果
@@ -387,37 +386,54 @@ def analyze_cluster_overlaps(subgraphs_dir):
                         
                         if overlap_ratio1 > 0.8 and overlap_ratio2 > 0.8:
                             overlapping_found = True
+                            
+                            # 检查是否完全一致
+                            is_identical = (cluster1_nodes == cluster2_nodes)
+                            
                             # 创建新的核心聚类（重叠部分）
                             new_core = {
                                 'core_nodes': list(intersection),
                                 'core_dimensions': [min(cluster1['core_dimensions'][0], cluster2['core_dimensions'][0])],
-                                'extensions': [],
-                                'links': []  # 将在后面更新
+                                'extensions': []
                             }
                             
-                            # 创建外延（非重叠部分）
-                            ext1_nodes = cluster1_nodes - intersection
-                            ext2_nodes = cluster2_nodes - intersection
-                            
-                            if ext1_nodes:
+                            # 如果不完全一致，则将A和B作为C的外延，并且保留A和B作为独立的核心聚类
+                            if not is_identical:
+                                # 将整个聚类A作为C的外延
                                 new_core['extensions'].append({
-                                    'dimension': f"z_{cluster1['core_dimensions'][0]}",
-                                    'nodes': list(ext1_nodes)
+                                    'dimension': f"cluster_A_{cluster1['core_dimensions'][0]}",
+                                    'nodes': list(cluster1_nodes)
                                 })
-                            
-                            if ext2_nodes:
+                                
+                                # 将整个聚类B作为C的外延
                                 new_core['extensions'].append({
-                                    'dimension': f"z_{cluster2['core_dimensions'][0]}",
-                                    'nodes': list(ext2_nodes)
+                                    'dimension': f"cluster_B_{cluster2['core_dimensions'][0]}",
+                                    'nodes': list(cluster2_nodes)
                                 })
+                                
+                                # 添加核心聚类C
+                                final_core_clusters.append(new_core)
+                                
+                                # 保留A和B作为独立的核心聚类
+                                # 复制A和B，避免修改原始对象
+                                cluster1_copy = {
+                                    'core_nodes': list(cluster1_nodes),
+                                    'core_dimensions': cluster1['core_dimensions'].copy(),
+                                    'extensions': []
+                                }
+                                
+                                cluster2_copy = {
+                                    'core_nodes': list(cluster2_nodes),
+                                    'core_dimensions': cluster2['core_dimensions'].copy(),
+                                    'extensions': []
+                                }
+                                
+                                final_core_clusters.append(cluster1_copy)
+                                final_core_clusters.append(cluster2_copy)
+                            else:
+                                # 如果完全一致，只添加一个核心聚类
+                                final_core_clusters.append(new_core)
                             
-                            # 更新连接信息
-                            new_core['links'] = [
-                                link for link in cluster1['links'] + cluster2['links']
-                                if (link['source'] in intersection and link['target'] in intersection)
-                            ]
-                            
-                            final_core_clusters.append(new_core)
                             processed_clusters.add(id(cluster1))
                             processed_clusters.add(id(cluster2))
                             break
@@ -443,54 +459,17 @@ def analyze_cluster_overlaps(subgraphs_dir):
         
         cluster['extensions'] = unique_extensions
     
-    # 生成可视化数据结构
-    nodes = []
-    links = []
-    
-    # 添加所有节点
-    for i, cluster in enumerate(final_core_clusters):
-        core_id = f"core_{i}"
-        nodes.append({
-            "id": core_id,
-            "name": f"核心聚类 {i+1}",
-            "type": "core",
-            "dimensions": cluster['core_dimensions'],
-            "size": len(cluster['core_nodes'])
-        })
-        
-        # 添加外延节点
-        for j, ext in enumerate(cluster['extensions']):
-            ext_id = f"ext_{i}_{j}"
-            nodes.append({
-                "id": ext_id,
-                "name": f"外延({ext['dimension']})",
-                "type": "extension",
-                "dimension": ext['dimension'],
-                "size": len(ext['nodes'])
-            })
-            
-            # 添加核心到外延的连接
-            links.append({
-                "source": core_id,
-                "target": ext_id,
-                "value": 1
-            })
-    
     # 保存结果
     final_graph_data = {
         'core_clusters': final_core_clusters,
-        'total_cores': len(final_core_clusters),
-        'visualization': {
-            'nodes': nodes,
-            'links': links
-        }
+        'total_cores': len(final_core_clusters)
     }
     
     output_file = os.path.join(subgraphs_dir, 'subgraph_dimension_all.json')
     with open(output_file, 'w') as f:
         json.dump(final_graph_data, f, indent=4)
     
-    print(f"The core clustering analysis was completed, finding a total of {len(final_core_clusters)} Core clusters")
+    print(f"核心聚类分析完成，共找到 {len(final_core_clusters)} 个核心聚类")
     return final_graph_data
 
 def main(features_json_path, output_dir, clustering_method, subgraph_dimensions, progress_callback=None):

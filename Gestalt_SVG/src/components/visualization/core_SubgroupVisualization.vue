@@ -439,7 +439,7 @@ const drawConnectionLines = () => {
                     const coreY = 20; // 矩形的顶部y坐标
 
                     // 创建一个弧线路径
-                    const pathData = createArcPath(extX, extY, coreX, coreY);
+                    const pathData = createArcPath(coreX, coreY, extX, extY);
 
                     // 添加路径到SVG
                     linesGroup.append('path')
@@ -454,7 +454,7 @@ const drawConnectionLines = () => {
                         .style('overflow', 'visible'); // 确保内容可以超出边界
                     
                     // 计算箭头位置 - 在弧线的中点
-                    const midPoint = calculateArcMidPoint(extX, extY, coreX, coreY);
+                    const midPoint = calculateArcMidPoint(coreX, coreY, extX, extY);
                     
                     // 计算箭头方向 - 从核心指向外延
                     const arrowAngle = calculateArrowAngle(coreX, coreY, extX, extY, midPoint);
@@ -530,11 +530,6 @@ const calculateArrowAngle = (coreX, coreY, extX, extY, midPoint) => {
     
     // 计算角度（弧度）并转换为角度
     let angle = Math.atan2(tangentY, tangentX) * (180 / Math.PI);
-    
-    // 确保箭头方向从核心指向外延
-    if (extX < coreX) {
-        angle += 180; // 如果外延在核心左侧，需要翻转箭头方向
-    }
     
     return angle;
 };
