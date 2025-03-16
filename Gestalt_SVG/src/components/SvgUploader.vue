@@ -15,7 +15,7 @@
         <div class="layout-container" v-if="file">
             <!-- 左侧区域：C区 - 可点击但不高亮的SVG -->
             <div class="left-panel">
-                <div class="section-title">Control preview</div>
+                <div class="section-title">Chart preview</div>
                 <div class="svg-container mac-style-container control-svg" ref="controlSvgContainer">
                     <div v-html="processedSvgContent"></div>
                     <!-- 替换原来的元素选择器为侧边抽屉式选择器 -->

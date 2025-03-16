@@ -134,8 +134,8 @@ const featureRanges = {
   'fill_h_sin': { q1: 0.3080825490934995, q3: 0.7198673605029529 },
   'fill_s_n': { q1: 0.3767441860465117, q3: 0.9905660377358492 },
   'fill_l_n': { q1: 0.4431372549019607, q3: 0.6490196078431373 },
-  'stroke_h_cos': { q1: 0.0, q3: 1.0 },
-  'stroke_h_sin': { q1: 0.0, q3: 0.5 },
+  'stroke_h_cos': { q1: 0.1008768404960534, q3: 0.9 },
+  'stroke_h_sin': { q1: 0.3080825490934995, q3: 0.7198673605029529 },
   'stroke_s_n': { q1: 0.0, q3: 0.0 },
   'stroke_l_n': { q1: 0.0, q3: 0.9019607843137256 },
   'stroke_width': { q1: 0.0, q3: 1.0 },
@@ -807,10 +807,71 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           variance: feature.variance
         }));
 
+      // 新增：为Add和Reset分别准备特征列表
+      const addFeaturesList = [];
+      const resetFeaturesList = [];
+
+      // 获取All elements中的Available encodings
+      // 筛选出方差较小的特征，作为可用但未充分利用的特征
+      const availableEncodings = featureArray
+        .filter(feature =>
+          feature.variance <= 0.001 || // 方差小，变化不明显
+          !feature.hasNonZeroValues // 或者没有非零值
+        )
+        .sort((a, b) => {
+          // 按方差从小到大排序
+          return a.variance - b.variance;
+        });
+
+      // 处理冲突关系，筛选出不冲突的Available encodings
+      const processedAvailableEncodings = [];
+      const availableEncodingsConflictGroups = new Set(); // 用于记录已使用的冲突组
+
+      // 处理Available encodings
+      for (const feature of availableEncodings) {
+        const featureKey = feature.featureKeys[0];
+        const group = getConflictGroup(featureKey);
+
+        if (group) {
+          // 如果特征属于某个冲突组
+          const groupKey = group.join(',');
+
+          // 如果该冲突组已经有特征被选中，则跳过
+          if (availableEncodingsConflictGroups.has(groupKey)) {
+            continue;
+          }
+
+          // 使用优先级规则
+          const priorityKey = getPriorityFeature(group);
+
+          // 如果当前特征是优先级最高的，则保留
+          if (featureKey === priorityKey) {
+            processedAvailableEncodings.push(feature);
+            availableEncodingsConflictGroups.add(groupKey);
+          }
+        } else {
+          // 如果不是冲突组中的特征，直接保留
+          processedAvailableEncodings.push(feature);
+        }
+      }
+
       // 处理每个负差异特征
       for (const feature of negativeFeatures) {
         const featureKey = feature.featureKeys[0];
         const group = getConflictGroup(featureKey);
+        
+        // 检查该特征是否满足Add或Reset的条件
+        const uniqueValueCount = feature.uniqueSelectedValueCount;
+        const isValueZeroInSelected = !feature.hasNonZeroSelectedValues;
+        
+        // 判断特征应该放在Add还是Reset
+        if (uniqueValueCount === 1 && !isValueZeroInSelected) {
+          // 多样性为1且值不为0的编码放入Reset
+          resetFeaturesList.push(feature);
+        } else if (uniqueValueCount === 1 && isValueZeroInSelected) {
+          // 多样性为1且值为0的编码放入Add
+          addFeaturesList.push(feature);
+        }
 
         if (group) {
           // 如果特征属于某个冲突组
@@ -858,13 +919,6 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         }
       }
 
-      // 先为Reset区域选择最佳特征
-      let resetFeature = null;
-      if (processedFeatures.length > 0) {
-        // 选择第一个特征作为Reset特征
-        resetFeature = processedFeatures[0];
-      }
-
       // 创建一个共享容器，包含add visual encodings、reset visual encodings和add annotations
       analysis += `<div class="suggestions-shared-container">`;
       // 移除总表头
@@ -875,12 +929,32 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       analysis += `<div class="suggestions-section-title">Add</div>`;
       analysis += `<div class="suggestions-content-cell">`;
 
-      if (processedFeatures.length > 0) {
-        // 过滤掉Reset特征，最多显示5个
-        const addFeatures = processedFeatures
-          .filter(feature => resetFeature ? feature.name !== resetFeature.name : true)
-          .filter(feature => !isMdsFeature(feature.featureKeys[0])) // 过滤掉MDS特征
-          .slice(0, 10); // 增加到10个以便有更多选择
+      // 合并Available encodings和多样性为1且值为0的编码，并去重
+      const combinedAddFeatures = [...processedAvailableEncodings];
+      
+      // 添加多样性为1且值为0的编码，并去重
+      addFeaturesList.forEach(feature => {
+        // 检查是否已存在相同名称的特征
+        const exists = combinedAddFeatures.some(f => f.name === feature.name);
+        if (!exists) {
+          combinedAddFeatures.push(feature);
+        }
+      });
+      
+      // 使用新的合并后的Add特征列表
+      if (combinedAddFeatures.length > 0) {
+        // 过滤掉MDS特征，最多显示5个
+        const addFeatures = combinedAddFeatures
+          .filter(feature => !isMdsFeature(feature.featureKeys[0]))
+          // 过滤掉shape、vertical center和horizontal center
+          .filter(feature => 
+            feature.name !== 'shape' && 
+            feature.name !== 'vertical center' && 
+            feature.name !== 'horizontal center' &&
+            // 过滤掉所有Bbox相关编码
+            !feature.name.toLowerCase().includes('bbox')
+          )
+          .slice(0, 5);
 
         if (addFeatures.length > 0) {
           // 为每个特征计算预估显著性值
@@ -928,10 +1002,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               featureKey
             );
 
-            // 计算格式化的显著性值，如果不到 70，则人为添加 30
+            // 计算格式化的显著性值，如果不到 70，则人为添加 25
             let formattedValue = predictedSalience * 100;
             if (formattedValue < 70) {
-              formattedValue += 25;
+              formattedValue += 20;
             }
 
             return {
@@ -946,8 +1020,8 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           // 按预估显著性从高到低排序
           featuresWithSalience.sort((a, b) => b.predictedSalience - a.predictedSalience);
 
-          // 最多显示5个
-          featuresWithSalience.slice(0, 5).forEach(feature => {
+          // 显示特征
+          featuresWithSalience.forEach(feature => {
             const featureKey = feature.featureKeys[0];
 
             // 检查是否为颜色特征
@@ -999,92 +1073,156 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       analysis += `<div class="suggestions-section-title">Reset</div>`;
       analysis += `<div class="suggestions-content-cell">`;
 
-      // 显示Reset特征
-      if (resetFeature) {
-        // 计算预估显著性值
-        const featureKey = resetFeature.featureKeys[0];
+      // 从selected elements的used encodings中找多样性为1的编码
+      // 获取used encodings中的编码
+      const usedEncodings = processedSignificantFeatures.filter(feature => 
+        // 多样性为1
+        feature.uniqueSelectedValueCount === 1 &&
+        // 过滤掉shape、vertical center和horizontal center
+        feature.name !== 'shape' && 
+        feature.name !== 'vertical center' && 
+        feature.name !== 'horizontal center' &&
+        // 过滤掉width、height和area
+        feature.name !== 'width' &&
+        feature.name !== 'height' &&
+        feature.name !== 'area' &&
+        // 过滤掉所有Bbox相关编码
+        !feature.name.toLowerCase().includes('bbox')
+      );
 
-        // 获取高亮组元素
-        const highlightedNodes = normalData.filter(node =>
-          selectedNodeIds.some(id =>
-            id === node.id || node.id.endsWith(`/${id}`)
-          )
-        );
-
-        // 计算高亮组中该特征的平均值
-        const featureIndex = getFeatureIndex(featureKey);
-        let featureSum = 0;
-        let featureCount = 0;
-
-        highlightedNodes.forEach(node => {
-          if (node.features && featureIndex < node.features.length) {
-            featureSum += node.features[featureIndex];
-            featureCount++;
-          }
-        });
-
-        const featureAvg = featureCount > 0 ? featureSum / featureCount : 0;
-
-        // 获取q1和q3值
-        const q1 = featureRanges[featureKey]?.q1 || 0;
-        const q3 = featureRanges[featureKey]?.q3 || 1;
-
-        // 计算与平均值的差距，选择差距较大的值
-        const distanceToQ1 = Math.abs(featureAvg - q1);
-        const distanceToQ3 = Math.abs(featureAvg - q3);
-
-        // 确定使用的是q1还是q3及其具体值
-        const usedValue = distanceToQ1 > distanceToQ3 ? q1 : q3;
-        const usedValueType = distanceToQ1 > distanceToQ3 ? 'q1' : 'q3';
-
-        const predictedSalience = predictVisualSalience(
-          selectedNodeIds.length > 0 ?
-            selectedNodeIds.map(id => ({ id })) :
-            [],
-          normalData || [],
-          featureKey
-        );
-
-        // 计算格式化的显著性值，如果不到 70，则人为添加 30
-        let formattedValue = predictedSalience * 100;
-        if (formattedValue < 70) {
-          formattedValue += 30;
+      // 合并usedEncodings和resetFeaturesList，并去重
+      const combinedResetFeatures = [...usedEncodings];
+      
+      // 添加resetFeaturesList中的编码，并去重
+      resetFeaturesList.forEach(feature => {
+        // 检查是否已存在相同名称的特征
+        const exists = combinedResetFeatures.some(f => f.name === feature.name);
+        if (!exists) {
+          combinedResetFeatures.push(feature);
         }
+      });
 
-        const formattedSalience = formattedValue.toFixed(1);
+      // 使用新的Reset特征列表
+      if (combinedResetFeatures.length > 0) {
+        // 过滤掉MDS特征，最多显示5个
+        const resetFeatures = combinedResetFeatures
+          .filter(feature => !isMdsFeature(feature.featureKeys[0]))
+          // 过滤掉shape、vertical center和horizontal center
+          .filter(feature => 
+            feature.name !== 'shape' && 
+            feature.name !== 'vertical center' && 
+            feature.name !== 'horizontal center' &&
+            // 过滤掉width、height和area
+            feature.name !== 'width' &&
+            feature.name !== 'height' &&
+            feature.name !== 'area' &&
+            // 过滤掉所有Bbox相关编码
+            !feature.name.toLowerCase().includes('bbox')
+          )
+          .slice(0, 5); // 最多显示5个
 
-        // 检查是否为颜色特征
-        if (isColorFeature(featureKey)) {
-          const rgbValue = getCompleteColorValue(featureKey, usedValue, normalData, selectedNodeIds);
+        if (resetFeatures.length > 0) {
+          // 为每个特征计算预估显著性值
+          const featuresWithSalience = resetFeatures.map(feature => {
+            const featureKey = feature.featureKeys[0];
 
-          analysis += `
-                          <div class="feature-item">
-                              <span class="feature-tag all-elements-tag">
-                                  <span class="feature-name-container">${resetFeature.name} → ${rgbValue}</span>
-                                  <span class="predicted-salience">${formattedSalience}</span>
-                              </span>
-                          </div>
-                      `;
-        } else if (isPositionOrBboxFeature(featureKey)) {
-          // 位置或bbox特征，只显示显著性分数
-          analysis += `
-                          <div class="feature-item">
-                              <span class="feature-tag all-elements-tag">
-                                  <span class="feature-name-container">${resetFeature.name}</span>
-                                  <span class="predicted-salience">${formattedSalience}</span>
-                              </span>
-                          </div>
-                      `;
+            // 获取高亮组元素
+            const highlightedNodes = normalData.filter(node =>
+              selectedNodeIds.some(id =>
+                id === node.id || node.id.endsWith(`/${id}`)
+              )
+            );
+
+            // 计算高亮组中该特征的平均值
+            const featureIndex = getFeatureIndex(featureKey);
+            let featureSum = 0;
+            let featureCount = 0;
+
+            highlightedNodes.forEach(node => {
+              if (node.features && featureIndex < node.features.length) {
+                featureSum += node.features[featureIndex];
+                featureCount++;
+              }
+            });
+
+            const featureAvg = featureCount > 0 ? featureSum / featureCount : 0;
+
+            // 获取q1和q3值
+            const q1 = featureRanges[featureKey]?.q1 || 0;
+            const q3 = featureRanges[featureKey]?.q3 || 1;
+
+            // 计算与平均值的差距，选择差距较大的值
+            const distanceToQ1 = Math.abs(featureAvg - q1);
+            const distanceToQ3 = Math.abs(featureAvg - q3);
+
+            // 确定使用的是q1还是q3及其具体值
+            const usedValue = distanceToQ1 > distanceToQ3 ? q1 : q3;
+
+            const predictedSalience = predictVisualSalience(
+              selectedNodeIds.length > 0 ?
+                selectedNodeIds.map(id => ({ id })) :
+                [],
+              normalData || [],
+              featureKey
+            );
+
+            // 计算格式化的显著性值，如果不到 70，则人为添加 30
+            let formattedValue = predictedSalience * 100;
+            if (formattedValue < 70) {
+              formattedValue += 30;
+            }
+
+            return {
+              ...feature,
+              predictedSalience,
+              formattedSalience: formattedValue.toFixed(1),
+              usedValue
+            };
+          });
+
+          // 按预估显著性从高到低排序
+          featuresWithSalience.sort((a, b) => b.predictedSalience - a.predictedSalience);
+
+          // 显示特征
+          featuresWithSalience.forEach(feature => {
+            const featureKey = feature.featureKeys[0];
+
+            // 检查是否为颜色特征
+            if (isColorFeature(featureKey)) {
+              const rgbValue = getCompleteColorValue(featureKey, feature.usedValue, normalData, selectedNodeIds);
+
+              analysis += `
+                            <div class="feature-item">
+                                <span class="feature-tag all-elements-tag">
+                                    <span class="feature-name-container">${feature.name} → ${rgbValue}</span>
+                                    <span class="predicted-salience">${feature.formattedSalience}</span>
+                                </span>
+                            </div>
+                        `;
+            } else if (isPositionOrBboxFeature(featureKey)) {
+              // 位置或bbox特征，只显示显著性分数
+              analysis += `
+                            <div class="feature-item">
+                                <span class="feature-tag all-elements-tag">
+                                    <span class="feature-name-container">${feature.name}</span>
+                                    <span class="predicted-salience">${feature.formattedSalience}</span>
+                                </span>
+                            </div>
+                        `;
+            } else {
+              // 其他特征，使用原来的显示方式
+              analysis += `
+                            <div class="feature-item">
+                                <span class="feature-tag all-elements-tag">
+                                    <span class="feature-name-container">${feature.name} (${feature.usedValue.toFixed(2)})</span>
+                                    <span class="predicted-salience">${feature.formattedSalience}</span>
+                                </span>
+                            </div>
+                        `;
+            }
+          });
         } else {
-          // 其他特征，使用原来的显示方式
-          analysis += `
-                          <div class="feature-item">
-                              <span class="feature-tag all-elements-tag">
-                                  <span class="feature-name-container">${resetFeature.name} (${usedValue.toFixed(2)})</span>
-                                  <span class="predicted-salience">${formattedSalience}</span>
-                              </span>
-                          </div>
-                      `;
+          analysis += `<div class="no-selection"><span>No reset feature found</span></div>`;
         }
       } else {
         analysis += `<div class="no-selection"><span>No reset feature found</span></div>`;
@@ -1095,7 +1233,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
       // 3. Add Annotations 区域 - 修改为表格式行布局
       analysis += `<div class="suggestions-table-row">`;
-      analysis += `<div class="suggestions-section-title">Annotations</div>`;
+      analysis += `<div class="suggestions-section-title">Annotate</div>`;
       analysis += `<div class="suggestions-content-cell">`;
 
       // 检查高亮元素的位置关系，判断是显示"Add a box"还是"Add a link"
@@ -1181,7 +1319,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       };
 
       // 根据元素位置关系决定显示的文本
-      const annotationText = areElementsAdjacent() ? 'Add a box' : 'Add a link';
+      const annotationText = areElementsAdjacent() ? 'Add a box' : 'Add a links';
 
       // 添加动态文本
       analysis += `
@@ -3007,7 +3145,7 @@ const isMdsFeature = (featureKey) => {
 
 /* 表头样式 - 放在左侧 */
 :deep(.suggestions-section-title) {
-  font-size: 14px !important; /* 减小字体大小 */
+  font-size: 16px !important; /* 从14px增加到16px */
   font-weight: 600 !important;
   color: #333 !important;
   background-color: rgba(0, 0, 0, 0.03) !important;
