@@ -10,7 +10,7 @@
     </button> -->
     
     <!-- 保持大标题在顶部 -->
-    <div class="title">Assessment of Visual effects</div>
+    <div class="title">Visual Encodings Assessment</div>
     
     <div class="sections-container">
       <div class="section-wrapper">
@@ -1745,7 +1745,7 @@ function getFeatureTypePriority(featureName) {
 
 /* 修改左右两侧区域的宽度比例 */
 :deep(.feature-column.positive) {
-    flex: 1.2; /* 增加左侧Used effects区域的比例，从1改为1.2 */
+    flex: 1.4; /* 增加左侧Used effects区域的比例，从1改为1.2 */
 }
 
 :deep(.feature-column.negative) {

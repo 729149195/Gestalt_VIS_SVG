@@ -1,6 +1,6 @@
 <template>
     <v-card class="fill-height mac-style-card">
-        <span class="title">Visual Elements Preview</span>
+        <span class="title">Visual Elements</span>
 
         <div v-if="analyzing" class="progress-card">
             <div class="progress-label">{{ currentStep }}</div>
@@ -15,7 +15,7 @@
         <div class="layout-container" v-if="file">
             <!-- 左侧区域：C区 - 可点击但不高亮的SVG -->
             <div class="left-panel">
-                <div class="section-title">Control</div>
+                <div class="section-title">Control preview</div>
                 <div class="svg-container mac-style-container control-svg" ref="controlSvgContainer">
                     <div v-html="processedSvgContent"></div>
                 </div>
@@ -36,7 +36,7 @@
             <div class="right-panel">
                 <!-- 右上区域：S区 - 可高亮但不可点击的SVG -->
                 <div class="right-top-panel">
-                    <div class="section-title">Selected</div>
+                    <div class="section-title">Selected preview</div>
                     <div class="svg-container mac-style-container display-svg" ref="displaySvgContainer">
                         <div v-html="processedSvgContent"></div>
                     </div>
@@ -312,21 +312,21 @@ const fetchProcessedSvg = () => {
 
 // 为两个SVG添加缩放和拖拽功能
 const addZoomEffectToDualSvgs = () => {
-    // 只为控制区SVG添加缩放效果
+    // 为控制区SVG添加缩放效果
     if (controlSvgContainer.value) {
         const svg = d3.select(controlSvgContainer.value).select('svg');
-        addZoomEffectToSvg(svg, true);
+        addZoomEffectToSvg(svg, true, 'control');
     }
 
-    // 为显示区SVG不添加缩放拖拽功能，只处理初始化和同步
+    // 为显示区SVG也添加缩放拖拽功能
     if (displaySvgContainer.value) {
         const svg = d3.select(displaySvgContainer.value).select('svg');
-        addZoomEffectToSvg(svg, false);
+        addZoomEffectToSvg(svg, true, 'display');
     }
 };
 
 // 添加缩放和拖拽功能到单个SVG
-const addZoomEffectToSvg = (svg, enableInteraction) => {
+const addZoomEffectToSvg = (svg, enableInteraction, svgType) => {
     if (!svg || svg.empty()) return;
 
     // 创建一个包裹实际SVG内容的组
@@ -342,7 +342,7 @@ const addZoomEffectToSvg = (svg, enableInteraction) => {
         });
     }
 
-    // 只为可交互的SVG添加缩放和拖拽功能
+    // 为SVG添加缩放和拖拽功能
     if (enableInteraction) {
         const zoom = d3.zoom()
             .scaleExtent([0.5, 10])
@@ -351,15 +351,15 @@ const addZoomEffectToSvg = (svg, enableInteraction) => {
                     g.attr('transform', event.transform);
 
                     // 同步另一个SVG的缩放
-                    syncOtherSvgZoom(svg, event.transform);
+                    syncOtherSvgZoom(svg, event.transform, svgType);
                 }
             });
 
         svg.call(zoom);
 
-        // 设置初始缩放为0.8（80%的原始大小）并向右平移10%
+        // 设置初始缩放为0.9（90%的原始大小）并向右平移5%
         const width = svg.node().getBoundingClientRect().width;
-        const translateX = width * 0.05; // 向右平移10%
+        const translateX = width * 0.05; // 向右平移5%
         svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, 10).scale(0.9));
     } else {
         // 为不可交互的SVG移除任何缩放相关监听器
@@ -373,20 +373,23 @@ const addZoomEffectToSvg = (svg, enableInteraction) => {
 };
 
 // 同步两个SVG的缩放状态
-const syncOtherSvgZoom = (currentSvg, transform) => {
+const syncOtherSvgZoom = (currentSvg, transform, svgType) => {
     if (isSyncingSvg.value) return; // 防止循环同步
 
     isSyncingSvg.value = true;
 
     try {
-        // 只从控制区同步到显示区，不需要双向同步
-        const isControlSvg = currentSvg.node().parentNode === controlSvgContainer.value;
-
-        if (isControlSvg && displaySvgContainer.value) {
-            // 同步显示区SVG
+        if (svgType === 'control' && displaySvgContainer.value) {
+            // 从控制区同步到显示区
             const displaySvg = d3.select(displaySvgContainer.value).select('svg');
             if (!displaySvg.empty()) {
                 displaySvg.select('g.zoom-wrapper').attr('transform', transform);
+            }
+        } else if (svgType === 'display' && controlSvgContainer.value) {
+            // 从显示区同步到控制区
+            const controlSvg = d3.select(controlSvgContainer.value).select('svg');
+            if (!controlSvg.empty()) {
+                controlSvg.select('g.zoom-wrapper').attr('transform', transform);
             }
         }
     } finally {
@@ -407,7 +410,7 @@ const toggleTrackMode = () => {
 
         const transform = d3.zoomTransform(svg.node());
         currentTransform.value = transform;
-        svg.on('.zoom', null);
+        svg.on('.zoom', null); // 只禁用控制区SVG的缩放
     } else {
         controlSvgContainer.value.classList.remove('copy-cursor');
         disableTrackMode();
@@ -417,7 +420,7 @@ const toggleTrackMode = () => {
             .on('zoom', (event) => {
                 if (!isTracking.value) {
                     svg.select('g.zoom-wrapper').attr('transform', event.transform);
-                    syncOtherSvgZoom(svg, event.transform);
+                    syncOtherSvgZoom(svg, event.transform, 'control');
                 }
             });
 
@@ -567,6 +570,13 @@ const setupDisplaySvgInteractions = () => {
 
     // 更新显示区节点的高亮状态
     updateDisplayNodeOpacity();
+    
+    // 添加拖拽鼠标样式
+    nextTick(() => {
+        if (svgContainer) {
+            svgContainer.classList.add('grab-cursor');
+        }
+    });
 };
 
 // 控制区SVG点击处理函数
@@ -1191,9 +1201,10 @@ const showSalienceDetail = () => {
     cursor: pointer;
 }
 
-.display-svg svg * {
+/* 移除display-svg的默认鼠标样式，以支持拖拽功能 */
+/* .display-svg svg * {
     cursor: default;
-}
+} */
 
 .progress-card {
     position: absolute;
@@ -1325,6 +1336,14 @@ const showSalienceDetail = () => {
 
 .click-cursor {
     cursor: pointer !important;
+}
+
+.grab-cursor {
+    cursor: grab !important;
+}
+
+.grab-cursor:active {
+    cursor: grabbing !important;
 }
 
 /* 修改视觉显著性指示器样式，使其与按钮高度统一 */

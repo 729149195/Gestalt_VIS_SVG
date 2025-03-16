@@ -2,6 +2,9 @@
     <div class="force-graph-container">
         <div class="title-container">
             <span class="title">Patterns List</span>
+            <div class="legend-container">
+                <span class="legend-text">100</span> <div class="legend-gradient"><span class="legend-gradient-text">Salience</span></div> <span class="legend-text">0.0</span>
+            </div>
         </div>
         <div class="core-view-container">
             <CoreSubgroupVisualization />
@@ -627,40 +630,66 @@ onUnmounted(() => {
 /* 添加标题容器样式 */
 .title-container {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    margin: 12px 16px 0 16px;
-}
-
-/* 添加图例样式 */
-.legend {
-    display: flex;
     align-items: center;
-    gap: 16px;
+    padding: 5px 16px 0 16px;
 }
 
-.legend-item {
+.title {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #333;
+}
+
+/* 颜色图例样式 */
+.color-legend {
     display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.legend-probability-sample {
-    font-size: 14px;
-    font-weight: 600;
-    color: #905F29;
-    padding: 4px 8px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px 12px;
     border-radius: 6px;
-    background: rgba(144, 95, 41, 0.08);
-    border: 1px solid rgba(144, 95, 41, 0.2);
-    min-width: 70px;
-    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(144, 95, 41, 0.1);
 }
 
-.legend-text {
-  font-size: 16px;
-  font-weight: 500;
-  color: #666;
+.legend-title {
+    font-size: 13px;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-align: center;
+    width: 100%;
+}
+
+.legend-gradient {
+    width: 150px;
+    height: 16px;
+    border-radius: 4px;
+    background: linear-gradient(to left, 
+        rgba(144, 95, 41, 0.15), 
+        rgba(144, 95, 41, 0.3), 
+        rgba(144, 95, 41, 0.5), 
+        rgba(144, 95, 41, 0.7), 
+        rgba(144, 95, 41, 0.9), 
+        rgba(144, 95, 41, 1)
+    );
+    border: 1px solid rgba(144, 95, 41, 0.2);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.legend-labels {
+    width: 150px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+}
+
+.legend-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
 }
 
 /* 添加提示容器样式 */
@@ -696,11 +725,29 @@ onUnmounted(() => {
     padding: 0 16px;
 }
 
-.title {
-  font-size: 1.8em;
-  font-weight: bold;
-  color: #1d1d1f;
-  letter-spacing: -0.01em;
-  opacity: 0.8;
+.legend-container{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    gap: 8px;
 }
+
+.legend-text{
+    font-size: 1.1em;
+    color: #666;
+    font-weight: 800;
+    color: #905F29;
+}
+
+.legend-gradient-text{
+    font-size: 1.1em;
+    color: #666;
+    font-weight: 800;
+    color: #905F29;
+    position: relative;
+    bottom: 25px;
+    left: 30%;
+}
+
 </style>

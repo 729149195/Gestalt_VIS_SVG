@@ -205,13 +205,17 @@ const handleMouseMove = (e) => {
         const containerHeight = container.offsetHeight;
         const rect = container.getBoundingClientRect();
 
-        // 两个分隔点之间的距离占总高度的百分比
-        const relativeY = e.clientY - rect.top;
-        const percentY = (relativeY / containerHeight) * 100;
-
-        // 更新统计区域高度，并计算分析区域的高度
-        const newStatisticsHeight = percentY - subgroupHeight.value;
-        statisticsHeight.value = Math.max(10, Math.min(40, newStatisticsHeight));
+        // 计算鼠标移动的相对距离
+        const deltaY = e.clientY - startY;
+        const deltaPercent = (deltaY / containerHeight) * 100;
+        
+        // 更新统计区域高度，考虑鼠标移动方向
+        const newStatisticsHeight = startHeight + deltaPercent;
+        
+        // 限制统计区域的最小和最大高度
+        statisticsHeight.value = Math.max(10, Math.min(60, newStatisticsHeight));
+        
+        // 确保三个区域的总高度为100%
         analysisHeight.value = 100 - subgroupHeight.value - statisticsHeight.value;
     }
 
@@ -364,6 +368,9 @@ onBeforeUnmount(() => {
 .resize-right1, .resize-right2 {
     position: absolute;
     background-color: transparent;
+    height: 12px;
+    transform: translateY(-50%);
+    cursor: ns-resize;
 }
 
 .resize-handle:hover,
