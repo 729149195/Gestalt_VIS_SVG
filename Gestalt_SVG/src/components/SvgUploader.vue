@@ -18,8 +18,8 @@
                 <div class="section-title">Control preview</div>
                 <div class="svg-container mac-style-container control-svg" ref="controlSvgContainer">
                     <div v-html="processedSvgContent"></div>
-                    <!-- 添加元素类型选择列表到Control preview区域 -->
-                    <div v-if="visibleElements.length > 0" class="control-element-selector">
+                    <!-- 替换原来的元素选择器为侧边抽屉式选择器 -->
+                    <div v-if="visibleElements.length > 0" class="element-selector-drawer" :class="{ 'open': showElementSelector }">
                         <div class="selector-content control-selector-content">
                             <v-list density="compact" class="mac-style-list">
                                 <v-list-item v-for="element in visibleElements" :key="element.id" class="mac-style-list-item">
@@ -28,6 +28,15 @@
                             </v-list>
                         </div>
                     </div>
+                    
+                    <!-- 添加切换按钮 -->
+                    <div v-if="visibleElements.length > 0" class="element-selector-toggle" @click="toggleElementSelector">
+                        <v-icon class="toggle-icon">{{ showElementSelector ? 'mdi-chevron-right' : 'mdi-chevron-left' }}</v-icon>
+                        <div class="toggle-text-container">
+                            <span class="toggle-text">Select by types</span>
+                        </div>
+                    </div>
+                    
                     <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
                         {{ analyzing ? 'Simulating...' : 'Submit elements scope' }}
                     </v-btn>
@@ -44,12 +53,14 @@
                     </div>
                 </div>
 
-                <!-- 右下区域：元素类型选择列表 -->
+                <!-- 右下区域：select pannel -->
                 <div class="right-bottom-panel">
-                    <!-- 元素类型选择列表 - 始终展开 -->
                     <div v-if="visibleElements.length > 0" class="element-selector">
                         <div class="selector-header">
                             <h3 class="mac-style-title">Select panel</h3>
+                        </div>
+                        <div class="button-container">
+                            <!-- 将selection-mode-container移到这里，放在visual-salience-indicator左侧 -->
                             <div class="selection-mode-container">
                                 <v-btn @click.stop="setSelectionMode('click')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'click' }">
                                     <v-icon>mdi-cursor-default-click</v-icon>
@@ -60,8 +71,6 @@
                                     <span class="selection-text">Lasso</span>
                                 </v-btn>
                             </div>
-                        </div>
-                        <div class="button-container">
                             <div class="visual-salience-indicator" @click="showSalienceDetail">
                                 <span class="salience-label">Salience</span>
                                 <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
@@ -684,6 +693,7 @@ watch(() => analyzing.value, (newValue) => {
 
 // 添加选择模式变量和方法
 const selectionMode = ref('click'); // 默认为点击选择模式
+const showElementSelector = ref(false);
 
 const setSelectionMode = (mode) => {
     selectionMode.value = mode;
@@ -911,6 +921,11 @@ const showSalienceDetail = () => {
     });
 };
 
+// 添加切换抽屉显示/隐藏的方法
+const toggleElementSelector = () => {
+    showElementSelector.value = !showElementSelector.value;
+};
+
 </script>
 
 <style scoped>
@@ -939,7 +954,7 @@ const showSalienceDetail = () => {
 }
 
 .left-panel {
-    flex: 1.3;
+    flex: 1.8;
     display: flex;
     flex-direction: column;
     background: rgba(248, 248, 248, 0.5);
@@ -951,7 +966,7 @@ const showSalienceDetail = () => {
 }
 
 .right-panel {
-    flex: 0.9;
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -959,7 +974,7 @@ const showSalienceDetail = () => {
 }
 
 .right-top-panel {
-    flex: 1.5;
+    flex: 3.3   ;
     display: flex;
     flex-direction: column;
     background: rgba(248, 248, 248, 0.5);
@@ -970,7 +985,7 @@ const showSalienceDetail = () => {
 }
 
 .right-bottom-panel {
-    flex: 0.6;
+    flex: 1;
     background: rgba(248, 248, 248, 0.5);
     border-radius: 12px;
     border: 1px solid rgba(200, 200, 200, 0.3);
@@ -978,6 +993,7 @@ const showSalienceDetail = () => {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    min-height: 0; /* 确保flex子元素不会超出容器 */
 }
 
 .section-title {
@@ -1038,9 +1054,10 @@ const showSalienceDetail = () => {
     user-select: none;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
     border-bottom: 1px solid rgba(200, 200, 200, 0.3);
+    min-height: 32px; /* 确保标题有最小高度 */
 }
 
 .title-container {
@@ -1135,7 +1152,7 @@ const showSalienceDetail = () => {
 .mac-style-button {
     background: #aa7134 !important;
     border-radius: 8px;
-    font-size: 1.4em;
+    font-size: 1.2em;
     color: white;
     font-weight: bold;
     height: 40px;
@@ -1207,6 +1224,7 @@ const showSalienceDetail = () => {
     flex-direction: column;
     padding: 8px;
     height: 100%;
+    overflow: hidden; /* 防止内容溢出 */
 }
 
 /* SVG 相关样式 */
@@ -1281,19 +1299,23 @@ const showSalienceDetail = () => {
 
 .button-container {
     display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-top: auto;
+    align-items: stretch;
     justify-content: space-between;
-    flex-shrink: 0;
+    flex: 1;
+    width: 100%;
+    padding: 4px;
+    min-height: 0; /* 确保在flex容器中不会超出 */
+    overflow: hidden; /* 防止内容溢出 */
 }
 
 .selection-mode-container {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: auto;
-    margin-right: 8px;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+    flex: 1;
+    height: 100%;
+    min-height: 0; /* 确保在flex容器中不会超出 */
 }
 
 .selection-mode-btn {
@@ -1303,10 +1325,15 @@ const showSalienceDetail = () => {
     letter-spacing: 0.3px;
     transition: all 0.3s ease;
     text-transform: none;
-    height: 32px;
+    height: calc(50% - 2px); /* 减小间距以适应容器高度 */
+    min-height: 32px; /* 确保按钮有最小高度 */
     padding: 0 8px !important;
     background-color: rgba(255, 255, 255, 0.6) !important;
     border: 1px solid rgba(144, 95, 41, 0.2);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .selection-mode-btn:hover {
@@ -1327,7 +1354,7 @@ const showSalienceDetail = () => {
 }
 
 .selection-text {
-    font-size: 0.9em;
+    font-size: 1.1em;
     font-weight: 600;
     color: inherit;
 }
@@ -1352,13 +1379,13 @@ const showSalienceDetail = () => {
     cursor: grabbing !important;
 }
 
-/* 修改视觉显著性指示器样式，使其与按钮高度统一 */
+/* 修改视觉显著性指示器样式，使其与按钮区域高度一致且响应式 */
 .visual-salience-indicator {
     position: relative;
     font-size: 1.8em;
     font-weight: 800;
     color: #905F29;
-    padding: 4px 12px;
+    padding: 4px;
     border-radius: 8px;
     background: rgba(144, 95, 41, 0.08);
     border: 1px solid rgba(144, 95, 41, 0.2);
@@ -1366,14 +1393,19 @@ const showSalienceDetail = () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 120px;
+    min-width: 140px;
+    width: 140px;
+    flex: 1.5;
     text-align: center;
     z-index: 90;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    margin-left: 8px;
+    overflow: hidden; /* 防止内容溢出 */
 }
 
 .salience-label {
-    font-size: 0.7em;
+    font-size: 0.8em; /* 减小字体大小 */
     line-height: 1;
     margin-bottom: 2px;
     white-space: nowrap;
@@ -1383,7 +1415,7 @@ const showSalienceDetail = () => {
 }
 
 .salience-value {
-    font-size: 0.9em;
+    font-size: 1em; /* 减小字体大小 */
     line-height: 1;
     color: #b4793a;
     white-space: nowrap;
@@ -1431,7 +1463,98 @@ const showSalienceDetail = () => {
     margin: 0 !important;
 }
 
-/* 添加Control preview区域内的元素选择器样式 */
+/* 侧边抽屉式元素选择器样式 */
+.element-selector-drawer {
+    position: absolute !important;
+    top: 230px !important;
+    right: -180px !important; /* 默认隐藏在右侧 */
+    z-index: 100 !important;
+    width: 180px !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    border-radius: 8px 0 0 8px !important;
+    border: 1px solid rgba(144, 95, 41, 0.2) !important;
+    border-right: none !important;
+    box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.1) !important;
+    padding: 8px !important;
+    max-height: 280px !important;
+    overflow: hidden !important;
+    transition: right 0.3s ease !important;
+}
+
+.element-selector-drawer.open {
+    right: 0 !important; /* 显示在视图中 */
+}
+
+.drawer-header {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #905F29;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(144, 95, 41, 0.15);
+    text-align: center;
+}
+
+.element-selector-toggle {
+    position: absolute !important;
+    top: 20px !important;
+    right: 0 !important;
+    z-index: 101 !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 180px !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    border-radius: 4px 0 0 4px !important;
+    border: 1px solid rgba(144, 95, 41, 0.2) !important;
+    border-right: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 15px 0 !important;
+    cursor: pointer !important;
+    box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.08) !important;
+    color: #905F29 !important;
+    transition: background 0.2s ease !important;
+}
+
+.toggle-text-container {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    width: 100% !important;
+}
+
+.toggle-text {
+    position: absolute !important;
+    font-size: 1.1em !important;
+    font-weight: 600 !important;
+    transform: rotate(-90deg) !important;
+    white-space: nowrap !important;
+    letter-spacing: 0.5px !important;
+    width: 130px !important;
+    text-align: center !important;
+    color: #905F29 !important;
+}
+
+.toggle-icon {
+    font-size: 20px !important;
+}
+
+.element-selector-toggle:hover {
+    background: rgba(144, 95, 41, 0.1) !important;
+}
+
+.control-selector-content {
+    height: auto !important;
+    max-height: 230px !important;
+    overflow-y: auto !important;
+    margin-bottom: 0 !important;
+}
+
+/* 删除旧的控制元素选择器样式 */
 .control-element-selector {
     position: absolute !important;
     bottom: 70px !important;
@@ -1445,12 +1568,5 @@ const showSalienceDetail = () => {
     padding: 5px !important;
     max-height: 150px !important;
     overflow: hidden !important;
-}
-
-.control-selector-content {
-    height: 100% !important;
-    max-height: 140px !important;
-    overflow-y: auto !important;
-    margin-bottom: 0 !important;
 }
 </style>
