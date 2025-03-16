@@ -873,6 +873,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         // 过滤掉Reset特征，最多显示5个
         const addFeatures = processedFeatures
           .filter(feature => resetFeature ? feature.name !== resetFeature.name : true)
+          .filter(feature => !isMdsFeature(feature.featureKeys[0])) // 过滤掉MDS特征
           .slice(0, 10); // 增加到10个以便有更多选择
 
         if (addFeatures.length > 0) {
@@ -942,24 +943,36 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           // 最多显示5个
           featuresWithSalience.slice(0, 5).forEach(feature => {
             const featureKey = feature.featureKeys[0];
-
+            
             // 检查是否为颜色特征
             if (isColorFeature(featureKey)) {
               const rgbValue = getCompleteColorValue(featureKey, feature.usedValue, normalData, selectedNodeIds);
-
+              
               analysis += `
                                     <div class="feature-item">
                                         <span class="feature-tag all-elements-tag">
-                                            ${feature.name}<span class="predicted-salience">${feature.formattedSalience} (${rgbValue})</span>
+                                            <span class="feature-name-container">${feature.name} → ${rgbValue}</span>
+                                            <span class="predicted-salience">${feature.formattedSalience}</span>
+                                        </span>
+                                    </div>
+                                `;
+            } else if (isPositionOrBboxFeature(featureKey)) {
+              // 位置或bbox特征，只显示显著性分数
+              analysis += `
+                                    <div class="feature-item">
+                                        <span class="feature-tag all-elements-tag">
+                                            <span class="feature-name-container">${feature.name}</span>
+                                            <span class="predicted-salience">${feature.formattedSalience}</span>
                                         </span>
                                     </div>
                                 `;
             } else {
-              // 非颜色特征，使用原来的显示方式
+              // 其他特征，使用原来的显示方式
               analysis += `
                                     <div class="feature-item">
                                         <span class="feature-tag all-elements-tag">
-                                            ${feature.name}<span class="predicted-salience">${feature.formattedSalience} (${feature.usedValue.toFixed(2)})</span>
+                                            <span class="feature-name-container">${feature.name} (${feature.usedValue.toFixed(2)})</span>
+                                            <span class="predicted-salience">${feature.formattedSalience}</span>
                                         </span>
                                     </div>
                                 `;
@@ -1038,20 +1051,32 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         // 检查是否为颜色特征
         if (isColorFeature(featureKey)) {
           const rgbValue = getCompleteColorValue(featureKey, usedValue, normalData, selectedNodeIds);
-
+          
           analysis += `
                           <div class="feature-item">
                               <span class="feature-tag all-elements-tag">
-                                  ${resetFeature.name}<span class="predicted-salience">${formattedSalience} (${rgbValue})</span>
+                                  <span class="feature-name-container">${resetFeature.name} → ${rgbValue}</span>
+                                  <span class="predicted-salience">${formattedSalience}</span>
+                              </span>
+                          </div>
+                      `;
+        } else if (isPositionOrBboxFeature(featureKey)) {
+          // 位置或bbox特征，只显示显著性分数
+          analysis += `
+                          <div class="feature-item">
+                              <span class="feature-tag all-elements-tag">
+                                  <span class="feature-name-container">${resetFeature.name}</span>
+                                  <span class="predicted-salience">${formattedSalience}</span>
                               </span>
                           </div>
                       `;
         } else {
-          // 非颜色特征，使用原来的显示方式
+          // 其他特征，使用原来的显示方式
           analysis += `
                           <div class="feature-item">
                               <span class="feature-tag all-elements-tag">
-                                  ${resetFeature.name}<span class="predicted-salience">${formattedSalience} (${usedValue.toFixed(2)})</span>
+                                  <span class="feature-name-container">${resetFeature.name} (${usedValue.toFixed(2)})</span>
+                                  <span class="predicted-salience">${formattedSalience}</span>
                               </span>
                           </div>
                       `;
@@ -1789,6 +1814,20 @@ const getOriginalFeatureName = (featureKey) => {
     'stroke_l_n': 'stroke_l'
   };
   return mapping[featureKey] || featureKey;
+};
+
+// 检查特征是否为位置或bbox相关特征
+const isPositionOrBboxFeature = (featureKey) => {
+  const positionFeatures = [
+    'bbox_left_n', 'bbox_right_n', 'bbox_top_n', 'bbox_bottom_n',
+    'bbox_width_n', 'bbox_height_n', 'bbox_fill_area'
+  ];
+  return positionFeatures.includes(featureKey);
+};
+
+// 检查特征是否为需要过滤的MDS特征
+const isMdsFeature = (featureKey) => {
+  return featureKey === 'bbox_mds_1' || featureKey === 'bbox_mds_2';
 };
 </script>
 
@@ -2888,5 +2927,22 @@ const getOriginalFeatureName = (featureKey) => {
 :deep(.feature-column.negative.selected-elements) {
   flex: 1.4;
   /* Suggestions区域的比例 */
+}
+
+/* 添加新的样式，确保编码名和预估显著性评分横向居中对齐 */
+:deep(.feature-tag) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+:deep(.feature-name-container) {
+  display: flex;
+  align-items: center;
+}
+
+:deep(.predicted-salience) {
+  margin-left: auto;
 }
 </style>
