@@ -19,17 +19,6 @@
                 <div class="svg-container mac-style-container control-svg" ref="controlSvgContainer">
                     <div v-html="processedSvgContent"></div>
                 </div>
-                <!-- 添加到左侧面板底部的选择模式按钮 -->
-                <div class="control-panel-buttons">
-                    <v-btn @click.stop="setSelectionMode('click')" class="selection-mode-btn control-btn" :class="{ 'active-mode': selectionMode === 'click' }">
-                        <v-icon >mdi-cursor-default-click</v-icon>
-                        <span class="selection-text">Click</span>
-                    </v-btn>
-                    <v-btn @click.stop="setSelectionMode('lasso')" class="selection-mode-btn control-btn" :class="{ 'active-mode': selectionMode === 'lasso' }">
-                        <v-icon >mdi-gesture</v-icon>
-                        <span class="selection-text">Lasso</span>
-                    </v-btn>
-                </div>
             </div>
 
             <!-- 右侧区域：上下分栏 -->
@@ -45,9 +34,19 @@
                 <!-- 右下区域：元素类型选择列表 -->
                 <div class="right-bottom-panel">
                     <!-- 元素类型选择列表 - 始终展开 -->
-                    <div v-if="visibleElements.length > 0" class="element-selector mac-style-selector">
+                    <div v-if="visibleElements.length > 0" class="element-selector">
                         <div class="selector-header">
                             <h3 class="mac-style-title">Select panel</h3>
+                            <div class="selection-mode-container">
+                                <v-btn @click.stop="setSelectionMode('click')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'click' }">
+                                    <v-icon>mdi-cursor-default-click</v-icon>
+                                    <span class="selection-text">Click</span>
+                                </v-btn>
+                                <v-btn @click.stop="setSelectionMode('lasso')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'lasso' }">
+                                    <v-icon>mdi-gesture</v-icon>
+                                    <span class="selection-text">Lasso</span>
+                                </v-btn>
+                            </div>
                             <div class="element-type-indicator">
                                 <v-icon class="element-type-icon">mdi-shape-outline</v-icon>
                                 <span class="element-type-text">Element Types</span>
@@ -947,13 +946,13 @@ const showSalienceDetail = () => {
     background: rgba(248, 248, 248, 0.5);
     border-radius: 12px;
     border: 1px solid rgba(200, 200, 200, 0.3);
-    padding: 12px;
+    padding: 5px 12px 12px 12px;
     height: 100%;
     overflow: hidden;
 }
 
 .right-panel {
-    flex: 1;
+    flex: 0.9;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -961,13 +960,13 @@ const showSalienceDetail = () => {
 }
 
 .right-top-panel {
-    flex: 1;
+    flex: 1.5;
     display: flex;
     flex-direction: column;
     background: rgba(248, 248, 248, 0.5);
     border-radius: 12px;
     border: 1px solid rgba(200, 200, 200, 0.3);
-    padding: 12px;
+    padding: 5px 12px 12px 12px;
     overflow: hidden;
 }
 
@@ -976,7 +975,7 @@ const showSalienceDetail = () => {
     background: rgba(248, 248, 248, 0.5);
     border-radius: 12px;
     border: 1px solid rgba(200, 200, 200, 0.3);
-    padding: 12px;
+    padding: 0px 0px 5px 5px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -1039,8 +1038,10 @@ const showSalienceDetail = () => {
     align-items: center;
     user-select: none;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(200, 200, 200, 0.3);
 }
 
 .title-container {
@@ -1059,7 +1060,7 @@ const showSalienceDetail = () => {
     padding: 4px 8px;
     transition: all 0.2s ease;
     border: 1px solid rgba(144, 95, 41, 0.15);
-    margin-left: auto;
+    margin-left: 0;
 }
 
 .element-type-icon {
@@ -1075,18 +1076,36 @@ const showSalienceDetail = () => {
 }
 
 .selector-content {
-    flex: 1;
-    min-height: 100px;
-    max-height: 200px;
+    flex: 0 0 auto;
+    height: 85px;
     overflow-y: auto;
     margin-bottom: 12px;
     border-radius: 8px;
     background: rgba(250, 250, 250, 0.4);
     border: 1px solid rgba(200, 200, 200, 0.2);
+    padding: 4px;
+}
+
+.selector-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.selector-content::-webkit-scrollbar-track {
+    background: rgba(200, 200, 200, 0.1);
+    border-radius: 4px;
+}
+
+.selector-content::-webkit-scrollbar-thumb {
+    background: rgba(144, 95, 41, 0.2);
+    border-radius: 4px;
+}
+
+.selector-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(144, 95, 41, 0.3);
 }
 
 .mac-style-title {
-    font-size: 1.2em;
+    font-size: 1.3em;
     font-weight: 600;
     color: #1d1d1f;
     white-space: nowrap;
@@ -1188,6 +1207,8 @@ const showSalienceDetail = () => {
     flex: 1;
     display: flex;
     flex-direction: column;
+    padding: 8px;
+    height: 100%;
 }
 
 /* SVG 相关样式 */
@@ -1266,29 +1287,15 @@ const showSalienceDetail = () => {
     align-items: center;
     margin-top: auto;
     justify-content: space-between;
+    flex-shrink: 0;
 }
 
 .selection-mode-container {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 8px;
-    padding: 3px 6px;
-    border: 1px solid rgba(144, 95, 41, 0.15);
-}
-
-.selection-mode-label {
-    font-size: 12px;
-    font-weight: 500;
-    color: #aa7134;
-    white-space: nowrap;
-}
-
-.selection-mode-buttons {
-    display: flex;
-    align-items: center;
-    gap: 3px;
+    margin-left: auto;
+    margin-right: 8px;
 }
 
 .selection-mode-btn {
@@ -1298,21 +1305,22 @@ const showSalienceDetail = () => {
     letter-spacing: 0.3px;
     transition: all 0.3s ease;
     text-transform: none;
-    height: 28px;
-    padding: 0 6px !important;
+    height: 32px;
+    padding: 0 8px !important;
+    background-color: rgba(255, 255, 255, 0.6) !important;
+    border: 1px solid rgba(144, 95, 41, 0.2);
 }
 
 .selection-mode-btn:hover {
-    background: rgba(144, 95, 41, 0.2) !important;
+    background-color: rgba(144, 95, 41, 0.1) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
 .selection-mode-btn.active-mode {
     background-color: #aa7134 !important;
     color: white !important;
-}
-
-.selection-mode-btn.active-mode .selection-text {
-    color: white;
+    box-shadow: 0 2px 5px rgba(144, 95, 41, 0.3);
 }
 
 .selection-mode-btn .v-icon {
@@ -1321,8 +1329,8 @@ const showSalienceDetail = () => {
 }
 
 .selection-text {
-    font-size: 1.2em;
-    font-weight: 700;
+    font-size: 0.9em;
+    font-weight: 600;
     color: inherit;
 }
 
@@ -1392,44 +1400,5 @@ const showSalienceDetail = () => {
     color: #1d1d1f;
     letter-spacing: -0.01em;
     opacity: 0.8;
-}
-
-/* 新增：左侧面板底部的选择模式按钮样式 */
-.control-panel-buttons {
-    display: flex;
-    width: 100%;
-    margin-top: 12px;
-    gap: 8px;
-}
-
-.control-btn {
-    flex: 1;
-    border-radius: 8px;
-    color: #aa7134;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    transition: all 0.3s ease;
-    text-transform: none;
-    height: 40px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(144, 95, 41, 0.2);
-    background-color: rgba(255, 255, 255, 0.6) !important;
-}
-
-.control-btn:hover {
-    background-color: rgba(144, 95, 41, 0.1) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-}
-
-.control-btn.active-mode {
-    background-color: #aa7134 !important;
-    color: white !important;
-    box-shadow: 0 2px 5px rgba(144, 95, 41, 0.3);
-}
-
-.control-btn .v-icon {
-    margin-right: 6px;
-    font-size: 18px;
 }
 </style>

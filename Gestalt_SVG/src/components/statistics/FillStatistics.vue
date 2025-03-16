@@ -166,7 +166,7 @@ const render = (data) => {
         
         const marginTop = height * 0.08;
         const marginRight = width * 0.02;
-        const marginBottom = height * 0.3;
+        const marginBottom = height * 0.2;
         const marginLeft = width * 0.15;
 
         // 清空容器

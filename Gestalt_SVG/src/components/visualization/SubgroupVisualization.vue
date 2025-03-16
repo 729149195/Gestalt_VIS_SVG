@@ -3,6 +3,17 @@
         <div class="title-container">
             <span class="title">Patterns List</span>
             <div class="legend-container">
+                <div class="cluster-legend">
+                    <div class="cluster-labels">
+                        <span class="cluster-label">core</span>
+                        <span class="cluster-label correspond-label">correspond</span>
+                    </div>
+                    <div class="cluster-legend-item">
+                        <div class="cluster-box core-box"></div>
+                        <div class="cluster-arrow">→</div>
+                        <div class="cluster-box correspond-box"></div>
+                    </div>
+                </div>
                 <span class="legend-text">100</span> <div class="legend-gradient"><span class="legend-gradient-text">Salience</span></div> <span class="legend-text">0.0</span>
             </div>
         </div>
@@ -744,10 +755,70 @@ onUnmounted(() => {
     font-size: 1.1em;
     color: #666;
     font-weight: 800;
-    color: #905F29;
+
     position: relative;
     bottom: 25px;
     left: 30%;
+}
+
+/* 添加核心聚类和外延聚类图例样式 */
+.cluster-legend {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-right: 15px;
+}
+
+.cluster-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cluster-box {
+    width: 50px;
+    height: 16px;
+    border-radius: 3px;
+}
+
+.core-box {
+    background-color: #C99C6E;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.correspond-box {
+    background-color: #C99C6E;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.cluster-arrow {
+    font-size: 1.6em;
+    color: #905F29;
+    font-weight: bold;
+    position: relative;
+    top: -2px;
+}
+
+.cluster-labels {
+    position: absolute;
+    top: -15px;
+    left: 10px;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.cluster-label {
+    font-size: 1.1em;
+    color: #333;
+    font-weight: 600;
+}
+
+.correspond-label {
+    margin-left: 24px;
 }
 
 </style>

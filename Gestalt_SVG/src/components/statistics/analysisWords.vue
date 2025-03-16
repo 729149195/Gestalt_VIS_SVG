@@ -101,8 +101,8 @@ const featureNameMap = {
       'bbox_right_n': 'Bbox right',
       'bbox_top_n': 'Bbox top',
       'bbox_bottom_n': 'Bbox bottom',
-    'bbox_mds_1': 'position',
-    'bbox_mds_2': 'position',
+    'bbox_mds_1': 'vertical center',
+    'bbox_mds_2': 'horizontal center',
       'bbox_width_n': 'width',
       'bbox_height_n': 'height',
     'bbox_fill_area': 'area'
@@ -654,7 +654,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               })
               .slice(0, 20); // 最多显示20个
           
-          // 处理冲突关系，筛选出不冲突的特征（used effects部分）
+          // 处理冲突关系，筛选出不冲突的特征（used encodings
           const processedSignificantFeatures = [];
           const usedSignificantConflictGroups = new Set(); // 用于记录已使用的冲突组
           
@@ -752,8 +752,8 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         let analysis = '<div class="feature-columns">';
         
         // 正差异特征（选中元素特有的特征）- Used Features
-        analysis += '<div class="feature-column positive">';
-          analysis += `<div class="column-title all-elements-title">Used effects</div>`;
+        analysis += '<div class="feature-column positive selected-elements">';
+          analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label">#Distinct values</span></div>`;
           analysis += `<div class="column-content">`; // 添加内容容器
           
           if (processedSignificantFeatures.length > 0) {
@@ -773,15 +773,15 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               
               analysis += `</div>`;
           } else {
-              analysis += `<div class="no-selection"><span>No visual effects found</span></div>`;
+              analysis += `<div class="no-selection"><span>No visual encodings found</span></div>`;
           }
           
           analysis += `</div>`; // 关闭内容容器
           analysis += '</div>';
           
           // 负差异特征（选中元素缺乏的特征）- Suggest Features
-          analysis += '<div class="feature-column negative">';
-            analysis += `<div class="column-title all-elements-title">Suggestions for improvement</div>`;
+          analysis += '<div class="feature-column negative selected-elements">';
+            analysis += `<div class="column-title all-elements-title">Suggestions</div>`;
             analysis += `<div class="column-content">`; // 添加内容容器
             
             // 检查visual salience值是否小于85
@@ -1011,7 +1011,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         const processedLeastDistinctive = [];
         const usedConflictGroups = new Set(); // 用于记录已使用的冲突组
         
-        // 处理多样性高的特征（Used effects）
+        // 处理多样性高的特征（Used encodings
         for (const feature of diverseFeatures) {
             const featureKey = feature.featureKeys[0];
             const group = getConflictGroup(featureKey);
@@ -1041,10 +1041,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             }
         }
         
-        // 重置冲突组记录，为Available effects准备
+        // 重置冲突组记录，为Available encodings
         usedConflictGroups.clear();
         
-        // 处理多样性低的特征（Available effects）
+        // 处理多样性低的特征（Available encodings
         for (const feature of leastDistinctive) {
             const featureKey = feature.featureKeys[0];
             const group = getConflictGroup(featureKey);
@@ -1072,10 +1072,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             }
         }
 
-        // 重置冲突组记录，为Available effects准备
+        // 重置冲突组记录，为Available encodings
         usedConflictGroups.clear();
         
-        // 处理多样性低的特征（Available effects）并计算预估显著性
+        // 处理多样性低的特征（Available encodings
         const featuresWithSalience = [];
         
         for (const feature of leastDistinctive) {
@@ -1151,8 +1151,8 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         let analysis = '<div class="feature-columns">';
         
         // 最突出的特征 - Used Features
-        analysis += '<div class="feature-column negative">';
-          analysis += `<div class="column-title all-elements-title">Used effects</div>`;
+        analysis += '<div class="feature-column negative all-elements">';
+          analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label">#Distinct values</span></div>`;
           analysis += `<div class="column-content">`; // 添加内容容器
           
           if (finalDiverseFeatures.length > 0) {
@@ -1179,8 +1179,8 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           analysis += '</div>';
           
           // 最不突出的特征 - Available Features
-          analysis += '<div class="feature-column positive">';
-            analysis += `<div class="column-title all-elements-title">Available effects</div>`;
+          analysis += '<div class="feature-column positive all-elements">';
+            analysis += `<div class="column-title all-elements-title">Available encodings</div>`;
             analysis += `<div class="column-content">`; // 添加内容容器
           
           if (finalLeastDistinctive.length > 0) {
@@ -1439,6 +1439,16 @@ function getFeatureTypePriority(featureName) {
   flex-direction: column;
   flex: 1;
   position: relative; /* 添加相对定位 */
+}
+
+/* 为All elements部分添加特定样式 */
+.section-wrapper:first-child {
+  flex: 1.1; /* 缩小All elements部分的宽度占比 */
+}
+
+/* 为Selected elements部分添加特定样式 */
+.section-wrapper:last-child {
+  flex: 1.2; /* 增加Selected elements部分的宽度占比 */
 }
 
 /* 新增：section-header样式 */
@@ -1743,14 +1753,6 @@ function getFeatureTypePriority(featureName) {
     height: 100%; /* 确保占满整个高度 */
 }
 
-/* 修改左右两侧区域的宽度比例 */
-:deep(.feature-column.positive) {
-    flex: 1.4; /* 增加左侧Used effects区域的比例，从1改为1.2 */
-}
-
-:deep(.feature-column.negative) {
-    flex: 1.8; /* 减少右侧Available effects区域的比例，从2改为1.8 */
-}
 
 :deep(.column-title) {
     font-size: 18px; /* 增大字体大小，从16px改为18px */
@@ -1841,7 +1843,7 @@ function getFeatureTypePriority(featureName) {
       background-color: rgba(0, 0, 0, 0.02);
   }
   
-  /* 为 All elements 部分的 Used visual effects 添加特殊的 feature-item 样式 */
+  /* 为 All elements 部分的 Used visual encodings 添加特殊的 feature-item 样式 */
   :deep(.feature-column.negative .feature-item),
   :deep(.feature-column.positive .feature-item) {
       padding: 3px 6px; /* 增加内边距 */
@@ -2009,7 +2011,7 @@ function getFeatureTypePriority(featureName) {
     opacity: 0.9;
 }
   
-  /* 添加 All elements 部分的 Used visual effects 下的 tag 特殊样式 */
+  /* 添加 All elements 部分的 Used visual encodings 下的 tag 特殊样式 */
   :deep(.all-elements-tag) {
       width: 100%;
       min-width: 100%;
@@ -2039,13 +2041,23 @@ function getFeatureTypePriority(featureName) {
       color: #333 !important;
   }
   
-  /* 添加 All elements 部分的 Used visual effects 标题样式 */
+  /* 添加 All elements 部分的 Used visual encodings 标题样式 */
   :deep(.all-elements-title) {
       font-size: 1.3em; /* 增大字体大小，从1.1em改为1.3em */
       padding: 0px 8px 8px 0;
       margin-bottom: 0;
       font-weight: 600;
       color: #444;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+  }
+  
+  :deep(.distinct-values-label) {
+      font-size: 0.7em;
+      font-weight: 500;
+      color: #666;
+      margin-left: auto;
   }
   
   /* 添加两列布局容器 */
@@ -2253,4 +2265,23 @@ function getFeatureTypePriority(featureName) {
     position: relative;
     top: -1px;
   }
+
+  /* 修改左右两侧区域的宽度比例 - All elements部分 */
+  :deep(.feature-column.positive.all-elements) {
+    flex: 1; /* 增加Available encodings区域的比例 */
+  }
+
+  :deep(.feature-column.negative.all-elements) {
+    flex: 1.2; /* 减少Used encodings区域的比例 */
+  }
+
+  /* 修改左右两侧区域的宽度比例 - Selected elements部分 */
+  :deep(.feature-column.positive.selected-elements) {
+    flex: 1.3; /* Used encodings区域的比例 */
+  }
+
+  :deep(.feature-column.negative.selected-elements) {
+    flex: 1.4; /* Suggestions区域的比例 */
+  }
+
 </style>

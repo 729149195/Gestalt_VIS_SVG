@@ -1881,7 +1881,7 @@ const handleOverviewClick = (nodeId, event) => {
 
 /* 总览条样式 - 独立于卡片样式 */
 .clusters-overview {
-    width: 90%; /* 将宽度从100%缩小到80% */
+    width: 100%; /* 将宽度从100%缩小到80% */
     height: 85px;
     /* 增加高度，从70px改为85px，以容纳滚动条 */
     padding: 0;
