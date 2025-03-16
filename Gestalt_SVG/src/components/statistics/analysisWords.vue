@@ -757,7 +757,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
     // 正差异特征（选中元素特有的特征）- Used Features
     analysis += '<div class="feature-column positive selected-elements">';
-    analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label">#Distinct values</span></div>`;
+    analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">distinct<br>values</span></span></div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     if (processedSignificantFeatures.length > 0) {
@@ -943,11 +943,11 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           // 最多显示5个
           featuresWithSalience.slice(0, 5).forEach(feature => {
             const featureKey = feature.featureKeys[0];
-            
+
             // 检查是否为颜色特征
             if (isColorFeature(featureKey)) {
               const rgbValue = getCompleteColorValue(featureKey, feature.usedValue, normalData, selectedNodeIds);
-              
+
               analysis += `
                                     <div class="feature-item">
                                         <span class="feature-tag all-elements-tag">
@@ -1051,7 +1051,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         // 检查是否为颜色特征
         if (isColorFeature(featureKey)) {
           const rgbValue = getCompleteColorValue(featureKey, usedValue, normalData, selectedNodeIds);
-          
+
           analysis += `
                           <div class="feature-item">
                               <span class="feature-tag all-elements-tag">
@@ -1380,7 +1380,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
     // 最突出的特征 - Used Features
     analysis += '<div class="feature-column negative all-elements">';
-    analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label">#Distinct values</span></div>`;
+    analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">distinct<br>values</span></span></div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     if (finalDiverseFeatures.length > 0) {
@@ -1880,18 +1880,6 @@ const isMdsFeature = (featureKey) => {
   /* 添加相对定位 */
 }
 
-/* 为All elements部分添加特定样式 */
-.section-wrapper:first-child {
-  flex: 1.1;
-  /* 缩小All elements部分的宽度占比 */
-}
-
-/* 为Selected elements部分添加特定样式 */
-.section-wrapper:last-child {
-  flex: 1.2;
-  /* 增加Selected elements部分的宽度占比 */
-}
-
 /* 新增：section-header样式 */
 .section-header {
   position: absolute;
@@ -1919,8 +1907,8 @@ const isMdsFeature = (featureKey) => {
   font-weight: 700;
   color: #333;
   letter-spacing: 0.04em;
-  width: 120px;
-  /* 增加宽度，从100px改为120px */
+  width: 80px;
+  /* 减小宽度，从120px改为80px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2638,6 +2626,16 @@ const isMdsFeature = (featureKey) => {
   font-weight: 500;
   color: #666;
   margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+:deep(.hash-symbol) {
+  margin-right: 2px;
+}
+
+:deep(.label-text) {
+  line-height: 1.1;
 }
 
 /* 添加两列布局容器 */
@@ -2673,29 +2671,23 @@ const isMdsFeature = (featureKey) => {
 
 :deep(.feature-item) {
   margin-bottom: 0px;
-  /* 移除底部边距，使用 gap 控制间距 */
 }
 
 /* 三区块布局样式 */
 :deep(.suggestions-container) {
   display: flex;
   flex-direction: column;
-  /* 改为列布局 */
   gap: 6px;
-  /* 保持间距 */
   margin-top: 2px;
   width: 100%;
   min-height: 80px;
-  /* 减小最小高度 */
 }
 
 /* 缩小两侧区域的间距 */
 :deep(.suggestions-add-section) {
   flex: 1;
   min-width: 100%;
-  /* 改为100%，占满整行 */
   max-width: 100%;
-  /* 改为100%，占满整行 */
   border: none;
   border-radius: 0;
   padding: 0;
@@ -2705,23 +2697,18 @@ const isMdsFeature = (featureKey) => {
   flex-direction: column;
   overflow-y: auto;
   min-height: 100px;
-  /* 确保最小高度足够显示提示文字 */
 }
 
 :deep(.suggestions-reset-section),
 :deep(.suggestions-stroke-section) {
   flex: 1;
-  /* 平均分配空间 */
   width: 100%;
-  /* 占满整行 */
   min-width: 100%;
   max-width: 100%;
   min-height: 35px;
-  /* 减小最小高度 */
   border: none;
   border-radius: 0;
   padding: 0;
-  /* 移除左侧内边距 */
   background-color: transparent;
   display: flex;
   flex-direction: column;
@@ -2914,20 +2901,33 @@ const isMdsFeature = (featureKey) => {
 }
 
 :deep(.feature-column.negative.all-elements) {
-  flex: 1.2;
+  flex: 1.1;
   /* 减少Used encodings区域的比例 */
 }
 
 /* 修改左右两侧区域的宽度比例 - Selected elements部分 */
 :deep(.feature-column.positive.selected-elements) {
-  flex: 1.3;
+  flex: 1;
   /* Used encodings区域的比例 */
 }
 
 :deep(.feature-column.negative.selected-elements) {
-  flex: 1.4;
+  flex: 2;
   /* Suggestions区域的比例 */
 }
+
+/* 为All elements部分添加特定样式 */
+.section-wrapper:first-child {
+  flex: 1;
+  /* 缩小All elements部分的宽度占比 */
+}
+
+/* 为Selected elements部分添加特定样式 */
+.section-wrapper:last-child {
+  flex: 1.5;
+  /* 增加Selected elements部分的宽度占比 */
+}
+
 
 /* 添加新的样式，确保编码名和预估显著性评分横向居中对齐 */
 :deep(.feature-tag) {
