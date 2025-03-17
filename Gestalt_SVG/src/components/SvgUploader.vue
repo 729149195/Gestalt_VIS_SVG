@@ -20,9 +20,9 @@
                     <div class="section-title">Chart preview</div>
                     <div class="svg-container mac-style-container control-svg" ref="controlSvgContainer">
                         <div v-html="processedSvgContent"></div>
-                        
-                        <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
-                            {{ analyzing ? 'Simulating...' : 'Submit elements scope' }}
+
+                        <v-btn class="mac-style-button submit-button" @click="updatePerceptionScope" :disabled="selectedElements.length === 0 || analyzing">
+                            Update the perception scope as the selected group
                         </v-btn>
                     </div>
                 </div>
@@ -32,6 +32,9 @@
                     <div class="section-title">Selected elements</div>
                     <div class="svg-container mac-style-container display-svg" ref="displaySvgContainer">
                         <div v-html="processedSvgContent"></div>
+                        <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
+                            {{ analyzing ? 'Simulating...' : 'Submit perception scope' }}
+                        </v-btn>
                     </div>
                 </div>
             </div>
@@ -64,7 +67,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="visual-salience-indicator" @click="showSalienceDetail">
                             <span class="salience-label">Salience</span>
                             <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
@@ -240,15 +243,12 @@ const analyzeSvg = () => {
         .finally(async () => {
             analyzing.value = false;
             eventSource.close();
-            // 先获取最新的normalized数据，然后再计算视觉显著性
             await fetchNormalizedData();
-            // 计算视觉显著性
             calculateVisualSalience();
         });
 }
 
 const fetchProcessedSvg = () => {
-    // 清除选中的节点
     clearSelectedNodes();
 
     return axios.get('http://127.0.0.1:5000/get_svg', {
@@ -918,7 +918,7 @@ const getSelectedCountForType = (tagName) => {
     if (!selectedNodeIds.value || selectedNodeIds.value.length === 0) {
         return 0;
     }
-    
+
     // 根据tag类型筛选出已选中的节点数量
     // 先检查当前SVG中选中的元素，统计特定类型的数量
     let count = 0;
@@ -1134,11 +1134,13 @@ const getSelectedCountForType = (tagName) => {
 
 .mac-style-checkbox :deep(.v-selection-control) {
     color: #905F29;
-    margin-bottom: -2px; /* 减小复选框的底部间距 */
+    margin-bottom: -2px;
+    /* 减小复选框的底部间距 */
 }
 
 .mac-style-checkbox :deep(.v-selection-control__wrapper) {
-    margin-bottom: -2px; /* 减小复选框的底部间距 */
+    margin-bottom: -2px;
+    /* 减小复选框的底部间距 */
 }
 
 .mac-style-button {
@@ -1228,17 +1230,17 @@ const getSelectedCountForType = (tagName) => {
 
 .progress-card {
     position: absolute;
-    top: 16px;
+    top: 12px;
     /* 调整位置，现在不再有上传区域 */
-    left: 16px;
-    right: 16px;
+    left: 230px;
+    right: 12px;
     z-index: 100;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(200, 200, 200, 0.3);
-    padding: 12px 16px;
+    padding: 5px 16px;
     margin-bottom: 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
@@ -1248,7 +1250,7 @@ const getSelectedCountForType = (tagName) => {
     font-size: 13px;
     font-weight: 500;
     color: #1d1d1f;
-    margin-bottom: 8px;
+    margin-bottom: 2px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1287,8 +1289,8 @@ const getSelectedCountForType = (tagName) => {
     flex: 1;
     width: 100%;
     gap: 8px;
-    padding-top: 8px;
-    padding-left: 134px; /* 为标题和按钮预留空间 */
+    padding-left: 134px;
+    /* 为标题和按钮预留空间 */
     height: 100%;
 }
 
@@ -1298,7 +1300,7 @@ const getSelectedCountForType = (tagName) => {
     background: rgba(255, 255, 255, 0.92);
     border-radius: 8px;
     border: 1px solid rgba(144, 95, 41, 0.2);
-    padding: 8px;
+    padding: 12px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     height: 100%;
