@@ -446,8 +446,20 @@ const drawConnectionLines = () => {
                     const coreX = coreIndex * (clusterItemSize + clusterItemGap) + clusterItemSize / 2;
                     const coreY = 20; // 矩形的顶部y坐标
 
+                    // 计算两点之间的距离
+                    const distance = Math.abs(extX - coreX);
+                    
+                    // 计算垂直线段的高度，确保不会超出容器
+                    const minOffset = 8;
+                    const maxOffset = Math.min(25, maxAvailableHeight - 5); // 确保不超出容器
+                    const normalizedDistance = Math.min(distance / 200, 1);
+                    const verticalOffset = Math.min(
+                        minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset)),
+                        maxAvailableHeight - 5
+                    );
+                    
                     // 创建一个圆角方形路径
-                    const pathData = createArcPath(coreX, coreY, extX, extY);
+                    const pathData = createArcPath(coreX, coreY, extX, extY, verticalOffset);
 
                     // 添加路径到SVG
                     linesGroup.append('path')
@@ -462,20 +474,17 @@ const drawConnectionLines = () => {
                         .style('overflow', 'visible'); // 确保内容可以超出边界
                     
                     // 计算箭头位置 - 在水平线段的中点
-                    const midPoint = calculateArcMidPoint(coreX, coreY, extX, extY);
+                    const midPoint = calculateArcMidPoint(coreX, coreY, extX, extY, verticalOffset);
                     
-                    // 确保箭头不会超出容器顶部
-                    if (midPoint.y >= 5) { // 至少留5px的边距
-                        // 计算箭头方向 - 从核心指向外延
-                        const arrowAngle = calculateArrowAngle(coreX, coreY, extX, extY, midPoint);
-                        
-                        // 添加箭头
-                        linesGroup.append('polygon')
-                            .attr('points', '0,-3 6,0 0,3') // 调整箭头大小
-                            .attr('fill', '#905F29')
-                            .attr('transform', `translate(${midPoint.x}, ${midPoint.y}) rotate(${arrowAngle})`)
-                            .style('pointer-events', 'none');
-                    }
+                    // 计算箭头方向 - 从核心指向外延
+                    const arrowAngle = calculateArrowAngle(coreX, coreY, extX, extY);
+                    
+                    // 添加箭头 - 始终显示箭头
+                    linesGroup.append('polygon')
+                        .attr('points', '0,-3 6,0 0,3') // 调整箭头大小
+                        .attr('fill', '#905F29')
+                        .attr('transform', `translate(${midPoint.x}, ${midPoint.y}) rotate(${arrowAngle})`)
+                        .style('pointer-events', 'none');
                 }
             }
         });
@@ -488,24 +497,24 @@ const drawConnectionLines = () => {
 };
 
 // 创建弧线路径的辅助函数
-const createArcPath = (x1, y1, x2, y2) => {
+const createArcPath = (x1, y1, x2, y2, verticalOffset) => {
     // 计算两点之间的距离
     const distance = Math.abs(x2 - x1);
     
     // 设置圆角半径
     const cornerRadius = 5;
     
-    // 根据距离计算垂直线段的高度
-    // 距离越远，高度越高，但有上限
-    const minOffset = 8; // 最小高度
-    const maxOffset = 25; // 最大高度
-    
-    // 使用非线性映射，让短距离和长距离的高度差更明显
-    const normalizedDistance = Math.min(distance / 200, 1); // 归一化距离，最大200px
-    const verticalOffset = minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset));
+    // 使用传入的垂直偏移量，如果没有传入则计算
+    const offset = verticalOffset !== undefined ? verticalOffset : (() => {
+        // 根据距离计算垂直线段的高度
+        const minOffset = 8; // 最小高度
+        const maxOffset = 25; // 最大高度
+        const normalizedDistance = Math.min(distance / 200, 1); // 归一化距离，最大200px
+        return minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset));
+    })();
     
     // 计算垂直线段的Y坐标
-    const verticalY = y1 - verticalOffset;
+    const verticalY = y1 - offset;
     
     // 创建圆角方形路径，确保圆角方向正确
     if (x1 < x2) {
@@ -528,25 +537,28 @@ const createArcPath = (x1, y1, x2, y2) => {
 };
 
 // 计算弧线中点的辅助函数
-const calculateArcMidPoint = (x1, y1, x2, y2) => {
+const calculateArcMidPoint = (x1, y1, x2, y2, verticalOffset) => {
     // 计算两点之间的距离
     const distance = Math.abs(x2 - x1);
     
-    // 使用与createArcPath相同的逻辑计算高度
-    const minOffset = 8;
-    const maxOffset = 25;
-    const normalizedDistance = Math.min(distance / 200, 1);
-    const verticalOffset = minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset));
+    // 使用传入的垂直偏移量，如果没有传入则计算
+    const offset = verticalOffset !== undefined ? verticalOffset : (() => {
+        // 使用与createArcPath相同的逻辑计算高度
+        const minOffset = 8;
+        const maxOffset = 25;
+        const normalizedDistance = Math.min(distance / 200, 1);
+        return minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset));
+    })();
     
     // 计算水平线段的中点
     const midX = (x1 + x2) / 2;
-    const midY = y1 - verticalOffset;
+    const midY = y1 - offset;
     
     return { x: midX, y: midY };
 };
 
 // 计算箭头角度的辅助函数
-const calculateArrowAngle = (coreX, coreY, extX, extY, midPoint) => {
+const calculateArrowAngle = (coreX, coreY, extX, extY) => {
     // 对于水平线段，箭头角度为0度（向右）
     // 如果从核心到外延是从右到左，则箭头角度为180度（向左）
     return coreX < extX ? 0 : 180;

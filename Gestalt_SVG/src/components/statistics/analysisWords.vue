@@ -1377,7 +1377,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       };
 
       // 根据元素位置关系决定显示的文本
-      const annotationText = areElementsAdjacent() ? 'Add a box' : 'Add links';
+      const annotationText = areElementsAdjacent() ? 'by a box' : 'by links';
 
       // 添加动态文本
       analysis += `
