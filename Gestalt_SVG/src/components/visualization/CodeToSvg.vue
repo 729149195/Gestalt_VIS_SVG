@@ -990,7 +990,7 @@ onUnmounted(() => {
 // 处理从SvgUploader接收到的新SVG内容
 const handleSvgContentUpdated = async (event) => {
   try {
-    const response = await fetch('http://127.0.0.1:5000/get_svg', {
+    const response = await fetch('http://127.0.0.1:5000/get_upload_svg', {
       responseType: 'text',
       headers: {
         'Accept': 'image/svg+xml'
@@ -1080,7 +1080,7 @@ const generateAndUpload = async () => {
     const blob = new Blob([contentToUpload], { type: 'image/svg+xml' })
 
     
-    const file = new File([blob], `generated_width_id.svg`, { type: 'image/svg+xml' })
+    const file = new File([blob], `generated_with_id.svg`, { type: 'image/svg+xml' })
 
     // 创建FormData
     const formData = new FormData()

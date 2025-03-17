@@ -17,6 +17,9 @@ def simple_mds_embedding(bbox_features):
 
 def normalize_features(input_path, output_path):
     df = pd.read_csv(input_path)
+    
+    # 保存原始tag_name列，确保不会被修改
+    original_tag_names = df['tag_name'].copy()
 
     # 替换 -1 为一个小正数
     df.replace(-1, 0.000001, inplace=True)
@@ -90,6 +93,9 @@ def normalize_features(input_path, output_path):
     # 对MDS特征进行归一化
     df['bbox_mds_1'] = (bbox_mds[:, 0] - bbox_mds[:, 0].min()) / (bbox_mds[:, 0].max() - bbox_mds[:, 0].min())
     df['bbox_mds_2'] = (bbox_mds[:, 1] - bbox_mds[:, 1].min()) / (bbox_mds[:, 1].max() - bbox_mds[:, 1].min())
+
+    # 恢复原始tag_name列
+    df['tag_name'] = original_tag_names
 
     n_columns = [
         'tag_name', 

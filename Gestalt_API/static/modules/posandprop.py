@@ -16,11 +16,53 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
     left_data = defaultdict(lambda: {"tags": [], "total": defaultdict(int)})
     right_data = defaultdict(lambda: {"tags": [], "total": defaultdict(int)})
     
-    # 获取所有边界值的范围
-    all_tops = [item['features'][10] for item in init_data]
-    all_bottoms = [item['features'][11] for item in init_data]
-    all_lefts = [item['features'][12] for item in init_data]
-    all_rights = [item['features'][13] for item in init_data]
+    # 获取过滤后SVG中的所有元素ID
+    filtered_element_ids = set()
+    try:
+        with open(svg_file_path, 'r', encoding='utf-8') as f:
+            soup = BeautifulSoup(f.read(), 'xml')
+            # 获取所有带有ID的元素
+            for element in soup.find_all(lambda tag: tag.get('id')):
+                filtered_element_ids.add(element.get('id'))
+            
+            # 获取所有带有tag_name的元素
+            for element in soup.find_all(lambda tag: tag.get('tag_name')):
+                filtered_element_ids.add(element.get('tag_name'))
+        
+        print(f"过滤后的SVG文件中找到 {len(filtered_element_ids)} 个元素")
+    except Exception as e:
+        print(f"读取过滤后的SVG文件时出错: {str(e)}")
+        filtered_element_ids = set()  # 如果出错，使用空集合
+
+    # 只处理在过滤后SVG中存在的元素
+    filtered_init_data = []
+    for item in init_data:
+        element_id = item['id']
+        # 检查元素是否在过滤后的SVG中
+        if not filtered_element_ids or element_id in filtered_element_ids or element_id.split('/')[-1] in filtered_element_ids:
+            filtered_init_data.append(item)
+    
+    # 如果没有找到匹配的元素，使用所有元素（回退策略）
+    if not filtered_init_data and init_data:
+        print("警告: 没有找到与过滤后SVG匹配的元素，将使用所有元素")
+        filtered_init_data = init_data
+    
+    print(f"处理 {len(filtered_init_data)} 个元素（共 {len(init_data)} 个）")
+    
+    # 获取过滤后元素的边界值范围
+    all_tops = [item['features'][10] for item in filtered_init_data]
+    all_bottoms = [item['features'][11] for item in filtered_init_data]
+    all_lefts = [item['features'][12] for item in filtered_init_data]
+    all_rights = [item['features'][13] for item in filtered_init_data]
+    
+    # 确保有足够的数据点
+    if len(all_tops) < 2:
+        print("警告: 数据点不足，使用默认范围")
+        min_val, max_val = 0, 100
+        all_tops = [min_val, max_val]
+        all_bottoms = [min_val, max_val]
+        all_lefts = [min_val, max_val]
+        all_rights = [min_val, max_val]
     
     # 计算区间范围
     top_intervals = generate_intervals(min(all_tops), max(all_tops), 8)
@@ -29,9 +71,18 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
     right_intervals = generate_intervals(min(all_rights), max(all_rights), 8)
     
     # 处理每个元素
-    for item in init_data:
+    for item in filtered_init_data:
+        # 从id中获取元素标识符，在init_data中，id通常是从tag_name转换过来的
         element_id = item['id'].split('/')[-1]
-        tag_name = element_id.split('_')[0] if '_' in element_id else element_id
+        
+        # 避免依赖于"tagname_number"格式
+        # 尝试从SVG文件中获取元素的类型标识，或直接使用元素ID
+        # 如果ID中包含下划线，尝试提取标签类型，但不假设特定格式
+        if '_' in element_id and any(element_id.startswith(tag) for tag in ['rect', 'circle', 'ellipse', 'path', 'line', 'polygon', 'polyline', 'text', 'image']):
+            tag_name = element_id.split('_')[0]
+        else:
+            # 如果不是SVGParser生成的ID格式，则使用整个ID
+            tag_name = element_id
         
         # 处理位置数据
         process_position(item, tag_name, top_intervals, top_data, 10)
@@ -43,7 +94,7 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
     fill_colors = defaultdict(int)
     stroke_colors = defaultdict(int)
     
-    for item in init_data:
+    for item in filtered_init_data:
         # 处理填充颜色 (h,s,l 分别在索引 2,3,4)
         h_fill, s_fill, l_fill = item['features'][2:5]
         if h_fill != -1 and s_fill != -1 and l_fill != -1:
@@ -56,10 +107,10 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
             color_key = f"hsl({h_stroke:.1f}, {s_stroke:.1f}%, {l_stroke:.1f}%)"
             stroke_colors[color_key] += 1
     
-    # 处理SVG属性数据
+    # 处理SVG属性数据 - 使用过滤后的SVG文件
     attr_data = process_svg_attributes(svg_file_path)
     
-    # 处理元素数量数据
+    # 处理元素数量数据 - 使用过滤后的SVG文件
     ele_data = process_element_numbers(svg_file_path)
     
     # 保存所有生成的JSON文件
@@ -86,9 +137,12 @@ def process_position(item, tag_name, intervals, data_dict, feature_index):
     for i, (start, end) in enumerate(intervals):
         if start <= value <= end:
             interval_key = f"{start:.1f}-{end:.1f}"
-            data_dict[interval_key]["tags"].append(item['id'].split('/')[-1])
-            tag_base = tag_name.split('_')[0]
-            data_dict[interval_key]["total"][tag_base] += 1
+            # 使用完整的元素ID
+            element_id = item['id'].split('/')[-1]
+            data_dict[interval_key]["tags"].append(element_id)
+            
+            # 使用传入的tag_name，不做二次处理
+            data_dict[interval_key]["total"][tag_name] += 1
             break
 
 def process_svg_attributes(svg_file_path):

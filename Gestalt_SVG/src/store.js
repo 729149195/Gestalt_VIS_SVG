@@ -7,6 +7,7 @@ export default createStore({
       gmInfoData: null,              // 一些 GM 信息数据
       loading: false,                // 加载状态
       selectedSvg: null,             // 当前选中的 SVG 内容
+      displaySvgContent: null,       // S区显示的SVG内容
       selectedNodes: {               // 当前选中的节点信息
         nodeIds: [],                 // 选中的节点 ID 列表
         group: null                  // 选中的组（可选）
@@ -28,6 +29,9 @@ export default createStore({
     },
     setSelectedSvg(state, svgContent) {
       state.selectedSvg = svgContent;
+    },
+    SET_DISPLAY_SVG_CONTENT(state, svgContent) {
+      state.displaySvgContent = svgContent;
     },
     UPDATE_SELECTED_NODES(state, payload) {
       // 更新选中的节点 ID 列表和组信息

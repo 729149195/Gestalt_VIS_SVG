@@ -13,11 +13,39 @@ import { useStore } from 'vuex';
 const store = useStore();
 
 const eleURL = "http://127.0.0.1:5000/ele_num_data"
+const svgURL = "http://127.0.0.1:5000/get_svg"
 const chartContainer = ref(null);
 const hasData = ref(false);
 const rawJsonData = ref(null);
 const isInitialized = ref(false);
 const svgRef = ref(null);
+const filteredElementIds = ref([]); // 存储过滤后的SVG元素ID
+
+// 从SVG内容中提取所有元素ID
+const extractElementIds = (svgContent) => {
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgContent, "image/svg+xml");
+    const allElements = svgDoc.querySelectorAll('[id]');
+    
+    return Array.from(allElements).map(el => el.id);
+};
+
+// 获取过滤后的SVG元素ID
+const fetchFilteredSvgIds = async () => {
+    try {
+        const response = await fetch(svgURL);
+        if (!response.ok) {
+            console.error('获取SVG内容失败');
+            return [];
+        }
+        
+        const svgContent = await response.text();
+        return extractElementIds(svgContent);
+    } catch (error) {
+        console.error('获取过滤后SVG元素ID时出错:', error);
+        return [];
+    }
+};
 
 // 计算选中元素的类型比例
 const calculateSelectedRatio = (tag, selectedNodes) => {
@@ -30,11 +58,21 @@ const calculateSelectedRatio = (tag, selectedNodes) => {
         const lastPart = parts[parts.length - 1];
         // 返回类型和编号
         const [type, id] = lastPart.split('_');
-        return { type, id };
+        return { type, id, fullId: nodeId };
     });
     
-    // 找出该类型的所有选中元素
-    const selectedOfThisType = selectedElements.filter(el => el.type === tag);
+    // 只保留在过滤后SVG中存在的元素
+    const validSelectedElements = selectedElements.filter(el => {
+        // 检查元素ID是否在过滤后的SVG中
+        // 需要考虑多种可能的ID格式: fullId, type_id, 或者纯id
+        return filteredElementIds.value.length === 0 || 
+               filteredElementIds.value.includes(el.fullId) || 
+               filteredElementIds.value.includes(`${el.type}_${el.id}`) ||
+               filteredElementIds.value.includes(el.id);
+    });
+    
+    // 找出该类型的所有有效选中元素
+    const selectedOfThisType = validSelectedElements.filter(el => el.type === tag);
     
     // 获取该类型的总数量 (从 rawJsonData 中)
     const typeData = rawJsonData.value.find(d => d.tag === tag);
@@ -52,6 +90,8 @@ const calculateSelectedRatio = (tag, selectedNodes) => {
 onMounted(async () => {
     await nextTick();
     isInitialized.value = true;
+    // 先获取过滤后的SVG元素ID
+    filteredElementIds.value = await fetchFilteredSvgIds();
     await fetchData();
 });
 
@@ -65,6 +105,9 @@ const fetchData = async () => {
     }
     
     try {
+        // 获取最新的过滤后SVG元素ID
+        filteredElementIds.value = await fetchFilteredSvgIds();
+        
         const response = await fetch(eleURL);
         if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -114,8 +157,14 @@ watch([() => chartContainer.value, () => isInitialized.value], ([newContainer, n
 // 监听选中节点变化
 watch(
     () => store.state.selectedNodes.nodeIds,
-    (newSelectedNodes) => {
+    async (newSelectedNodes) => {
         if (!svgRef.value || !rawJsonData.value) return;
+        
+        // 确保每次节点变化时都更新过滤后的SVG元素ID
+        if (filteredElementIds.value.length === 0) {
+            filteredElementIds.value = await fetchFilteredSvgIds();
+        }
+        
         updateSelection(newSelectedNodes || []);
     },
     { deep: true, immediate: true }

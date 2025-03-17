@@ -424,6 +424,12 @@ const drawConnectionLines = () => {
             }
         });
 
+        // 获取SVG容器的高度
+        const svgHeight = overviewSvg.value.clientHeight || 50;
+        
+        // 计算最大可用高度（留出一些边距）
+        const maxAvailableHeight = svgHeight - 5; // 5px的安全边距
+        
         // 为每个外延节点绘制连接线
         flattenedNodes.value.forEach((node, index) => {
             if (node.type === 'extension') {
@@ -440,7 +446,7 @@ const drawConnectionLines = () => {
                     const coreX = coreIndex * (clusterItemSize + clusterItemGap) + clusterItemSize / 2;
                     const coreY = 20; // 矩形的顶部y坐标
 
-                    // 创建一个弧线路径
+                    // 创建一个圆角方形路径
                     const pathData = createArcPath(coreX, coreY, extX, extY);
 
                     // 添加路径到SVG
@@ -455,18 +461,21 @@ const drawConnectionLines = () => {
                         .style('pointer-events', 'none') // 禁用鼠标事件，防止干扰
                         .style('overflow', 'visible'); // 确保内容可以超出边界
                     
-                    // 计算箭头位置 - 在弧线的中点
+                    // 计算箭头位置 - 在水平线段的中点
                     const midPoint = calculateArcMidPoint(coreX, coreY, extX, extY);
                     
-                    // 计算箭头方向 - 从核心指向外延
-                    const arrowAngle = calculateArrowAngle(coreX, coreY, extX, extY, midPoint);
-                    
-                    // 添加箭头
-                    linesGroup.append('polygon')
-                        .attr('points', '0,-5 10,0 0,5') // 增大箭头尺寸
-                        .attr('fill', '#905F29')
-                        .attr('transform', `translate(${midPoint.x}, ${midPoint.y}) rotate(${arrowAngle})`)
-                        .style('pointer-events', 'none');
+                    // 确保箭头不会超出容器顶部
+                    if (midPoint.y >= 5) { // 至少留5px的边距
+                        // 计算箭头方向 - 从核心指向外延
+                        const arrowAngle = calculateArrowAngle(coreX, coreY, extX, extY, midPoint);
+                        
+                        // 添加箭头
+                        linesGroup.append('polygon')
+                            .attr('points', '0,-3 6,0 0,3') // 调整箭头大小
+                            .attr('fill', '#905F29')
+                            .attr('transform', `translate(${midPoint.x}, ${midPoint.y}) rotate(${arrowAngle})`)
+                            .style('pointer-events', 'none');
+                    }
                 }
             }
         });
@@ -482,16 +491,40 @@ const drawConnectionLines = () => {
 const createArcPath = (x1, y1, x2, y2) => {
     // 计算两点之间的距离
     const distance = Math.abs(x2 - x1);
-
-    // 根据距离动态调整控制点的高度
-    const controlYOffset = Math.min(Math.max(distance * 0.4, 30), 60);
-    const controlY = Math.min(y1, y2) - controlYOffset;
-
-    // 计算控制点
-    const midX = (x1 + x2) / 2;
-
-    // 创建弧线路径
-    return `M ${x1} ${y1} Q ${midX} ${controlY}, ${x2} ${y2}`;
+    
+    // 设置圆角半径
+    const cornerRadius = 5;
+    
+    // 根据距离计算垂直线段的高度
+    // 距离越远，高度越高，但有上限
+    const minOffset = 8; // 最小高度
+    const maxOffset = 25; // 最大高度
+    
+    // 使用非线性映射，让短距离和长距离的高度差更明显
+    const normalizedDistance = Math.min(distance / 200, 1); // 归一化距离，最大200px
+    const verticalOffset = minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset));
+    
+    // 计算垂直线段的Y坐标
+    const verticalY = y1 - verticalOffset;
+    
+    // 创建圆角方形路径，确保圆角方向正确
+    if (x1 < x2) {
+        // 从左到右
+        return `M ${x1} ${y1} 
+                L ${x1} ${y1 - cornerRadius} 
+                Q ${x1} ${verticalY} ${x1 + cornerRadius} ${verticalY} 
+                L ${x2 - cornerRadius} ${verticalY} 
+                Q ${x2} ${verticalY} ${x2} ${verticalY + cornerRadius} 
+                L ${x2} ${y2}`;
+    } else {
+        // 从右到左
+        return `M ${x1} ${y1} 
+                L ${x1} ${y1 - cornerRadius} 
+                Q ${x1} ${verticalY} ${x1 - cornerRadius} ${verticalY} 
+                L ${x2 + cornerRadius} ${verticalY} 
+                Q ${x2} ${verticalY} ${x2} ${verticalY + cornerRadius} 
+                L ${x2} ${y2}`;
+    }
 };
 
 // 计算弧线中点的辅助函数
@@ -499,41 +532,24 @@ const calculateArcMidPoint = (x1, y1, x2, y2) => {
     // 计算两点之间的距离
     const distance = Math.abs(x2 - x1);
     
-    // 根据距离动态调整控制点的高度
-    const controlYOffset = Math.min(Math.max(distance * 0.4, 30), 60);
-    const controlY = Math.min(y1, y2) - controlYOffset;
+    // 使用与createArcPath相同的逻辑计算高度
+    const minOffset = 8;
+    const maxOffset = 25;
+    const normalizedDistance = Math.min(distance / 200, 1);
+    const verticalOffset = minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset));
     
-    // 计算控制点
+    // 计算水平线段的中点
     const midX = (x1 + x2) / 2;
+    const midY = y1 - verticalOffset;
     
-    // 计算贝塞尔曲线的中点 (t=0.5)
-    // 二次贝塞尔曲线的参数方程: B(t) = (1-t)²P₀ + 2(1-t)tP₁ + t²P₂
-    // 当t=0.5时: B(0.5) = 0.25*P₀ + 0.5*P₁ + 0.25*P₂
-    const t = 0.5;
-    const mt = 1 - t;
-    const midPointX = mt * mt * x1 + 2 * mt * t * midX + t * t * x2;
-    const midPointY = mt * mt * y1 + 2 * mt * t * controlY + t * t * y2;
-    
-    return { x: midPointX, y: midPointY };
+    return { x: midX, y: midY };
 };
 
 // 计算箭头角度的辅助函数
 const calculateArrowAngle = (coreX, coreY, extX, extY, midPoint) => {
-    // 计算箭头在中点处的切线方向
-    // 二次贝塞尔曲线在t点的切线方向: B'(t) = 2(1-t)(P₁-P₀) + 2t(P₂-P₁)
-    const t = 0.5;
-    const midX = (coreX + extX) / 2;
-    const controlYOffset = Math.min(Math.max(Math.abs(extX - coreX) * 0.4, 30), 60);
-    const controlY = Math.min(coreY, extY) - controlYOffset;
-    
-    // 计算切线向量
-    const tangentX = 2 * (1 - t) * (midX - coreX) + 2 * t * (extX - midX);
-    const tangentY = 2 * (1 - t) * (controlY - coreY) + 2 * t * (extY - controlY);
-    
-    // 计算角度（弧度）并转换为角度
-    let angle = Math.atan2(tangentY, tangentX) * (180 / Math.PI);
-    
-    return angle;
+    // 对于水平线段，箭头角度为0度（向右）
+    // 如果从核心到外延是从右到左，则箭头角度为180度（向左）
+    return coreX < extX ? 0 : 180;
 };
 
 // 标记总览条中当前可见的卡片

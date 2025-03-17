@@ -19,7 +19,7 @@
                 <div class="left-panel">
                     <div class="section-title">Chart preview</div>
                     <div class="svg-container mac-style-container control-svg" ref="controlSvgContainer">
-                        <div v-html="processedSvgContent"></div>
+                        <div v-html="controlSvgContent"></div>
 
                         <v-btn class="mac-style-button submit-button" @click="updatePerceptionScope" :disabled="selectedElements.length === 0 || analyzing">
                             Update the perception scope as the selected group
@@ -31,7 +31,7 @@
                 <div class="right-panel">
                     <div class="section-title">Selected elements</div>
                     <div class="svg-container mac-style-container display-svg" ref="displaySvgContainer">
-                        <div v-html="processedSvgContent"></div>
+                        <div v-html="displaySvgContent"></div>
                         <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
                             {{ analyzing ? 'Simulating...' : 'Submit perception scope' }}
                         </v-btn>
@@ -87,7 +87,8 @@ import { useStore } from 'vuex';
 import * as d3 from 'd3';
 
 const file = ref(null)
-const processedSvgContent = ref('')
+const controlSvgContent = ref('') // C区SVG内容
+const displaySvgContent = ref('') // S区SVG内容
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 const allVisiableNodes = computed(() => store.state.AllVisiableNodes);
@@ -144,25 +145,35 @@ const handleSvgUploaded = async (event) => {
     clearSelectedNodes();
 
     try {
-        // 设置file值，这样可以触发界面更新
-        const response = await fetch('http://127.0.0.1:5000/get_svg', {
+        // 获取C区SVG内容 - 原始上传的SVG
+        const controlResponse = await fetch('http://127.0.0.1:5000/get_upload_svg', {
             responseType: 'text',
             headers: {
                 'Accept': 'image/svg+xml'
             }
         })
 
-        const svgContent = await response.text()
+        const controlSvgData = await controlResponse.text()
+        
+        // 获取S区SVG内容 - 处理后的SVG
+        const displayResponse = await fetch('http://127.0.0.1:5000/get_svg', {
+            responseType: 'text',
+            headers: {
+                'Accept': 'image/svg+xml'
+            }
+        })
+        
+        const displaySvgData = await displayResponse.text()
 
-        // 创建File对象
-        const blob = new Blob([svgContent], { type: 'image/svg+xml' })
+        // 创建File对象 (使用控制区SVG)
+        const blob = new Blob([controlSvgData], { type: 'image/svg+xml' })
         const fileObj = new File([blob], filename, { type: 'image/svg+xml' })
 
         // 更新file引用，这会触发界面更新
         file.value = fileObj
 
-        // 获取并显示SVG内容
-        await fetchProcessedSvg()
+        // 处理并设置SVG内容
+        await processAndSetSvgContent(controlSvgData, displaySvgData)
 
         // 获取可见元素列表
         const elementsResponse = await axios.post('http://127.0.0.1:5000/get_visible_elements', {
@@ -183,6 +194,79 @@ const handleSvgUploaded = async (event) => {
     } catch (error) {
         console.error('Error handling upload event:', error)
     }
+}
+
+// 处理并设置SVG内容
+const processAndSetSvgContent = async (controlSvgData, displaySvgData) => {
+    // 处理控制区SVG
+    const controlParser = new DOMParser();
+    const controlSvgDoc = controlParser.parseFromString(controlSvgData, 'image/svg+xml');
+    const controlSvgElement = controlSvgDoc.querySelector('svg');
+
+    if (controlSvgElement) {
+        // 从原始SVG中提取viewBox
+        const viewBoxMatch = controlSvgData.match(/viewBox="([^"]*)"/) || [];
+        const viewBox = viewBoxMatch[1] || '0 0 800 600';
+
+        // 设置SVG的响应式属性
+        controlSvgElement.setAttribute('width', '100%');
+        controlSvgElement.setAttribute('height', '100%');
+        controlSvgElement.setAttribute('viewBox', viewBox);
+        controlSvgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+        // 确保有一个包装组用于缩放
+        let wrapper = controlSvgElement.querySelector('g.zoom-wrapper');
+        if (!wrapper) {
+            wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            wrapper.setAttribute('class', 'zoom-wrapper');
+            while (controlSvgElement.firstChild) {
+                wrapper.appendChild(controlSvgElement.firstChild);
+            }
+            controlSvgElement.appendChild(wrapper);
+        }
+
+        controlSvgContent.value = controlSvgElement.outerHTML;
+    }
+
+    // 处理显示区SVG
+    const displayParser = new DOMParser();
+    const displaySvgDoc = displayParser.parseFromString(displaySvgData, 'image/svg+xml');
+    const displaySvgElement = displaySvgDoc.querySelector('svg');
+
+    if (displaySvgElement) {
+        // 从原始SVG中提取viewBox
+        const viewBoxMatch = displaySvgData.match(/viewBox="([^"]*)"/) || [];
+        const viewBox = viewBoxMatch[1] || '0 0 800 600';
+
+        // 设置SVG的响应式属性
+        displaySvgElement.setAttribute('width', '100%');
+        displaySvgElement.setAttribute('height', '100%');
+        displaySvgElement.setAttribute('viewBox', viewBox);
+        displaySvgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+        // 确保有一个包装组用于缩放
+        let wrapper = displaySvgElement.querySelector('g.zoom-wrapper');
+        if (!wrapper) {
+            wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            wrapper.setAttribute('class', 'zoom-wrapper');
+            while (displaySvgElement.firstChild) {
+                wrapper.appendChild(displaySvgElement.firstChild);
+            }
+            displaySvgElement.appendChild(wrapper);
+        }
+
+        displaySvgContent.value = displaySvgElement.outerHTML;
+    }
+
+    // 获取最新的normalized数据
+    await fetchNormalizedData();
+    
+    // 确保DOM更新后再更新节点透明度
+    await nextTick();
+    updateControlNodeOpacity();
+    updateDisplayNodeOpacity();
+    
+    return nextTick();
 }
 
 // 添加进度相关的响应式变量
@@ -223,7 +307,7 @@ const analyzeSvg = () => {
     })
         .then(response => {
             if (response.data.success) {
-                return fetchProcessedSvg();
+                return refreshSvgContent();
             } else {
                 throw new Error(response.data.error || 'Failure to analyse');
             }
@@ -248,67 +332,51 @@ const analyzeSvg = () => {
         });
 }
 
-const fetchProcessedSvg = () => {
+// 刷新SVG内容
+const refreshSvgContent = async () => {
     clearSelectedNodes();
 
-    return axios.get('http://127.0.0.1:5000/get_svg', {
-        responseType: 'text',
-        headers: {
-            'Accept': 'image/svg+xml'
-        }
-    })
-        .then(svgResponse => {
-            let svgContent = svgResponse.data;
-
-            // 确保SVG内容是有效的
-            if (!svgContent.includes('<svg')) {
-                throw new Error('Invalid SVG content received');
+    try {
+        // 获取C区SVG内容 - 原始上传的SVG
+        const controlResponse = await fetch('http://127.0.0.1:5000/get_upload_svg', {
+            responseType: 'text',
+            headers: {
+                'Accept': 'image/svg+xml'
             }
-
-            // 处理SVG内容
-            const parser = new DOMParser();
-            const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
-            const svgElement = svgDoc.querySelector('svg');
-
-            if (!svgElement) {
-                throw new Error('No SVG element found in response');
-            }
-
-            // 从原始SVG中提取viewBox
-            const viewBoxMatch = svgContent.match(/viewBox="([^"]*)"/) || [];
-            const viewBox = viewBoxMatch[1] || '0 0 800 600';
-
-            // 设置SVG的响应式属性
-            svgElement.setAttribute('width', '100%');
-            svgElement.setAttribute('height', '100%');
-            svgElement.setAttribute('viewBox', viewBox);
-            svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-
-            // 确保有一个包装组用于缩放
-            let wrapper = svgElement.querySelector('g.zoom-wrapper');
-            if (!wrapper) {
-                wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                wrapper.setAttribute('class', 'zoom-wrapper');
-                while (svgElement.firstChild) {
-                    wrapper.appendChild(svgElement.firstChild);
-                }
-                svgElement.appendChild(wrapper);
-            }
-
-            processedSvgContent.value = svgElement.outerHTML;
-
-            // 获取最新的normalized数据
-            return fetchNormalizedData().then(() => {
-                return nextTick(() => {
-                    setupDualSvgInteractions();
-                });
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching SVG:', error);
-            throw error;
         });
-};
+        
+        const controlSvgData = await controlResponse.text();
+        
+        // 获取S区SVG内容 - 处理后的SVG
+        const displayResponse = await fetch('http://127.0.0.1:5000/get_svg', {
+            responseType: 'text',
+            headers: {
+                'Accept': 'image/svg+xml'
+            }
+        });
+        
+        const displaySvgData = await displayResponse.text();
+
+        // 处理并设置SVG内容
+        await processAndSetSvgContent(controlSvgData, displaySvgData);
+        
+        // 确保DOM更新后再设置交互
+        await nextTick();
+        setupDualSvgInteractions();
+        
+        return true;
+    } catch (error) {
+        console.error('Error refreshing SVG content:', error);
+        throw error;
+    }
+}
+
+// 更新感知范围
+const updatePerceptionScope = () => {
+    // 实现更新感知范围的逻辑
+    console.log('Updating perception scope with selected elements:', selectedElements.value);
+    console.log('Selected node IDs:', selectedNodeIds.value);
+}
 
 // 为两个SVG添加缩放和拖拽功能
 const addZoomEffectToDualSvgs = () => {
@@ -495,6 +563,12 @@ const setupDualSvgInteractions = () => {
 
     // 添加缩放效果到两个SVG
     addZoomEffectToDualSvgs();
+    
+    // 确保两个区域的节点透明度正确设置
+    nextTick(() => {
+        updateControlNodeOpacity();
+        updateDisplayNodeOpacity();
+    });
 };
 
 // 设置控制区SVG交互 - 可点击但不高亮
@@ -517,22 +591,28 @@ const setupControlSvgInteractions = () => {
         svg.removeEventListener('click', oldClickHandler);
     }
 
+    // 移除现有的悬停处理器
+    const oldMouseoverHandler = svg._mouseoverHandler;
+    const oldMouseoutHandler = svg._mouseoutHandler;
+    if (oldMouseoverHandler) {
+        svg.removeEventListener('mouseover', oldMouseoverHandler);
+    }
+    if (oldMouseoutHandler) {
+        svg.removeEventListener('mouseout', oldMouseoutHandler);
+    }
+
     // 保存新的事件处理器引用
     svg._clickHandler = handleControlSvgClick;
+    svg._mouseoverHandler = handleControlSvgMouseover;
+    svg._mouseoutHandler = handleControlSvgMouseout;
 
     // 添加新的事件监听器
     svg.addEventListener('click', svg._clickHandler);
+    svg.addEventListener('mouseover', svg._mouseoverHandler);
+    svg.addEventListener('mouseout', svg._mouseoutHandler);
 
-    // 设置控制区所有节点都不高亮（始终完全显示）
-    const allNodes = svg.querySelectorAll('*');
-    allNodes.forEach(node => {
-        if (!node.tagName || node.tagName.toLowerCase() === 'svg' ||
-            node.tagName.toLowerCase() === 'g') return;
-
-        node.style.opacity = 1;
-        node.style.filter = 'none';
-        node.style.transition = 'opacity 0.3s ease, filter 0.3s ease';
-    });
+    // 更新控制区节点的高亮状态
+    updateControlNodeOpacity();
 
     // 根据当前选择模式设置鼠标样式
     nextTick(() => {
@@ -548,35 +628,45 @@ const setupControlSvgInteractions = () => {
     });
 };
 
-// 设置显示区SVG交互 - 可高亮但不可点击
-const setupDisplaySvgInteractions = () => {
-    const svgContainer = displaySvgContainer.value;
-    if (!svgContainer) {
-        console.warn('Display SVG container not found');
-        return;
+// 控制区鼠标悬停处理
+const handleControlSvgMouseover = (event) => {
+    const target = event.target;
+    if (!target || !target.tagName) return;
+    
+    const nodeType = target.tagName.toLowerCase();
+    
+    // 只有当元素类型在选中列表中时，才改变鼠标样式和亮度
+    if (selectedElements.value.includes(nodeType) && target.id) {
+        target.style.cursor = 'pointer';
+        target.style.filter = 'brightness(1.1)';
     }
+};
 
-    const svg = svgContainer.querySelector('svg');
-    if (!svg) {
-        console.warn('SVG element not found in display container');
-        return;
-    }
-
-    // 移除任何可能存在的点击事件处理器
-    const oldClickHandler = svg._clickHandler;
-    if (oldClickHandler) {
-        svg.removeEventListener('click', oldClickHandler);
-    }
-
-    // 更新显示区节点的高亮状态
-    updateDisplayNodeOpacity();
-
-    // 添加拖拽鼠标样式
-    nextTick(() => {
-        if (svgContainer) {
-            svgContainer.classList.add('grab-cursor');
+// 控制区鼠标移出处理
+const handleControlSvgMouseout = (event) => {
+    const target = event.target;
+    if (!target || !target.tagName) return;
+    
+    // 恢复原始滤镜设置
+    const nodeType = target.tagName.toLowerCase();
+    const nodeId = target.id;
+    
+    // 检查元素是否高亮状态
+    const isTypeSelected = selectedElements.value.includes(nodeType);
+    const isNodeSelected = selectedNodeIds.value.includes(nodeId);
+    
+    if (isTypeSelected) {
+        if (selectedNodeIds.value.length > 0 && !isNodeSelected) {
+            // 如果有选中的节点，但当前节点不在其中，应用灰色滤镜
+            target.style.filter = 'grayscale(80%)';
+        } else {
+            // 否则移除滤镜
+            target.style.filter = 'none';
         }
-    });
+    }
+    
+    // 恢复默认鼠标样式
+    target.style.cursor = '';
 };
 
 // 控制区SVG点击处理函数
@@ -587,6 +677,17 @@ const handleControlSvgClick = (event) => {
         (target.tagName.toLowerCase() === 'g' && target.classList.contains('zoom-wrapper'))) {
         // 无论是否在多选模式下，点击空白区域都清空所有选中的节点
         store.dispatch('clearSelectedNodes');
+        // 清空后也需要更新两个区域的透明度
+        nextTick(() => {
+            updateControlNodeOpacity();
+            updateDisplayNodeOpacity();
+        });
+        return;
+    }
+
+    // 只有当节点类型在selectedElements中时才处理点击事件
+    const nodeType = target.tagName.toLowerCase();
+    if (!selectedElements.value.includes(nodeType)) {
         return;
     }
 
@@ -602,6 +703,7 @@ const handleControlSvgClick = (event) => {
 
     // 使用 nextTick 确保状态更新后再更新显示区视图
     nextTick(() => {
+        updateControlNodeOpacity();
         updateDisplayNodeOpacity();
     });
 };
@@ -661,7 +763,8 @@ const updateDisplayNodeOpacity = () => {
 // 监听选中节点的变化
 watch(selectedNodeIds, async () => {
     await nextTick();
-    updateDisplayNodeOpacity(); // 只更新显示区的节点透明度
+    updateDisplayNodeOpacity(); // 更新显示区的节点透明度
+    updateControlNodeOpacity(); // 更新控制区的节点透明度
     // 当选中节点变化时，先获取最新的normalized数据，再计算视觉显著性
     await fetchNormalizedData();
     calculateVisualSalience();
@@ -670,7 +773,8 @@ watch(selectedNodeIds, async () => {
 // 监听selectedElements的变化
 watch(selectedElements, () => {
     nextTick(() => {
-        updateDisplayNodeOpacity(); // 只更新显示区的节点透明度
+        updateDisplayNodeOpacity(); // 更新显示区的节点透明度
+        updateControlNodeOpacity(); // 更新控制区的节点透明度
     });
 });
 
@@ -934,6 +1038,89 @@ const getSelectedCountForType = (tagName) => {
         }
     }
     return count;
+};
+
+// 更新控制区节点透明度（根据选中的节点ID和元素类型）
+const updateControlNodeOpacity = () => {
+    const svgContainer = controlSvgContainer.value;
+    if (!svgContainer) return;
+
+    const svg = svgContainer.querySelector('svg');
+    if (!svg) return;
+
+    try {
+        const allNodes = svg.querySelectorAll('*');
+
+        allNodes.forEach(node => {
+            if (!node.tagName || node.tagName.toLowerCase() === 'svg' ||
+                node.tagName.toLowerCase() === 'g') return;
+
+            const nodeType = node.tagName.toLowerCase();
+            const nodeId = node.id;
+
+            // 基础透明度 - 根据元素类型是否被选中
+            let opacity = selectedElements.value.includes(nodeType) ? 1 : 0.6;
+            let isHighlighted = true; // 默认为高亮状态
+
+            // 如果有选中的节点，应用高亮逻辑
+            if (opacity === 1 && selectedNodeIds.value.length > 0) {
+                isHighlighted = selectedNodeIds.value.includes(nodeId);
+                opacity = isHighlighted ? 1 : 0.3;  // 控制区使用较高的非高亮透明度
+            }
+
+            // 设置透明度
+            node.style.opacity = opacity;
+            node.style.transition = 'opacity 0.3s ease, filter 0.3s ease';
+
+            // 保存原始颜色属性
+            if (!node.dataset.originalFill && node.getAttribute('fill')) {
+                node.dataset.originalFill = node.getAttribute('fill');
+            }
+            if (!node.dataset.originalStroke && node.getAttribute('stroke')) {
+                node.dataset.originalStroke = node.getAttribute('stroke');
+            }
+
+            // 对于非高亮元素，应用轻微灰色滤镜
+            if (!isHighlighted && opacity > 0) {
+                node.style.filter = 'grayscale(80%)';
+            } else {
+                node.style.filter = 'none';
+            }
+        });
+    } catch (error) {
+        console.error('Error updating control node opacity:', error);
+    }
+};
+
+// 设置显示区SVG交互 - 可高亮但不可点击
+const setupDisplaySvgInteractions = () => {
+    const svgContainer = displaySvgContainer.value;
+    if (!svgContainer) {
+        console.warn('Display SVG container not found');
+        return;
+    }
+
+    const svg = svgContainer.querySelector('svg');
+    if (!svg) {
+        console.warn('SVG element not found in display container');
+        return;
+    }
+
+    // 移除任何可能存在的点击事件处理器
+    const oldClickHandler = svg._clickHandler;
+    if (oldClickHandler) {
+        svg.removeEventListener('click', oldClickHandler);
+    }
+
+    // 更新显示区节点的高亮状态
+    updateDisplayNodeOpacity();
+
+    // 添加拖拽鼠标样式
+    nextTick(() => {
+        if (svgContainer) {
+            svgContainer.classList.add('grab-cursor');
+        }
+    });
 };
 
 </script>

@@ -116,7 +116,9 @@ def process_svg_file(file_path):
         # 处理步骤
         print("Start extracting features...")
         send_progress_update(10, "Feature extraction in progress...")
-        featureCSV.process_and_save_features(file_path, output_paths['csv'], output_paths['svg_with_ids'])
+        # 不添加新ID和tag_name属性，只提取特征
+        featureCSV.process_and_save_features(file_path, output_paths['csv'], output_paths['svg_with_ids'], 
+                                           add_ids=False, add_tag_names=False)
         
         print("Starting to standardise features...")
         send_progress_update(25, "Being standardised features...")
@@ -267,7 +269,7 @@ def upload_file():
             print(f"文件已保存到: {file_path}")
 
             try:
-                # 使用featureCSV处理SVG，添加ID
+                # 使用featureCSV处理SVG，添加ID和tag_name属性
                 temp_csv_path = os.path.join(app.config['DATA_FOLDER'], 'temp_features.csv')
                 output_svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
                 
@@ -276,7 +278,9 @@ def upload_file():
                 print(f"- 输入文件存在: {os.path.exists(file_path)}")
                 print(f"- 输入文件大小: {os.path.getsize(file_path)}")
                 
-                featureCSV.process_and_save_features(file_path, temp_csv_path, output_svg_with_ids_path)
+                # 上传时需要添加ID和tag_name属性
+                featureCSV.process_and_save_features(file_path, temp_csv_path, output_svg_with_ids_path, 
+                                                   add_ids=True, add_tag_names=True)
                 print("SVG处理完成")
                 
             except Exception as process_error:
@@ -361,6 +365,120 @@ def get_svg():
         }
     except Exception as e:
         print(f"获取SVG出错: {str(e)}")
+        return jsonify({'error': f'Error reading SVG: {str(e)}'}), 500
+    
+# 获取生成 SVG 文件内容
+@app.route('/get_upload_svg', methods=['GET'])
+def get_upload_svg():
+    try:
+        # 尝试按优先级查找文件
+        possible_filenames = [
+            'generated_with_id.svg',    # 正确拼写版本
+            'generated_width_id.svg',   # 原始拼写版本
+            'svg_with_ids.svg'          # 如果前两个不存在，使用get_svg使用的文件
+        ]
+        
+        svg_file_path = None
+        found_file = None
+        
+        # 遍历所有可能的文件名
+        for filename in possible_filenames:
+            temp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            print(f"尝试读取SVG文件: {temp_path}")
+            if os.path.exists(temp_path):
+                svg_file_path = temp_path
+                found_file = filename
+                print(f"找到SVG文件: {found_file}")
+                
+                # 读取找到的文件
+                with open(svg_file_path, 'r', encoding='utf-8') as svg_file:
+                    svg_content = svg_file.read()
+                    
+                    # 检查文件内容是否为有效的SVG
+                    if '<parsererror' in svg_content or svg_content.strip().startswith('<html>'):
+                        print(f"文件内容包含错误，不是有效的SVG: {found_file}")
+                        # 继续尝试下一个文件
+                        continue
+                    
+                    # 确保SVG内容有效
+                    if not svg_content.strip().startswith('<?xml') and not svg_content.strip().startswith('<svg'):
+                        svg_content = f'<?xml version="1.0" encoding="UTF-8"?>\n{svg_content}'
+                    
+                    # 确保SVG有正确的命名空间
+                    if 'xmlns=' not in svg_content:
+                        svg_content = svg_content.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
+                    
+                    print(f"SVG文件读取成功: {found_file}")
+                    return svg_content, 200, {
+                        'Content-Type': 'image/svg+xml; charset=utf-8',
+                        'Cache-Control': 'no-cache'
+                    }
+                
+        # 如果所有文件都不存在或都无效
+        print("所有可能的SVG文件都不存在或无效")
+        
+        # 检查是否能通过get_svg的逻辑生成文件
+        svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
+        
+        # 如果没有找到文件，但是存在上传的SVG文件，尝试生成
+        uploaded_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) 
+                          if f.endswith('.svg') and (f.startswith('uploaded_') or not any(f.startswith(p) for p in ['generated_', 'svg_with_ids', 'filtered_']))]
+        
+        if uploaded_files:
+            print(f"发现上传的文件，尝试处理: {uploaded_files[0]}")
+            original_file_path = os.path.join(app.config['UPLOAD_FOLDER'], uploaded_files[0])
+            
+            # 尝试生成带ID的SVG文件
+            try:
+                from static.modules import featureCSV
+                output_csv_path = os.path.join(app.config['DATA_FOLDER'], 'temp_features.csv')
+                
+                # 处理文件，生成带ID的SVG
+                featureCSV.process_and_save_features(
+                    original_file_path, output_csv_path, svg_with_ids_path, 
+                    add_ids=True, add_tag_names=True
+                )
+                
+                # 删除临时CSV文件
+                if os.path.exists(output_csv_path):
+                    os.remove(output_csv_path)
+                    
+                # 复制一份作为generated_with_id.svg
+                generated_path = os.path.join(app.config['UPLOAD_FOLDER'], 'generated_with_id.svg')
+                import shutil
+                shutil.copy2(svg_with_ids_path, generated_path)
+                
+                # 读取生成的文件
+                with open(generated_path, 'r', encoding='utf-8') as svg_file:
+                    svg_content = svg_file.read()
+                    
+                    # 确保SVG内容有效
+                    if not svg_content.strip().startswith('<?xml') and not svg_content.strip().startswith('<svg'):
+                        svg_content = f'<?xml version="1.0" encoding="UTF-8"?>\n{svg_content}'
+                    
+                    # 确保SVG有正确的命名空间
+                    if 'xmlns=' not in svg_content:
+                        svg_content = svg_content.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
+                    
+                    print(f"成功生成并读取SVG文件: generated_with_id.svg")
+                    return svg_content, 200, {
+                        'Content-Type': 'image/svg+xml; charset=utf-8',
+                        'Cache-Control': 'no-cache'
+                    }
+                
+            except Exception as gen_error:
+                print(f"自动生成SVG文件失败: {str(gen_error)}")
+        
+        # 如果没有找到或无法生成有效的SVG文件
+        print("无法找到或生成有效的SVG文件")
+        return jsonify({
+            'error': 'SVG file not found or invalid. Try calling /get_svg endpoint first.',
+            'suggestion': '请先调用/get_svg接口以生成必要的文件'
+        }), 404
+            
+    except Exception as e:
+        print(f"获取SVG出错: {str(e)}")
+        print(f"错误堆栈: {traceback.format_exc()}")
         return jsonify({'error': f'Error reading SVG: {str(e)}'}), 500
 
 
@@ -767,12 +885,30 @@ def filter_and_process():
                 'error': 'Original file not found'
             }), 404
             
-        # 首先处理原始文件生成带ID的SVG
-        output_csv_path = os.path.join(app.config['DATA_FOLDER'], 'temp_features.csv')
+        # 查找svg_with_ids.svg文件，这个文件应该是上传时生成的带有最初ID和tag_name的SVG
         svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
         
-        print("生成带ID的SVG文件...")
-        featureCSV.process_and_save_features(original_file_path, output_csv_path, svg_with_ids_path)
+        # 确保svg_with_ids.svg文件存在
+        if not os.path.exists(svg_with_ids_path):
+            print(f"带ID的SVG文件不存在: {svg_with_ids_path}")
+            
+            # 尝试使用generated_with_id.svg 
+            svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'generated_with_id.svg')
+            if not os.path.exists(svg_with_ids_path):
+                return jsonify({
+                    'success': False,
+                    'error': 'Could not find SVG with IDs. Please upload the file first.'
+                }), 404
+                
+        print(f"使用带ID的SVG文件: {svg_with_ids_path}")
+        
+        # 首先处理原始文件生成带ID的SVG
+        output_csv_path = os.path.join(app.config['DATA_FOLDER'], 'temp_features.csv')
+        
+        print("处理SVG文件以提取特征...")
+        # 不添加新ID和tag_name属性，使用已有的
+        featureCSV.process_and_save_features(original_file_path, output_csv_path, svg_with_ids_path, 
+                                           add_ids=False, add_tag_names=False)
         
         # 删除临时CSV文件
         if os.path.exists(output_csv_path):

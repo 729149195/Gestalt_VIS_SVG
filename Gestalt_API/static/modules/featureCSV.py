@@ -11,9 +11,11 @@ import matplotlib.path as mpath
 import matplotlib.transforms as mtransforms
 
 class SVGParser:
-    def __init__(self, file_path):
+    def __init__(self, file_path, add_ids=True, add_tag_names=True):
         self.file_path = file_path
         self.existing_tags = {}
+        self.add_ids = add_ids
+        self.add_tag_names = add_tag_names
 
     @staticmethod
     def escape_text_content(svg_content):
@@ -63,14 +65,18 @@ class SVGParser:
         return full_tag, attributes, element.text
 
     def add_element_to_graph(self, element, parent_path='0', level=0, layer="0"):
-
         tag, attributes, text_content = self.extract_element_info(element)
         node_id = tag
 
-        element.set('id', node_id)
+        # 只有当add_ids为True时才设置id属性
+        if self.add_ids:
+            element.set('id', node_id)
 
         current_path = f"{parent_path}/{node_id}" if parent_path != '0' else node_id
-        element.attrib['tag_name'] = current_path
+        
+        # 只有当add_tag_names为True时才设置tag_name属性
+        if self.add_tag_names:
+            element.attrib['tag_name'] = current_path
 
         new_layer_counter = 0
         for child in reversed(element):
@@ -115,8 +121,8 @@ class LayerDataExtractor:
         return self.node_layers
 
 
-def svgid(svg_input_path, svg_output_path):
-    parser = SVGParser(svg_input_path)
+def svgid(svg_input_path, svg_output_path, add_ids=True, add_tag_names=True):
+    parser = SVGParser(svg_input_path, add_ids=add_ids, add_tag_names=add_tag_names)
     svg_tree = parser.run()
     svg_tree.write(svg_output_path, encoding='utf-8', xml_declaration=True)
 
@@ -385,7 +391,15 @@ def extract_features(element, layer_extractor, current_transform='', current_col
     layer = layer_extractor.get_node_layers().get(element_id, ['0'])
     layer = [int(part.split('_')[-1]) if part != '0' else 0 for part in layer]
 
+    # 获取tag_name，如果没有则使用元素ID或默认值
     tag_name = element.attrib.get('tag_name', '')
+    if not tag_name:
+        # 如果没有tag_name属性，使用id代替，或生成一个基于标签的路径
+        if element_id != '0':
+            tag_name = element_id
+        else:
+            # 这里可以根据需要生成一个临时路径，但在本例中使用空字符串
+            tag_name = ''
 
     return [
         tag_name, tag_value, opacity, fill_h, fill_s, fill_l,
@@ -611,7 +625,7 @@ def parse_font_size(font_size_str):
 
 
 def process_svg(file_path):
-    svg_parser = SVGParser(file_path)
+    svg_parser = SVGParser(file_path, add_ids=False, add_tag_names=False)
     tree = svg_parser.run()
     root = tree.getroot()
 
@@ -675,6 +689,7 @@ def process_csv_to_json(input_csv_path, output_json_path):
     df = pd.read_csv(input_csv_path)
     json_data = []
     for index, row in df.iterrows():
+        # 使用完整的tag_name作为ID，不做任何处理
         element_id = row['tag_name']
         features = row[1:].tolist()
 
@@ -686,11 +701,11 @@ def process_csv_to_json(input_csv_path, output_json_path):
         json.dump(json_data, json_file, indent=4)
 
 
-def save_svg_with_ids(svg_input_path, svg_output_path):
-    svgid(svg_input_path, svg_output_path)
+def save_svg_with_ids(svg_input_path, svg_output_path, add_ids=True, add_tag_names=True):
+    svgid(svg_input_path, svg_output_path, add_ids=add_ids, add_tag_names=add_tag_names)
 
 
-def process_and_save_features(svg_input_path, output_csv_path, output_svg_with_ids_path):
+def process_and_save_features(svg_input_path, output_csv_path, output_svg_with_ids_path, add_ids=True, add_tag_names=True):
     features = process_svg(svg_input_path)
     save_features(features, output_csv_path)
-    save_svg_with_ids(svg_input_path, output_svg_with_ids_path)
+    save_svg_with_ids(svg_input_path, output_svg_with_ids_path, add_ids=add_ids, add_tag_names=add_tag_names)
