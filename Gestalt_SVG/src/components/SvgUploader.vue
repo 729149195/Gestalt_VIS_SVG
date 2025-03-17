@@ -382,7 +382,7 @@ const updatePerceptionScope = () => {
     // 实现更新感知范围的逻辑
     console.log('Updating perception scope with selected elements:', selectedElements.value);
     console.log('Scope node IDs:', scopeNodes.value);
-    
+
     // 如果scopeNodes为空（没有特别选择的节点），则将所有可见元素设为选中
     if (scopeNodes.value.length === 0) {
         // 获取所有可见元素的ID
@@ -400,7 +400,7 @@ const updatePerceptionScope = () => {
                 });
             }
         }
-        
+
         // 清空当前选中节点并添加所有可见节点
         store.dispatch('clearSelectedNodes');
         allVisibleIds.forEach(id => {
@@ -413,7 +413,7 @@ const updatePerceptionScope = () => {
             store.dispatch('addSelectedNode', nodeId);
         });
     }
-    
+
     // 更新完成后，使用ElMessage通知用户
     ElMessage({
         message: '感知范围已更新，包含' + (selectedNodeIds.value.length === 0 ? '所有可见元素' : selectedNodeIds.value.length + '个元素'),
@@ -1136,7 +1136,7 @@ const setupDisplaySvgInteractions = () => {
     if (oldClickHandler) {
         svg.removeEventListener('click', oldClickHandler);
     }
-    
+
     // 添加新的点击事件处理器
     svg._clickHandler = handleDisplaySvgClick;
     svg.addEventListener('click', svg._clickHandler);
@@ -1596,6 +1596,8 @@ watch(scopeNodes, () => {
     flex-wrap: wrap;
     gap: 4px;
     padding: 4px;
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
 }
 
 .element-type-item {
@@ -1603,6 +1605,8 @@ watch(scopeNodes, () => {
     min-width: 120px;
     margin-right: 4px;
     margin-bottom: 2px;
+    display: flex;
+    justify-content: center; /* 内容水平居中 */
 }
 
 .selector-content::-webkit-scrollbar {
@@ -1630,6 +1634,7 @@ watch(scopeNodes, () => {
     justify-content: space-between;
     gap: 4px;
     width: 100%;
+    height: 100%; /* 占满可用高度 */
 }
 
 .selection-mode-btn {
@@ -1647,8 +1652,10 @@ watch(scopeNodes, () => {
     align-items: center;
     justify-content: center;
     font-size: 0.85em;
-    height: 30px;
+    flex: 1; /* 自动填充可用空间 */
     margin-bottom: 0;
+    max-height: calc(50% - 2px); /* 确保不会超出容器 */
+    min-height: 30px; /* 最小高度保证 */
 }
 
 .selection-mode-btn:hover {
@@ -1770,5 +1777,11 @@ watch(scopeNodes, () => {
 .selection-mode-btn .v-icon {
     margin-right: 4px;
     font-size: 16px;
+}
+
+/* 确保复选框内容居中 */
+.mac-style-checkbox {
+    display: flex;
+    justify-content: center;
 }
 </style>
