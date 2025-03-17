@@ -22,9 +22,6 @@
           </div>
           
           <div class="side-mode-switch">
-            <el-button type="primary" @click="generateAndUpload" class="larger-text-btn">Upload</el-button>
-            <el-button @click="copyCode" class="larger-text-btn">Copy</el-button>
-            <el-button @click="downloadSvg" class="larger-text-btn">Download</el-button>
             <el-select v-model="selectedSyntax" placeholder="选择生成式语法" class="syntax-selector" popper-class="syntax-selector-dropdown">
               <el-option v-for="item in syntaxOptions" :key="item.value" :label="item.label" :value="item.value">
                 <div class="syntax-option">
@@ -33,6 +30,10 @@
                 </div>
               </el-option>
             </el-select>
+            <el-button type="primary" @click="generateAndUpload" class="larger-text-btn">Upload</el-button>
+            <el-button @click="copyCode" class="larger-text-btn">Copy</el-button>
+            <el-button @click="downloadSvg" class="larger-text-btn">Download</el-button>
+            
             <div class="mode-tabs">
               <div class="mode-tab larger-text-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
                 Syntax
@@ -1529,6 +1530,7 @@ const uploadFile = () => {
   .side-mode-switch {
     width: 100%;
     justify-content: flex-end;
+    height: 35px !important;
   }
 
   :deep(.el-button) {
@@ -1559,6 +1561,7 @@ const uploadFile = () => {
 
 .syntax-selector {
   width: 120px;
+  height: 35px !important;
 }
 
 :deep(.syntax-selector-dropdown) {
@@ -1620,6 +1623,9 @@ const uploadFile = () => {
   color: white;
   font-weight: 500;
   box-shadow: 0 2px 8px rgba(136, 95, 53, 0.2);
+  height: 35px !important;
+  line-height: 20px !important;
+  padding: 6px 16px !important;
 }
 
 :deep(.el-button:hover) {
@@ -1640,6 +1646,13 @@ const uploadFile = () => {
     background: rgba(240, 240, 240, 0.6);
     border: 1px solid rgba(200, 200, 200, 0.3);
     box-shadow: none;
+    height: 35px !important;
+    line-height: 35px !important;
+  }
+
+  .el-input__inner {
+    height: 35px !important;
+    line-height: 35px !important;
   }
 
   .el-input__wrapper:hover {
@@ -1684,6 +1697,10 @@ const uploadFile = () => {
   cursor: pointer;
   border-radius: 6px;
   font-weight: 500;
+  height: 35px;
+  line-height: 27px;
+  display: flex;
+  align-items: center;
 }
 
 .mode-tab:hover {
@@ -1700,7 +1717,9 @@ const uploadFile = () => {
 .larger-text-btn {
   font-size: 15px !important;
   font-weight: 600 !important;
-  padding: 8px 16px !important;
+  padding: 6px 16px !important;
+  height: 35px !important;
+  line-height: 20px !important;
 }
 
 /* 添加放大模式切换标签文字的样式 */
@@ -1708,6 +1727,8 @@ const uploadFile = () => {
   font-size: 15px !important;
   font-weight: 600 !important;
   padding: 6px 16px !important;
+  height: 35px !important;
+  line-height: 20px !important;
 }
 
 /* 全局样式，不能使用 scoped */
@@ -2339,9 +2360,8 @@ const uploadFile = () => {
 
 .upload-text {
   color: #1d1d1f;
-  font-size: 1.3em;
-  font-weight: 700;
-
+  font-size: 1.1em;
+  font-weight: 400;
   white-space: nowrap;
 }
 

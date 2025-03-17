@@ -1869,7 +1869,7 @@ const handleOverviewClick = (nodeId, event) => {
 <style scoped>
 .core-graph-container {
     width: 100%;
-    height: calc(100% - 10px);
+    height: calc(100%);
     /* 减去标题的高度 */
     overflow: hidden;
     border: none;
@@ -1879,7 +1879,7 @@ const handleOverviewClick = (nodeId, event) => {
 /* 总览条样式 - 独立于卡片样式 */
 .clusters-overview {
     width: 100%; /* 将宽度从100%缩小到80% */
-    height: 85px;
+    height: 70px;
     /* 增加高度，从70px改为85px，以容纳滚动条 */
     padding: 0;
     margin-bottom: 10px;
@@ -1903,9 +1903,9 @@ const handleOverviewClick = (nodeId, event) => {
     position: absolute; /* 改为绝对定位 */
     font-size: 1.4em; /* 增大字号 */
     font-weight: 500;
-    left: 20px; /* 距左边距 */
+    left: 25px; /* 距左边距 */
     top: 50%; /* 垂直居中 */
-    transform: translateY(-100%); /* 垂直居中 */
+    transform: translateY(-30%); /* 垂直居中 */
     color: #333; /* 使用主题色 */
     white-space: nowrap;
     display: flex;
@@ -1918,9 +1918,10 @@ const handleOverviewClick = (nodeId, event) => {
 .overview-wrapper-container {
     flex: 1;
     display: flex;
-    justify-content: center;
     align-items: center;
+    padding-left: 180px;
     height: 100%;
+    padding-top: 15px;
 }
 
 .overview-wrapper {
@@ -2046,7 +2047,7 @@ const handleOverviewClick = (nodeId, event) => {
 .cards-wrapper {
     display: flex;
     flex: 1;
-    padding: 5px 0px 8px 0px;
+    padding: 5px 0px 0px 0px;
     gap: 16px;
     overflow-x: auto;
     scroll-behavior: smooth;

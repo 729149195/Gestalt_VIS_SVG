@@ -827,7 +827,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
     // 检查visual salience值是否小于85
     // 直接从store获取最新的visualSalience值，而不是使用计算属性
     const currentVisualSalience = store.state.visualSalience * 100;
-    if (currentVisualSalience < 85) {
+    if (currentVisualSalience < 90) {
       // 创建三区块布局
       analysis += `<div class="suggestions-container">`;
 

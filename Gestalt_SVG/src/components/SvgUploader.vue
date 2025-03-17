@@ -11,71 +11,64 @@
             </v-progress-linear>
         </div>
 
-        <!-- 主内容区域：左右两栏布局 -->
+        <!-- 主内容区域：上下两栏布局 -->
         <div class="layout-container" v-if="file">
-            <!-- 左侧区域：C区 - 可点击但不高亮的SVG -->
-            <div class="left-panel">
-                <div class="section-title">Chart preview</div>
-                <div class="svg-container mac-style-container control-svg" ref="controlSvgContainer">
-                    <div v-html="processedSvgContent"></div>
-                    <!-- 替换原来的元素选择器为侧边抽屉式选择器 -->
-                    <div v-if="visibleElements.length > 0" class="element-selector-drawer" :class="{ 'open': showElementSelector }">
-                        <div class="selector-content control-selector-content">
-                            <v-list density="compact" class="mac-style-list">
-                                <v-list-item v-for="element in visibleElements" :key="element.id" class="mac-style-list-item">
-                                    <v-checkbox v-model="selectedElements" :label="`${element.tag} (${element.count})`" :value="element.id" hide-details class="mac-style-checkbox"></v-checkbox>
-                                </v-list-item>
-                            </v-list>
-                        </div>
+            <!-- 上部区域：左右分栏 -->
+            <div class="top-panel">
+                <!-- 左侧区域：C区 - 可点击但不高亮的SVG -->
+                <div class="left-panel">
+                    <div class="section-title">Chart preview</div>
+                    <div class="svg-container mac-style-container control-svg" ref="controlSvgContainer">
+                        <div v-html="processedSvgContent"></div>
+                        
+                        <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
+                            {{ analyzing ? 'Simulating...' : 'Submit elements scope' }}
+                        </v-btn>
                     </div>
-                    
-                    <!-- 添加切换按钮 -->
-                    <div v-if="visibleElements.length > 0" class="element-selector-toggle" @click="toggleElementSelector">
-                        <v-icon class="toggle-icon">{{ showElementSelector ? 'mdi-chevron-right' : 'mdi-chevron-left' }}</v-icon>
-                        <div class="toggle-text-container">
-                            <span class="toggle-text">Select by types</span>
-                        </div>
-                    </div>
-                    
-                    <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
-                        {{ analyzing ? 'Simulating...' : 'Submit elements scope' }}
-                    </v-btn>
                 </div>
-            </div>
 
-            <!-- 右侧区域：上下分栏 -->
-            <div class="right-panel">
-                <!-- 右上区域：S区 - 可高亮但不可点击的SVG -->
-                <div class="right-top-panel">
+                <!-- 右侧区域：S区 - 可高亮但不可点击的SVG -->
+                <div class="right-panel">
                     <div class="section-title">Selected elements</div>
                     <div class="svg-container mac-style-container display-svg" ref="displaySvgContainer">
                         <div v-html="processedSvgContent"></div>
                     </div>
                 </div>
+            </div>
 
-                <!-- 右下区域：select pannel -->
-                <div class="right-bottom-panel">
-                    <div v-if="visibleElements.length > 0" class="element-selector">
-                        <div class="selector-header">
-                            <h3 class="mac-style-title">Select panel</h3>
+            <!-- 下部区域：select pannel -->
+            <div class="bottom-panel">
+                <div v-if="visibleElements.length > 0" class="element-selector">
+                    <div class="selector-header">
+                        <h3 class="mac-style-title">Select panel</h3>
+                        <!-- 将选择模式按钮放到标题下方 -->
+                        <div class="selection-mode-container">
+                            <v-btn @click.stop="setSelectionMode('click')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'click' }">
+                                <v-icon>mdi-cursor-default-click</v-icon>
+                                <span class="selection-text">Click</span>
+                            </v-btn>
+                            <v-btn @click.stop="setSelectionMode('lasso')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'lasso' }">
+                                <v-icon>mdi-gesture</v-icon>
+                                <span class="selection-text">Lasso</span>
+                            </v-btn>
                         </div>
-                        <div class="button-container">
-                            <!-- 将selection-mode-container移到这里，放在visual-salience-indicator左侧 -->
-                            <div class="selection-mode-container">
-                                <v-btn @click.stop="setSelectionMode('click')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'click' }">
-                                    <v-icon>mdi-cursor-default-click</v-icon>
-                                    <span class="selection-text">Click</span>
-                                </v-btn>
-                                <v-btn @click.stop="setSelectionMode('lasso')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'lasso' }">
-                                    <v-icon>mdi-gesture</v-icon>
-                                    <span class="selection-text">Lasso</span>
-                                </v-btn>
+                    </div>
+                    <div class="button-container">
+                        <!-- 元素类型选择器占据主要空间 -->
+                        <div class="element-type-selector">
+                            <div class="selector-content">
+                                <div class="horizontal-list">
+                                    <div v-for="element in visibleElements" :key="element.id" class="element-type-item">
+                                        <v-checkbox v-model="selectedElements" :label="`${element.tag} (${getSelectedCountForType(element.tag)}|${element.count})`" :value="element.id" hide-details class="mac-style-checkbox"></v-checkbox>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="visual-salience-indicator" @click="showSalienceDetail">
-                                <span class="salience-label">Salience</span>
-                                <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
-                                <span class="salience-value" v-else>--.---</span>
-                            </div>
+                        </div>
+                        
+                        <div class="visual-salience-indicator" @click="showSalienceDetail">
+                            <span class="salience-label">Salience</span>
+                            <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
+                            <span class="salience-value" v-else>--.---</span>
                         </div>
                     </div>
                 </div>
@@ -693,7 +686,6 @@ watch(() => analyzing.value, (newValue) => {
 
 // 添加选择模式变量和方法
 const selectionMode = ref('click'); // 默认为点击选择模式
-const showElementSelector = ref(false);
 
 const setSelectionMode = (mode) => {
     selectionMode.value = mode;
@@ -921,9 +913,27 @@ const showSalienceDetail = () => {
     });
 };
 
-// 添加切换抽屉显示/隐藏的方法
-const toggleElementSelector = () => {
-    showElementSelector.value = !showElementSelector.value;
+// 添加一个计算选中元素数量的方法
+const getSelectedCountForType = (tagName) => {
+    if (!selectedNodeIds.value || selectedNodeIds.value.length === 0) {
+        return 0;
+    }
+    
+    // 根据tag类型筛选出已选中的节点数量
+    // 先检查当前SVG中选中的元素，统计特定类型的数量
+    let count = 0;
+    if (displaySvgContainer.value) {
+        const svg = displaySvgContainer.value.querySelector('svg');
+        if (svg) {
+            selectedNodeIds.value.forEach(id => {
+                const element = svg.getElementById(id);
+                if (element && element.tagName.toLowerCase() === tagName.toLowerCase()) {
+                    count++;
+                }
+            });
+        }
+    }
+    return count;
 };
 
 </script>
@@ -944,17 +954,40 @@ const toggleElementSelector = () => {
     flex-direction: column;
 }
 
-/* 新增：左右两栏布局样式 */
+/* 新增：上下两栏布局样式 */
 .layout-container {
     display: flex;
+    flex-direction: column;
     flex: 1;
     gap: 12px;
     height: calc(100% - 60px);
     padding: 12px;
 }
 
+/* 上部区域样式 */
+.top-panel {
+    display: flex;
+    flex: 5.3;
+    gap: 12px;
+    width: 100%;
+}
+
+/* 下部区域样式 */
+.bottom-panel {
+    flex: 1;
+    background: rgba(248, 248, 248, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(200, 200, 200, 0.3);
+    padding: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 120px;
+    max-height: 160px;
+}
+
 .left-panel {
-    flex: 1.8;
+    flex: 1;
     display: flex;
     flex-direction: column;
     background: rgba(248, 248, 248, 0.5);
@@ -969,31 +1002,12 @@ const toggleElementSelector = () => {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    height: 100%;
-}
-
-.right-top-panel {
-    flex: 3.3   ;
-    display: flex;
-    flex-direction: column;
     background: rgba(248, 248, 248, 0.5);
     border-radius: 12px;
     border: 1px solid rgba(200, 200, 200, 0.3);
     padding: 5px 12px 12px 12px;
+    height: 100%;
     overflow: hidden;
-}
-
-.right-bottom-panel {
-    flex: 1;
-    background: rgba(248, 248, 248, 0.5);
-    border-radius: 12px;
-    border: 1px solid rgba(200, 200, 200, 0.3);
-    padding: 0px 0px 5px 5px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 0; /* 确保flex子元素不会超出容器 */
 }
 
 .section-title {
@@ -1048,16 +1062,17 @@ const toggleElementSelector = () => {
 }
 
 .selector-header {
+    position: absolute;
+    z-index: 10;
+    background: rgba(248, 248, 248, 0.8);
+    border-radius: 8px;
+    margin: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    user-select: none;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 8px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid rgba(200, 200, 200, 0.3);
-    min-height: 32px; /* 确保标题有最小高度 */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 125px;
 }
 
 .title-container {
@@ -1091,40 +1106,13 @@ const toggleElementSelector = () => {
     white-space: nowrap;
 }
 
-.selector-content {
-    flex: 0 0 auto;
-    height: 85px;
-    overflow-y: auto;
-    margin-bottom: 12px;
-    border-radius: 8px;
-    background: rgba(250, 250, 250, 0.4);
-    border: 1px solid rgba(200, 200, 200, 0.2);
-    padding: 4px;
-}
-
-.selector-content::-webkit-scrollbar {
-    width: 8px;
-}
-
-.selector-content::-webkit-scrollbar-track {
-    background: rgba(200, 200, 200, 0.1);
-    border-radius: 4px;
-}
-
-.selector-content::-webkit-scrollbar-thumb {
-    background: rgba(144, 95, 41, 0.2);
-    border-radius: 4px;
-}
-
-.selector-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(144, 95, 41, 0.3);
-}
-
 .mac-style-title {
-    font-size: 1.3em;
+    font-size: 1.2em;
     font-weight: 600;
     color: #1d1d1f;
     white-space: nowrap;
+    text-align: left;
+    width: 100%;
 }
 
 .mac-style-list {
@@ -1132,7 +1120,6 @@ const toggleElementSelector = () => {
     background: transparent;
     border: none;
     overflow: visible;
-    padding: 4px;
 }
 
 .mac-style-list-item {
@@ -1147,13 +1134,17 @@ const toggleElementSelector = () => {
 
 .mac-style-checkbox :deep(.v-selection-control) {
     color: #905F29;
+    margin-bottom: -2px; /* 减小复选框的底部间距 */
+}
+
+.mac-style-checkbox :deep(.v-selection-control__wrapper) {
+    margin-bottom: -2px; /* 减小复选框的底部间距 */
 }
 
 .mac-style-button {
-    background: #aa7134 !important;
     border-radius: 8px;
     font-size: 1.2em;
-    color: white;
+    color: #7F5427;
     font-weight: bold;
     height: 40px;
     letter-spacing: 0.3px;
@@ -1163,13 +1154,10 @@ const toggleElementSelector = () => {
 }
 
 .mac-style-button:hover {
-    background: #7F5427 !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(144, 95, 41, 0.3);
 }
 
 .mac-style-button:disabled {
-    background: rgba(144, 95, 41, 0.5) !important;
     box-shadow: none;
 }
 
@@ -1194,7 +1182,7 @@ const toggleElementSelector = () => {
 }
 
 .mac-style-track-button {
-    background: rgba(144, 95, 41, 0.1) !important;
+    background: gray !important;
     border-radius: 8px;
     color: #905F29;
     font-weight: 500;
@@ -1222,9 +1210,9 @@ const toggleElementSelector = () => {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 8px;
     height: 100%;
-    overflow: hidden; /* 防止内容溢出 */
+    overflow: hidden;
+    position: relative;
 }
 
 /* SVG 相关样式 */
@@ -1237,11 +1225,6 @@ const toggleElementSelector = () => {
 .control-svg svg * {
     cursor: pointer;
 }
-
-/* 移除display-svg的默认鼠标样式，以支持拖拽功能 */
-/* .display-svg svg * {
-    cursor: default;
-} */
 
 .progress-card {
     position: absolute;
@@ -1303,11 +1286,68 @@ const toggleElementSelector = () => {
     justify-content: space-between;
     flex: 1;
     width: 100%;
+    gap: 8px;
+    padding-top: 8px;
+    padding-left: 134px; /* 为标题和按钮预留空间 */
+    height: 100%;
+}
+
+/* 添加元素类型选择器样式 */
+.element-type-selector {
+    flex: 1.8;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 8px;
+    border: 1px solid rgba(144, 95, 41, 0.2);
+    padding: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-top: 0;
+}
+
+.selector-content {
+    flex: 1;
+    overflow-y: auto;
+    border-radius: 8px;
+    background: rgba(250, 250, 250, 0.4);
+    border: 1px solid rgba(200, 200, 200, 0.2);
     padding: 4px;
-    min-height: 0; /* 确保在flex容器中不会超出 */
-    max-height: 100%; /* 限制最大高度 */
-    overflow: hidden; /* 防止内容溢出 */
-    gap: 8px; /* 添加间距 */
+}
+
+/* 添加横向列表样式 */
+.horizontal-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+}
+
+.element-type-item {
+    flex: 0 0 auto;
+    min-width: 120px;
+    margin-right: 4px;
+    margin-bottom: 2px;
+}
+
+.selector-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.selector-content::-webkit-scrollbar-track {
+    background: rgba(200, 200, 200, 0.1);
+    border-radius: 4px;
+}
+
+.selector-content::-webkit-scrollbar-thumb {
+    background: rgba(144, 95, 41, 0.2);
+    border-radius: 4px;
+}
+
+.selector-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(144, 95, 41, 0.3);
 }
 
 .selection-mode-container {
@@ -1315,10 +1355,7 @@ const toggleElementSelector = () => {
     flex-direction: column;
     justify-content: space-between;
     gap: 4px;
-    flex: 1;
-    height: 100%;
-    min-height: 0; /* 确保在flex容器中不会超出 */
-    max-height: 100%; /* 限制最大高度 */
+    width: 100%;
 }
 
 .selection-mode-btn {
@@ -1328,16 +1365,16 @@ const toggleElementSelector = () => {
     letter-spacing: 0.3px;
     transition: all 0.3s ease;
     text-transform: none;
-    flex: 1; /* 改为flex: 1，使按钮平均分配空间 */
-    min-height: 0; /* 移除最小高度限制 */
-    padding: 4px 8px !important; /* 调整内边距 */
-    background-color: rgba(255, 255, 255, 0.6) !important;
+    padding: 2px 8px !important;
+    background-color: rgba(255, 255, 255, 0.7) !important;
     border: 1px solid rgba(144, 95, 41, 0.2);
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9em; /* 稍微减小字体大小 */
+    font-size: 0.85em;
+    height: 30px;
+    margin-bottom: 0;
 }
 
 .selection-mode-btn:hover {
@@ -1352,19 +1389,10 @@ const toggleElementSelector = () => {
     box-shadow: 0 2px 5px rgba(144, 95, 41, 0.3);
 }
 
-.selection-mode-btn .v-icon {
-    margin-right: 4px;
-    font-size: 16px;
-}
-
 .selection-text {
-    font-size: 1.1em;
+    font-size: 0.95em;
     font-weight: 600;
     color: inherit;
-}
-
-.copy-cursor {
-    cursor: copy !important;
 }
 
 .lasso-cursor {
@@ -1386,10 +1414,10 @@ const toggleElementSelector = () => {
 /* 修改视觉显著性指示器样式，使其与按钮区域高度一致且响应式 */
 .visual-salience-indicator {
     position: relative;
-    font-size: 1.6em; /* 稍微减小字体大小 */
+    font-size: 1.6em;
     font-weight: 800;
     color: #905F29;
-    padding: 4px;
+    padding: 8px 4px;
     border-radius: 8px;
     background: rgba(144, 95, 41, 0.08);
     border: 1px solid rgba(144, 95, 41, 0.2);
@@ -1397,20 +1425,17 @@ const toggleElementSelector = () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 120px; /* 减小最小宽度 */
-    width: 120px;
-    flex: 1;
+    width: 100px;
+    flex: 0.35;
     text-align: center;
-    z-index: 90;
+    z-index: 5;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     height: 100%;
-    max-height: 100%; /* 限制最大高度 */
-    margin-left: 0; /* 移除左边距，因为已经添加了gap */
-    overflow: hidden;
+    margin-top: 0;
 }
 
 .salience-label {
-    font-size: 0.8em; /* 减小字体大小 */
+    font-size: 0.8em;
     line-height: 1;
     margin-bottom: 2px;
     white-space: nowrap;
@@ -1420,7 +1445,7 @@ const toggleElementSelector = () => {
 }
 
 .salience-value {
-    font-size: 1em; /* 减小字体大小 */
+    font-size: 1em;
     line-height: 1;
     color: #b4793a;
     white-space: nowrap;
@@ -1468,110 +1493,8 @@ const toggleElementSelector = () => {
     margin: 0 !important;
 }
 
-/* 侧边抽屉式元素选择器样式 */
-.element-selector-drawer {
-    position: absolute !important;
-    top: 200px !important;
-    right: -180px !important; /* 默认隐藏在右侧 */
-    z-index: 100 !important;
-    width: 180px !important;
-    background: rgba(255, 255, 255, 0.92) !important;
-    border-radius: 8px 0 0 8px !important;
-    border: 1px solid rgba(144, 95, 41, 0.2) !important;
-    border-right: none !important;
-    box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.1) !important;
-    padding: 8px !important;
-    max-height: 260px !important;
-    overflow: hidden !important;
-    transition: right 0.3s ease !important;
-}
-
-.element-selector-drawer.open {
-    right: 0 !important; /* 显示在视图中 */
-}
-
-.drawer-header {
-    font-size: 0.9em;
-    font-weight: 600;
-    color: #905F29;
-    margin-bottom: 5px;
-    padding-bottom: 5px;
-    border-bottom: 1px solid rgba(144, 95, 41, 0.15);
-    text-align: center;
-}
-
-.element-selector-toggle {
-    position: absolute !important;
-    top: 20px !important;
-    right: 0 !important;
-    z-index: 101 !important;
-    width: 36px !important;
-    min-width: 36px !important;
-    height: 180px !important;
-    background: rgba(255, 255, 255, 0.92) !important;
-    border-radius: 4px 0 0 4px !important;
-    border: 1px solid rgba(144, 95, 41, 0.2) !important;
-    border-right: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 15px 0 !important;
-    cursor: pointer !important;
-    box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.08) !important;
-    color: #905F29 !important;
-    transition: background 0.2s ease !important;
-}
-
-.toggle-text-container {
-    flex: 1 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    position: relative !important;
-    width: 100% !important;
-}
-
-.toggle-text {
-    position: absolute !important;
-    font-size: 1.1em !important;
-    font-weight: 600 !important;
-    transform: rotate(-90deg) !important;
-    white-space: nowrap !important;
-    letter-spacing: 0.5px !important;
-    width: 130px !important;
-    text-align: center !important;
-    color: #905F29 !important;
-}
-
-.toggle-icon {
-    font-size: 20px !important;
-}
-
-.element-selector-toggle:hover {
-    background: rgba(144, 95, 41, 0.1) !important;
-}
-
-.control-selector-content {
-    height: auto !important;
-    max-height: 230px !important;
-    overflow-y: auto !important;
-    margin-bottom: 0 !important;
-}
-
-/* 删除旧的控制元素选择器样式 */
-.control-element-selector {
-    position: absolute !important;
-    bottom: 70px !important;
-    right: 15px !important;
-    z-index: 100 !important;
-    width: 200px !important;
-    background: rgba(255, 255, 255, 0.9) !important;
-    border-radius: 8px !important;
-    border: 1px solid rgba(144, 95, 41, 0.2) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-    padding: 5px !important;
-    max-height: 150px !important;
-    overflow: hidden !important;
+.selection-mode-btn .v-icon {
+    margin-right: 4px;
+    font-size: 16px;
 }
 </style>

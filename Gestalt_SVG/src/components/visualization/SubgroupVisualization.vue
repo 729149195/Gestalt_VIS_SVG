@@ -5,11 +5,14 @@
             <div class="legend-container">
                 <div class="cluster-legend">
                     <div class="cluster-legend-item">
-                        <span class="cluster-label">Core</span>
+                        <span class="cluster-label">Core elements</span>
                         <div class="cluster-box core-box"></div>
-                        <div class="cluster-arrow">→</div>
+                        <div class="cluster-arrow">
+                            <div class="arrow-line"></div>
+                            <div class="arrow-triangle"></div>
+                        </div>
                         <div class="cluster-box correspond-box"></div>
-                        <span class="cluster-label correspond-label">Related</span>
+                        <span class="cluster-label correspond-label">Related patterns</span>
                     </div>
                 </div>
                 <div class="salience-legend">
@@ -677,11 +680,11 @@ onUnmounted(() => {
 }
 
 .legend-gradient {
-    width: 150px;
+    width: 80px;
     height: 16px;
     border-radius: 4px;
     background: linear-gradient(to right, 
-        rgba(144, 95, 41, 0.15), 
+        rgba(255, 255, 255, 1), 
         rgba(144, 95, 41, 0.3), 
         rgba(144, 95, 41, 0.5), 
         rgba(144, 95, 41, 0.7), 
@@ -734,31 +737,15 @@ onUnmounted(() => {
 
 .legend-container{
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: flex-end;
-    align-items: flex-end;
+    align-items: center;
+    gap: 40px;
 }
 
 .legend-text{
     font-size: 1.1em;
-    color: #666;
-    color: #905F29;
-}
-
-.legend-gradient{
-    width: 150px;
-    height: 16px;
-    border-radius: 4px;
-    background: linear-gradient(to right, 
-        rgba(144, 95, 41, 0.15), 
-        rgba(144, 95, 41, 0.3), 
-        rgba(144, 95, 41, 0.5), 
-        rgba(144, 95, 41, 0.7), 
-        rgba(144, 95, 41, 0.9), 
-        rgba(144, 95, 41, 1)
-    );
-    border: none;
-    box-shadow: none;
+    color: #333;
 }
 
 .legend-label {
@@ -796,10 +783,29 @@ onUnmounted(() => {
 }
 
 .cluster-arrow {
-    font-size: 1.2em;
-    color: #905F29;
     position: relative;
-    top: -2px;
+    width: 30px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.arrow-line {
+    position: absolute;
+    width: 150%;
+    height: 2px;
+    background-color: #905F29;
+}
+
+.arrow-triangle {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 8px solid #905F29;
+    transform: rotate(90deg);
 }
 
 .cluster-label {
