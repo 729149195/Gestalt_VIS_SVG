@@ -1079,9 +1079,8 @@ const generateAndUpload = async () => {
     // 创建Blob对象
     const blob = new Blob([contentToUpload], { type: 'image/svg+xml' })
 
-    // 创建File对象，使用时间戳确保文件名唯一
-    const timestamp = new Date().getTime()
-    const file = new File([blob], `generated_${timestamp}.svg`, { type: 'image/svg+xml' })
+    
+    const file = new File([blob], `generated_width_id.svg`, { type: 'image/svg+xml' })
 
     // 创建FormData
     const formData = new FormData()
