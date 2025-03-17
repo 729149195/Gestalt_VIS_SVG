@@ -1,73 +1,6 @@
 {
-    "519.9-591.5": {
+    "256.0-289.7": {
         "tags": [
-            "path_19",
-            "text_21",
-            "path_10",
-            "path_9",
-            "path_8",
-            "path_7",
-            "path_6",
-            "path_5",
-            "path_4",
-            "path_3",
-            "path_2",
-            "path_1",
-            "path",
-            "text_11",
-            "text_10",
-            "text_9",
-            "text_8",
-            "text_7",
-            "text_6",
-            "text_5",
-            "text_4",
-            "text_3",
-            "text_2",
-            "text_1",
-            "text"
-        ],
-        "total": {
-            "path": 12,
-            "text": 13
-        }
-    },
-    "448.3-519.9": {
-        "tags": [
-            "path_18",
-            "path_17",
-            "text_20"
-        ],
-        "total": {
-            "path": 2,
-            "text": 1
-        }
-    },
-    "376.8-448.3": {
-        "tags": [
-            "path_16",
-            "text_19"
-        ],
-        "total": {
-            "path": 1,
-            "text": 1
-        }
-    },
-    "305.2-376.8": {
-        "tags": [
-            "path_15",
-            "text_18",
-            "text_17"
-        ],
-        "total": {
-            "path": 1,
-            "text": 2
-        }
-    },
-    "233.6-305.2": {
-        "tags": [
-            "path_14",
-            "text_16",
             "rect_36",
             "rect_35",
             "rect_34",
@@ -76,76 +9,87 @@
             "rect_31",
             "rect_30",
             "rect_29",
-            "rect_28",
-            "rect_27",
             "rect_6",
             "rect_5",
             "rect_4",
             "rect_3",
             "rect_2",
             "rect_1",
-            "rect",
-            "line"
+            "rect"
         ],
         "total": {
-            "path": 1,
-            "text": 1,
-            "rect": 17,
-            "line": 1
+            "rect": 15
         }
     },
-    "162.0-233.6": {
+    "222.3-256.0": {
         "tags": [
-            "path_13",
-            "text_15",
-            "rect_26",
-            "rect_25",
-            "rect_24",
-            "rect_11",
-            "rect_9",
+            "rect_28",
+            "rect_27",
             "rect_8",
             "rect_7"
         ],
         "total": {
-            "path": 1,
-            "text": 1,
-            "rect": 7
+            "rect": 4
         }
     },
-    "90.4-162.0": {
+    "154.8-188.5": {
         "tags": [
-            "path_12",
-            "text_14",
-            "rect_23",
-            "rect_22",
-            "rect_13",
-            "rect_12",
-            "rect_10"
+            "rect_26",
+            "rect_25",
+            "rect_12"
         ],
         "total": {
-            "path": 1,
-            "text": 1,
-            "rect": 5
+            "rect": 3
         }
     },
-    "18.9-90.4": {
+    "87.4-121.1": {
         "tags": [
-            "path_11",
-            "text_13",
-            "text_12",
-            "rect_21",
-            "rect_20",
-            "rect_19",
-            "rect_18",
-            "rect_17",
-            "rect_16",
-            "rect_15",
+            "rect_24",
             "rect_14"
         ],
         "total": {
-            "path": 1,
-            "text": 2,
-            "rect": 8
+            "rect": 2
+        }
+    },
+    "121.1-154.8": {
+        "tags": [
+            "rect_23",
+            "rect_13",
+            "rect_11"
+        ],
+        "total": {
+            "rect": 3
+        }
+    },
+    "53.7-87.4": {
+        "tags": [
+            "rect_22",
+            "rect_18",
+            "rect_17",
+            "rect_15"
+        ],
+        "total": {
+            "rect": 4
+        }
+    },
+    "20.0-53.7": {
+        "tags": [
+            "rect_21",
+            "rect_20",
+            "rect_19",
+            "rect_16"
+        ],
+        "total": {
+            "rect": 4
+        }
+    },
+    "188.5-222.3": {
+        "tags": [
+            "rect_10",
+            "rect_9"
+        ],
+        "total": {
+            "rect": 2
         }
     }
 }

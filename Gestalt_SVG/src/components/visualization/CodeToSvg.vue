@@ -813,66 +813,6 @@ const handleHighchartsCode = async () => {
   }
 }
 
-// 处理Matplotlib代码
-const handleMatplotlibCode = async () => {
-  try {
-    // 这里需要与后端API交互来执行Python代码
-    const response = await fetch('http://127.0.0.1:5000/api/matplotlib', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        code: code.value,
-        // 添加额外信息帮助后端正确处理
-        options: {
-          format: 'svg',
-          dpi: 100,
-          bbox_inches: 'tight',
-          transparent: true
-        }
-      })
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Matplotlib API响应错误:', errorText);
-      throw new Error(`后端API调用失败: ${response.status} ${response.statusText}`);
-    }
-
-    // 先将响应读取为文本，只读取一次
-    const responseText = await response.text();
-    
-    // 尝试将文本解析为JSON
-    try {
-      const result = JSON.parse(responseText);
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      
-      if (result.svg) {
-        // 处理SVG数据
-        svgCode.value = result.svg;
-        svgOutput.value = result.svg;
-      } else {
-        throw new Error('No SVG content in the returned data');
-      }
-    } catch (jsonError) {
-      // 如果不是有效的JSON，检查是否是有效的SVG
-      if (responseText.trim().startsWith('<svg') || responseText.trim().startsWith('<?xml')) {
-        svgCode.value = responseText;
-        svgOutput.value = responseText;
-      } else {
-        console.error('Unable to parse response:', responseText.substring(0, 100) + '...');
-        throw new Error('Returns not valid SVG or JSON content');
-      }
-    }
-  } catch (error) {
-    console.error('Matplotlib handling errors:', error);
-    throw new Error(`Matplotlib error: ${error.message}`);
-  }
-}
-
 // 复制SVG代码
 const copyCode = () => {
   navigator.clipboard.writeText(svgCode.value)

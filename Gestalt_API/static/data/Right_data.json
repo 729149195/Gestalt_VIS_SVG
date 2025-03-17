@@ -1,54 +1,41 @@
 {
-    "80.0-367.2": {
+    "275.5-371.9": {
         "tags": [
-            "path_19",
-            "path_18",
-            "path_17",
-            "path_16",
-            "path_15",
-            "path_14",
-            "path_13",
-            "path_12",
-            "path_11",
-            "text_21",
-            "text_20",
-            "text_19",
-            "text_18",
-            "text_17",
-            "text_16",
-            "text_15",
-            "text_14",
-            "text_13",
-            "text_12",
-            "path_10",
-            "path_9",
-            "text_11",
-            "text_10",
             "rect_36",
             "rect_35",
             "rect_34",
             "rect_33",
-            "rect_32",
-            "rect_31"
+            "rect_32"
         ],
         "total": {
-            "path": 11,
-            "text": 12,
-            "rect": 6
+            "rect": 5
         }
     },
-    "367.2-654.4": {
+    "371.9-468.2": {
         "tags": [
-            "path_8",
-            "text_9",
+            "rect_31",
             "rect_30",
             "rect_29",
-            "rect_28",
+            "rect_28"
+        ],
+        "total": {
+            "rect": 4
+        }
+    },
+    "468.2-564.6": {
+        "tags": [
             "rect_27",
             "rect_26",
             "rect_25",
             "rect_24",
-            "rect_23",
+            "rect_23"
+        ],
+        "total": {
+            "rect": 5
+        }
+    },
+    "564.6-660.9": {
+        "tags": [
             "rect_22",
             "rect_21",
             "rect_20",
@@ -56,96 +43,53 @@
             "rect_18"
         ],
         "total": {
-            "path": 1,
-            "text": 1,
-            "rect": 13
+            "rect": 5
         }
     },
-    "654.4-941.6": {
+    "660.9-757.3": {
         "tags": [
-            "path_7",
-            "path_6",
-            "text_8",
             "rect_17",
             "rect_16",
             "rect_15",
-            "rect_14",
+            "rect_14"
+        ],
+        "total": {
+            "rect": 4
+        }
+    },
+    "757.3-853.6": {
+        "tags": [
             "rect_13",
             "rect_12",
             "rect_11",
             "rect_10",
-            "rect_9",
+            "rect_9"
+        ],
+        "total": {
+            "rect": 5
+        }
+    },
+    "853.6-950.0": {
+        "tags": [
             "rect_8",
             "rect_7",
             "rect_6",
-            "rect_5",
-            "rect_4"
+            "rect_5"
         ],
         "total": {
-            "path": 2,
-            "text": 1,
-            "rect": 14
+            "rect": 4
         }
     },
-    "941.6-1228.8": {
+    "950.0-1046.4": {
         "tags": [
-            "path_5",
-            "text_7",
-            "text_6",
+            "rect_4",
             "rect_3",
             "rect_2",
             "rect_1",
-            "rect",
-            "line"
+            "rect"
         ],
         "total": {
-            "path": 1,
-            "text": 2,
-            "rect": 4,
-            "line": 1
-        }
-    },
-    "1228.8-1515.9": {
-        "tags": [
-            "path_4",
-            "text_5"
-        ],
-        "total": {
-            "path": 1,
-            "text": 1
-        }
-    },
-    "1515.9-1803.1": {
-        "tags": [
-            "path_3",
-            "path_2",
-            "text_4"
-        ],
-        "total": {
-            "path": 2,
-            "text": 1
-        }
-    },
-    "1803.1-2090.3": {
-        "tags": [
-            "path_1",
-            "text_3",
-            "text_2"
-        ],
-        "total": {
-            "path": 1,
-            "text": 2
-        }
-    },
-    "2090.3-2377.5": {
-        "tags": [
-            "path",
-            "text_1",
-            "text"
-        ],
-        "total": {
-            "path": 1,
-            "text": 2
+            "rect": 5
         }
     }
 }
