@@ -4,17 +4,20 @@
             <span class="title">Patterns List</span>
             <div class="legend-container">
                 <div class="cluster-legend">
-                    <div class="cluster-labels">
-                        <span class="cluster-label">Core</span>
-                        <span class="cluster-label correspond-label">Correspond</span>
-                    </div>
                     <div class="cluster-legend-item">
+                        <span class="cluster-label">Core</span>
                         <div class="cluster-box core-box"></div>
                         <div class="cluster-arrow">→</div>
                         <div class="cluster-box correspond-box"></div>
+                        <span class="cluster-label correspond-label">Related</span>
                     </div>
                 </div>
-                <span class="legend-text">100</span> <div class="legend-gradient"><span class="legend-gradient-text">Salience</span></div> <span class="legend-text">0.0</span>
+                <div class="salience-legend">
+                    <span class="legend-label">Salience</span>
+                    <span class="legend-text">0</span>
+                    <div class="legend-gradient"></div>
+                    <span class="legend-text">100</span>
+                </div>
             </div>
         </div>
         <div class="core-view-container">
@@ -668,7 +671,6 @@ onUnmounted(() => {
 .legend-title {
     font-size: 13px;
     color: #333;
-    font-weight: 600;
     margin-bottom: 6px;
     text-align: center;
     width: 100%;
@@ -678,7 +680,7 @@ onUnmounted(() => {
     width: 150px;
     height: 16px;
     border-radius: 4px;
-    background: linear-gradient(to left, 
+    background: linear-gradient(to right, 
         rgba(144, 95, 41, 0.15), 
         rgba(144, 95, 41, 0.3), 
         rgba(144, 95, 41, 0.5), 
@@ -686,8 +688,8 @@ onUnmounted(() => {
         rgba(144, 95, 41, 0.9), 
         rgba(144, 95, 41, 1)
     );
-    border: 1px solid rgba(144, 95, 41, 0.2);
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: none;
+    box-shadow: none;
 }
 
 .legend-labels {
@@ -695,12 +697,6 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     margin-top: 4px;
-}
-
-.legend-label {
-    font-size: 12px;
-    color: #666;
-    font-weight: 500;
 }
 
 /* 添加提示容器样式 */
@@ -738,37 +734,43 @@ onUnmounted(() => {
 
 .legend-container{
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-direction: row;
-    gap: 8px;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
 }
 
 .legend-text{
     font-size: 1.1em;
     color: #666;
-    font-weight: 800;
     color: #905F29;
 }
 
-.legend-gradient-text{
-    font-size: 1.1em;
-    color: #666;
-    font-weight: 800;
-
-    position: relative;
-    bottom: 25px;
-    left: 30%;
+.legend-gradient{
+    width: 150px;
+    height: 16px;
+    border-radius: 4px;
+    background: linear-gradient(to right, 
+        rgba(144, 95, 41, 0.15), 
+        rgba(144, 95, 41, 0.3), 
+        rgba(144, 95, 41, 0.5), 
+        rgba(144, 95, 41, 0.7), 
+        rgba(144, 95, 41, 0.9), 
+        rgba(144, 95, 41, 1)
+    );
+    border: none;
+    box-shadow: none;
 }
 
-/* 添加核心聚类和外延聚类图例样式 */
+.legend-label {
+    font-size: 1.1em;
+    color: #333;
+    margin-right: 5px;
+}
+
+/* 修改核心聚类和外延聚类图例样式 */
 .cluster-legend {
-    position: relative;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 4px;
-    margin-right: 15px;
 }
 
 .cluster-legend-item {
@@ -796,29 +798,23 @@ onUnmounted(() => {
 .cluster-arrow {
     font-size: 1.2em;
     color: #905F29;
-    font-weight: bold;
     position: relative;
     top: -2px;
-}
-
-.cluster-labels {
-    position: absolute;
-    top: -18px;
-    left: -10px;
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    margin-bottom: 4px;
 }
 
 .cluster-label {
     font-size: 1.1em;
     color: #333;
-    font-weight: 600;
 }
 
 .correspond-label {
     margin-left: 5px;
+}
+
+.salience-legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 </style>

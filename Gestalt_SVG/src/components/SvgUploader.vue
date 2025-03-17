@@ -1305,7 +1305,9 @@ const toggleElementSelector = () => {
     width: 100%;
     padding: 4px;
     min-height: 0; /* 确保在flex容器中不会超出 */
+    max-height: 100%; /* 限制最大高度 */
     overflow: hidden; /* 防止内容溢出 */
+    gap: 8px; /* 添加间距 */
 }
 
 .selection-mode-container {
@@ -1316,6 +1318,7 @@ const toggleElementSelector = () => {
     flex: 1;
     height: 100%;
     min-height: 0; /* 确保在flex容器中不会超出 */
+    max-height: 100%; /* 限制最大高度 */
 }
 
 .selection-mode-btn {
@@ -1325,15 +1328,16 @@ const toggleElementSelector = () => {
     letter-spacing: 0.3px;
     transition: all 0.3s ease;
     text-transform: none;
-    height: calc(50% - 2px); /* 减小间距以适应容器高度 */
-    min-height: 32px; /* 确保按钮有最小高度 */
-    padding: 0 8px !important;
+    flex: 1; /* 改为flex: 1，使按钮平均分配空间 */
+    min-height: 0; /* 移除最小高度限制 */
+    padding: 4px 8px !important; /* 调整内边距 */
     background-color: rgba(255, 255, 255, 0.6) !important;
     border: 1px solid rgba(144, 95, 41, 0.2);
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 0.9em; /* 稍微减小字体大小 */
 }
 
 .selection-mode-btn:hover {
@@ -1382,7 +1386,7 @@ const toggleElementSelector = () => {
 /* 修改视觉显著性指示器样式，使其与按钮区域高度一致且响应式 */
 .visual-salience-indicator {
     position: relative;
-    font-size: 1.8em;
+    font-size: 1.6em; /* 稍微减小字体大小 */
     font-weight: 800;
     color: #905F29;
     padding: 4px;
@@ -1393,15 +1397,16 @@ const toggleElementSelector = () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 140px;
-    width: 140px;
-    flex: 1.5;
+    min-width: 120px; /* 减小最小宽度 */
+    width: 120px;
+    flex: 1;
     text-align: center;
     z-index: 90;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     height: 100%;
-    margin-left: 8px;
-    overflow: hidden; /* 防止内容溢出 */
+    max-height: 100%; /* 限制最大高度 */
+    margin-left: 0; /* 移除左边距，因为已经添加了gap */
+    overflow: hidden;
 }
 
 .salience-label {
@@ -1466,7 +1471,7 @@ const toggleElementSelector = () => {
 /* 侧边抽屉式元素选择器样式 */
 .element-selector-drawer {
     position: absolute !important;
-    top: 230px !important;
+    top: 200px !important;
     right: -180px !important; /* 默认隐藏在右侧 */
     z-index: 100 !important;
     width: 180px !important;
@@ -1476,7 +1481,7 @@ const toggleElementSelector = () => {
     border-right: none !important;
     box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.1) !important;
     padding: 8px !important;
-    max-height: 280px !important;
+    max-height: 260px !important;
     overflow: hidden !important;
     transition: right 0.3s ease !important;
 }

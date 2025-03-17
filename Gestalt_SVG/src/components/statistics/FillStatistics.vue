@@ -279,7 +279,7 @@ const render = (data) => {
         svg.value.append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", marginLeft / 3)
-            .attr("x", 0 - (height - marginBottom) / 1.7)
+            .attr("x", 0 - (height - marginTop) / 2)
             .style("text-anchor", "middle")
             .style("font-size", "12px")
             .text("Count");
@@ -386,7 +386,6 @@ const render = (data) => {
   top: 1.1em;
   left: 16px;
   font-size: 14px;
-  font-weight: bold;
   color: #000;
   margin: 0;
   padding: 0;

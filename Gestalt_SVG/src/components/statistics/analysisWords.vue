@@ -22,7 +22,7 @@
           <!-- 添加阴影遮盖器 -->
           <div class="shadow-overlay top" :class="{ active: featureSectionScrollTop > 10 }"></div>
           <div class="shadow-overlay bottom" :class="{ active: isFeatureSectionScrollable && !isFeatureSectionScrolledToBottom }"></div>
-          <div class="analysis-content" @scroll="handleFeatureSectionScroll" v-html="analysisContent"></div>
+          <div class="analysis-content" @scroll="handleFeatureSectionScroll" v-html="analysisContent" @click="handleClick"></div>
         </div>
       </div>
       <div class="section-wrapper">
@@ -34,7 +34,7 @@
           <!-- 添加阴影遮盖器 -->
           <div class="shadow-overlay top" :class="{ active: middleSectionScrollTop > 10 }"></div>
           <div class="shadow-overlay bottom" :class="{ active: isMiddleSectionScrollable && !isMiddleSectionScrolledToBottom }"></div>
-          <div class="analysis-content" @scroll="handleMiddleSectionScroll" v-html="selectedNodesAnalysis"></div>
+          <div class="analysis-content" @scroll="handleMiddleSectionScroll" v-html="selectedNodesAnalysis" @click="handleClick"></div>
         </div>
       </div>
     </div>
@@ -49,11 +49,19 @@
         </div>
       </div>
     </Teleport> -->
+
+    <!-- 添加复制成功提示 -->
+    <div v-if="copyTooltip.visible" 
+         class="copy-tooltip"
+         :style="{ left: copyTooltip.x + 'px', top: (copyTooltip.y - 30) + 'px' }">
+      {{ copyTooltip.text }}
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import maxstic from '../visualization/maxstic.vue'
 import { useStore } from 'vuex'
@@ -470,6 +478,34 @@ const isMiddleSectionScrollable = ref(false);
 const isFeatureSectionScrolledToBottom = ref(true);
 const isMiddleSectionScrolledToBottom = ref(true);
 
+// 添加复制成功提示的状态
+const copyTooltip = ref({ visible: false, text: '', x: 0, y: 0 });
+
+// 修改复制函数，使用事件委托
+const handleClick = (event) => {
+  // 检查点击的元素是否是可复制的值
+  const copyableValue = event.target.closest('.copyable-value');
+  if (copyableValue) {
+    const textToCopy = copyableValue.getAttribute('data-value');
+    if (textToCopy) {
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        ElMessage({
+          message: '复制成功',
+          type: 'success',
+          duration: 1500
+        });
+      }).catch(err => {
+        console.error('复制失败:', err);
+        ElMessage({
+          message: '复制失败',
+          type: 'error',
+          duration: 1500
+        });
+      });
+    }
+  }
+};
+
 // 生成分析文字的函数
 const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds = []) => {
   if (!normalData || !Array.isArray(normalData) || normalData.length === 0) {
@@ -757,7 +793,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
     // 正差异特征（选中元素特有的特征）- Used Features
     analysis += '<div class="feature-column positive selected-elements">';
-    analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">distinct<br>values</span></span></div>`;
+    analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">Distinct<br>values</span></span></div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     if (processedSignificantFeatures.length > 0) {
@@ -781,11 +817,11 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
     }
 
     analysis += `</div>`; // 关闭内容容器
-    analysis += '</div>';
+    analysis += '</div>'; 
 
     // 负差异特征（选中元素缺乏的特征）- Suggest Features
     analysis += '<div class="feature-column negative selected-elements">';
-    analysis += `<div class="column-title all-elements-title">Suggestions</div>`;
+    analysis += `<div class="column-title all-elements-title">Suggestions for improving salience</div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     // 检查visual salience值是否小于85
@@ -1020,6 +1056,13 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           // 按预估显著性从高到低排序
           featuresWithSalience.sort((a, b) => b.predictedSalience - a.predictedSalience);
 
+          // 添加一个函数来判断是否为宽度相关特征
+          const isWidthFeature = (featureKey) => {
+            return featureKey.toLowerCase().includes('width') || 
+                   featureKey.toLowerCase().includes('size') ||
+                   featureKey.toLowerCase().includes('bbox_width');
+          };
+
           // 显示特征
           featuresWithSalience.forEach(feature => {
             const featureKey = feature.featureKeys[0];
@@ -1031,27 +1074,31 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               analysis += `
                                     <div class="feature-item">
                                         <span class="feature-tag all-elements-tag">
-                                            <span class="feature-name-container">${feature.name} → ${rgbValue}</span>
+                                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${rgbValue}">${rgbValue}</span></span>
                                             <span class="predicted-salience">${feature.formattedSalience}</span>
                                         </span>
                                     </div>
                                 `;
             } else if (isPositionOrBboxFeature(featureKey)) {
-              // 位置或bbox特征，只显示显著性分数
+              // 位置或bbox特征，显示推荐值
+              const unit = isWidthFeature(featureKey) ? 'px' : '';
+              const value = `${feature.usedValue.toFixed(2)}${unit}`;
               analysis += `
                                     <div class="feature-item">
                                         <span class="feature-tag all-elements-tag">
-                                            <span class="feature-name-container">${feature.name}</span>
+                                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
                                             <span class="predicted-salience">${feature.formattedSalience}</span>
                                         </span>
                                     </div>
                                 `;
             } else {
-              // 其他特征，使用原来的显示方式
+              // 其他特征，显示推荐值
+              const unit = isWidthFeature(featureKey) ? 'px' : '';
+              const value = `${feature.usedValue.toFixed(2)}${unit}`;
               analysis += `
                                     <div class="feature-item">
                                         <span class="feature-tag all-elements-tag">
-                                            <span class="feature-name-container">${feature.name} (${feature.usedValue.toFixed(2)})</span>
+                                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
                                             <span class="predicted-salience">${feature.formattedSalience}</span>
                                         </span>
                                     </div>
@@ -1183,6 +1230,13 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           // 按预估显著性从高到低排序
           featuresWithSalience.sort((a, b) => b.predictedSalience - a.predictedSalience);
 
+          // 添加一个函数来判断是否为宽度相关特征
+          const isWidthFeature = (featureKey) => {
+            return featureKey.toLowerCase().includes('width') || 
+                   featureKey.toLowerCase().includes('size') ||
+                   featureKey.toLowerCase().includes('bbox_width');
+          };
+
           // 显示特征
           featuresWithSalience.forEach(feature => {
             const featureKey = feature.featureKeys[0];
@@ -1194,27 +1248,31 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               analysis += `
                             <div class="feature-item">
                                 <span class="feature-tag all-elements-tag">
-                                    <span class="feature-name-container">${feature.name} → ${rgbValue}</span>
+                                    <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${rgbValue}">${rgbValue}</span></span>
                                     <span class="predicted-salience">${feature.formattedSalience}</span>
                                 </span>
                             </div>
                         `;
             } else if (isPositionOrBboxFeature(featureKey)) {
-              // 位置或bbox特征，只显示显著性分数
+              // 位置或bbox特征，显示推荐值
+              const unit = isWidthFeature(featureKey) ? 'px' : '';
+              const value = `${feature.usedValue.toFixed(2)}${unit}`;
               analysis += `
                             <div class="feature-item">
                                 <span class="feature-tag all-elements-tag">
-                                    <span class="feature-name-container">${feature.name}</span>
+                                    <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
                                     <span class="predicted-salience">${feature.formattedSalience}</span>
                                 </span>
                             </div>
                         `;
             } else {
-              // 其他特征，使用原来的显示方式
+              // 其他特征，显示推荐值
+              const unit = isWidthFeature(featureKey) ? 'px' : '';
+              const value = `${feature.usedValue.toFixed(2)}${unit}`;
               analysis += `
                             <div class="feature-item">
                                 <span class="feature-tag all-elements-tag">
-                                    <span class="feature-name-container">${feature.name} (${feature.usedValue.toFixed(2)})</span>
+                                    <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
                                     <span class="predicted-salience">${feature.formattedSalience}</span>
                                 </span>
                             </div>
@@ -1319,12 +1377,12 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       };
 
       // 根据元素位置关系决定显示的文本
-      const annotationText = areElementsAdjacent() ? 'Add a box' : 'Add a links';
+      const annotationText = areElementsAdjacent() ? 'Add a box' : 'Add links';
 
       // 添加动态文本
       analysis += `
                   <div class="feature-item">
-                    <span class="feature-tag all-elements-tag">
+                    <span class="feature-tag all-elements-tag annotation-tag">
                         ${annotationText}
                     </span>
                   </div>
@@ -1524,7 +1582,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
     // 最突出的特征 - Used Features
     analysis += '<div class="feature-column negative all-elements">';
-    analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">distinct<br>values</span></span></div>`;
+    analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">Distinct<br>values</span></span></div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     if (finalDiverseFeatures.length > 0) {
@@ -2683,7 +2741,7 @@ const isMdsFeature = (featureKey) => {
   /* 增加内边距 */
   text-align: left;
   /* 左对齐文本 */
-  font-weight: 600;
+  font-weight: 400; /* 移除加粗效果 */
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -2729,15 +2787,18 @@ const isMdsFeature = (featureKey) => {
   color: #666;
   margin-left: auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 }
 
 :deep(.hash-symbol) {
   margin-right: 2px;
+  line-height: 1.1;
 }
 
 :deep(.label-text) {
   line-height: 1.1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 添加两列布局容器 */
@@ -2873,7 +2934,7 @@ const isMdsFeature = (featureKey) => {
   /* 确保占满整行 */
   font-size: 17px;
   /* 增大字体大小，从16px改为17px */
-  font-weight: 600;
+  font-weight: 400; /* 移除加粗效果 */
   color: #333;
   justify-content: space-between;
   /* 在两端对齐内容 */
@@ -3150,8 +3211,8 @@ const isMdsFeature = (featureKey) => {
   color: #333 !important;
   background-color: rgba(0, 0, 0, 0.03) !important;
   padding: 8px 10px !important; /* 减小内边距 */
-  width: 120px !important;
-  min-width: 120px !important;
+  width: 100px !important; /* 从120px减小到80px */
+  min-width: 80px !important; /* 从120px减小到80px */
   border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
   margin-bottom: 0 !important;
   display: flex !important;
@@ -3233,5 +3294,51 @@ const isMdsFeature = (featureKey) => {
   padding: 10px 12px !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
   margin-bottom: 0 !important;
+}
+
+/* 添加复制提示样式 */
+.copy-tooltip {
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1000;
+  transform: translate(-50%, -100%);
+  animation: fadeInOut 1.5s ease-in-out;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -90%); }
+  20% { opacity: 1; transform: translate(-50%, -100%); }
+  80% { opacity: 1; transform: translate(-50%, -100%); }
+  100% { opacity: 0; transform: translate(-50%, -90%); }
+}
+
+/* 添加可复制值的样式 */
+:deep(.feature-name-container .copyable-value) {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+:deep(.feature-name-container .copyable-value:hover) {
+  background-color: rgba(144, 95, 41, 0.1);
+}
+
+/* 为注释标签添加特殊样式 */
+:deep(.annotation-tag) {
+  font-weight: 400 !important; /* 移除加粗效果 */
+}
+
+/* 修改多样性数值的样式 */
+:deep(.value-count) {
+  font-weight: 400 !important; /* 移除加粗效果 */
+  margin-left: 4px;
 }
 </style>

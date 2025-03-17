@@ -283,8 +283,8 @@ const renderChart = (dataset) => {
 
     svg.value.append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", margin.left / 3)
-        .attr("x", 0 - (height + margin.top + margin.bottom) / 2)
+        .attr("y", margin.left / 2.5)
+        .attr("x", 0 - (height + margin.top) / 1.8)
         .style("text-anchor", "middle")
         .style("font-size", "12px")
         .text("Count");
@@ -296,7 +296,6 @@ const renderChart = (dataset) => {
   top: 1.3em;
   left: 16px;
   font-size: 14px;
-  font-weight: bold;
   color: #000;
   margin: 0;
   padding: 0;

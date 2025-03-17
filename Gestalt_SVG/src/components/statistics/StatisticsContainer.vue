@@ -484,7 +484,6 @@ const hasSevenItems = computed(() => {
 
 .legend-text {
   font-size: 16px;
-  font-weight: 500;
   color: #666;
 }
 </style> 

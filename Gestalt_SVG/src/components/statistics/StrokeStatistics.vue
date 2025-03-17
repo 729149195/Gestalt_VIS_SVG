@@ -411,7 +411,6 @@ const render = (data) => {
   top: 12px;
   left: 16px;
   font-size: 14px;
-  font-weight: bold;
   color: #000;
   margin: 0;
   padding: 0;

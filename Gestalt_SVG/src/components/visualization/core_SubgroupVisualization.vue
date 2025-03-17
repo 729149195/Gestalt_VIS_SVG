@@ -99,7 +99,7 @@ const elementStats = ref(new Map());
 // 修改总览条相关的变量
 const overviewSvg = ref(null);
 const clusterItemSize = 32; // 小方块高度和宽度相同，形成正方形
-const clusterItemGap = 3;  // 小方块之间的间隔，从2px修改为3px
+const clusterItemGap = 8;  // 小方块之间的间隔为3px
 const overviewHeight = 50; // 总览条高度
 // 不再需要单独的itemWidth变量，使用clusterItemSize代替
 
@@ -1901,12 +1901,12 @@ const handleOverviewClick = (nodeId, event) => {
 /* 添加总览条标题样式 */
 .overview-title {
     position: absolute; /* 改为绝对定位 */
-    font-size: 1.3em; /* 增大字号 */
-    font-weight: 600;
+    font-size: 1.4em; /* 增大字号 */
+    font-weight: 500;
     left: 20px; /* 距左边距 */
     top: 50%; /* 垂直居中 */
-    transform: translateY(-50%); /* 垂直居中 */
-    color: #905F29; /* 使用主题色 */
+    transform: translateY(-100%); /* 垂直居中 */
+    color: #333; /* 使用主题色 */
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -2307,7 +2307,6 @@ const handleOverviewClick = (nodeId, event) => {
     white-space: nowrap;
     opacity: 0.8;
     width: 100%;
-    font-weight: 700;
 }
 
 .attention-probability-value {
@@ -2316,7 +2315,7 @@ const handleOverviewClick = (nodeId, event) => {
     color: #b4793a;
     white-space: nowrap;
     width: 100%;
-    font-weight: 700;
+    font-weight: 650;
 }
 
 .card-extension .attention-probability {
