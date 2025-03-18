@@ -31,6 +31,11 @@
                     <div class="section-title">Selected elements</div>
                     <div class="svg-container mac-style-container display-svg" ref="displaySvgContainer">
                         <div v-html="displaySvgContent"></div>
+                        <div class="visual-salience-indicator" @click="showSalienceDetail">
+                            <span class="salience-label">Salience</span>
+                            <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
+                            <span class="salience-value" v-else>--.---</span>
+                        </div>
                         <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
                             {{ analyzing ? 'Simulating...' : 'Submit the selected group' }}
                         </v-btn>
@@ -96,14 +101,6 @@
 
                         <!-- 右侧分隔线 -->
                         <div class="vertical-divider"></div>
-
-                        <!-- 右侧按钮 -->
-                        <!-- 视觉显著性指示器 -->
-                        <div class="visual-salience-indicator" @click="showSalienceDetail">
-                            <span class="salience-label">Salience</span>
-                            <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
-                            <span class="salience-value" v-else>--.---</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1854,44 +1851,42 @@ watch(scopeNodes, () => {
     cursor: grabbing !important;
 }
 
-/* 修改视觉显著性指示器样式，使其与按钮区域高度一致且响应式 */
+/* 修改视觉显著性指示器样式，使其与按钮高度一致并水平布局 */
 .visual-salience-indicator {
-    position: relative;
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
     font-size: 1.2em;
     font-weight: 800;
     color: #905F29;
-    padding: 5px 2px;
+    padding: 6px 12px;
     border-radius: 8px;
     background: rgba(144, 95, 41, 0.08);
     border: 1px solid rgba(144, 95, 41, 0.2);
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    width: 150px;
+    max-width: 200px;
     text-align: center;
-    z-index: 5;
+    z-index: 100;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    height: 100%;
-    margin: 0;
+    max-height: 40px;
 }
 
 .salience-label {
     font-size: 1.1em;
-    line-height: 1;
-    margin-bottom: 2px;
-    white-space: nowrap;
+
     opacity: 0.8;
-    width: 100%;
     font-weight: 700;
+    margin-right: 8px;
 }
 
 .salience-value {
-    font-size: 1.3em;
+    font-size: 1.1em;
     line-height: 1;
     color: #b4793a;
     white-space: nowrap;
-    width: 100%;
     font-weight: 700;
 }
 

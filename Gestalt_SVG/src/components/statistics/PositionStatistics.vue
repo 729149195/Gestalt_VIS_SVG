@@ -1,6 +1,8 @@
 <template>
     <div class="statistics-container">
-        <span class="title">Bbox-{{ title }}</span>
+        <div class="title-container">
+            <span class="title">{{ title }}</span>
+        </div>
         <div ref="chartContainer" class="chart-container"></div>
     </div>
 </template>
@@ -292,23 +294,28 @@ const renderChart = (dataset) => {
 </script>
 
 <style scoped>
-.title {
-  top: 1.3em;
-  left: 16px;
-  font-size: 14px;
-  color: #000;
-  margin: 0;
-  padding: 0;
-  z-index: 10;
-  letter-spacing: -0.01em;
-  opacity: 0.8;
-}
-
 .statistics-container {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
+}
+
+.title-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding-top: 8px;
+}
+
+.title {
+    font-size: 14px;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    z-index: 10;
+    letter-spacing: -0.01em;
+    opacity: 0.8;
 }
 
 .chart-container {

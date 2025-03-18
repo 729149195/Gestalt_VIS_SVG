@@ -1,6 +1,8 @@
 <template>
     <div class="statistics-container">
-        <span class="title">Elements Type</span>
+        <div class="title-container">
+            <span class="title">Elements Type</span>
+        </div>
         <div ref="chartContainer" class="chart-container"></div>
         <div v-if="!hasData" class="no-data-message">No Elements</div>
     </div>
@@ -346,6 +348,23 @@ const render = (data) => {
     position: relative;
 }
 
+.title-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding-top: 8px;
+}
+
+.title {
+    font-size: 14px;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    z-index: 10;
+    letter-spacing: -0.01em;
+    opacity: 0.8;
+}
+
 .chart-container {
     flex: 1;
     width: 100%;
@@ -362,18 +381,6 @@ const render = (data) => {
     font-size: 14px;
     pointer-events: none;
     z-index: 5;
-}
-
-.title {
-  top: 1.1em;
-  left: 16px;
-  font-size: 14px;
-  color: #000;
-  margin: 0;
-  padding: 0;
-  z-index: 10;
-  letter-spacing: -0.01em;
-  opacity: 0.8;
 }
 
 /* 添加条形图样式 */
