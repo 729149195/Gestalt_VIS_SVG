@@ -39,8 +39,16 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
     for item in init_data:
         element_id = item['id']
         # 检查元素是否在过滤后的SVG中
-        if not filtered_element_ids or element_id in filtered_element_ids or element_id.split('/')[-1] in filtered_element_ids:
+        if not filtered_element_ids:
             filtered_init_data.append(item)
+        elif isinstance(element_id, str):
+            # 只有当id是字符串时才尝试split操作
+            if element_id in filtered_element_ids or element_id.split('/')[-1] in filtered_element_ids:
+                filtered_init_data.append(item)
+        else:
+            # 处理id不是字符串的情况
+            if element_id in filtered_element_ids:
+                filtered_init_data.append(item)
     
     # 如果没有找到匹配的元素，使用所有元素（回退策略）
     if not filtered_init_data and init_data:
@@ -73,7 +81,11 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
     # 处理每个元素
     for item in filtered_init_data:
         # 从id中获取元素标识符，在init_data中，id通常是从tag_name转换过来的
-        element_id = item['id'].split('/')[-1]
+        if isinstance(item['id'], str):
+            element_id = item['id'].split('/')[-1]
+        else:
+            # 如果id不是字符串类型，则直接使用该值作为id
+            element_id = str(item['id'])
         
         # 避免依赖于"tagname_number"格式
         # 尝试从SVG文件中获取元素的类型标识，或直接使用元素ID
@@ -138,7 +150,10 @@ def process_position(item, tag_name, intervals, data_dict, feature_index):
         if start <= value <= end:
             interval_key = f"{start:.1f}-{end:.1f}"
             # 使用完整的元素ID
-            element_id = item['id'].split('/')[-1]
+            if isinstance(item['id'], str):
+                element_id = item['id'].split('/')[-1]
+            else:
+                element_id = str(item['id'])
             data_dict[interval_key]["tags"].append(element_id)
             
             # 使用传入的tag_name，不做二次处理

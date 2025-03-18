@@ -118,9 +118,79 @@ class ClusterPredictor:
 
     # 保存特征到 JSON 文件
     def save_features_to_json(self, identifiers, features):
-        data = [{"id": identifier, "features": feature.tolist()} for identifier, feature in zip(identifiers, features)]
-        with open(self.features_file_path, 'w') as f:
-            json.dump(data, f, indent=4)
+        data = []
+        print(f"准备序列化数据，特征类型: {type(features)}")
+        
+        try:
+            for i, (identifier, feature) in enumerate(zip(identifiers, features)):
+                try:
+                    # 更详细地处理各种类型
+                    if isinstance(feature, torch.Tensor):
+                        print(f"处理Tensor类型的特征: {i}")
+                        feature_list = feature.cpu().numpy().tolist()
+                    elif isinstance(feature, np.ndarray):
+                        print(f"处理numpy.ndarray类型的特征: {i}")
+                        feature_list = feature.tolist()
+                    else:
+                        print(f"处理其他类型的特征: {i}, 类型: {type(feature)}")
+                        # 如果是列表，确保其中没有非基本类型
+                        if isinstance(feature, list):
+                            # 递归检查列表中的每个元素
+                            def convert_to_native(item):
+                                if isinstance(item, (np.ndarray, torch.Tensor)):
+                                    return item.tolist() if hasattr(item, 'tolist') else float(item)
+                                elif isinstance(item, list):
+                                    return [convert_to_native(subitem) for subitem in item]
+                                else:
+                                    return item
+                            feature_list = convert_to_native(feature)
+                        else:
+                            feature_list = feature
+                    
+                    # 确保ID也是可序列化的
+                    if isinstance(identifier, (np.ndarray, torch.Tensor)):
+                        identifier = identifier.tolist() if hasattr(identifier, 'tolist') else str(identifier)
+                    
+                    data.append({"id": identifier, "features": feature_list})
+                except Exception as e:
+                    print(f"处理特征 {i} 时出错: {str(e)}")
+                    # 尝试一种更保守的方法
+                    if isinstance(feature, (np.ndarray, torch.Tensor)):
+                        feature_list = feature.detach().cpu().numpy().tolist() if hasattr(feature, 'detach') else feature.tolist()
+                    else:
+                        feature_list = str(feature)  # 最后的尝试，转换为字符串
+                    data.append({"id": str(identifier), "features": feature_list})
+            
+            with open(self.features_file_path, 'w') as f:
+                json.dump(data, f, indent=4)
+                
+        except Exception as e:
+            print(f"保存特征到JSON文件时出错: {str(e)}")
+            print(f"尝试单独序列化每个元素...")
+            
+            # 尝试序列化每个元素，看哪一个出错
+            for i, (identifier, feature) in enumerate(zip(identifiers, features)):
+                try:
+                    if isinstance(feature, (np.ndarray, torch.Tensor)):
+                        feature_list = feature.tolist()
+                    else:
+                        feature_list = feature
+                    json.dumps({"id": identifier, "features": feature_list})
+                except Exception as e:
+                    print(f"元素 {i} 序列化失败: {str(e)}")
+                    print(f"ID类型: {type(identifier)}, 特征类型: {type(feature)}")
+                    if isinstance(feature, (np.ndarray, torch.Tensor)):
+                        print(f"特征形状: {feature.shape if hasattr(feature, 'shape') else '未知'}")
+                    
+            # 最后的尝试：全部转换为字符串
+            try:
+                with open(self.features_file_path, 'w') as f:
+                    fallback_data = [{"id": str(identifier), "features": [float(x) for x in feature]} 
+                                    for identifier, feature in zip(identifiers, features)]
+                    json.dump(fallback_data, f, indent=4)
+                print("成功使用后备方法保存JSON")
+            except Exception as e:
+                print(f"后备方法也失败: {str(e)}")
 
     def run(self):
         identifiers, features = self.predict()

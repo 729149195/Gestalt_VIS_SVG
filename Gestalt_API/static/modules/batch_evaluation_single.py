@@ -48,14 +48,26 @@ class EnhancedClusterEvaluator:
         # 处理核心聚类组
         for core_cluster in data['core_clusters']:
             # 添加核心节点
-            core_nodes = set(node.split('/')[-1] for node in core_cluster['core_nodes'])
+            core_nodes = set()
+            for node in core_cluster['core_nodes']:
+                if isinstance(node, str):
+                    core_nodes.add(node.split('/')[-1])
+                else:
+                    # 如果不是字符串，直接使用原始值
+                    core_nodes.add(str(node))
             clusters.append(core_nodes)
             
             # 如果有外延，创建包含外延的新组
             if core_cluster.get('extensions'):
                 extended_nodes = core_nodes.copy()
                 for ext in core_cluster['extensions']:
-                    ext_nodes = set(node.split('/')[-1] for node in ext['nodes'])
+                    ext_nodes = set()
+                    for node in ext['nodes']:
+                        if isinstance(node, str):
+                            ext_nodes.add(node.split('/')[-1])
+                        else:
+                            # 如果不是字符串，直接使用原始值
+                            ext_nodes.add(str(node))
                     extended_nodes.update(ext_nodes)
                 clusters.append(extended_nodes)
                 
