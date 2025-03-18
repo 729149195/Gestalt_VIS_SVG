@@ -1,8 +1,10 @@
 {
-    "-9.3-272.2": {
+    "0.0-80.1": {
         "tags": [
-            "path_19",
-            "path_18",
+            "rect_17",
+            "rect_16",
+            "rect_15",
+            "rect_14",
             "path_17",
             "path_16",
             "path_15",
@@ -10,123 +12,85 @@
             "path_13",
             "path_12",
             "path_11",
-            "text_21",
-            "text_20",
-            "text_19",
-            "text_18",
-            "text_17",
-            "text_16",
-            "text_15",
-            "text_14",
-            "text_13",
-            "text_12",
             "path_10",
-            "text_11",
-            "rect_45",
-            "rect_44",
-            "rect_43",
-            "rect_42",
-            "rect_41",
-            "rect_40",
-            "line"
-        ],
-        "total": {
-            "path": 10,
-            "text": 11,
-            "rect": 6,
-            "line": 1
-        }
-    },
-    "272.2-553.8": {
-        "tags": [
-            "path_9",
-            "path_8",
-            "text_10",
-            "text_9",
-            "rect_39",
-            "rect_38",
-            "rect_37",
-            "rect_36",
-            "rect_35",
-            "rect_34",
-            "rect_33",
-            "rect_32",
-            "rect_31",
-            "rect_30",
-            "rect_29",
-            "rect_28",
-            "rect_27"
-        ],
-        "total": {
-            "path": 2,
-            "text": 2,
-            "rect": 13
-        }
-    },
-    "553.8-835.4": {
-        "tags": [
-            "path_7",
-            "text_8",
-            "rect_26",
-            "rect_25",
-            "rect_24",
-            "rect_23",
-            "rect_22",
-            "rect_21",
-            "rect_20",
-            "rect_19",
-            "rect_18",
-            "rect_17",
-            "rect_16",
-            "rect_15",
-            "rect_14",
-            "rect_13"
-        ],
-        "total": {
-            "path": 1,
-            "text": 1,
-            "rect": 14
-        }
-    },
-    "835.4-1116.9": {
-        "tags": [
-            "path_6",
-            "text_7",
-            "rect_12",
-            "rect_11",
-            "rect_10",
-            "rect_9",
-            "rect_8",
-            "rect_7",
+            "rect_13",
+            "path_1",
+            "path",
             "rect_6",
             "rect_5",
             "rect_4",
             "rect_3",
             "rect_2",
             "rect_1",
-            "rect"
+            "text_18",
+            "text_17",
+            "text_16",
+            "rect",
+            "text_15",
+            "text_14",
+            "text_13",
+            "text_12",
+            "text_11",
+            "text_10",
+            "text_9"
+        ],
+        "total": {
+            "rect": 12,
+            "path": 10,
+            "text": 10
+        }
+    },
+    "80.1-160.1": {
+        "tags": [
+            "path_9",
+            "rect_9",
+            "text_8"
         ],
         "total": {
             "path": 1,
-            "text": 1,
-            "rect": 13
+            "rect": 1,
+            "text": 1
         }
     },
-    "1116.9-1398.5": {
+    "160.1-240.2": {
         "tags": [
-            "path_5",
-            "path_4",
-            "text_6",
+            "path_8",
+            "text_7"
+        ],
+        "total": {
+            "path": 1,
+            "text": 1
+        }
+    },
+    "240.2-320.2": {
+        "tags": [
+            "path_7",
+            "rect_12",
+            "rect_11",
+            "rect_10",
+            "rect_8",
+            "rect_7",
+            "text_6"
+        ],
+        "total": {
+            "path": 1,
+            "rect": 5,
+            "text": 1
+        }
+    },
+    "320.2-400.3": {
+        "tags": [
+            "path_6",
             "text_5"
         ],
         "total": {
-            "path": 2,
-            "text": 2
+            "path": 1,
+            "text": 1
         }
     },
-    "1398.5-1680.0": {
+    "400.3-480.4": {
         "tags": [
-            "path_3",
+            "path_5",
             "text_4"
         ],
         "total": {
@@ -134,27 +98,27 @@
             "text": 1
         }
     },
-    "1680.0-1961.6": {
+    "480.4-560.4": {
         "tags": [
-            "path_2",
-            "text_3"
+            "path_4",
+            "text_3",
+            "text_2"
         ],
         "total": {
             "path": 1,
-            "text": 1
+            "text": 2
         }
     },
-    "1961.6-2243.1": {
+    "560.4-640.5": {
         "tags": [
-            "path_1",
-            "path",
-            "text_2",
+            "path_3",
+            "path_2",
             "text_1",
             "text"
         ],
         "total": {
             "path": 2,
-            "text": 3
+            "text": 2
         }
     }
 }

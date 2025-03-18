@@ -1,8 +1,18 @@
 {
-    "525.7-607.5": {
+    "481.7-562.0": {
         "tags": [
-            "path_19",
-            "text_21",
+            "rect_17",
+            "rect_16"
+        ],
+        "total": {
+            "rect": 2
+        }
+    },
+    "321.1-401.4": {
+        "tags": [
+            "rect_15",
+            "rect_14",
+            "path_12",
             "path_10",
             "path_9",
             "path_8",
@@ -12,9 +22,11 @@
             "path_4",
             "path_3",
             "path_2",
+            "rect_13",
             "path_1",
             "path",
-            "text_11",
+            "rect_7",
+            "rect_1",
             "text_10",
             "text_9",
             "text_8",
@@ -28,122 +40,70 @@
             "text"
         ],
         "total": {
+            "rect": 5,
             "path": 12,
-            "text": 13
+            "text": 11
         }
     },
-    "443.9-525.7": {
+    "0.0-80.3": {
         "tags": [
-            "path_18",
             "path_17",
-            "text_20",
-            "text_19"
+            "path_11",
+            "rect_12",
+            "rect_6",
+            "text_18",
+            "text_17",
+            "text_16",
+            "rect",
+            "text_15"
         ],
         "total": {
             "path": 2,
-            "text": 2
+            "rect": 3,
+            "text": 4
         }
     },
-    "362.1-443.9": {
+    "80.3-160.6": {
         "tags": [
             "path_16",
-            "text_18"
-        ],
-        "total": {
-            "path": 1,
-            "text": 1
-        }
-    },
-    "280.3-362.1": {
-        "tags": [
-            "path_15",
-            "text_17",
-            "rect_45",
-            "rect_44",
-            "rect_43",
-            "rect_42",
-            "rect_41",
-            "rect_40",
-            "rect_39",
-            "rect_38",
-            "rect_37",
-            "rect_36",
-            "rect_35",
-            "rect_34",
-            "rect_33",
-            "rect_32",
-            "rect_31",
-            "rect_30",
-            "rect_29",
-            "rect_28",
-            "rect_27",
-            "rect_26",
-            "rect_25",
-            "rect_24",
-            "rect_23",
-            "rect_22",
-            "rect_21",
-            "rect_20",
-            "rect_19",
-            "rect_18",
-            "rect_17",
-            "rect_16",
-            "rect_15",
-            "rect_14",
-            "rect_13",
-            "rect_12",
             "rect_11",
-            "rect_10",
-            "rect_9",
-            "rect_8",
-            "rect_7",
-            "rect_6",
             "rect_5",
-            "rect_4",
-            "rect_3",
-            "rect_2",
-            "rect_1",
-            "rect",
-            "line"
-        ],
-        "total": {
-            "path": 1,
-            "text": 1,
-            "rect": 46,
-            "line": 1
-        }
-    },
-    "198.5-280.3": {
-        "tags": [
-            "path_14",
-            "text_16"
-        ],
-        "total": {
-            "path": 1,
-            "text": 1
-        }
-    },
-    "116.7-198.5": {
-        "tags": [
-            "path_13",
-            "path_12",
-            "text_15",
             "text_14"
         ],
         "total": {
-            "path": 2,
-            "text": 2
+            "path": 1,
+            "rect": 2,
+            "text": 1
         }
     },
-    "34.9-116.7": {
+    "160.6-240.9": {
         "tags": [
-            "path_11",
+            "path_15",
+            "rect_10",
+            "rect_9",
+            "rect_4",
+            "rect_3",
             "text_13",
             "text_12"
         ],
         "total": {
             "path": 1,
+            "rect": 4,
             "text": 2
+        }
+    },
+    "240.9-321.1": {
+        "tags": [
+            "path_14",
+            "path_13",
+            "rect_8",
+            "rect_2",
+            "text_11"
+        ],
+        "total": {
+            "path": 2,
+            "rect": 2,
+            "text": 1
         }
     }
 }

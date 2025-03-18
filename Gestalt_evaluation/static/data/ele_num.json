@@ -1,28 +1,38 @@
 [
     {
-        "tag": "rect",
-        "num": 46,
-        "visible": true
-    },
-    {
         "tag": "text",
-        "num": 22,
+        "num": 19,
         "visible": true
     },
     {
         "tag": "path",
-        "num": 20,
+        "num": 18,
+        "visible": true
+    },
+    {
+        "tag": "rect",
+        "num": 18,
         "visible": true
     },
     {
         "tag": "g",
-        "num": 8,
+        "num": 15,
         "visible": false
     },
     {
-        "tag": "line",
+        "tag": "clipPath",
+        "num": 2,
+        "visible": false
+    },
+    {
+        "tag": "defs",
         "num": 1,
-        "visible": true
+        "visible": false
+    },
+    {
+        "tag": "desc",
+        "num": 1,
+        "visible": false
     },
     {
         "tag": "svg",
