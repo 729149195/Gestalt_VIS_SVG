@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="false" aria-label="Interactive chart" viewBox="0 0 650 400" height="400" width="650" class="st0" version="1.1">
+  <style>.st0 {font-family: Roboto; font-size: 12px;}
+.st1 {fill:none;}
+.st2 {fill:#ffffff;}
+.st3 {fill:none; opacity:1;}
+.st4 {fill:none; stroke:#e6e6e6; stroke-width:1; opacity:1;}
+.st5 {fill:none; stroke:#ccd6eb; stroke-width:1;}
+.st6 {outline: none; opacity:1;}
+.st7 {outline: none; fill:#94d13d; stroke:#ffffff; stroke-width:1; opacity:1;}
+.st8 {opacity:1;}
+.st9 {outline: none; fill:#6f58e9; stroke:#ffffff; stroke-width:1; opacity:1;}
+.st10 {color: rgb(51, 51, 51); font-size: 18px; fill: rgb(51, 51, 51);}
+.st11 {color: rgb(102, 102, 102); fill: rgb(102, 102, 102);}
+.st12 {color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102); opacity:1;}
+.st13 {cursor: pointer; color: rgb(153, 153, 153); font-size: 9px; fill: rgb(153, 153, 153);}</style>
+  <desc aria-hidden="true">Created with Highcharts 10.3.1</desc>
+  <defs aria-hidden="true">
+    <clipPath id="highcharts-20apdan-204-">
+      <rect height="562" width="354" y="0" x="0" class="st1"/>
+    </clipPath>
+    <clipPath id="highcharts-20apdan-211-">
+      <rect height="562" width="354" y="0" x="0" class="st1"/>
+    </clipPath>
+  </defs>
+  <rect aria-hidden="true" ry="0" rx="0" height="400" width="650" y="0" x="0" class="st2"/>
+  <rect aria-hidden="true" height="354" width="562" y="10" x="78" class="st1">
+    </rect>
+  <g aria-hidden="true" data-z-index="0" class="highcharts-pane-group"/>
+  <g aria-hidden="true" data-z-index="1" class="highcharts-grid highcharts-xaxis-grid">
+    <path d="M 78 69.5 L 640 69.5" class="st3" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 78 128.5 L 640 128.5" class="st3" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 78 187.5 L 640 187.5" class="st3" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 78 246.5 L 640 246.5" class="st3" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 78 305.5 L 640 305.5" class="st3" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 78 364.5 L 640 364.5" class="st3" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 78 10.5 L 640 10.5" class="st3" data-z-index="1" stroke-dasharray="none"/>
+  </g>
+  <g aria-hidden="true" data-z-index="1" class="highcharts-grid highcharts-yaxis-grid">
+    <path d="M 77.5 10 L 77.5 364" class="st4" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 147.5 10 L 147.5 364" class="st4" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 218.5 10 L 218.5 364" class="st4" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 288.5 10 L 288.5 364" class="st4" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 358.5 10 L 358.5 364" class="st4" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 428.5 10 L 428.5 364" class="st4" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 499.5 10 L 499.5 364" class="st4" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 569.5 10 L 569.5 364" class="st4" data-z-index="1" stroke-dasharray="none"/>
+    <path d="M 640.5 10 L 640.5 364" class="st4" data-z-index="1" stroke-dasharray="none"/>
+  </g>
+  <rect aria-hidden="true" height="354" width="562" y="10" x="78" data-z-index="1" class="st1"/>
+  <g aria-hidden="true" data-z-index="2" class="highcharts-axis highcharts-xaxis">
+    <path d="M 77.5 10 L 77.5 364" data-z-index="7" class="st5"/>
+  </g>
+  <g aria-hidden="true" data-z-index="2" class="highcharts-axis highcharts-yaxis">
+    <path d="M 78 364 L 640 364" data-z-index="7" class="st1"/>
+  </g>
+  <g aria-hidden="false" data-z-index="3" class="highcharts-series-group">
+    <g aria-label="Item 2, bar series 1 of 2 with 6 bars." tabindex="-1" role="region" aria-hidden="false" clip-path="url(#highcharts-20apdan-211-)" transform="translate(640,364) rotate(90) scale(-1,1) scale(1 1)" data-z-index="0.1" class="st6">
+      <rect aria-label="Category 1, 60. Item 2." role="img" tabindex="-1" class="st7" height="211" width="29" y="130.5" x="309.5"/>
+      <rect aria-label="Category 2, 50. Item 2." role="img" tabindex="-1" class="st7" height="175" width="29" y="162.5" x="250.5"/>
+      <rect aria-label="Category 3, 48. Item 2." role="img" tabindex="-1" class="st7" height="169" width="29" y="200.5" x="191.5"/>
+      <rect aria-label="Category 4, 16. Item 2." role="img" tabindex="-1" class="st7" height="56" width="29" y="425.5" x="132.5"/>
+      <rect aria-label="Category 5, 66. Item 2." role="img" tabindex="-1" class="st7" height="232" width="29" y="151.5" x="73.5"/>
+      <rect aria-label="Category 6, 87. Item 2." role="img" tabindex="-1" class="st7" height="305" width="29" y="32.5" x="14.5"/>
+    </g>
+    <g aria-hidden="true" clip-path="none" transform="translate(640,364) rotate(90) scale(-1,1) scale(1 1)" data-z-index="0.1" class="st8"/>
+    <g aria-label="Item 1, bar series 2 of 2 with 6 bars." tabindex="-1" role="region" aria-hidden="false" clip-path="url(#highcharts-20apdan-211-)" transform="translate(640,364) rotate(90) scale(-1,1) scale(1 1)" data-z-index="0.1" class="st6">
+      <rect aria-label="Category 1, 63. Item 1." role="img" tabindex="-1" class="st9" height="221" width="29" y="341.5" x="309.5"/>
+      <rect aria-label="Category 2, 64. Item 1." role="img" tabindex="-1" class="st9" height="225" width="29" y="337.5" x="250.5"/>
+      <rect aria-label="Category 3, 55. Item 1." role="img" tabindex="-1" class="st9" height="193" width="29" y="369.5" x="191.5"/>
+      <rect aria-label="Category 4, 23. Item 1." role="img" tabindex="-1" class="st9" height="81" width="29" y="481.5" x="132.5"/>
+      <rect aria-label="Category 5, 51. Item 1." role="img" tabindex="-1" class="st9" height="179" width="29" y="383.5" x="73.5"/>
+      <rect aria-label="Category 6, 64. Item 1." role="img" tabindex="-1" class="st9" height="225" width="29" y="337.5" x="14.5"/>
+    </g>
+    <g aria-hidden="true" clip-path="none" transform="translate(640,364) rotate(90) scale(-1,1) scale(1 1)" data-z-index="0.1" class="st8"/>
+  </g>
+  <text aria-hidden="true" y="24" data-z-index="4" class="st10" text-anchor="middle" x="325"/>
+  <text aria-hidden="true" y="24" data-z-index="4" class="st11" text-anchor="middle" x="325"/>
+  <text aria-hidden="true" y="397" data-z-index="4" class="st11" text-anchor="start" x="10"/>
+  <g aria-hidden="true" visibility="hidden" data-z-index="7" class="highcharts-legend highcharts-no-tooltip">
+    <rect height="8" width="8" y="0" x="0" ry="0" rx="0" class="st1"/>
+    <g data-z-index="1">
+      <g/>
+    </g>
+  </g>
+  <g aria-hidden="true" data-z-index="7" class="highcharts-axis-labels highcharts-xaxis-labels">
+    <text y="44" transform="translate(0,0)" text-anchor="end" x="63" class="st12">Category 1</text>
+    <text y="103" transform="translate(0,0)" text-anchor="end" x="63" class="st12">Category 2</text>
+    <text y="162" transform="translate(0,0)" text-anchor="end" x="63" class="st12">Category 3</text>
+    <text y="221" transform="translate(0,0)" text-anchor="end" x="63" class="st12">Category 4</text>
+    <text y="280" transform="translate(0,0)" text-anchor="end" x="63" class="st12">Category 5</text>
+    <text y="339" transform="translate(0,0)" text-anchor="end" x="63" class="st12">Category 6</text>
+  </g>
+  <g aria-hidden="true" data-z-index="7" class="highcharts-axis-labels highcharts-yaxis-labels">
+    <text y="383" transform="translate(0,0)" text-anchor="middle" x="78" class="st12">0</text>
+    <text y="383" transform="translate(0,0)" text-anchor="middle" x="148.25" class="st12">20</text>
+    <text y="383" transform="translate(0,0)" text-anchor="middle" x="218.5" class="st12">40</text>
+    <text y="383" transform="translate(0,0)" text-anchor="middle" x="288.75" class="st12">60</text>
+    <text y="383" transform="translate(0,0)" text-anchor="middle" x="359" class="st12">80</text>
+    <text y="383" transform="translate(0,0)" text-anchor="middle" x="429.25" class="st12">100</text>
+    <text y="383" transform="translate(0,0)" text-anchor="middle" x="499.5" class="st12">120</text>
+    <text y="383" transform="translate(0,0)" text-anchor="middle" x="569.75" class="st12">140</text>
+    <text y="383" transform="translate(0,0)" text-anchor="middle" x="630.7265625" class="st12">160</text>
+  </g>
+  <text aria-hidden="false" aria-label="Chart credits: Highcharts.com" y="395" data-z-index="8" text-anchor="end" class="st13" x="640">Highcharts.com</text>
+</svg>

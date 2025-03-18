@@ -1,0 +1,13 @@
+[Unit]
+Description=Questionnaire Counter Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /home/ubuntu/questionnaire/server/index.js
+WorkingDirectory=/home/ubuntu/questionnaire/server
+User=ubuntu
+Group=ubuntu
+Restart=always
+
+[Install]
+WantedBy=multi-user.target 

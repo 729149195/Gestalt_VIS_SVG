@@ -1,0 +1,21 @@
+server {
+    listen 80;
+    server_name your_domain_or_ip;
+
+    # 前端静态文件
+    location / {
+        root /home/ubuntu/questionnaire/dist;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 后端 API
+    location /api/ {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+} 

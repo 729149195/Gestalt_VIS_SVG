@@ -1,0 +1,163 @@
+<svg aria-hidden="false" aria-label="Interactive chart" viewBox="0 0 650 400" height="400" width="650"
+    xmlns="http://www.w3.org/2000/svg" style="font-family: Roboto; font-size: 12px;" class="highcharts-root"
+    version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <desc aria-hidden="true">Created with Highcharts 10.3.1</desc>
+    <defs aria-hidden="true">
+        <clipPath id="highcharts-20apdan-204-">
+            <rect fill="none" height="562" width="354" y="0" x="0"></rect>
+        </clipPath>
+        <clipPath id="highcharts-20apdan-211-">
+            <rect fill="none" height="562" width="354" y="0" x="0"></rect>
+        </clipPath>
+    </defs>
+    <rect aria-hidden="true" ry="0" rx="0" height="400" width="650" y="0" x="0" class="highcharts-background"
+        fill="#ffffff"></rect>
+    <rect aria-hidden="true" height="354" width="562" y="10" x="78" class="highcharts-plot-background" fill="none">
+    </rect>
+    <g aria-hidden="true" data-z-index="0" class="highcharts-pane-group"></g>
+    <g aria-hidden="true" data-z-index="1" class="highcharts-grid highcharts-xaxis-grid">
+        <path opacity="1" d="M 78 69.5 L 640 69.5" class="highcharts-grid-line" data-z-index="1" stroke-dasharray="none"
+            fill="none"></path>
+        <path opacity="1" d="M 78 128.5 L 640 128.5" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" fill="none"></path>
+        <path opacity="1" d="M 78 187.5 L 640 187.5" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" fill="none"></path>
+        <path opacity="1" d="M 78 246.5 L 640 246.5" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" fill="none"></path>
+        <path opacity="1" d="M 78 305.5 L 640 305.5" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" fill="none"></path>
+        <path opacity="1" d="M 78 364.5 L 640 364.5" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" fill="none"></path>
+        <path opacity="1" d="M 78 10.5 L 640 10.5" class="highcharts-grid-line" data-z-index="1" stroke-dasharray="none"
+            fill="none"></path>
+    </g>
+    <g aria-hidden="true" data-z-index="1" class="highcharts-grid highcharts-yaxis-grid">
+        <path opacity="1" d="M 77.5 10 L 77.5 364" class="highcharts-grid-line" data-z-index="1" stroke-dasharray="none"
+            stroke-width="1" stroke="#e6e6e6" fill="none"></path>
+        <path opacity="1" d="M 147.5 10 L 147.5 364" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" stroke-width="1" stroke="#e6e6e6" fill="none"></path>
+        <path opacity="1" d="M 218.5 10 L 218.5 364" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" stroke-width="1" stroke="#e6e6e6" fill="none"></path>
+        <path opacity="1" d="M 288.5 10 L 288.5 364" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" stroke-width="1" stroke="#e6e6e6" fill="none"></path>
+        <path opacity="1" d="M 358.5 10 L 358.5 364" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" stroke-width="1" stroke="#e6e6e6" fill="none"></path>
+        <path opacity="1" d="M 428.5 10 L 428.5 364" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" stroke-width="1" stroke="#e6e6e6" fill="none"></path>
+        <path opacity="1" d="M 499.5 10 L 499.5 364" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" stroke-width="1" stroke="#e6e6e6" fill="none"></path>
+        <path opacity="1" d="M 569.5 10 L 569.5 364" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" stroke-width="1" stroke="#e6e6e6" fill="none"></path>
+        <path opacity="1" d="M 640.5 10 L 640.5 364" class="highcharts-grid-line" data-z-index="1"
+            stroke-dasharray="none" stroke-width="1" stroke="#e6e6e6" fill="none"></path>
+    </g>
+    <rect aria-hidden="true" height="354" width="562" y="10" x="78" data-z-index="1" class="highcharts-plot-border"
+        fill="none"></rect>
+    <g aria-hidden="true" data-z-index="2" class="highcharts-axis highcharts-xaxis">
+        <path d="M 77.5 10 L 77.5 364" data-z-index="7" stroke-width="1" stroke="#ccd6eb" class="highcharts-axis-line"
+            fill="none"></path>
+    </g>
+    <g aria-hidden="true" data-z-index="2" class="highcharts-axis highcharts-yaxis">
+        <path d="M 78 364 L 640 364" data-z-index="7" class="highcharts-axis-line" fill="none"></path>
+    </g>
+    <g aria-hidden="false" data-z-index="3" class="highcharts-series-group">
+        <g style="outline: none;" aria-label="Item 2, bar series 1 of 2 with 6 bars." tabindex="-1" role="region"
+            aria-hidden="false" clip-path="url(#highcharts-20apdan-211-)"
+            transform="translate(640,364) rotate(90) scale(-1,1) scale(1 1)" opacity="1" data-z-index="0.1"
+            class="highcharts-series highcharts-series-0 highcharts-bar-series">
+            <rect style="outline: none;" aria-label="Category 1, 60. Item 2." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#94d13d" height="211"
+                width="29" y="130.5" x="309.5"></rect>
+            <rect style="outline: none;" aria-label="Category 2, 50. Item 2." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#94d13d" height="175"
+                width="29" y="162.5" x="250.5"></rect>
+            <rect style="outline: none;" aria-label="Category 3, 48. Item 2." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#94d13d" height="169"
+                width="29" y="200.5" x="191.5"></rect>
+            <rect style="outline: none;" aria-label="Category 4, 16. Item 2." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#94d13d" height="56"
+                width="29" y="425.5" x="132.5"></rect>
+            <rect style="outline: none;" aria-label="Category 5, 66. Item 2." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#94d13d" height="232"
+                width="29" y="151.5" x="73.5"></rect>
+            <rect style="outline: none;" aria-label="Category 6, 87. Item 2." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#94d13d" height="305"
+                width="29" y="32.5" x="14.5"></rect>
+        </g>
+        <g aria-hidden="true" clip-path="none" transform="translate(640,364) rotate(90) scale(-1,1) scale(1 1)"
+            opacity="1" data-z-index="0.1" class="highcharts-markers highcharts-series-0 highcharts-bar-series"></g>
+        <g style="outline: none;" aria-label="Item 1, bar series 2 of 2 with 6 bars." tabindex="-1" role="region"
+            aria-hidden="false" clip-path="url(#highcharts-20apdan-211-)"
+            transform="translate(640,364) rotate(90) scale(-1,1) scale(1 1)" opacity="1" data-z-index="0.1"
+            class="highcharts-series highcharts-series-1 highcharts-bar-series">
+            <rect style="outline: none;" aria-label="Category 1, 63. Item 1." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#6f58e9" height="221"
+                width="29" y="341.5" x="309.5"></rect>
+            <rect style="outline: none;" aria-label="Category 2, 64. Item 1." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#6f58e9" height="225"
+                width="29" y="337.5" x="250.5"></rect>
+            <rect style="outline: none;" aria-label="Category 3, 55. Item 1." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#6f58e9" height="193"
+                width="29" y="369.5" x="191.5"></rect>
+            <rect style="outline: none;" aria-label="Category 4, 23. Item 1." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#6f58e9" height="81"
+                width="29" y="481.5" x="132.5"></rect>
+            <rect style="outline: none;" aria-label="Category 5, 51. Item 1." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#6f58e9" height="179"
+                width="29" y="383.5" x="73.5"></rect>
+            <rect style="outline: none;" aria-label="Category 6, 64. Item 1." role="img" tabindex="-1"
+                class="highcharts-point" opacity="1" stroke-width="1" stroke="#ffffff" fill="#6f58e9" height="225"
+                width="29" y="337.5" x="14.5"></rect>
+        </g>
+        <g aria-hidden="true" clip-path="none" transform="translate(640,364) rotate(90) scale(-1,1) scale(1 1)"
+            opacity="1" data-z-index="0.1" class="highcharts-markers highcharts-series-1 highcharts-bar-series"></g>
+    </g><text aria-hidden="true" y="24" style="color: rgb(51, 51, 51); font-size: 18px; fill: rgb(51, 51, 51);"
+        data-z-index="4" class="highcharts-title" text-anchor="middle" x="325"></text><text aria-hidden="true" y="24"
+        style="color: rgb(102, 102, 102); fill: rgb(102, 102, 102);" data-z-index="4" class="highcharts-subtitle"
+        text-anchor="middle" x="325"></text><text aria-hidden="true" y="397"
+        style="color: rgb(102, 102, 102); fill: rgb(102, 102, 102);" data-z-index="4" class="highcharts-caption"
+        text-anchor="start" x="10"></text>
+    <g aria-hidden="true" visibility="hidden" data-z-index="7" class="highcharts-legend highcharts-no-tooltip">
+        <rect height="8" width="8" y="0" x="0" ry="0" rx="0" class="highcharts-legend-box" fill="none"></rect>
+        <g data-z-index="1">
+            <g></g>
+        </g>
+    </g>
+    <g aria-hidden="true" data-z-index="7" class="highcharts-axis-labels highcharts-xaxis-labels"><text opacity="1"
+            y="44" transform="translate(0,0)" text-anchor="end"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            x="63">Category 1</text><text opacity="1" y="103"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            transform="translate(0,0)" text-anchor="end" x="63">Category 2</text><text opacity="1" y="162"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            transform="translate(0,0)" text-anchor="end" x="63">Category 3</text><text opacity="1" y="221"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            transform="translate(0,0)" text-anchor="end" x="63">Category 4</text><text opacity="1" y="280"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            transform="translate(0,0)" text-anchor="end" x="63">Category 5</text><text opacity="1" y="339"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            transform="translate(0,0)" text-anchor="end" x="63">Category 6</text></g>
+    <g aria-hidden="true" data-z-index="7" class="highcharts-axis-labels highcharts-yaxis-labels"><text opacity="1"
+            y="383" transform="translate(0,0)" text-anchor="middle"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            x="78">0</text><text opacity="1" y="383" transform="translate(0,0)" text-anchor="middle"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            x="148.25">20</text><text opacity="1" y="383" transform="translate(0,0)" text-anchor="middle"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            x="218.5">40</text><text opacity="1" y="383" transform="translate(0,0)" text-anchor="middle"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            x="288.75">60</text><text opacity="1" y="383" transform="translate(0,0)" text-anchor="middle"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            x="359">80</text><text opacity="1" y="383" transform="translate(0,0)" text-anchor="middle"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            x="429.25">100</text><text opacity="1" y="383"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            transform="translate(0,0)" text-anchor="middle" x="499.5">120</text><text opacity="1" y="383"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            transform="translate(0,0)" text-anchor="middle" x="569.75">140</text><text opacity="1" y="383"
+            style="color: rgb(102, 102, 102); cursor: default; font-size: 11px; fill: rgb(102, 102, 102);"
+            transform="translate(0,0)" text-anchor="middle" x="630.7265625">160</text></g><text aria-hidden="false"
+        aria-label="Chart credits: Highcharts.com"
+        style="cursor: pointer; color: rgb(153, 153, 153); font-size: 9px; fill: rgb(153, 153, 153);" y="395"
+        data-z-index="8" text-anchor="end" class="highcharts-credits" x="640">Highcharts.com</text>
+</svg>

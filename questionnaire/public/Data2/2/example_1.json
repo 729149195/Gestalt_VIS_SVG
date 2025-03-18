@@ -1,0 +1,39 @@
+{
+    "ID":455122,
+      "groups": [
+    {
+    "group": "组合1",
+    "nodes": [
+    "rect_9",
+    "rect_4",
+    "rect_5",
+    "rect"
+    ],
+    "ratings": {
+    "attention": 1,
+    "boundary": 1
+    }
+    },
+    {
+    "group": "组合2",
+    "nodes": [
+    "rect_9",
+    "rect_12",
+    "rect_15",
+    "rect_14"
+    ],
+    "ratings": {
+    "attention": 1,
+    "boundary": 1
+    }
+    },
+    {
+    "group": "组合3",
+    "nodes": [],
+    "ratings": {
+    "attention": 4.5,
+    "boundary": 4.5
+    }
+    }
+    ]
+    }

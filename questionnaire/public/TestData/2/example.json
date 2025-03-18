@@ -1,0 +1,85 @@
+{
+  "groups": [
+    {
+      "group": "组合1",
+      "nodes": ["rect", "rect_2", "rect_1", "rect_3"],
+      "ratings": {
+        "attention": 3,
+        "correlation_strength": 3,
+        "exclusionary_force": 3
+      }
+    },
+    {
+      "group": "组合2",
+      "nodes": ["rect_9", "rect_12", "rect_15", "rect_14"],
+      "ratings": {
+        "attention": 3,
+        "correlation_strength": 3,
+        "exclusionary_force": 3
+      }
+    },
+    {
+      "group": "组合3",
+      "nodes": [
+        "rect_4",
+        "rect_12",
+        "rect_13",
+        "rect_7",
+        "rect_10",
+        "rect_14",
+        "rect_15",
+        "rect_9"
+      ],
+      "ratings": {
+        "attention": 3,
+        "correlation_strength": 3,
+        "exclusionary_force": 3
+      }
+    },
+    {
+      "group": "组合4",
+      "nodes": ["rect_5", "rect_6", "rect_8", "rect_11"],
+      "ratings": {
+        "attention": 1,
+        "correlation_strength": 3,
+        "exclusionary_force": 3
+      }
+    },
+    {
+      "group": "组合5",
+      "nodes": ["rect_9", "rect_4", "rect_5", "rect"],
+      "ratings": {
+        "attention": 2,
+        "correlation_strength": 2,
+        "exclusionary_force": 2
+      }
+    },
+    {
+      "group": "组合6",
+      "nodes": ["rect_12", "rect_13", "rect_6", "rect_2"],
+      "ratings": {
+        "attention": 1,
+        "correlation_strength": 2,
+        "exclusionary_force": 2
+      }
+    },
+    {
+      "group": "组合7",
+      "nodes": [
+        "rect_15",
+        "rect_7",
+        "rect_8",
+        "rect_11",
+        "rect_10",
+        "rect_14",
+        "rect_1",
+        "rect_3"
+      ],
+      "ratings": {
+        "attention": 1,
+        "correlation_strength": 2,
+        "exclusionary_force": 2
+      }
+    }
+  ]
+}

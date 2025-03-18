@@ -1,0 +1,45 @@
+{
+  "name": "pollster",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:unit": "vitest",
+    "deploy": "gh-pages -d dist",
+    "start-server": "node server/index.js",
+    "dev-server": "node server/dev-server.js"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "@emailjs/browser": "^3.12.1",
+    "@tsparticles/engine": "^3.0.0",
+    "@tsparticles/slim": "^3.7.1",
+    "@tsparticles/vue3": "^3.0.0",
+    "@vueuse/core": "^12.0.0",
+    "cors": "^2.8.5",
+    "d3": "^7.9.0",
+    "element-plus": "^2.7.6",
+    "express": "^4.21.2",
+    "file-saver": "^2.0.5",
+    "glob": "^9.0.0",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0",
+    "vuex": "^4.0.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "@vue/test-utils": "^2.4.5",
+    "gh-pages": "^6.1.1",
+    "jsdom": "^24.0.0",
+    "push-dir": "^0.4.1",
+    "sass": "^1.77.6",
+    "sass-loader": "^14.2.1",
+    "unplugin-auto-import": "^0.17.6",
+    "unplugin-vue-components": "^0.27.2",
+    "vite": "^5.2.8",
+    "vitest": "^1.4.0"
+  }
+}

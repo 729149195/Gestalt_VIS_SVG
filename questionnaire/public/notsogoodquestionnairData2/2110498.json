@@ -1,0 +1,204 @@
+{
+  "formData": {
+    "studentid": "2110498",
+    "age": "21",
+    "gender": "male",
+    "visualimpairment": "no",
+    "visualizationExperience": "yes",
+    "id": "437750"
+  },
+  "startTime": "2024-12-13 08:57:47",
+  "endTime": "2024-12-13 09:01:32",
+  "duration": "3 minutes 44 seconds",
+  "steps": [
+    {
+      "stepId": 22,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": ["rect_5", "rect_3", "rect_1"],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 18,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "path_67",
+            "path_66",
+            "path_65",
+            "path_64",
+            "path_63",
+            "path_62",
+            "path_61",
+            "path_60",
+            "path_59",
+            "path_58",
+            "path_57",
+            "path_56"
+          ],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 21,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": ["rect_19", "rect_18", "rect_17", "rect_16", "rect_15"],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 31,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": ["path_4", "path_5", "path_3", "path_2", "path_1", "path"],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 29,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": ["rect_9", "rect_12", "rect_14", "rect_15"],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 9,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "path_22",
+            "path_12",
+            "path_26",
+            "path_18",
+            "path_7",
+            "path_33"
+          ],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 8,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": ["path"],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 30,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "rect_2",
+            "polygon_20",
+            "rect_1",
+            "polygon_21",
+            "polygon_1",
+            "polygon",
+            "polygon_2",
+            "rect",
+            "polygon_5",
+            "polygon_4",
+            "polygon_6",
+            "polygon_3",
+            "polygon_7",
+            "polygon_8",
+            "polygon_11",
+            "polygon_15",
+            "polygon_10",
+            "polygon_9",
+            "polygon_14",
+            "polygon_19",
+            "polygon_12",
+            "polygon_13",
+            "polygon_18",
+            "polygon_17",
+            "polygon_16"
+          ],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 33,
+      "groups": []
+    },
+    {
+      "stepId": 5,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "circle_65",
+            "line_77",
+            "line_12",
+            "line_18",
+            "line_63",
+            "line_28",
+            "line_34",
+            "line_42",
+            "line_71",
+            "line_51",
+            "line_59",
+            "line_8"
+          ],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        }
+      ]
+    }
+  ]
+}

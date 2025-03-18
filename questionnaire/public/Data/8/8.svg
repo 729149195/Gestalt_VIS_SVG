@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='us-ascii'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="340" viewBox="-440,-170,880,340" style="max-width: 100%; height: auto; font: 10px sans-serif;">
+    <circle cx="0" cy="0" r="100" fill="none" stroke="lightgray" stroke-width="2" id="circle" />
+    <path d="M-100,0 A100,100 0 0,1 100,0 L60,60 A60,60 0 0,0 -60,60 Z" fill="skyblue" stroke="none" id="path_4" />
+    <path d="M100,0 A100,100 0 0,1 0,100 L-60,60 A60,60 0 0,0 60,60 Z" fill="lightgreen" stroke="none" id="path_3" />
+    <path d="M0,100 A100,100 0 0,1 -100,0 L-60,-60 A60,60 0 0,0 -60,60 Z" fill="salmon" stroke="none" id="path_2" />
+    <path d="M-100,0 A100,100 0 0,1 0,-100 L60,-60 A60,60 0 0,0 -60,-60 Z" fill="plum" stroke="none" id="path_1" />
+    <path d="M0,-100 A100,100 0 0,1 100,0 L60,-60 A60,60 0 0,0 60,60 Z" fill="gold" stroke="none" id="path" />
+</svg>
