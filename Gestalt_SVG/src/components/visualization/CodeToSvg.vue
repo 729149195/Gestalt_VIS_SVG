@@ -13,7 +13,7 @@
             <input type="file" ref="fileInput" accept=".svg" class="hidden-input" @change="handleFileChange">
             <div class="header-upload-content">
               <v-icon size="24" class="upload-icon">mdi-cloud-upload-outline</v-icon>
-              <span class="upload-text">Select SVG file here</span>
+              <span class="upload-text font-weight-bold">Select SVG file here</span>
               <div v-if="file" class="file-info">
                 <span class="file-name">{{ file.name }}</span>
                 <span class="file-size">{{ formatFileSize(file.size) }}</span>
@@ -68,7 +68,7 @@
             <input type="file" ref="fileInput" accept=".svg" class="hidden-input" @change="handleFileChange">
             <div class="header-upload-content">
               <v-icon size="24" class="upload-icon">mdi-cloud-upload-outline</v-icon>
-              <span class="upload-text">Select SVG file here</span>
+              <span class="upload-text font-weight-bold">Select SVG file here</span>
               <div v-if="file" class="file-info">
                 <span class="file-name">{{ file.name }}</span>
                 <span class="file-size">{{ formatFileSize(file.size) }}</span>
@@ -115,7 +115,6 @@ import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import { useStore } from 'vuex'
-import { Upload } from '@element-plus/icons-vue'
 import axios from 'axios'
 
 // 配置 Monaco Editor 的 Web Worker
@@ -1054,6 +1053,20 @@ const handleSvgContentUpdated = async (event) => {
 // 生成SVG并上传到分析器
 const generateAndUpload = async () => {
   try {
+    // 先清除原有文件
+    await axios.post('http://127.0.0.1:5000/clear_upload_folder')
+      .then(response => {
+        if (response.data.success) {
+          console.log('Upload folder cleared successfully')
+        } else {
+          console.warn('Failed to clear upload folder:', response.data.error)
+        }
+      })
+      .catch(error => {
+        console.error('Error clearing upload folder:', error)
+        // 即使清除文件夹失败，我们仍然继续上传流程
+      })
+
     // 根据当前模式获取要上传的内容
     let contentToUpload = ''
 
@@ -1290,6 +1303,27 @@ const formatFileSize = (bytes) => {
 // 上传文件
 const uploadFile = () => {
   if (!file.value) return
+  
+  // 先清除原有文件
+  axios.post('http://127.0.0.1:5000/clear_upload_folder')
+    .then(response => {
+      if (response.data.success) {
+        console.log('Upload folder cleared successfully')
+      } else {
+        console.warn('Failed to clear upload folder:', response.data.error)
+      }
+    })
+    .catch(error => {
+      console.error('Error clearing upload folder:', error)
+    })
+    .finally(() => {
+      // 继续上传流程
+      proceedWithUpload()
+    })
+}
+
+// 处理上传流程
+const proceedWithUpload = () => {
   const formData = new FormData()
 
   // 创建新的File对象，添加uploaded_前缀
@@ -2300,7 +2334,7 @@ const uploadFile = () => {
 .upload-text {
   color: #1d1d1f;
   font-size: 1.1em;
-  font-weight: 400;
+  font-weight: 700 !important; /* 由 400 改为 700，加粗文本 */
   white-space: nowrap;
 }
 

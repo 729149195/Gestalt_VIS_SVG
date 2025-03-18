@@ -1,8 +1,13 @@
 [
     {
-        "tag": "circle",
-        "num": 81,
+        "tag": "rect",
+        "num": 37,
         "visible": true
+    },
+    {
+        "tag": "g",
+        "num": 1,
+        "visible": false
     },
     {
         "tag": "svg",

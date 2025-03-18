@@ -41,10 +41,49 @@
             <!-- 下部区域：select pannel -->
             <div class="bottom-panel">
                 <div v-if="visibleElements.length > 0" class="element-selector">
-                    <div class="selector-header">
-                        <h3 class="mac-style-title">Select panel</h3>
-                        <!-- 将选择模式按钮放到标题下方 -->
-                        <div class="selection-mode-container">
+                    <div class="select-panel-layout">
+                        <!-- 左侧Select Panel标题 -->
+                        <div class="select-panel-title">
+                            <div style="font-weight: 600;">Select</div>
+                            <div style="font-weight: 600;">Panel</div>
+                        </div>
+
+                        <!-- 中间分隔线 -->
+                        <div class="vertical-divider"></div>
+
+                        <!-- 中间表格 -->
+                        <div class="element-type-table">
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td class="element-type-table-header" style="font-weight: 700;">Element types</td>
+                                        <td v-for="element in visibleElements" :key="element.id">
+                                            <v-checkbox v-model="selectedElements" :value="element.id" hide-details density="compact" class="mac-style-checkbox">
+                                                <template v-slot:label>
+                                                    <span class="element-tag">{{ element.tag }}</span>
+                                                </template>
+                                            </v-checkbox>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="element-type-table-header" style="font-weight: 700;">#In the perception scope</td>
+                                        <td v-for="element in visibleElements" :key="element.id">
+                                            {{ element.count }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="element-type-table-header" style="font-weight: 700;">#In the selected group</td>
+                                        <td v-for="element in visibleElements" :key="element.id">
+                                            {{ getSelectedCountForType(element.tag) }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 右侧分隔线 -->
+                        <div class="vertical-divider" style="margin-left: 60px;"></div>
+                        <div class="selection-mode-buttons">
                             <v-btn @click.stop="setSelectionMode('click')" class="selection-mode-btn" :class="{ 'active-mode': selectionMode === 'click' }">
                                 <v-icon>mdi-cursor-default-click</v-icon>
                                 <span class="selection-text">Click</span>
@@ -54,23 +93,12 @@
                                 <span class="selection-text">Lasso</span>
                             </v-btn>
                         </div>
-                    </div>
-                    <div class="button-container">
-                        <!-- 元素类型选择器占据主要空间 -->
-                        <div class="element-type-selector">
-                            <div class="element-types-title">
-                                <div>Element</div>
-                                <div>types</div>
-                            </div>
-                            <div class="selector-content">
-                                <div class="horizontal-list">
-                                    <div v-for="element in visibleElements" :key="element.id" class="element-type-item">
-                                        <v-checkbox v-model="selectedElements" :label="`${element.tag} (${element.count}|${getSelectedCountForType(element.tag)})`" :value="element.id" hide-details class="mac-style-checkbox"></v-checkbox>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
+                        <!-- 右侧分隔线 -->
+                        <div class="vertical-divider"></div>
+
+                        <!-- 右侧按钮 -->
+                        <!-- 视觉显著性指示器 -->
                         <div class="visual-salience-indicator" @click="showSalienceDetail">
                             <span class="salience-label">Salience</span>
                             <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
@@ -1223,7 +1251,7 @@ watch(scopeNodes, () => {
 /* 上部区域样式 */
 .top-panel {
     display: flex;
-    flex: 5.3;
+    flex: 7;
     gap: 12px;
     width: 100%;
 }
@@ -1234,12 +1262,11 @@ watch(scopeNodes, () => {
     background: rgba(248, 248, 248, 0.5);
     border-radius: 12px;
     border: 1px solid rgba(200, 200, 200, 0.3);
-    padding: 12px;
+    padding: 2px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-height: 120px;
-    max-height: 160px;
+   min-height: 75px;
 }
 
 .left-panel {
@@ -1596,8 +1623,10 @@ watch(scopeNodes, () => {
     flex-wrap: wrap;
     gap: 4px;
     padding: 4px;
-    justify-content: center; /* 水平居中 */
-    align-items: center; /* 垂直居中 */
+    justify-content: center;
+    /* 水平居中 */
+    align-items: center;
+    /* 垂直居中 */
 }
 
 .element-type-item {
@@ -1606,7 +1635,8 @@ watch(scopeNodes, () => {
     margin-right: 4px;
     margin-bottom: 2px;
     display: flex;
-    justify-content: center; /* 内容水平居中 */
+    justify-content: center;
+    /* 内容水平居中 */
 }
 
 .selector-content::-webkit-scrollbar {
@@ -1634,17 +1664,28 @@ watch(scopeNodes, () => {
     justify-content: space-between;
     gap: 4px;
     width: 100%;
-    height: 100%; /* 占满可用高度 */
+    height: 100%;
+    /* 占满可用高度 */
+}
+
+.selection-mode-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+    width: 130px;
+    min-width: 80px;
+    height: 100%;
 }
 
 .selection-mode-btn {
     border-radius: 6px;
     color: #aa7134;
     font-weight: 500;
-    letter-spacing: 0.3px;
+    letter-spacing: 0;
     transition: all 0.3s ease;
     text-transform: none;
-    padding: 2px 8px !important;
+    padding: 0px 4px !important;
     background-color: rgba(255, 255, 255, 0.7) !important;
     border: 1px solid rgba(144, 95, 41, 0.2);
     width: 100%;
@@ -1652,10 +1693,9 @@ watch(scopeNodes, () => {
     align-items: center;
     justify-content: center;
     font-size: 0.85em;
-    flex: 1; /* 自动填充可用空间 */
-    margin-bottom: 0;
-    max-height: calc(50% - 2px); /* 确保不会超出容器 */
-    min-height: 30px; /* 最小高度保证 */
+    margin: 0;
+    height: calc(50% - 2px);
+    min-height: 0;
 }
 
 .selection-mode-btn:hover {
@@ -1670,10 +1710,132 @@ watch(scopeNodes, () => {
     box-shadow: 0 2px 5px rgba(144, 95, 41, 0.3);
 }
 
+.select-panel-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+    height: 100%;
+    width: 100%;
+    padding: 4px;
+}
+
+.select-panel-title {
+    font-size: 1.3em;
+    color: #1d1d1f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    min-width: 55px;
+    padding: 0 15px;
+    text-align: left;
+    line-height: 1.5;
+}
+
+.vertical-divider {
+    width: 1px;
+    height: auto;
+    background-color: rgba(144, 95, 41, 0.2);
+    margin: 0 6px 0 6px;
+}
+
+.element-type-table {
+    flex: 1;
+    overflow: auto;
+    max-height: 100%;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    color: #1d1d1f;
+}
+
+.element-type-table table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+}
+
+.element-type-table tbody {
+    height: 100%;
+}
+
+.element-type-table tr {
+    height: 33.33%;
+}
+
+.element-type-table td {
+    padding: 0 4px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    font-size: 0.85em;
+    line-height: 1;
+    height: 33.33%;
+}
+
+.element-type-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: #905F29 !important; /* 使用主题色 */
+    width: 120px; /* 从170px减小到130px */
+    padding-left: 0;
+}
+
+.element-tag {
+    font-weight: 500;
+    color: #1d1d1f;
+    font-size: 0.85em;
+    line-height: 1;
+}
+
 .selection-text {
-    font-size: 0.95em;
+    font-size: 1.2em;
     font-weight: 600;
     color: inherit;
+    margin-left: 4px;
+    white-space: nowrap;
+}
+
+.selection-mode-btn .v-icon {
+    font-size: 16px;
+}
+
+/* 确保复选框内容居中且不影响布局 */
+.mac-style-checkbox {
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    line-height: 1;
+}
+
+.mac-style-checkbox :deep(.v-selection-control) {
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    height: auto;
+}
+
+.mac-style-checkbox :deep(.v-selection-control__wrapper) {
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    height: auto;
+}
+
+.mac-style-checkbox :deep(.v-label) {
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    height: auto;
 }
 
 .lasso-cursor {
@@ -1695,10 +1857,10 @@ watch(scopeNodes, () => {
 /* 修改视觉显著性指示器样式，使其与按钮区域高度一致且响应式 */
 .visual-salience-indicator {
     position: relative;
-    font-size: 1.6em;
+    font-size: 1.2em;
     font-weight: 800;
     color: #905F29;
-    padding: 8px 4px;
+    padding: 5px 2px;
     border-radius: 8px;
     background: rgba(144, 95, 41, 0.08);
     border: 1px solid rgba(144, 95, 41, 0.2);
@@ -1706,17 +1868,16 @@ watch(scopeNodes, () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100px;
-    flex: 0.35;
+    width: 150px;
     text-align: center;
     z-index: 5;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     height: 100%;
-    margin-top: 0;
+    margin: 0;
 }
 
 .salience-label {
-    font-size: 0.8em;
+    font-size: 1.1em;
     line-height: 1;
     margin-bottom: 2px;
     white-space: nowrap;
@@ -1726,7 +1887,7 @@ watch(scopeNodes, () => {
 }
 
 .salience-value {
-    font-size: 1em;
+    font-size: 1.3em;
     line-height: 1;
     color: #b4793a;
     white-space: nowrap;
@@ -1783,5 +1944,39 @@ watch(scopeNodes, () => {
 .mac-style-checkbox {
     display: flex;
     justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.mac-style-checkbox :deep(.v-selection-control) {
+    margin: 0;
+    padding: 0;
+    min-height: auto;
+}
+
+/* 表格相关样式修正 */
+.element-type-table {
+    display: flex;
+    flex-direction: column;
+    
+}
+
+.element-type-table table {
+    table-layout: fixed;
+    flex: 1;
+}
+
+.element-type-table tbody {
+    height: 100%;
+}
+
+
+.element-type-table td {
+    height: 22px;
+}
+
+.element-type-table-header{
+    color: #1d1d1f;
+    font-weight: 600;
 }
 </style>
