@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800" height="600">
+    <!-- 标题 -->
+    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">员工工作满意度雷达图</text>
+    
+    <!-- 背景和网格 -->
+    <g transform="translate(400, 300)">
+        <!-- 五个层级的五边形 -->
+        <polygon points="0,-200 190.2,-61.8 117.6,161.8 -117.6,161.8 -190.2,-61.8" fill="none" stroke="#e0e0e0" stroke-width="1" />
+        <polygon points="0,-160 152.2,-49.4 94.1,129.4 -94.1,129.4 -152.2,-49.4" fill="none" stroke="#e0e0e0" stroke-width="1" />
+        <polygon points="0,-120 114.1,-37.1 70.6,97.1 -70.6,97.1 -114.1,-37.1" fill="none" stroke="#e0e0e0" stroke-width="1" />
+        <polygon points="0,-80 76.1,-24.7 47.1,64.7 -47.1,64.7 -76.1,-24.7" fill="none" stroke="#e0e0e0" stroke-width="1" />
+        <polygon points="0,-40 38,-12.4 23.5,32.4 -23.5,32.4 -38,-12.4" fill="none" stroke="#e0e0e0" stroke-width="1" />
+        
+        <!-- 中心点 -->
+        <circle cx="0" cy="0" r="3" fill="#616161" />
+        
+        <!-- 轴线 -->
+        <line x1="0" y1="0" x2="0" y2="-200" stroke="#9e9e9e" stroke-width="1" />
+        <line x1="0" y1="0" x2="190.2" y2="-61.8" stroke="#9e9e9e" stroke-width="1" />
+        <line x1="0" y1="0" x2="117.6" y2="161.8" stroke="#9e9e9e" stroke-width="1" />
+        <line x1="0" y1="0" x2="-117.6" y2="161.8" stroke="#9e9e9e" stroke-width="1" />
+        <line x1="0" y1="0" x2="-190.2" y2="-61.8" stroke="#9e9e9e" stroke-width="1" />
+        
+        <!-- 数据多边形 -->
+        <polygon points="0,-160 152.2,-49.4 70.6,97.1 -70.6,129.4 -152.2,-37.1" fill="#2196f3" fill-opacity="0.3" stroke="#2196f3" stroke-width="2" />
+        
+        <!-- 数据点 -->
+        <circle cx="0" cy="-160" r="5" fill="#2196f3" />
+        <circle cx="152.2" cy="-49.4" r="5" fill="#2196f3" />
+        <circle cx="70.6" cy="97.1" r="5" fill="#2196f3" />
+        <circle cx="-70.6" cy="129.4" r="5" fill="#2196f3" />
+        <circle cx="-152.2" cy="-37.1" r="5" fill="#2196f3" />
+        
+        <!-- 标签 -->
+        <text x="0" y="-215" font-family="Arial" font-size="14" text-anchor="middle">工作环境</text>
+        <text x="205" y="-61.8" font-family="Arial" font-size="14" text-anchor="start">薪资满意度</text>
+        <text x="130" y="176.8" font-family="Arial" font-size="14" text-anchor="middle">工作生活平衡</text>
+        <text x="-130" y="176.8" font-family="Arial" font-size="14" text-anchor="middle">团队协作</text>
+        <text x="-215" y="-61.8" font-family="Arial" font-size="14" text-anchor="end">职业发展</text>
+    </g>
+    
+    <!-- 图例 -->
+    <rect x="600" y="520" width="150" height="50" fill="white" stroke="#e0e0e0" stroke-width="1" rx="3" ry="3" />
+    <text x="675" y="540" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">图例</text>
+    
+    <rect x="620" y="555" width="20" height="5" fill="#2196f3" />
+    <text x="650" y="560" font-family="Arial" font-size="12" text-anchor="start">满意度得分</text>
+    
+    <!-- 注解 -->
+    <text x="400" y="550" font-family="Arial" font-size="14" text-anchor="middle">数据来源: 2023年第二季度员工满意度调查 (n=487)</text>
+</svg> 
