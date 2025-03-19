@@ -1,0 +1,243 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="340" viewBox="0,0,1300,700" id="svg">
+  <g transform="translate(0,0)">
+    <rect data-testid="node.viz" width="405" height="273" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,273)">
+    <rect data-testid="node.colors" width="405" height="131" fill-opacity="0.35" fill="#b2df8a" stroke="rgb(178, 223, 138)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,404)">
+    <rect data-testid="node.utils" width="405" height="276" fill-opacity="0.35" fill="#33a02c" stroke="rgb(51, 160, 44)" stroke-width="2"/>
+  </g>
+  <g transform="translate(405,0)">
+    <rect data-testid="node.generators" width="408" height="144" fill-opacity="0.35" fill="#fb9a99" stroke="rgb(251, 154, 153)" stroke-width="2"/>
+  </g>
+  <g transform="translate(405,144)">
+    <rect data-testid="node.set" width="408" height="536" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(813,0)">
+    <rect data-testid="node.text" width="233" height="680" fill-opacity="0.35" fill="#fdbf6f" stroke="rgb(253, 191, 111)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1046,0)">
+    <rect data-testid="node.misc" width="300" height="680" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,0)">
+    <rect data-testid="node.stack" width="405" height="95" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,95)">
+    <rect data-testid="node.ppie" width="405" height="178" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,273)">
+    <rect data-testid="node.rgb" width="199" height="131" fill-opacity="0.35" fill="#b2df8a" stroke="rgb(178, 223, 138)" stroke-width="2"/>
+  </g>
+  <g transform="translate(199,273)">
+    <rect data-testid="node.hsl" width="206" height="131" fill-opacity="0.35" fill="#b2df8a" stroke="rgb(178, 223, 138)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,404)">
+    <rect data-testid="node.randomize" width="130" height="170" fill-opacity="0.35" fill="#33a02c" stroke="rgb(51, 160, 44)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,574)">
+    <rect data-testid="node.resetClock" width="130" height="106" fill-opacity="0.35" fill="#33a02c" stroke="rgb(51, 160, 44)" stroke-width="2"/>
+  </g>
+  <g transform="translate(130,404)">
+    <rect data-testid="node.noop" width="147" height="166" fill-opacity="0.35" fill="#33a02c" stroke="rgb(51, 160, 44)" stroke-width="2"/>
+  </g>
+  <g transform="translate(277,404)">
+    <rect data-testid="node.tick" width="128" height="166" fill-opacity="0.35" fill="#33a02c" stroke="rgb(51, 160, 44)" stroke-width="2"/>
+  </g>
+  <g transform="translate(130,570)">
+    <rect data-testid="node.forceGC" width="206" height="110" fill-opacity="0.35" fill="#33a02c" stroke="rgb(51, 160, 44)" stroke-width="2"/>
+  </g>
+  <g transform="translate(336,570)">
+    <rect data-testid="node.stackTrace" width="7" height="110" fill-opacity="0.35" fill="#33a02c" stroke="rgb(51, 160, 44)" stroke-width="2"/>
+  </g>
+  <g transform="translate(343,570)">
+    <rect data-testid="node.dbg" width="62" height="110" fill-opacity="0.35" fill="#33a02c" stroke="rgb(51, 160, 44)" stroke-width="2"/>
+  </g>
+  <g transform="translate(405,0)">
+    <rect data-testid="node.address" width="63" height="130" fill-opacity="0.35" fill="#fb9a99" stroke="rgb(251, 154, 153)" stroke-width="2"/>
+  </g>
+  <g transform="translate(405,130)">
+    <rect data-testid="node.city" width="63" height="14" fill-opacity="0.35" fill="#fb9a99" stroke="rgb(251, 154, 153)" stroke-width="2"/>
+  </g>
+  <g transform="translate(468,0)">
+    <rect data-testid="node.animal" width="199" height="51" fill-opacity="0.35" fill="#fb9a99" stroke="rgb(251, 154, 153)" stroke-width="2"/>
+  </g>
+  <g transform="translate(468,51)">
+    <rect data-testid="node.movie" width="199" height="93" fill-opacity="0.35" fill="#fb9a99" stroke="rgb(251, 154, 153)" stroke-width="2"/>
+  </g>
+  <g transform="translate(667,0)">
+    <rect data-testid="node.user" width="146" height="144" fill-opacity="0.35" fill="#fb9a99" stroke="rgb(251, 154, 153)" stroke-width="2"/>
+  </g>
+  <g transform="translate(405,144)">
+    <rect data-testid="node.clone" width="54" height="140" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(459,144)">
+    <rect data-testid="node.intersect" width="160" height="140" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(619,144)">
+    <rect data-testid="node.merge" width="194" height="140" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(405,284)">
+    <rect data-testid="node.reverse" width="122" height="215" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(405,499)">
+    <rect data-testid="node.toArray" width="122" height="150" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(405,649)">
+    <rect data-testid="node.toObject" width="122" height="31" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(527,284)">
+    <rect data-testid="node.fromCSV" width="49" height="129" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(576,284)">
+    <rect data-testid="node.slice" width="178" height="129" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(754,284)">
+    <rect data-testid="node.append" width="59" height="129" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(527,413)">
+    <rect data-testid="node.prepend" width="197" height="120" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(527,533)">
+    <rect data-testid="node.shuffle" width="197" height="147" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(724,413)">
+    <rect data-testid="node.pick" width="89" height="104" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(724,517)">
+    <rect data-testid="node.plouc" width="89" height="163" fill-opacity="0.35" fill="#e31a1c" stroke="rgb(227, 26, 28)" stroke-width="2"/>
+  </g>
+  <g transform="translate(813,0)">
+    <rect data-testid="node.trim" width="144" height="207" fill-opacity="0.35" fill="#fdbf6f" stroke="rgb(253, 191, 111)" stroke-width="2"/>
+  </g>
+  <g transform="translate(957,0)">
+    <rect data-testid="node.slugify" width="89" height="207" fill-opacity="0.35" fill="#fdbf6f" stroke="rgb(253, 191, 111)" stroke-width="2"/>
+  </g>
+  <g transform="translate(813,207)">
+    <rect data-testid="node.snakeCase" width="4" height="34" fill-opacity="0.35" fill="#fdbf6f" stroke="rgb(253, 191, 111)" stroke-width="2"/>
+  </g>
+  <g transform="translate(817,207)">
+    <rect data-testid="node.camelCase" width="229" height="34" fill-opacity="0.35" fill="#fdbf6f" stroke="rgb(253, 191, 111)" stroke-width="2"/>
+  </g>
+  <g transform="translate(813,241)">
+    <rect data-testid="node.repeat" width="122" height="234" fill-opacity="0.35" fill="#fdbf6f" stroke="rgb(253, 191, 111)" stroke-width="2"/>
+  </g>
+  <g transform="translate(935,241)">
+    <rect data-testid="node.padLeft" width="111" height="234" fill-opacity="0.35" fill="#fdbf6f" stroke="rgb(253, 191, 111)" stroke-width="2"/>
+  </g>
+  <g transform="translate(813,475)">
+    <rect data-testid="node.padRight" width="139" height="118" fill-opacity="0.35" fill="#fdbf6f" stroke="rgb(253, 191, 111)" stroke-width="2"/>
+  </g>
+  <g transform="translate(813,593)">
+    <rect data-testid="node.sanitize" width="139" height="87" fill-opacity="0.35" fill="#fdbf6f" stroke="rgb(253, 191, 111)" stroke-width="2"/>
+  </g>
+  <g transform="translate(952,475)">
+    <rect data-testid="node.ploucify" width="94" height="205" fill-opacity="0.35" fill="#fdbf6f" stroke="rgb(253, 191, 111)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1046,0)">
+    <rect data-testid="node.greetings" width="300" height="198" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1046,198)">
+    <rect data-testid="node.other" width="2" height="482" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1048,198)">
+    <rect data-testid="node.path" width="298" height="482" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,0)">
+    <rect data-testid="node.cchart" width="33" height="95" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(33,0)">
+    <rect data-testid="node.xAxis" width="128" height="95" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(161,0)">
+    <rect data-testid="node.yAxis" width="236" height="95" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(397,0)">
+    <rect data-testid="node.layers" width="8" height="95" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,95)">
+    <rect data-testid="node.chart" width="395" height="178" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(395,95)">
+    <rect data-testid="node.legends" width="10" height="178" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1046,0)">
+    <rect data-testid="node.hey" width="248" height="90" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1046,90)">
+    <rect data-testid="node.HOWDY" width="248" height="108" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1294,0)">
+    <rect data-testid="node.aloha" width="52" height="156" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1294,156)">
+    <rect data-testid="node.AHOY" width="52" height="42" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1048,198)">
+    <rect data-testid="node.pathA" width="102" height="236" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1150,198)">
+    <rect data-testid="node.pathB" width="196" height="236" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1048,434)">
+    <rect data-testid="node.pathC" width="298" height="246" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,95)">
+    <rect data-testid="node.pie" width="241" height="178" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(241,95)">
+    <rect data-testid="node.donut" width="29" height="178" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(270,95)">
+    <rect data-testid="node.gauge" width="125" height="178" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1150,198)">
+    <rect data-testid="node.pathB1" width="115" height="109" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1265,198)">
+    <rect data-testid="node.pathB2" width="81" height="109" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1150,307)">
+    <rect data-testid="node.pathB3" width="196" height="3" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1150,310)">
+    <rect data-testid="node.pathB4" width="196" height="124" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1048,434)">
+    <rect data-testid="node.pathC1" width="78" height="227" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1048,661)">
+    <rect data-testid="node.pathC2" width="78" height="19" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1126,434)">
+    <rect data-testid="node.pathC3" width="63" height="113" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1189,434)">
+    <rect data-testid="node.pathC4" width="43" height="113" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1232,434)">
+    <rect data-testid="node.pathC5" width="53" height="113" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1285,434)">
+    <rect data-testid="node.pathC6" width="61" height="113" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1126,547)">
+    <rect data-testid="node.pathC7" width="170" height="133" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1296,547)">
+    <rect data-testid="node.pathC8" width="50" height="92" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(1296,639)">
+    <rect data-testid="node.pathC9" width="50" height="41" fill-opacity="0.35" fill="#ff7f00" stroke="rgb(255, 127, 0)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,95)">
+    <rect data-testid="node.outline" width="199" height="74" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(0,169)">
+    <rect data-testid="node.slices" width="199" height="104" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+  <g transform="translate(199,95)">
+    <rect data-testid="node.bbox" width="42" height="178" fill-opacity="0.35" fill="#1f78b4" stroke="rgb(31, 120, 180)" stroke-width="2"/>
+  </g>
+</svg>
