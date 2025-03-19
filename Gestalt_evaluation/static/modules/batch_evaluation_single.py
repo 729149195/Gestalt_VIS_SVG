@@ -1132,8 +1132,8 @@ class EnhancedBatchEvaluator:
             # svg_files = ['1.svg']
             
             # 跳过1.svg和11.svg文件
-            svg_files = [f for f in svg_files if f not in ['1.svg', '11.svg']]
-            # svg_files = [f for f in svg_files]
+            # svg_files = [f for f in svg_files if f not in ['1.svg', '11.svg']]
+            svg_files = [f for f in svg_files]
             
             # 批量处理
             print("开始批量评估...")
