@@ -32,7 +32,7 @@
                     <div class="svg-container mac-style-container display-svg" ref="displaySvgContainer">
                         <div v-html="displaySvgContent"></div>
                         <div class="visual-salience-indicator" @click="showSalienceDetail">
-                            <span class="salience-label">Salience</span>
+                            <span class="salience-label">Visual salience</span>
                             <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
                             <span class="salience-value" v-else>--.---</span>
                         </div>
@@ -1856,8 +1856,7 @@ watch(scopeNodes, () => {
     position: absolute;
     bottom: 15px;
     left: 15px;
-    font-size: 1.2em;
-    font-weight: 800;
+    font-size: 1.1em;
     color: #905F29;
     padding: 6px 12px;
     border-radius: 8px;
@@ -1867,7 +1866,7 @@ watch(scopeNodes, () => {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    max-width: 200px;
+    max-width: 250px;
     text-align: center;
     z-index: 100;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -1876,9 +1875,7 @@ watch(scopeNodes, () => {
 
 .salience-label {
     font-size: 1.1em;
-
     opacity: 0.8;
-    font-weight: 700;
     margin-right: 8px;
 }
 

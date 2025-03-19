@@ -17,9 +17,9 @@
                 </div>
                 <div class="salience-legend">
                     <span class="legend-label">Salience：</span>
-                    <span class="legend-text">0</span>
+                    <span class="legend-text">1</span>
                     <div class="legend-gradient"></div>
-                    <span class="legend-text">100</span>
+                    <span class="legend-text">{{ maxSalienceValue }}</span>
                 </div>
             </div>
         </div>
@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
 import CoreSubgroupVisualization from './core_SubgroupVisualization.vue';
@@ -40,6 +40,27 @@ const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 const checkbox = ref(false);
 const originalSvgContent = ref(''); // 存储原始SVG内容的ref
+
+// 添加一个ref来存储最新的显著性数据
+const salienceData = ref([]);
+
+// 计算视觉显著性的最大值
+const maxSalienceValue = computed(() => {
+    if (!salienceData.value || !Array.isArray(salienceData.value) || salienceData.value.length === 0) {
+        return 'Max';
+    }
+    // 返回数据中的最大显著性值
+    const maxSalience = Math.max(...salienceData.value.map(item => parseFloat(item.salienceValue)));
+    return maxSalience.toFixed(3);
+});
+
+// 获取最新的显著性数据
+function updateSalienceData() {
+    const storeData = store.state.visualSalience;
+    if (storeData && Array.isArray(storeData) && storeData.length > 0) {
+        salienceData.value = [...storeData];
+    }
+}
 
 // 获取原始SVG内容的函数
 async function fetchOriginalSvg() {
@@ -611,10 +632,19 @@ onMounted(async () => {
     try {
         await fetchOriginalSvg(); // 首先获取原始SVG内容
         window.addEventListener('keydown', handleKeyDown);
+        // 加载完成后更新显著性数据
+        updateSalienceData();
     } catch (error) {
         console.error('Error in onMounted:', error);
     }
 });
+
+// 监听Vuex store中visualSalience的变化
+watch(() => store.state.visualSalience, (newValue) => {
+    if (newValue && Array.isArray(newValue)) {
+        salienceData.value = [...newValue];
+    }
+}, { deep: true, immediate: true });
 
 onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyDown);

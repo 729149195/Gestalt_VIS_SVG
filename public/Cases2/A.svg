@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" width="1486" height="1105" style="position: absolute; left: 0px; top: 0px; user-select: none;">
     <!-- 标题 -->
-    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">质量监控数据分析 - 产品尺寸散点图</text>
+    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">Quality Control Data Analysis - Scatterplot of Product Dimensions</text>
     
     <!-- 坐标轴 -->
     <line x1="100" y1="500" x2="700" y2="500" stroke="black" stroke-width="2" />
@@ -46,8 +46,8 @@
     <text x="85" y="105" font-family="Arial" font-size="12" text-anchor="end">100</text>
     
     <!-- 轴标签 -->
-    <text x="400" y="555" font-family="Arial" font-size="16" text-anchor="middle">长度 (mm)</text>
-    <text x="45" y="300" font-family="Arial" font-size="16" text-anchor="middle" transform="rotate(-90, 45, 300)">直径 (mm)</text>
+    <text x="400" y="555" font-family="Arial" font-size="16" text-anchor="middle">Length (mm)</text>
+    <text x="45" y="300" font-family="Arial" font-size="16" text-anchor="middle" transform="rotate(-90, 45, 300)">Diameter (mm)</text>
     
     <!-- 网格线 -->
     <g stroke="#dddddd" stroke-dasharray="5,5">

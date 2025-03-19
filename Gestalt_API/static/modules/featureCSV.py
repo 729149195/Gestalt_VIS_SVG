@@ -45,7 +45,21 @@ class SVGParser:
         return tree, root
 
     def extract_element_info(self, element):
+        # 检查是否是注释节点或其他特殊节点
+        if not hasattr(element, 'tag'):
+            return "comment", {}, None
+            
         tag_with_namespace = element.tag
+        
+        # 检查tag_with_namespace是否为字符串类型
+        if not isinstance(tag_with_namespace, str):
+            # 如果不是字符串，尝试转换或使用备用方案
+            try:
+                tag_with_namespace = str(tag_with_namespace)
+            except:
+                # 如果无法转换，使用元素的名称作为备用
+                tag_with_namespace = element.get('name', 'unknown')
+        
         tag_without_namespace = tag_with_namespace.split("}")[-1] if '}' in tag_with_namespace else tag_with_namespace
 
         if tag_without_namespace != "svg":
@@ -60,9 +74,18 @@ class SVGParser:
             full_tag = tag_without_namespace
 
         attributes = element.attrib
-        text_content = element.text.strip() if element.text else None
+        
+        # 检查text属性是否为字符串
+        element_text = element.text
+        if element_text is not None and not isinstance(element_text, str):
+            try:
+                element_text = str(element_text)
+            except:
+                element_text = ""
+                
+        text_content = element_text.strip() if element_text else None
 
-        return full_tag, attributes, element.text
+        return full_tag, attributes, element_text
 
     def add_element_to_graph(self, element, parent_path='0', level=0, layer="0"):
         tag, attributes, text_content = self.extract_element_info(element)
@@ -80,6 +103,10 @@ class SVGParser:
 
         new_layer_counter = 0
         for child in reversed(element):
+            # 跳过注释节点和其他非元素节点
+            if not hasattr(child, 'tag') or not isinstance(child.tag, str):
+                continue
+                
             child_layer = f"{layer}_{new_layer_counter}"
             self.add_element_to_graph(child, parent_path=current_path, level=level + 1, layer=child_layer)
             new_layer_counter += 1
@@ -91,7 +118,15 @@ class SVGParser:
         tree, svg_root = SVGParser.parse_svg(self.file_path)
         self.build_graph(svg_root)
         for elem in svg_root.iter():
-            elem.tag = elem.tag.split('}', 1)[-1]
+            # 跳过注释节点和其他非元素节点
+            if not hasattr(elem, 'tag') or not isinstance(elem.tag, str):
+                continue
+                
+            # 对于元素节点，处理命名空间
+            if '}' in elem.tag:
+                elem.tag = elem.tag.split('}', 1)[-1]
+                
+            # 处理属性中的命名空间
             attribs = list(elem.attrib.items())
             for k, v in attribs:
                 if k.startswith('{'):
@@ -112,7 +147,12 @@ class LayerDataExtractor:
 
         children = list(element)
         for index, child in enumerate(children):
-            child_tag = child.tag.split('}')[-1]
+            # 跳过注释节点和其他非元素节点
+            if not hasattr(child, 'tag') or not isinstance(child.tag, str):
+                continue
+                
+            # 处理标签
+            child_tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
             child_layer = f"{index}"
             child_path = f"{current_path}/{child_layer}"
             self.extract_layers(child, child_path)
@@ -322,7 +362,17 @@ def is_visible(element):
 def extract_features(element, layer_extractor, current_transform='', current_color='black'):
     # 过滤不处理的标签
     filter_tags = {'defs', 'symbol', 'clipPath', 'mask'}  # 根据需求调整过滤的标签
-    tag_without_namespace = element.tag.split('}')[-1]
+    
+    # 检查元素是否有tag属性
+    if not hasattr(element, 'tag'):
+        return None
+        
+    # 处理tag，确保是字符串
+    if not isinstance(element.tag, str):
+        return None
+        
+    tag_without_namespace = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+    
     # 如果元素的标签在过滤列表中，视为不可见元素
     if tag_without_namespace in filter_tags:
         return None
@@ -472,6 +522,13 @@ def get_transformed_bbox(element, current_transform=''):
     fill_area = 0.0
     stroke_area = 0.0
     
+    # 检查元素是否有tag属性
+    if not hasattr(element, 'tag') or not isinstance(element.tag, str):
+        return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    
+    # 获取标签名，处理可能的命名空间
+    tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+    
     stroke = element.attrib.get('stroke', 'currentColor')
     if stroke == 'currentColor':
         stroke = get_inherited_attribute(element, 'stroke') or 'none'
@@ -484,14 +541,14 @@ def get_transformed_bbox(element, current_transform=''):
     height = parse_length(element.attrib.get('height', '0'))
     width = parse_length(element.attrib.get('width', '0'))
     
-    if element.tag.endswith('rect'):
+    if tag == 'rect':
         x = parse_length(element.attrib.get('x', 0))
         y = parse_length(element.attrib.get('y', 0))
         bbox = [(x, y), (x + width, y), (x, y + height), (x + width, y + height)]
         fill_area = width * height
         stroke_area = 2 * (width + height) * stroke_width
 
-    elif element.tag.endswith('circle'):
+    elif tag == 'circle':
         cx = parse_length(element.attrib.get('cx', 0))
         cy = parse_length(element.attrib.get('cy', 0))
         r = parse_length(element.attrib.get('r', 0))
@@ -499,7 +556,7 @@ def get_transformed_bbox(element, current_transform=''):
         fill_area = np.pi * r * r
         stroke_area = 2 * np.pi * r * stroke_width
 
-    elif element.tag.endswith('ellipse'):
+    elif tag == 'ellipse':
         cx = parse_length(element.attrib.get('cx', 0))
         cy = parse_length(element.attrib.get('cy', 0))
         rx = parse_length(element.attrib.get('rx', 0))
@@ -508,7 +565,7 @@ def get_transformed_bbox(element, current_transform=''):
         fill_area = np.pi * rx * ry
         stroke_area = 2 * np.pi * (rx + ry) * stroke_width
 
-    elif element.tag.split('}')[-1] == 'line':
+    elif tag == 'line':
         x1 = parse_length(element.attrib.get('x1', 0))
         y1 = parse_length(element.attrib.get('y1', 0))
         x2 = parse_length(element.attrib.get('x2', 0))
@@ -520,8 +577,7 @@ def get_transformed_bbox(element, current_transform=''):
         fill_area = 0.0
         stroke_area = length * stroke_width
 
-    elif element.tag.split('}')[-1] == 'polyline' or element.tag.split('}')[-1] == 'polygon':
-
+    elif tag == 'polyline' or tag == 'polygon':
         points = element.attrib.get('points', '').strip().split()
         points = [tuple(map(float, point.split(','))) for point in points]
         if not points:
@@ -531,7 +587,7 @@ def get_transformed_bbox(element, current_transform=''):
         # 计算 polyline 或 polygon 的长度
         length = sum(np.sqrt((points[i + 1][0] - points[i][0]) ** 2 + (points[i + 1][1] - points[i][1]) ** 2) for i in
                      range(len(points) - 1))
-        if element.tag.endswith('polygon'):
+        if tag == 'polygon':
             # 如果是 polygon，则计算填充面积，并将最后一段的长度加入
             fill_area = 0.5 * np.abs(
                 sum(points[i][0] * points[i + 1][1] - points[i + 1][0] * points[i][1] for i in range(len(points) - 1))
@@ -542,7 +598,7 @@ def get_transformed_bbox(element, current_transform=''):
             fill_area = 0.0  # polyline 没有填充面积
         stroke_area = length * stroke_width
 
-    elif element.tag.endswith('path'):
+    elif tag == 'path':
         path_data = element.attrib.get('d', None)
         if path_data:
             path = mpl_parse_path(path_data)
@@ -569,7 +625,7 @@ def get_transformed_bbox(element, current_transform=''):
                 stroke_area = 0.0
 
     # 在 get_transformed_bbox 函数的 text 处理部分使用 parse_font_size 函数
-    elif element.tag.endswith('text'):
+    elif tag == 'text':
         text_content = element.text or ''
         bbox = [(0, 0), (0, 0), (0, 0), (0, 0)]
         fill_area = 0.0
@@ -665,9 +721,17 @@ def process_svg(file_path):
     layer_extractor.extract_layers(root)
 
     features = []
-    elements = list(root.iter())
+    elements = []
+    
+    # 筛选出实际的元素节点，跳过注释等特殊节点
+    for elem in root.iter():
+        # 跳过注释节点和其他非元素节点
+        if not hasattr(elem, 'tag') or not isinstance(elem.tag, str):
+            continue
+        elements.append(elem)
+        
     for element in tqdm(elements, total=len(elements), desc="Processing SVG Elements"):
-        tag = element.tag.split('}')[-1]
+        tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
         if tag in {'circle', 'rect', 'line', 'polyline', 'polygon', 'path', 'text', 'ellipse', 'image', 'use'}:
             feature = extract_features(element, layer_extractor, current_transform=initial_transform)
             if feature:
