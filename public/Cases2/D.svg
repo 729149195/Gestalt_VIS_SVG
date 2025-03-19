@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800" height="600">
+    <!-- 标题 -->
+    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">网站用户点击行为热力图分析</text>
+    
+    <!-- 网站布局框架 -->
+    <rect x="100" y="80" width="600" height="450" fill="#f5f5f5" />
+    
+    <!-- 网站导航栏 -->
+    <rect x="100" y="80" width="600" height="50" fill="#e0e0e0" />
+    <rect x="120" y="95" width="80" height="20" fill="#d0d0d0" rx="3" ry="3" />
+    <rect x="220" y="95" width="80" height="20" fill="#d0d0d0" rx="3" ry="3" />
+    <rect x="320" y="95" width="80" height="20" fill="#d0d0d0" rx="3" ry="3" />
+    <rect x="420" y="95" width="80" height="20" fill="#d0d0d0" rx="3" ry="3" />
+    <rect x="600" y="95" width="80" height="20" fill="#d0d0d0" rx="3" ry="3" />
+    
+    <!-- 网站内容区 -->
+    <rect x="100" y="130" width="450" height="350" fill="#ffffff" />
+    
+    <!-- 侧边栏 -->
+    <rect x="550" y="130" width="150" height="350" fill="#f0f0f0" />
+    
+    <!-- 网站底部 -->
+    <rect x="100" y="480" width="600" height="50" fill="#e0e0e0" />
+    
+    <!-- 内容区元素 -->
+    <rect x="120" y="150" width="410" height="60" fill="#e8e8e8" rx="2" ry="2" />
+    <rect x="120" y="230" width="200" height="180" fill="#e8e8e8" rx="2" ry="2" />
+    <rect x="340" y="230" width="190" height="80" fill="#e8e8e8" rx="2" ry="2" />
+    <rect x="340" y="330" width="190" height="80" fill="#e8e8e8" rx="2" ry="2" />
+    <rect x="120" y="430" width="410" height="30" fill="#e8e8e8" rx="2" ry="2" />
+    
+    <!-- 侧边栏元素 -->
+    <rect x="570" y="150" width="110" height="40" fill="#e0e0e0" rx="2" ry="2" />
+    <rect x="570" y="210" width="110" height="40" fill="#e0e0e0" rx="2" ry="2" />
+    <rect x="570" y="270" width="110" height="40" fill="#e0e0e0" rx="2" ry="2" />
+    <rect x="570" y="330" width="110" height="40" fill="#e0e0e0" rx="2" ry="2" />
+    <rect x="570" y="390" width="110" height="40" fill="#e0e0e0" rx="2" ry="2" />
+    
+    <!-- 热力图层 (透明度表示点击热度) -->
+    <!-- 导航栏热点 -->
+    <rect x="120" y="95" width="80" height="20" fill="#ff9800" opacity="0.2" rx="3" ry="3" />
+    <rect x="220" y="95" width="80" height="20" fill="#ff9800" opacity="0.4" rx="3" ry="3" />
+    <rect x="320" y="95" width="80" height="20" fill="#ff9800" opacity="0.3" rx="3" ry="3" />
+    <rect x="420" y="95" width="80" height="20" fill="#ff9800" opacity="0.6" rx="3" ry="3" />
+    <rect x="600" y="95" width="80" height="20" fill="#ff9800" opacity="0.7" rx="3" ry="3" />
+    
+    <!-- 主要内容区热点 -->
+    <rect x="120" y="150" width="410" height="60" fill="#ff5722" opacity="0.4" rx="2" ry="2" />
+    
+    <!-- 高点击区域 (应该更突出的热点) -->
+    <rect x="120" y="230" width="200" height="180" fill="#ff5722" opacity="0.6" rx="2" ry="2" />
+    
+    <rect x="340" y="230" width="190" height="80" fill="#ff5722" opacity="0.3" rx="2" ry="2" />
+    <rect x="340" y="330" width="190" height="80" fill="#ff5722" opacity="0.5" rx="2" ry="2" />
+    <rect x="120" y="430" width="410" height="30" fill="#ff5722" opacity="0.2" rx="2" ry="2" />
+    
+    <!-- 侧边栏热点 -->
+    <rect x="570" y="150" width="110" height="40" fill="#ff9800" opacity="0.3" rx="2" ry="2" />
+    <rect x="570" y="210" width="110" height="40" fill="#ff9800" opacity="0.5" rx="2" ry="2" />
+    <rect x="570" y="270" width="110" height="40" fill="#ff9800" opacity="0.8" rx="2" ry="2" />
+    <rect x="570" y="330" width="110" height="40" fill="#ff9800" opacity="0.2" rx="2" ry="2" />
+    <rect x="570" y="390" width="110" height="40" fill="#ff9800" opacity="0.3" rx="2" ry="2" />
+    
+    <!-- 热力图图例 -->
+    <text x="400" y="550" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold">点击热度</text>
+    
+    <rect x="250" y="570" width="30" height="15" fill="#ff5722" opacity="0.2" />
+    <text x="290" y="583" font-family="Arial" font-size="12" text-anchor="start">低</text>
+    
+    <rect x="320" y="570" width="30" height="15" fill="#ff5722" opacity="0.4" />
+    <text x="360" y="583" font-family="Arial" font-size="12" text-anchor="start">中</text>
+    
+    <rect x="390" y="570" width="30" height="15" fill="#ff5722" opacity="0.6" />
+    <text x="430" y="583" font-family="Arial" font-size="12" text-anchor="start">高</text>
+    
+    <rect x="460" y="570" width="30" height="15" fill="#ff5722" opacity="0.8" />
+    <text x="500" y="583" font-family="Arial" font-size="12" text-anchor="start">极高</text>
+    
+    
+    <!-- 注解 -->
+    <text x="400" y="70" font-family="Arial" font-size="14" text-anchor="middle">数据来源: 网站用户行为追踪系统 (过去30天)</text>
+</svg> 
