@@ -1,0 +1,312 @@
+{
+  "core_clusters": [
+    {
+      "core_nodes": [
+        "svg/g_5/path_7",
+        "svg/g_5/path_4"
+      ],
+      "core_dimensions": [
+        "1"
+      ],
+      "extensions": [],
+      "links": [
+        {
+          "source": "svg/g_5/path_7",
+          "target": "svg/g_5/path_4",
+          "value": 0.9948320041109152,
+          "cluster": 3
+        }
+      ]
+    },
+    {
+      "core_nodes": [
+        "svg/g_5/path_6",
+        "svg/g_5/path_5"
+      ],
+      "core_dimensions": [
+        "1"
+      ],
+      "extensions": [],
+      "links": [
+        {
+          "source": "svg/g_5/path_6",
+          "target": "svg/g_5/path_5",
+          "value": 0.9847553592083272,
+          "cluster": 0
+        }
+      ]
+    },
+    {
+      "core_nodes": [
+        "svg/g/g_4/path_3"
+      ],
+      "core_dimensions": [
+        "1"
+      ],
+      "extensions": [],
+      "links": []
+    },
+    {
+      "core_nodes": [
+        "svg/g/g_2/path_1",
+        "svg/g/g_3/path_2"
+      ],
+      "core_dimensions": [
+        "1"
+      ],
+      "extensions": [],
+      "links": [
+        {
+          "source": "svg/g/g_3/path_2",
+          "target": "svg/g/g_2/path_1",
+          "value": 0.9998914717215297,
+          "cluster": 1
+        }
+      ]
+    },
+    {
+      "core_nodes": [
+        "svg/g/g_1/path"
+      ],
+      "core_dimensions": [
+        "1"
+      ],
+      "extensions": [],
+      "links": []
+    },
+    {
+      "core_nodes": [
+        "svg/g_5/path_7"
+      ],
+      "core_dimensions": [
+        "2"
+      ],
+      "extensions": [],
+      "links": []
+    },
+    {
+      "core_nodes": [
+        "svg/g_5/path_6"
+      ],
+      "core_dimensions": [
+        "2"
+      ],
+      "extensions": [],
+      "links": []
+    },
+    {
+      "core_nodes": [
+        "svg/g_5/path_5"
+      ],
+      "core_dimensions": [
+        "2"
+      ],
+      "extensions": [],
+      "links": []
+    },
+    {
+      "core_nodes": [
+        "svg/g/g_2/path_1",
+        "svg/g/g_4/path_3",
+        "svg/g/g_3/path_2",
+        "svg/g_5/path_4"
+      ],
+      "core_dimensions": [
+        "2"
+      ],
+      "extensions": [],
+      "links": [
+        {
+          "source": "svg/g_5/path_4",
+          "target": "svg/g/g_4/path_3",
+          "value": 0.9135974075230732,
+          "cluster": 3
+        },
+        {
+          "source": "svg/g_5/path_4",
+          "target": "svg/g/g_3/path_2",
+          "value": 0.9419958781122324,
+          "cluster": 3
+        },
+        {
+          "source": "svg/g_5/path_4",
+          "target": "svg/g/g_2/path_1",
+          "value": 0.9317057690292984,
+          "cluster": 3
+        },
+        {
+          "source": "svg/g/g_4/path_3",
+          "target": "svg/g/g_3/path_2",
+          "value": 0.9680558380481956,
+          "cluster": 3
+        },
+        {
+          "source": "svg/g/g_4/path_3",
+          "target": "svg/g/g_2/path_1",
+          "value": 0.9791693264406194,
+          "cluster": 3
+        },
+        {
+          "source": "svg/g/g_3/path_2",
+          "target": "svg/g/g_2/path_1",
+          "value": 0.988411427307641,
+          "cluster": 3
+        }
+      ]
+    },
+    {
+      "core_nodes": [
+        "svg/g_5/path_5",
+        "svg/g_5/path_4"
+      ],
+      "core_dimensions": [
+        "3"
+      ],
+      "extensions": [],
+      "links": [
+        {
+          "source": "svg/g_5/path_5",
+          "target": "svg/g_5/path_4",
+          "value": 0.9040386250627999,
+          "cluster": 0
+        }
+      ]
+    },
+    {
+      "core_nodes": [
+        "svg/g/g_2/path_1",
+        "svg/g/g_4/path_3",
+        "svg/g/g_3/path_2"
+      ],
+      "core_dimensions": [
+        "3"
+      ],
+      "extensions": [],
+      "links": [
+        {
+          "source": "svg/g/g_4/path_3",
+          "target": "svg/g/g_3/path_2",
+          "value": 0.9484765885588075,
+          "cluster": 1
+        },
+        {
+          "source": "svg/g/g_4/path_3",
+          "target": "svg/g/g_2/path_1",
+          "value": 0.9598298669315275,
+          "cluster": 1
+        },
+        {
+          "source": "svg/g/g_3/path_2",
+          "target": "svg/g/g_2/path_1",
+          "value": 0.9864735531995144,
+          "cluster": 1
+        }
+      ]
+    }
+  ],
+  "total_cores": 11,
+  "visualization": {
+    "nodes": [
+      {
+        "id": "core_0",
+        "name": "核心聚类 1",
+        "type": "core",
+        "dimensions": [
+          "1"
+        ],
+        "size": 2
+      },
+      {
+        "id": "core_1",
+        "name": "核心聚类 2",
+        "type": "core",
+        "dimensions": [
+          "1"
+        ],
+        "size": 2
+      },
+      {
+        "id": "core_2",
+        "name": "核心聚类 3",
+        "type": "core",
+        "dimensions": [
+          "1"
+        ],
+        "size": 1
+      },
+      {
+        "id": "core_3",
+        "name": "核心聚类 4",
+        "type": "core",
+        "dimensions": [
+          "1"
+        ],
+        "size": 2
+      },
+      {
+        "id": "core_4",
+        "name": "核心聚类 5",
+        "type": "core",
+        "dimensions": [
+          "1"
+        ],
+        "size": 1
+      },
+      {
+        "id": "core_5",
+        "name": "核心聚类 6",
+        "type": "core",
+        "dimensions": [
+          "2"
+        ],
+        "size": 1
+      },
+      {
+        "id": "core_6",
+        "name": "核心聚类 7",
+        "type": "core",
+        "dimensions": [
+          "2"
+        ],
+        "size": 1
+      },
+      {
+        "id": "core_7",
+        "name": "核心聚类 8",
+        "type": "core",
+        "dimensions": [
+          "2"
+        ],
+        "size": 1
+      },
+      {
+        "id": "core_8",
+        "name": "核心聚类 9",
+        "type": "core",
+        "dimensions": [
+          "2"
+        ],
+        "size": 4
+      },
+      {
+        "id": "core_9",
+        "name": "核心聚类 10",
+        "type": "core",
+        "dimensions": [
+          "3"
+        ],
+        "size": 2
+      },
+      {
+        "id": "core_10",
+        "name": "核心聚类 11",
+        "type": "core",
+        "dimensions": [
+          "3"
+        ],
+        "size": 3
+      }
+    ],
+    "links": []
+  }
+}

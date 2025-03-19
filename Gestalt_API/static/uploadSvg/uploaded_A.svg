@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg baseProfile="full" height="1105" style="position: absolute; left: 0px; top: 0px; user-select: none;" version="1.1" width="1486" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- 标题 -->
+<text font-family="Arial" font-size="20" font-weight="bold" text-anchor="middle" x="400" y="30">质量监控数据分析 - 产品尺寸散点图</text>
+<!-- 坐标轴 -->
+<line stroke="black" stroke-width="2" x1="100" x2="700" y1="500" y2="500"/>
+<line stroke="black" stroke-width="2" x1="100" x2="100" y1="500" y2="100"/>
+<!-- X轴刻度 -->
+<line stroke="black" stroke-width="2" x1="100" x2="100" y1="500" y2="505"/>
+<text font-family="Arial" font-size="12" text-anchor="middle" x="100" y="525">0</text>
+<line stroke="black" stroke-width="2" x1="220" x2="220" y1="500" y2="505"/>
+<text font-family="Arial" font-size="12" text-anchor="middle" x="220" y="525">20</text>
+<line stroke="black" stroke-width="2" x1="340" x2="340" y1="500" y2="505"/>
+<text font-family="Arial" font-size="12" text-anchor="middle" x="340" y="525">40</text>
+<line stroke="black" stroke-width="2" x1="460" x2="460" y1="500" y2="505"/>
+<text font-family="Arial" font-size="12" text-anchor="middle" x="460" y="525">60</text>
+<line stroke="black" stroke-width="2" x1="580" x2="580" y1="500" y2="505"/>
+<text font-family="Arial" font-size="12" text-anchor="middle" x="580" y="525">80</text>
+<line stroke="black" stroke-width="2" x1="700" x2="700" y1="500" y2="505"/>
+<text font-family="Arial" font-size="12" text-anchor="middle" x="700" y="525">100</text>
+<!-- Y轴刻度 -->
+<line stroke="black" stroke-width="2" x1="95" x2="100" y1="500" y2="500"/>
+<text font-family="Arial" font-size="12" text-anchor="end" x="85" y="505">0</text>
+<line stroke="black" stroke-width="2" x1="95" x2="100" y1="420" y2="420"/>
+<text font-family="Arial" font-size="12" text-anchor="end" x="85" y="425">20</text>
+<line stroke="black" stroke-width="2" x1="95" x2="100" y1="340" y2="340"/>
+<text font-family="Arial" font-size="12" text-anchor="end" x="85" y="345">40</text>
+<line stroke="black" stroke-width="2" x1="95" x2="100" y1="260" y2="260"/>
+<text font-family="Arial" font-size="12" text-anchor="end" x="85" y="265">60</text>
+<line stroke="black" stroke-width="2" x1="95" x2="100" y1="180" y2="180"/>
+<text font-family="Arial" font-size="12" text-anchor="end" x="85" y="185">80</text>
+<line stroke="black" stroke-width="2" x1="95" x2="100" y1="100" y2="100"/>
+<text font-family="Arial" font-size="12" text-anchor="end" x="85" y="105">100</text>
+<!-- 轴标签 -->
+<text font-family="Arial" font-size="16" text-anchor="middle" x="400" y="555">长度 (mm)</text>
+<text font-family="Arial" font-size="16" text-anchor="middle" transform="rotate(-90, 45, 300)" x="45" y="300">直径 (mm)</text>
+<!-- 网格线 -->
+<g stroke="#dddddd" stroke-dasharray="5,5">
+<line x1="100" x2="700" y1="420" y2="420"/>
+<line x1="100" x2="700" y1="340" y2="340"/>
+<line x1="100" x2="700" y1="260" y2="260"/>
+<line x1="100" x2="700" y1="180" y2="180"/>
+<line x1="100" x2="700" y1="100" y2="100"/>
+<line x1="220" x2="220" y1="100" y2="500"/>
+<line x1="340" x2="340" y1="100" y2="500"/>
+<line x1="460" x2="460" y1="100" y2="500"/>
+<line x1="580" x2="580" y1="100" y2="500"/>
+</g>
+<!-- 数据点（不规则分布的主群） -->
+<circle cx="145" cy="305" fill="#3498db" r="5"/>
+<circle cx="162" cy="323" fill="#3498db" r="5"/>
+<circle cx="176" cy="287" fill="#3498db" r="5"/>
+<circle cx="195" cy="312" fill="#3498db" r="5"/>
+<circle cx="213" cy="294" fill="#3498db" r="5"/>
+<circle cx="229" cy="301" fill="#3498db" r="5"/>
+<circle cx="243" cy="288" fill="#3498db" r="5"/>
+<circle cx="264" cy="307" fill="#3498db" r="5"/>
+<circle cx="275" cy="292" fill="#3498db" r="5"/>
+<circle cx="290" cy="315" fill="#3498db" r="5"/>
+<circle cx="312" cy="286" fill="#3498db" r="5"/>
+<circle cx="327" cy="308" fill="#3498db" r="5"/>
+<circle cx="345" cy="298" fill="#3498db" r="5"/>
+<circle cx="362" cy="312" fill="#3498db" r="5"/>
+<circle cx="374" cy="289" fill="#3498db" r="5"/>
+<circle cx="392" cy="302" fill="#3498db" r="5"/>
+<circle cx="407" cy="293" fill="#3498db" r="5"/>
+<circle cx="424" cy="309" fill="#3498db" r="5"/>
+<circle cx="437" cy="287" fill="#3498db" r="5"/>
+<circle cx="452" cy="302" fill="#3498db" r="5"/>
+<circle cx="468" cy="298" fill="#3498db" r="5"/>
+<circle cx="481" cy="314" fill="#3498db" r="5"/>
+<circle cx="497" cy="293" fill="#3498db" r="5"/>
+<circle cx="514" cy="306" fill="#3498db" r="5"/>
+<circle cx="527" cy="288" fill="#3498db" r="5"/>
+<circle cx="539" cy="302" fill="#3498db" r="5"/>
+<circle cx="553" cy="297" fill="#3498db" r="5"/>
+<circle cx="573" cy="310" fill="#3498db" r="5"/>
+<circle cx="591" cy="290" fill="#3498db" r="5"/>
+<circle cx="608" cy="304" fill="#3498db" r="5"/>
+<circle cx="624" cy="287" fill="#3498db" r="5"/>
+<circle cx="644" cy="295" fill="#3498db" r="5"/>
+<circle cx="658" cy="306" fill="#3498db" r="5"/>
+<!-- 离群点（与主群使用相同样式） -->
+<circle cx="280" cy="180" fill="#3498db" r="5"/>
+<circle cx="310" cy="165" fill="#3498db" r="5"/>
+<circle cx="295" cy="175" fill="#3498db" r="5"/>
+<circle cx="325" cy="170" fill="#3498db" r="5"/>
+<circle cx="340" cy="160" fill="#3498db" r="5"/>
+<!-- 时间戳 -->
+<text fill="#666" font-family="Arial" font-size="12" text-anchor="end" x="680" y="580">数据更新: 2023-11-08</text>
+</svg>

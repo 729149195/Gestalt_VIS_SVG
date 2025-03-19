@@ -22,9 +22,7 @@ plt.rcParams['axes.unicode_minus'] = False
 
 class EnhancedClusterEvaluator:
     def __init__(self, model_output_path: str, ground_truth_path: str):
-        """
-        初始化增强版评估器
-        
+        """ 
         Args:
             model_output_path: 模型输出的JSON文件路径
             ground_truth_path: 人工标注的JSON文件路径
