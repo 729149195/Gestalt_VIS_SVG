@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800" height="600">
     <!-- 标题 -->
-    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">社交网络影响力分析图</text>
-    <text x="400" y="60" font-family="Arial" font-size="14" text-anchor="middle">数据来源: 社交媒体互动数据 (2023年第四季度)</text>
+    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">Product Sales Trend Analysis 2023</text>
+    <text x="400" y="60" font-family="Arial" font-size="14" text-anchor="middle">Data Source: Sales Department Monthly Report 2023</text>
     
-    <!-- 背景 -->
-    <rect x="50" y="80" width="700" height="450" fill="#f9f9f9" stroke="#e0e0e0" stroke-width="1" rx="5" ry="5" />
     
     <!-- 连接线 (边) -->
     <!-- 普通连接 -->
@@ -91,13 +89,7 @@
     <circle cx="550" cy="280" r="8" fill="#90caf9" stroke="#64b5f6" stroke-width="1.5" />
     <circle cx="550" cy="350" r="8" fill="#90caf9" stroke="#64b5f6" stroke-width="1.5" />
     
-    <!-- 图例 -->
-    <rect x="580" y="400" width="150" height="60" fill="white" stroke="#e0e0e0" stroke-width="1" rx="3" ry="3" />
-    <text x="655" y="420" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">图例</text>
-    
-    <circle cx="600" cy="445" r="8" fill="#90caf9" stroke="#64b5f6" stroke-width="1.5" />
-    <text x="620" y="449" font-family="Arial" font-size="12" text-anchor="start">社交网络用户</text>
     
     <!-- 注解 -->
-    <text x="210" y="550" font-family="Arial" font-size="14" text-anchor="start">注: 节点表示用户，连线表示互动关系，网络中心区域连接更密集</text>
+    <text x="400" y="450" font-family="Arial" font-size="12" text-anchor="middle">Data Source: Sales Department Monthly Report 2023</text>
 </svg> 

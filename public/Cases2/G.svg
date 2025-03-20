@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800" height="600">
     <!-- 标题 -->
-    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">员工工作满意度雷达图</text>
+    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">Employee Satisfaction Radar Chart</text>
     
     <!-- 背景和网格 -->
     <g transform="translate(400, 300)">
@@ -33,20 +33,20 @@
         <circle cx="-152.2" cy="-37.1" r="5" fill="#2196f3" />
         
         <!-- 标签 -->
-        <text x="0" y="-215" font-family="Arial" font-size="14" text-anchor="middle">工作环境</text>
-        <text x="205" y="-61.8" font-family="Arial" font-size="14" text-anchor="start">薪资满意度</text>
-        <text x="130" y="176.8" font-family="Arial" font-size="14" text-anchor="middle">工作生活平衡</text>
-        <text x="-130" y="176.8" font-family="Arial" font-size="14" text-anchor="middle">团队协作</text>
-        <text x="-215" y="-61.8" font-family="Arial" font-size="14" text-anchor="end">职业发展</text>
+        <text x="0" y="-215" font-family="Arial" font-size="14" text-anchor="middle">Work Environment</text>
+        <text x="205" y="-61.8" font-family="Arial" font-size="14" text-anchor="start">Salary</text>
+        <text x="130" y="176.8" font-family="Arial" font-size="14" text-anchor="middle">Work-Life Balance</text>
+        <text x="-130" y="176.8" font-family="Arial" font-size="14" text-anchor="middle">Team Collaboration</text>
+        <text x="-215" y="-61.8" font-family="Arial" font-size="14" text-anchor="end">Career Growth</text>
     </g>
     
     <!-- 图例 -->
     <rect x="600" y="520" width="150" height="50" fill="white" stroke="#e0e0e0" stroke-width="1" rx="3" ry="3" />
-    <text x="675" y="540" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">图例</text>
+    <text x="675" y="540" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Legend</text>
     
     <rect x="620" y="555" width="20" height="5" fill="#2196f3" />
-    <text x="650" y="560" font-family="Arial" font-size="12" text-anchor="start">满意度得分</text>
+    <text x="650" y="560" font-family="Arial" font-size="12" text-anchor="start">Satisfaction Score</text>
     
     <!-- 注解 -->
-    <text x="400" y="550" font-family="Arial" font-size="14" text-anchor="middle">数据来源: 2023年第二季度员工满意度调查 (n=487)</text>
+    <text x="400" y="550" font-family="Arial" font-size="14" text-anchor="middle">Data Source: Q2 2023 Employee Satisfaction Survey (n=487)</text>
 </svg> 

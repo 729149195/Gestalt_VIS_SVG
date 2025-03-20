@@ -98,9 +98,6 @@
                                 <span class="selection-text">Lasso</span>
                             </v-btn>
                         </div>
-
-                        <!-- 右侧分隔线 -->
-                        <div class="vertical-divider"></div>
                     </div>
                 </div>
             </div>

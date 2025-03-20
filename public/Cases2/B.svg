@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800" height="600">
     <!-- 标题 -->
-    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">2023年季度产品销售数据分析</text>
+    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">Quarterly Product Sales Analysis 2023</text>
     
     <!-- 坐标轴 -->
     <line x1="100" y1="500" x2="700" y2="500" stroke="black" stroke-width="2" />
@@ -36,16 +36,16 @@
     </g>
     
     <!-- 轴标签 -->
-    <text x="400" y="545" font-family="Arial" font-size="16" text-anchor="middle">产品型号</text>
-    <text x="45" y="300" font-family="Arial" font-size="16" text-anchor="middle" transform="rotate(-90, 45, 300)">销量 (件)</text>
+    <text x="400" y="545" font-family="Arial" font-size="16" text-anchor="middle">Product Model</text>
+    <text x="45" y="300" font-family="Arial" font-size="16" text-anchor="middle" transform="rotate(-90, 45, 300)">Sales (pcs)</text>
     
     <!-- 第一组柱状图（电子类产品，使用深色） -->
-    <rect x="130" y="380" width="30" height="120" fill="#1a237e" />
-    <rect x="230" y="400" width="30" height="100" fill="#1a237e" />
-    <rect x="330" y="420" width="30" height="80" fill="#1a237e" />
-    <rect x="430" y="360" width="30" height="140" fill="#1a237e" />
-    <rect x="530" y="440" width="30" height="60" fill="#1a237e" />
-    <rect x="630" y="390" width="30" height="110" fill="#1a237e" />
+    <rect x="130" y="410" width="30" height="90" fill="red" />
+    <rect x="230" y="400" width="30" height="100" fill="red" />
+    <rect x="330" y="420" width="30" height="80" fill="red" />
+    <rect x="430" y="400" width="30" height="100" fill="red" />
+    <rect x="530" y="440" width="30" height="60" fill="red" />
+    <rect x="630" y="390" width="30" height="110" fill="red" />
     
     <!-- 第二组柱状图（家居类产品，使用中等亮度） -->
     <rect x="170" y="180" width="30" height="320" fill="#4fc3f7" />
@@ -56,17 +56,11 @@
     <rect x="670" y="160" width="30" height="340" fill="#4fc3f7" />
     
     <!-- X轴标签 -->
-    <text x="150" y="520" font-family="Arial" font-size="12" text-anchor="middle">产品A</text>
-    <text x="250" y="520" font-family="Arial" font-size="12" text-anchor="middle">产品B</text>
-    <text x="350" y="520" font-family="Arial" font-size="12" text-anchor="middle">产品C</text>
-    <text x="450" y="520" font-family="Arial" font-size="12" text-anchor="middle">产品D</text>
-    <text x="550" y="520" font-family="Arial" font-size="12" text-anchor="middle">产品E</text>
-    <text x="650" y="520" font-family="Arial" font-size="12" text-anchor="middle">产品F</text>
-    
-    <!-- 图例 -->
-    <rect x="580" y="50" width="20" height="20" fill="#1a237e" />
-    <text x="610" y="65" font-family="Arial" font-size="14">电子类产品</text>
-    
-    <rect x="580" y="80" width="20" height="20" fill="#4fc3f7" />
-    <text x="610" y="95" font-family="Arial" font-size="14">家居类产品</text>
+    <text x="150" y="520" font-family="Arial" font-size="12" text-anchor="middle">Product A</text>
+    <text x="250" y="520" font-family="Arial" font-size="12" text-anchor="middle">Product B</text>
+    <text x="350" y="520" font-family="Arial" font-size="12" text-anchor="middle">Product C</text>
+    <text x="450" y="520" font-family="Arial" font-size="12" text-anchor="middle">Product D</text>
+    <text x="550" y="520" font-family="Arial" font-size="12" text-anchor="middle">Product E</text>
+    <text x="650" y="520" font-family="Arial" font-size="12" text-anchor="middle">Product F</text>
+
 </svg> 

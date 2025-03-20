@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800" height="600">
     <!-- 标题 -->
-    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">2023年度部门预算分配饼图</text>
+    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">Department Budget Allocation 2023</text>
     
     <!-- 饼图 -->
     <g transform="translate(400,300)">
@@ -19,20 +19,20 @@
     
     <!-- 图例 -->
     <rect x="600" y="180" width="20" height="20" fill="#4285f4" />
-    <text x="630" y="195" font-family="Arial" font-size="14">研发部门 (30%)</text>
+    <text x="630" y="195" font-family="Arial" font-size="14">R&amp;D (30%)</text>
     
     <rect x="600" y="220" width="20" height="20" fill="#34a853" />
-    <text x="630" y="235" font-family="Arial" font-size="14">市场部门 (25%)</text>
+    <text x="630" y="235" font-family="Arial" font-size="14">Marketing (25%)</text>
     
     <rect x="600" y="260" width="20" height="20" fill="#fbbc05" />
-    <text x="630" y="275" font-family="Arial" font-size="14">销售部门 (20%)</text>
+    <text x="630" y="275" font-family="Arial" font-size="14">Sales (20%)</text>
     
     <rect x="600" y="300" width="20" height="20" fill="#ea4335" />
-    <text x="630" y="315" font-family="Arial" font-size="14">人力资源部门 (15%)</text>
+    <text x="630" y="315" font-family="Arial" font-size="14">HR (15%)</text>
     
     <rect x="600" y="340" width="20" height="20" fill="#9c27b0" />
-    <text x="630" y="355" font-family="Arial" font-size="14">行政部门 (10%)</text>
+    <text x="630" y="355" font-family="Arial" font-size="14">Admin (10%)</text>
     
     <!-- 注解 -->
-    <text x="400" y="500" font-family="Arial" font-size="14" text-anchor="middle">数据来源: 财务部2023年度报告</text>
+    <text x="400" y="500" font-family="Arial" font-size="14" text-anchor="middle">Data Source: Finance Department Annual Report 2023</text>
 </svg> 

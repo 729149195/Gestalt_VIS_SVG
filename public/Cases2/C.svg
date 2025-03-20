@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800" height="600">
     <!-- 标题 -->
-    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">公司年度业绩趋势图 (2018-2023)</text>
+    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">Monthly Sales Performance 2023</text>
     
     <!-- 坐标轴 -->
     <line x1="100" y1="500" x2="700" y2="500" stroke="black" stroke-width="2" />
@@ -126,6 +126,12 @@
     <circle cx="700" cy="165" r="4" fill="#2196F3" />
     
     <!-- 图例 -->
-    <rect x="600" y="50" width="20" height="3" fill="#2196F3" />
-    <text x="630" y="55" font-family="Arial" font-size="14">季度业绩</text>
+    <rect x="580" y="50" width="20" height="20" fill="#1a237e" />
+    <text x="610" y="65" font-family="Arial" font-size="14">Target</text>
+
+    <rect x="580" y="80" width="20" height="20" fill="#4fc3f7" />
+    <text x="610" y="95" font-family="Arial" font-size="14">Actual</text>
+
+    <!-- 注解 -->
+    <text x="400" y="550" font-family="Arial" font-size="12" text-anchor="middle">Data Source: Sales Department Monthly Report 2023</text>
 </svg>

@@ -80,7 +80,7 @@ const renderChart = (dataset) => {
         top: svgHeight * 0.05, 
         right: svgWidth * 0.05, 
         bottom: svgHeight * 0.3,
-        left: svgWidth * 0.15 
+        left: svgWidth * 0.15
     };
     const width = svgWidth - margin.left - margin.right;
     const height = svgHeight - margin.top - margin.bottom;
