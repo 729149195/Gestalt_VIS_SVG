@@ -393,6 +393,12 @@ watch([copiedValue, selectedNodeIds], async ([newCopiedValue, newSelectedNodeIds
     
     if (!element) return;
 
+    // 添加class="reveliogood"属性到高亮元素
+    const currentClass = element.getAttribute('class') || '';
+    if (!currentClass.includes('reveliogood')) {
+      element.setAttribute('class', currentClass ? `${currentClass} reveliogood` : 'reveliogood');
+    }
+
     switch (newCopiedValue.type) {
       case 'color-fill':
         element.setAttribute('fill', newCopiedValue.value);

@@ -132,6 +132,12 @@ const normalizedData = ref([]);
 const visualSalience = ref(0);
 // 添加SVG内容同步状态
 const isSyncingSvg = ref(false);
+// 添加变量记录上一次的文件名
+const lastFilename = ref(null);
+// 添加变量记录上一次的选择状态
+const lastSelectedElements = ref([]);
+// 添加变量记录上一次的scopeNodes状态
+const lastScopeNodes = ref([]);
 
 const emit = defineEmits(['file-uploaded'])
 
@@ -169,6 +175,22 @@ const clearSelectedNodes = () => {
 // 处理从CodeToSvg组件触发的上传事件
 const handleSvgUploaded = async (event) => {
     const filename = event.detail.filename
+    
+    // 判断是否与上次的文件名相同
+    const isSameFile = filename === lastFilename.value;
+    
+    // 只有在相同文件名的情况下才保存当前状态
+    if (isSameFile) {
+        // 如果文件名相同，保存当前的选择状态
+        lastSelectedElements.value = [...selectedElements.value];
+        // 同时保存当前的scopeNodes状态
+        lastScopeNodes.value = [...scopeNodes.value];
+    } else {
+        // 如果是新文件，先清空上次保存的状态
+        lastSelectedElements.value = [];
+        lastScopeNodes.value = [];
+    }
+    
     // 清除选中的节点
     clearSelectedNodes();
 
@@ -213,11 +235,40 @@ const handleSvgUploaded = async (event) => {
 
         if (elementsResponse.data.success) {
             visibleElements.value = elementsResponse.data.elements
-            selectedElements.value = elementsResponse.data.elements.map(el => el.id)
-
-            // 确保DOM更新后再设置交互
-            await nextTick()
-            setupDualSvgInteractions()
+            
+            // 检查是否是同一个文件名，并且有保存的状态
+            if (isSameFile && lastSelectedElements.value.length > 0) {
+                // 如果是相同文件名且有上次的选择状态，则使用上次保存的选择状态
+                selectedElements.value = lastSelectedElements.value;
+                // 同时恢复scopeNodes状态
+                scopeNodes.value = [...lastScopeNodes.value];
+                
+                // 确保DOM更新后再设置交互
+                await nextTick();
+                setupDualSvgInteractions();
+                
+                // 自动执行updatePerceptionScope
+                await nextTick();
+                updatePerceptionScope();
+                
+                // 自动执行analyzeSvg
+                await nextTick();
+                analyzeSvg();
+            } else {
+                // 文件名不同或者没有上次状态，使用默认的全选状态
+                const allElementTypes = elementsResponse.data.elements.map(el => el.id);
+                // 始终将selectedElements重置为全部元素
+                selectedElements.value = [...allElementTypes];
+                // 重置scopeNodes
+                scopeNodes.value = [];
+                
+                // 确保DOM更新后再设置交互
+                await nextTick();
+                setupDualSvgInteractions();
+                
+                // 更新lastFilename，保存当前文件名
+                lastFilename.value = filename;
+            }
         }
     } catch (error) {
         console.error('Error handling upload event:', error)
@@ -1807,8 +1858,6 @@ watch(scopeNodes, () => {
     justify-content: center;
     margin: 0;
     padding: 0;
-    min-height: 0;
-    line-height: 1;
 }
 
 .mac-style-checkbox :deep(.v-selection-control) {
