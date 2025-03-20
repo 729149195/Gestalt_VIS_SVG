@@ -216,6 +216,33 @@ def apply_transform(transform_str, points):
         return points
     # 初始化为单位矩阵
     transform_matrix = np.identity(3)
+    
+    # 检查是否有中心缩放的特殊模式 - translate(cx, cy) scale(s) translate(-cx, -cy)
+    center_scale_pattern = r'translate\(([^,]+),\s*([^)]+)\)\s*scale\(([^)]+)\)\s*translate\(([^,]+),\s*([^)]+)\)'
+    center_scale_match = re.search(center_scale_pattern, transform_str)
+    
+    if center_scale_match:
+        # 提取参数
+        cx = float(center_scale_match.group(1))
+        cy = float(center_scale_match.group(2))
+        scale_factor = float(center_scale_match.group(3))
+        neg_cx = float(center_scale_match.group(4))
+        neg_cy = float(center_scale_match.group(5))
+        
+        # 确认是否是中心缩放模式（第一个translate的x和第二个translate的x符号相反，y也一样）
+        if abs(cx + neg_cx) < 0.001 and abs(cy + neg_cy) < 0.001:
+            # 创建中心缩放矩阵
+            matrix = np.array([
+                [scale_factor, 0, cx * (1 - scale_factor)],
+                [0, scale_factor, cy * (1 - scale_factor)],
+                [0, 0, 1]
+            ])
+            transform_matrix = np.dot(transform_matrix, matrix)
+            
+            # 从transform_str中移除已处理的模式
+            transform_str = transform_str.replace(center_scale_match.group(0), '')
+    
+    # 处理其他常规变换
     transform_commands = re.findall(r'\w+\([^)]+\)', transform_str)
     for command in transform_commands:
         cmd_type = command.split('(')[0]
@@ -434,8 +461,31 @@ def extract_features(element, layer_extractor, current_transform='', current_col
     if transform:
         current_transform = f"{current_transform} {transform}"
 
+    # 检查是否有data-scale-factor属性（CodeToSvg添加的）
+    scale_factor = element.attrib.get('data-scale-factor', None)
+    
     # 计算边界框
     bbox_values = get_transformed_bbox(element, current_transform)
+    
+    # 如果有data-scale-factor属性，调整面积和尺寸
+    if scale_factor is not None:
+        try:
+            scale_factor = float(scale_factor)
+            # 将元组转换为列表，这样才能修改其元素
+            bbox_values = list(bbox_values)
+            # 边界框值的顺序：ymin, ymax, xmin, xmax, center_x, center_y, width, height, fill_area, stroke_area
+            # 不需要调整中心点和位置，只需要调整面积和尺寸
+            # 调整宽度和高度
+            bbox_values[6] *= scale_factor  # width
+            bbox_values[7] *= scale_factor  # height
+            # 调整面积
+            bbox_values[8] *= scale_factor * scale_factor  # fill_area
+            bbox_values[9] *= scale_factor  # stroke_area (线性增长)
+        except (ValueError, TypeError, IndexError) as e:
+            # 增强错误处理，如果发生任何错误，打印日志并继续
+            print(f"警告: 处理scale_factor时出错: {e}, scale_factor={scale_factor}, bbox_values={bbox_values}")
+            # 如果scale_factor不是有效的数字，或者bbox_values访问出错，忽略调整
+            pass
 
     # 提取层级信息
     layer = layer_extractor.get_node_layers().get(element_id, ['0'])
