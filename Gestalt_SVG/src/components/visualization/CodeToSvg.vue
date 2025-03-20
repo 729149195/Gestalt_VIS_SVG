@@ -384,6 +384,33 @@ watch([copiedValue, selectedNodeIds], async ([newCopiedValue, newSelectedNodeIds
   const currentSvgContent = svgEditor.getValue();
   const parser = new DOMParser();
   const doc = parser.parseFromString(currentSvgContent, 'image/svg+xml');
+  
+  // 检查所有元素中是否存在reveliogood或reveliogood_n
+  let maxN = 0;
+  const allElements = doc.querySelectorAll('*');
+  
+  allElements.forEach(el => {
+    const classAttr = el.getAttribute('class') || '';
+    if (classAttr.includes('reveliogood')) {
+      // 检查是否包含reveliogood_n格式的类
+      const matches = classAttr.match(/reveliogood_(\d+)/g);
+      if (matches) {
+        // 提取所有数字n并找出最大值
+        matches.forEach(match => {
+          const n = parseInt(match.replace('reveliogood_', ''));
+          if (!isNaN(n) && n > maxN) {
+            maxN = n;
+          }
+        });
+      } else if (classAttr.includes('reveliogood') && maxN === 0) {
+        // 如果只有reveliogood，没有数字，则设置maxN为1
+        maxN = 1;
+      }
+    }
+  });
+  
+  // 如果存在reveliogood或reveliogood_n，则使用新的类名reveliogood_(n+1)
+  const newClassName = maxN > 0 ? `reveliogood_${maxN + 1}` : 'reveliogood';
 
   // 处理每个选中的节点
   newSelectedNodeIds.forEach(nodeId => {
@@ -393,10 +420,10 @@ watch([copiedValue, selectedNodeIds], async ([newCopiedValue, newSelectedNodeIds
     
     if (!element) return;
 
-    // 添加class="reveliogood"属性到高亮元素
+    // 添加新的class属性到高亮元素
     const currentClass = element.getAttribute('class') || '';
-    if (!currentClass.includes('reveliogood')) {
-      element.setAttribute('class', currentClass ? `${currentClass} reveliogood` : 'reveliogood');
+    if (!currentClass.includes(newClassName)) {
+      element.setAttribute('class', currentClass ? `${currentClass} ${newClassName}` : newClassName);
     }
 
     switch (newCopiedValue.type) {

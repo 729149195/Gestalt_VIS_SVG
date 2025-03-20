@@ -685,13 +685,13 @@ function createThumbnail(nodeData) {
 }
 
 // 处理核心聚类数据
-function processGraphData(coreData) {
+function processGraphData(coreData, revelioGoodGroups = new Map()) {
     const processedNodes = [];
 
     // 处理核心节点和外延节点
     coreData.core_clusters.forEach((cluster, clusterIndex) => {
         const coreNodeId = `core_${clusterIndex}`;
-
+        
         // 添加核心节点
         processedNodes.push({
             id: coreNodeId,
@@ -703,7 +703,7 @@ function processGraphData(coreData) {
             extensions: [],  // 初始化为空数组
             value: 1
         });
-
+        
         // 添加外延节点
         cluster.extensions.forEach((extension, extIndex) => {
             const extensionNode = {
@@ -715,7 +715,7 @@ function processGraphData(coreData) {
                 parentCoreId: coreNodeId,
                 value: 1
             };
-
+            
             // 将扩展节点添加到对应核心节点的extensions数组中
             const coreNode = processedNodes.find(n => n.id === coreNodeId);
             if (coreNode) {
@@ -724,6 +724,129 @@ function processGraphData(coreData) {
         });
     });
 
+    // 收集现有聚类中的元素组
+    const existingElementGroups = [];
+    
+    // 收集现有聚类中的所有元素组
+    processedNodes.forEach(node => {
+        // 收集核心节点的元素组
+        if (node.originalNodes && Array.isArray(node.originalNodes) && node.originalNodes.length > 0) {
+            existingElementGroups.push(new Set(node.originalNodes));
+        }
+        
+        // 收集扩展节点的元素组
+        if (node.extensions && Array.isArray(node.extensions)) {
+            node.extensions.forEach(ext => {
+                if (ext.originalNodes && Array.isArray(ext.originalNodes) && ext.originalNodes.length > 0) {
+                    existingElementGroups.push(new Set(ext.originalNodes));
+                }
+            });
+        }
+    });
+    
+    // 处理每个reveliogood组，创建独立聚类
+    let revelioGoodClusterIndex = processedNodes.length;
+    
+    // 检查reveliogoodGroups是否是Map
+    if (revelioGoodGroups instanceof Map) {
+        // 处理Map格式的分组数据
+        revelioGoodGroups.forEach((elementIds, groupKey) => {
+            // 先对组内元素去重
+            const uniqueGroupElementIds = [...new Set(elementIds)];
+            
+            if (uniqueGroupElementIds.length === 0) return;
+            
+            // 创建当前组的Set以便比较
+            const currentGroup = new Set(uniqueGroupElementIds);
+            
+            // 检查当前组是否已经存在于现有组中
+            // 只有当两个组完全相同（包含完全相同的元素）时才去重
+            const isDuplicate = existingElementGroups.some(group => {
+                // 检查两个组是否有完全相同的元素
+                if (group.size !== currentGroup.size) return false;
+                return [...currentGroup].every(id => group.has(id));
+            });
+            
+            // 如果是重复组，跳过
+            if (isDuplicate) return;
+            
+            // 如果不是重复组，创建新的聚类
+            const newClusterId = `core_${revelioGoodClusterIndex}`;
+            
+            // 显示类型名称，根据组类型显示不同的名称
+            let displayName = '';
+            if (groupKey === 'reveliogood_all') {
+                displayName = 'All RevelioGood Elements';
+            } else if (groupKey === 'reveliogood_basic') {
+                displayName = 'Basic RevelioGood';
+            } else if (groupKey.startsWith('reveliogood_')) {
+                displayName = groupKey.replace('reveliogood_', 'RevelioGood_');
+            } else {
+                displayName = 'RevelioGood';
+            }
+            
+            // 创建一个新的聚类节点
+            const newCluster = {
+                id: newClusterId,
+                name: `Core ${revelioGoodClusterIndex + 1} (${displayName})`,
+                type: 'core',
+                originalNodes: uniqueGroupElementIds,
+                dimensions: [],
+                extensionCount: 0,
+                extensions: [],
+                value: 1,
+                // 标记为reveliogood聚类
+                isRevelioGood: true
+            };
+            
+            // 将新聚类添加到节点列表中
+            processedNodes.push(newCluster);
+            
+            // 将当前组添加到已存在组的列表中，用于后续比较
+            existingElementGroups.push(currentGroup);
+            
+            // 增加索引
+            revelioGoodClusterIndex++;
+        });
+    } else if (Array.isArray(revelioGoodGroups)) {
+        // 处理旧版本的数组格式 - 将所有元素作为一个组处理
+        const uniqueRevelioGoodIds = [...new Set(revelioGoodGroups)];
+        
+        if (uniqueRevelioGoodIds.length > 0) {
+            // 创建当前组的Set以便比较
+            const currentGroup = new Set(uniqueRevelioGoodIds);
+            
+            // 检查当前组是否已经存在于现有组中
+            const isDuplicate = existingElementGroups.some(group => {
+                // 检查两个组是否有完全相同的元素
+                if (group.size !== currentGroup.size) return false;
+                return [...currentGroup].every(id => group.has(id));
+            });
+            
+            // 如果不是重复组，创建新的聚类
+            if (!isDuplicate) {
+                const newClusterId = `core_${revelioGoodClusterIndex}`;
+                
+                // 创建一个新的聚类节点
+                const newCluster = {
+                    id: newClusterId,
+                    name: `Core ${revelioGoodClusterIndex + 1} (All RevelioGood)`,
+                    type: 'core',
+                    originalNodes: uniqueRevelioGoodIds,
+                    dimensions: [],
+                    extensionCount: 0,
+                    extensions: [],
+                    value: 1,
+                    // 标记为reveliogood聚类
+                    isRevelioGood: true
+                };
+                
+                // 将新聚类添加到节点列表中
+                processedNodes.push(newCluster);
+            }
+        }
+    }
+    
     return { nodes: processedNodes };
 }
 
@@ -1168,6 +1291,8 @@ const fetchAnalysisData = async () => {
 // 首先添加一个ref来存储特征数据
 const clusterFeatures = ref(null);
 const normalizedData = ref(null);
+// 添加一个ref来存储从SVG中提取的reveliogood元素
+const revelioGoodElements = ref([]);
 
 // 在loadAndRenderGraph函数中添加获取特征数据的逻辑
 async function loadAndRenderGraph() {
@@ -1190,6 +1315,10 @@ async function loadAndRenderGraph() {
             normalDataResponse.json()
         ]);
 
+        // 从SVG中提取包含class="reveliogood"的元素，按组分类
+        const revelioGoodGroups = extractRevelioGoodElements(svgContent);
+        revelioGoodElements.value = Array.from(revelioGoodGroups.values()).flat();
+
         // 检查数据是否更新
         if (originalSvgContent.value !== svgContent ||
             JSON.stringify(graphData.value) !== JSON.stringify(data) ||
@@ -1206,8 +1335,8 @@ async function loadAndRenderGraph() {
             thumbnailCache.clear();
             elementStats.value.clear();
 
-            // 处理数据，将扩展节点集成到核心节点中
-            const processedData = processGraphData(data);
+            // 处理数据，将扩展节点集成到核心节点中，并添加从SVG中提取的revelioGood元素聚类
+            const processedData = processGraphData(data, revelioGoodGroups);
             nodes.value = processedData.nodes.filter(node => node.type === 'core');
 
             // 等待DOM更新后，一次性渲染所有卡片
@@ -1233,6 +1362,66 @@ async function loadAndRenderGraph() {
             // 再次更新总览条，确保显著性数据已更新
             updateOverview();
         });
+    }
+}
+
+// 添加一个函数用于解析SVG并提取class="reveliogood"的元素
+function extractRevelioGoodElements(svgContent) {
+    try {
+        // 创建一个DOM解析器
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
+        
+        // 创建一个Map来存储不同类型的reveliogood元素组
+        const revelioGoodGroups = new Map();
+        
+        // 初始化一个"all"组来保存所有reveliogood相关的元素
+        revelioGoodGroups.set('reveliogood_all', []);
+        
+        // 初始化一个普通的reveliogood组（只有无数字后缀的reveliogood类）
+        revelioGoodGroups.set('reveliogood_basic', []);
+        
+        // 查找所有包含class="reveliogood"的元素
+        const revelioGoodNodes = svgDoc.querySelectorAll('[class*="reveliogood"]');
+        
+        // 遍历所有元素
+        revelioGoodNodes.forEach(node => {
+            if (!node.id) return;
+            
+            const classAttr = node.getAttribute('class') || '';
+            const elementId = node.id;
+            
+            // 1. 始终添加到"所有reveliogood元素"组
+            revelioGoodGroups.get('reveliogood_all').push(elementId);
+            
+            // 2. 检查是否包含普通的reveliogood类（没有数字后缀）
+            if (classAttr.match(/\breveliogood\b/)) {
+                revelioGoodGroups.get('reveliogood_basic').push(elementId);
+            }
+            
+            // 3. 检查是否包含reveliogood_n格式的类并添加到对应组
+            const matches = classAttr.match(/reveliogood_(\d+)/g);
+            if (matches && matches.length > 0) {
+                matches.forEach(match => {
+                    if (!revelioGoodGroups.has(match)) {
+                        revelioGoodGroups.set(match, []);
+                    }
+                    revelioGoodGroups.get(match).push(elementId);
+                });
+            }
+        });
+        
+        // 移除空组
+        for (const [key, elements] of revelioGoodGroups.entries()) {
+            if (elements.length === 0) {
+                revelioGoodGroups.delete(key);
+            }
+        }
+        
+        return revelioGoodGroups;
+    } catch (error) {
+        console.error('Error extracting reveliogood elements:', error);
+        return new Map();
     }
 }
 
@@ -1532,24 +1721,24 @@ function getHighlightedElementsStats(nodeData) {
 }
 
 // 修改注意力概率计算函数
-const calculateAttentionProbability = (nodeData, returnRawScore = false) => {
+const calculateAttentionProbability = (node, returnRawScore = false) => {
     if (!normalizedData.value || normalizedData.value.length === 0) return 0.1;
 
     try {
         let nodesToAnalyze = [];
 
-        if (nodeData.type === 'extension') {
+        if (node.type === 'extension') {
             // 对于外延节点，同时分析核心节点的内容
-            const coreIndex = parseInt(nodeData.clusterId);
+            const coreIndex = parseInt(node.clusterId);
             const coreNode = nodes.value.find(n => n.id === `core_${coreIndex}`);
             if (coreNode) {
                 nodesToAnalyze.push(...coreNode.originalNodes);
             }
             // 再添加外延节点内容
-            nodesToAnalyze.push(...nodeData.originalNodes);
+            nodesToAnalyze.push(...node.originalNodes);
         } else {
             // 核心节点只分析自身
-            nodesToAnalyze = [...nodeData.originalNodes];
+            nodesToAnalyze = [...node.originalNodes];
         }
 
         if (nodesToAnalyze.length === 0) return 0.1;
@@ -1715,6 +1904,11 @@ const calculateAttentionProbability = (nodeData, returnRawScore = false) => {
         // 如果高亮元素的平均面积小于阈值，显著降低显著性
         if (highlightedAvgArea < areaThreshold) {
             salienceScore = salienceScore / 3;
+        }
+        
+        // 检查是否是reveliogood聚类，如果是则额外加5分
+        if (node.isRevelioGood) {
+            salienceScore += 0.1;
         }
 
         // 如果需要返回原始分数（用于排序），直接返回
