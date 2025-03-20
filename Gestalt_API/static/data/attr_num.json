@@ -1,31 +1,39 @@
 [
     {
         "attribute": "height",
-        "num": 3
+        "num": 13
     },
     {
         "attribute": "id",
-        "num": 3
+        "num": 13
     },
     {
         "attribute": "tag_name",
-        "num": 3
+        "num": 13
     },
     {
         "attribute": "width",
-        "num": 3
+        "num": 13
+    },
+    {
+        "attribute": "class",
+        "num": 12
     },
     {
         "attribute": "fill",
-        "num": 2
+        "num": 12
+    },
+    {
+        "attribute": "stroke-width",
+        "num": 12
     },
     {
         "attribute": "x",
-        "num": 2
+        "num": 12
     },
     {
         "attribute": "y",
-        "num": 2
+        "num": 12
     },
     {
         "attribute": "version",
@@ -37,6 +45,10 @@
     },
     {
         "attribute": "xmlns:xlink",
+        "num": 1
+    },
+    {
+        "attribute": "stroke",
         "num": 1
     }
 ]

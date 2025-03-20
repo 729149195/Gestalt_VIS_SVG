@@ -1,22 +1,11 @@
 {
-    "nodes": [
-        {
-            "id": "svg/rect_1",
-            "name": "svg/rect_1",
-            "cluster": 0
-        },
-        {
-            "id": "svg/rect",
-            "name": "svg/rect",
-            "cluster": 1
-        }
-    ],
+    "nodes": [],
     "links": [],
-    "clusters": 2,
+    "clusters": 0,
     "dimensions": [
         0,
         1
     ],
-    "filtered": false,
-    "filter_reason": null
+    "filtered": true,
+    "filter_reason": "\u8fc7\u6ee4(\u6742\u4e71\u65e0\u89c4\u5f8b)"
 }
