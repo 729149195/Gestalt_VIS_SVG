@@ -22,7 +22,7 @@
           <!-- 添加阴影遮盖器 -->
           <div class="shadow-overlay top" :class="{ active: featureSectionScrollTop > 10 }"></div>
           <div class="shadow-overlay bottom" :class="{ active: isFeatureSectionScrollable && !isFeatureSectionScrolledToBottom }"></div>
-          <div class="analysis-content" @scroll="handleFeatureSectionScroll" v-html="analysisContent" @click="handleClick"></div>
+          <div class="analysis-content" @scroll="handleFeatureSectionScroll" v-html="analysisContent"></div>
         </div>
       </div>
       <div class="section-wrapper">
@@ -487,8 +487,47 @@ const handleClick = (event) => {
   const copyableValue = event.target.closest('.copyable-value');
   if (copyableValue) {
     const textToCopy = copyableValue.getAttribute('data-value');
+    const featureName = copyableValue.closest('.feature-name-container')?.textContent;
+    let processedText = textToCopy;
+
     if (textToCopy) {
-      navigator.clipboard.writeText(textToCopy).then(() => {
+      // 根据特征类型进行二次处理
+      if (featureName) {
+        if (featureName.includes('fill hue') || featureName.includes('fill saturation') || 
+            featureName.includes('fill lightness')) {
+          processedText = `fill="${textToCopy}"`;
+        } else if (featureName.includes('stroke hue') || featureName.includes('stroke saturation') || 
+                  featureName.includes('stroke lightness')) {
+          processedText = `stroke="${textToCopy}"`;
+        } else if (featureName.includes('stroke width')) {
+          // 去掉px并加1
+          const numValue = parseFloat(textToCopy);
+          if (!isNaN(numValue)) {
+            processedText = `stroke-width="${numValue + 1}"`;
+          }
+        } else if (featureName.includes('area')) {
+          // 处理area
+          const numValue = parseFloat(textToCopy);
+          if (!isNaN(numValue)) {
+            processedText = `area up ${1 + numValue}`;
+          }
+        }
+      }
+
+      navigator.clipboard.writeText(processedText).then(() => {
+        // 显示复制成功提示
+        copyTooltip.value = {
+          visible: true,
+          text: '复制成功: ' + processedText,
+          x: event.clientX,
+          y: event.clientY
+        };
+        
+        // 1.5秒后隐藏提示
+        setTimeout(() => {
+          copyTooltip.value.visible = false;
+        }, 1500);
+        
         ElMessage({
           message: '复制成功',
           type: 'success',
