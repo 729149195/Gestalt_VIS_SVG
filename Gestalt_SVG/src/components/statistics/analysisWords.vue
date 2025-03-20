@@ -1,13 +1,13 @@
 <template>
   <div class="analysis-words-container">
     <!-- 修改按钮图标为更合适的展开图标 -->
-    <!-- <button class="apple-button-corner" @click="showDrawer = true">
+    <button class="apple-button-corner" @click="showDrawer = true">
       <div class="arrow-wrapper">
         <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </div>
-    </button> -->
+    </button>
 
     <!-- 保持大标题在顶部 -->
     <div class="title">Visual Encodings Assessment</div>
@@ -40,7 +40,7 @@
     </div>
 
     <!-- 使用 Teleport 将抽屉传送到 body -->
-    <!-- <Teleport to="body">
+    <Teleport to="body">
       <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
       <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
         <button class="close-button" @click="showDrawer = false">×</button>
@@ -48,7 +48,7 @@
           <maxstic :key="componentKey" />
         </div>
       </div>
-    </Teleport> -->
+    </Teleport>
 
     <!-- 添加复制成功提示 -->
     <div v-if="copyTooltip.visible" 
@@ -493,32 +493,46 @@ const handleClick = (event) => {
     if (textToCopy) {
       // 进行二次处理
       let finalTextToCopy = textToCopy;
+      let valueType = null;
       
       // 判断内容类型并进行相应处理
       if (textToCopy.startsWith('rgb') || textToCopy.includes('rgb(')) {
         // 处理fill颜色
-        if (copyableValue.closest('.feature-name-container')?.textContent.includes('fill')) {
+        if (featureName?.includes('fill')) {
           finalTextToCopy = `fill="${textToCopy}"`;
+          valueType = 'color-fill';
         } 
         // 处理stroke颜色
-        else if (copyableValue.closest('.feature-name-container')?.textContent.includes('stroke')) {
+        else if (featureName?.includes('stroke')) {
           finalTextToCopy = `stroke="${textToCopy}"`;
+          valueType = 'color-stroke';
         }
       } 
       // 处理stroke-width
-      else if (copyableValue.closest('.feature-name-container')?.textContent.includes('stroke width')) {
+      else if (featureName?.includes('stroke width')) {
         // 去掉px并加1
         const numValue = parseFloat(textToCopy.replace('px', ''));
         finalTextToCopy = `stroke-width="${numValue + 1}"`;
+        valueType = 'stroke-width';
       }
       // 处理area
-      else if (copyableValue.closest('.feature-name-container')?.textContent.includes('area')) {
+      else if (featureName?.includes('area')) {
         // 计算 1+原来的数值
         const numValue = parseFloat(textToCopy);
         finalTextToCopy = `area up ${1 + numValue}`;
+        valueType = 'area';
       }
 
       navigator.clipboard.writeText(finalTextToCopy).then(() => {
+        // 更新到 store
+        if (valueType) {
+          store.dispatch('setCopiedValue', {
+            value: textToCopy,
+            type: valueType,
+            featureName: featureName
+          });
+        }
+
         // 显示复制提示
         copyTooltip.value = {
           visible: true,

@@ -14,7 +14,10 @@ export default createStore({
       },
       AllVisiableNodes: [],          // 所有可见的节点 ID 列表
       ele_num_data: null,            // 元素数量数据
-      visualSalience: []             // 视觉显著性数组，存储所有卡片的显著性值
+      visualSalience: [],            // 视觉显著性数组，存储所有卡片的显著性值
+      copiedValue: null,             // 存储复制的值
+      copiedValueType: null,         // 存储复制值的类型（color, stroke-width, area）
+      copiedFeatureName: null        // 存储复制值的特征名称
     };
   },
   mutations: {
@@ -60,6 +63,16 @@ export default createStore({
     SET_VISUAL_SALIENCE(state, value) {
       // 设置视觉显著性数组
       state.visualSalience = value;
+    },
+    SET_COPIED_VALUE(state, { value, type, featureName }) {
+      state.copiedValue = value;
+      state.copiedValueType = type;
+      state.copiedFeatureName = featureName;
+    },
+    CLEAR_COPIED_VALUE(state) {
+      state.copiedValue = null;
+      state.copiedValueType = null;
+      state.copiedFeatureName = null;
     }
   },
   actions: {
@@ -74,6 +87,12 @@ export default createStore({
     },
     removeSelectedNode({ commit }, nodeId) {
       commit('REMOVE_SELECTED_NODE', nodeId);
+    },
+    setCopiedValue({ commit }, payload) {
+      commit('SET_COPIED_VALUE', payload);
+    },
+    clearCopiedValue({ commit }) {
+      commit('CLEAR_COPIED_VALUE');
     }
   },
   getters: {
@@ -88,6 +107,13 @@ export default createStore({
     getSelectedGroup(state) {
       // 获取当前选中的组信息
       return state.selectedNodes.group;
+    },
+    getCopiedValue(state) {
+      return {
+        value: state.copiedValue,
+        type: state.copiedValueType,
+        featureName: state.copiedFeatureName
+      };
     }
   }
 });

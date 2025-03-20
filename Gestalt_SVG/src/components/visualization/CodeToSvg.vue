@@ -149,6 +149,7 @@ let svgEditor = null
 
 // 从Vuex获取selectedNodes
 const store = useStore()
+const copiedValue = computed(() => store.getters.getCopiedValue)
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds)
 
 // 文件上传相关变量
@@ -374,6 +375,135 @@ const formatSvgEditor = () => {
     }
   }
 }
+
+// 监听复制值的变化
+watch([copiedValue, selectedNodeIds], async ([newCopiedValue, newSelectedNodeIds]) => {
+  if (!newCopiedValue?.value || !newSelectedNodeIds?.length) return;
+
+  // 获取当前SVG内容
+  const currentSvgContent = svgEditor.getValue();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(currentSvgContent, 'image/svg+xml');
+
+  // 处理每个选中的节点
+  newSelectedNodeIds.forEach(nodeId => {
+    // 查找对应的元素
+    const element = doc.getElementById(nodeId) || 
+                   doc.querySelector(`[id$="/${nodeId}"]`);
+    
+    if (!element) return;
+
+    switch (newCopiedValue.type) {
+      case 'color-fill':
+        element.setAttribute('fill', newCopiedValue.value);
+        break;
+      case 'color-stroke':
+        element.setAttribute('stroke', newCopiedValue.value);
+        break;
+      case 'stroke-width':
+        // 获取当前stroke-width值（如果存在）
+        let currentWidth = element.getAttribute('stroke-width');
+        let newWidth;
+        
+        if (currentWidth !== null && currentWidth !== '') {
+          // 已有stroke-width值，在现有基础上累加
+          currentWidth = parseFloat(currentWidth);
+          const addWidth = parseFloat(newCopiedValue.value.replace('px', '')) + 1;
+          newWidth = currentWidth + addWidth;
+        } else {
+          // 没有stroke-width值，设置新值
+          newWidth = parseFloat(newCopiedValue.value.replace('px', '')) + 1;
+        }
+        
+        element.setAttribute('stroke-width', newWidth.toString());
+        break;
+      case 'area':
+        const scaleValue = 1 + parseFloat(newCopiedValue.value);
+        
+        try {
+          // 创建一个临时SVG来获取元素的原始边界框
+          const svgNS = "http://www.w3.org/2000/svg";
+          const tempSvg = document.createElementNS(svgNS, "svg");
+          document.body.appendChild(tempSvg);
+          
+          // 克隆元素到临时SVG
+          const tempElement = element.cloneNode(true);
+          
+          // 移除所有变换以获取原始边界框
+          tempElement.removeAttribute('transform');
+          tempSvg.appendChild(tempElement);
+          
+          // 获取元素的原始边界框
+          const bbox = tempElement.getBBox();
+          
+          // 计算中心点
+          const cx = bbox.x + bbox.width / 2;
+          const cy = bbox.y + bbox.height / 2;
+          
+          // 读取自定义缩放属性，或使用1作为默认值
+          let currentScaleFactor = element.getAttribute('data-scale-factor');
+          if (!currentScaleFactor) {
+            currentScaleFactor = 1;
+          } else {
+            currentScaleFactor = parseFloat(currentScaleFactor);
+          }
+          
+          // 计算新的缩放因子并保存到自定义属性
+          const newScaleFactor = currentScaleFactor * scaleValue;
+          element.setAttribute('data-scale-factor', newScaleFactor.toString());
+          
+          // 移除所有现有变换，创建新的变换
+          element.setAttribute('transform', `translate(${cx}, ${cy}) scale(${newScaleFactor}) translate(${-cx}, ${-cy})`);
+          
+          // 清理临时SVG
+          document.body.removeChild(tempSvg);
+        } catch (e) {
+          console.error('Error applying area transform:', e);
+          
+          // 备用方法
+          try {
+            // 获取边界框
+            const bbox = element.getBBox();
+            
+            // 计算中心点
+            const cx = bbox.x + bbox.width / 2;
+            const cy = bbox.y + bbox.height / 2;
+            
+            // 读取当前缩放因子或设置默认值
+            let currentScaleFactor = element.getAttribute('data-scale-factor');
+            if (!currentScaleFactor) {
+              currentScaleFactor = 1;
+            } else {
+              currentScaleFactor = parseFloat(currentScaleFactor);
+            }
+            
+            // 计算新的缩放因子
+            const newScaleFactor = currentScaleFactor * scaleValue;
+            element.setAttribute('data-scale-factor', newScaleFactor.toString());
+            
+            // 设置变换
+            element.setAttribute('transform', `translate(${cx}, ${cy}) scale(${newScaleFactor}) translate(${-cx}, ${-cy})`);
+          } catch (innerError) {
+            console.error('备用变换方法也失败:', innerError);
+          }
+        }
+        break;
+    }
+  });
+
+  // 更新SVG编辑器的内容
+  const serializer = new XMLSerializer();
+  const updatedSvgContent = serializer.serializeToString(doc);
+  svgEditor.setValue(updatedSvgContent);
+
+  // 格式化更新后的内容
+  setTimeout(() => {
+    formatSvgEditor();
+  }, 100);
+
+  // 清除复制的值
+  store.dispatch('clearCopiedValue');
+});
 
 // 监听语法变化
 watch(selectedSyntax, (newValue) => {
