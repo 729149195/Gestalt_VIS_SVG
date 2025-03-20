@@ -488,7 +488,47 @@ const handleClick = (event) => {
   if (copyableValue) {
     const textToCopy = copyableValue.getAttribute('data-value');
     if (textToCopy) {
-      navigator.clipboard.writeText(textToCopy).then(() => {
+      // 进行二次处理
+      let finalTextToCopy = textToCopy;
+      
+      // 判断内容类型并进行相应处理
+      if (textToCopy.startsWith('rgb') || textToCopy.includes('rgb(')) {
+        // 处理fill颜色
+        if (copyableValue.closest('.feature-name-container')?.textContent.includes('fill')) {
+          finalTextToCopy = `fill="${textToCopy}"`;
+        } 
+        // 处理stroke颜色
+        else if (copyableValue.closest('.feature-name-container')?.textContent.includes('stroke')) {
+          finalTextToCopy = `stroke="${textToCopy}"`;
+        }
+      } 
+      // 处理stroke-width
+      else if (copyableValue.closest('.feature-name-container')?.textContent.includes('stroke width')) {
+        // 去掉px并加1
+        const numValue = parseFloat(textToCopy.replace('px', ''));
+        finalTextToCopy = `stroke-width="${numValue + 1}"`;
+      }
+      // 处理area
+      else if (copyableValue.closest('.feature-name-container')?.textContent.includes('area')) {
+        // 计算 1+原来的数值
+        const numValue = parseFloat(textToCopy);
+        finalTextToCopy = `area up ${1 + numValue}`;
+      }
+
+      navigator.clipboard.writeText(finalTextToCopy).then(() => {
+        // 显示复制提示
+        copyTooltip.value = {
+          visible: true,
+          text: `已复制: ${finalTextToCopy}`,
+          x: event.clientX,
+          y: event.clientY
+        };
+        
+        // 1.5秒后隐藏提示
+        setTimeout(() => {
+          copyTooltip.value.visible = false;
+        }, 1500);
+        
         ElMessage({
           message: '复制成功',
           type: 'success',
