@@ -499,6 +499,12 @@ watch([copiedValue, selectedNodeIds], async ([newCopiedValue, newSelectedNodeIds
   // 格式化更新后的内容
   setTimeout(() => {
     formatSvgEditor();
+    
+    // 在格式化完成后，再等待一小段时间以确保编辑器内容已稳定，然后自动执行上传
+    setTimeout(() => {
+      // 执行上传操作
+      generateAndUpload();
+    }, 300);
   }, 100);
 
   // 清除复制的值
