@@ -22,7 +22,7 @@
           <!-- 添加阴影遮盖器 -->
           <div class="shadow-overlay top" :class="{ active: featureSectionScrollTop > 10 }"></div>
           <div class="shadow-overlay bottom" :class="{ active: isFeatureSectionScrollable && !isFeatureSectionScrolledToBottom }"></div>
-          <div class="analysis-content" @scroll="handleFeatureSectionScroll" v-html="analysisContent" @click="handleClick"></div>
+          <div class="analysis-content" @scroll="handleFeatureSectionScroll" v-html="analysisContent"></div>
         </div>
       </div>
       <div class="section-wrapper">
@@ -487,6 +487,9 @@ const handleClick = (event) => {
   const copyableValue = event.target.closest('.copyable-value');
   if (copyableValue) {
     const textToCopy = copyableValue.getAttribute('data-value');
+    const featureName = copyableValue.closest('.feature-name-container')?.textContent;
+    let processedText = textToCopy;
+
     if (textToCopy) {
       // 进行二次处理
       let finalTextToCopy = textToCopy;
