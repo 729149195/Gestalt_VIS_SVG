@@ -33,7 +33,7 @@
                         <div v-html="displaySvgContent"></div>
                         <div class="visual-salience-indicator" @click="showSalienceDetail">
                             <span class="salience-label">Visual salience</span>
-                            <span class="salience-value" v-if="selectedNodeIds.length > 0">{{ (visualSalience * 100).toFixed(3) }}</span>
+                            <span class="salience-value" v-if="selectedNodeIds.length > 0 && !fromPerceptionScope">{{ (visualSalience * 100).toFixed(3) }}</span>
                             <span class="salience-value" v-else>--.---</span>
                         </div>
                         <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
@@ -138,6 +138,8 @@ const lastFilename = ref(null);
 const lastSelectedElements = ref([]);
 // 添加变量记录上一次的scopeNodes状态
 const lastScopeNodes = ref([]);
+// 添加新的状态标记，用于跟踪是否通过updatePerceptionScope更新了节点
+const fromPerceptionScope = ref(false);
 
 const emit = defineEmits(['file-uploaded'])
 
@@ -360,6 +362,9 @@ const analyzeSvg = () => {
     analyzing.value = true;
     progress.value = 0;
     currentStep.value = 'Prepare to percept...';
+    
+    // 设置标记为true，这样Visual salience将显示为--.---
+    fromPerceptionScope.value = true;
 
     // 确保 selectedNodeIds 是数组格式
     const nodeIds = Array.isArray(selectedNodeIds.value) ? selectedNodeIds.value : [];
@@ -407,7 +412,9 @@ const analyzeSvg = () => {
             analyzing.value = false;
             eventSource.close();
             await fetchNormalizedData();
-            calculateVisualSalience();
+            // 不再计算显著性值
+            // 添加延迟重置fromPerceptionScope，确保后续交互可以正常计算显著性
+            setTimeout(() => { fromPerceptionScope.value = false; }, 100);
         });
 }
 
@@ -456,6 +463,9 @@ const updatePerceptionScope = () => {
     console.log('Updating perception scope with selected elements:', selectedElements.value);
     console.log('Scope node IDs:', scopeNodes.value);
 
+    // 设置标记为true，表示当前是通过updatePerceptionScope传递节点的
+    fromPerceptionScope.value = true;
+
     // 如果scopeNodes为空（没有特别选择的节点），则将所有可见元素设为选中
     if (scopeNodes.value.length === 0) {
         // 获取所有可见元素的ID
@@ -493,6 +503,11 @@ const updatePerceptionScope = () => {
         type: 'success',
         duration: 3000
     });
+    
+    console.log('更新感知范围完成，selectionMode:', selectionMode.value);
+    
+    // 重置fromPerceptionScope，以便随后的lasso选择能正常工作
+    setTimeout(() => { fromPerceptionScope.value = false; }, 100);
 }
 
 // 为两个SVG添加缩放和拖拽功能
@@ -675,7 +690,7 @@ const setupDualSvgInteractions = () => {
     // 设置控制区SVG交互 - 可点击但不高亮
     setupControlSvgInteractions();
 
-    // 设置显示区SVG交互 - 可高亮但不可点击
+    // 设置显示区SVG交互 - 可高亮也可点击
     setupDisplaySvgInteractions();
 
     // 添加缩放效果到两个SVG
@@ -686,6 +701,47 @@ const setupDualSvgInteractions = () => {
         updateControlNodeOpacity();
         updateDisplayNodeOpacity();
     });
+    
+    // 根据当前选择模式设置交互模式
+    if (selectionMode.value === 'lasso') {
+        // 如果当前是lasso模式，确保两个区域都启用了追踪模式
+        if (!isTracking.value) {
+            toggleTrackMode();
+        }
+        if (!isDisplayTracking.value) {
+            toggleDisplayTrackMode();
+        }
+        // 设置鼠标样式
+        nextTick(() => {
+            if (controlSvgContainer.value) {
+                controlSvgContainer.value.classList.add('lasso-cursor');
+                controlSvgContainer.value.classList.remove('click-cursor');
+            }
+            if (displaySvgContainer.value) {
+                displaySvgContainer.value.classList.add('lasso-cursor');
+                displaySvgContainer.value.classList.remove('grab-cursor');
+            }
+        });
+    } else {
+        // 如果当前是点击模式，确保两个区域都禁用了追踪模式
+        if (isTracking.value) {
+            toggleTrackMode();
+        }
+        if (isDisplayTracking.value) {
+            toggleDisplayTrackMode();
+        }
+        // 设置鼠标样式
+        nextTick(() => {
+            if (controlSvgContainer.value) {
+                controlSvgContainer.value.classList.add('click-cursor');
+                controlSvgContainer.value.classList.remove('lasso-cursor');
+            }
+            if (displaySvgContainer.value) {
+                displaySvgContainer.value.classList.add('grab-cursor');
+                displaySvgContainer.value.classList.remove('lasso-cursor');
+            }
+        });
+    }
 };
 
 // 设置控制区SVG交互 - 可点击但不高亮
@@ -868,9 +924,21 @@ watch(selectedNodeIds, async () => {
     await nextTick();
     updateDisplayNodeOpacity(); // 更新显示区的节点透明度
     updateControlNodeOpacity(); // 更新控制区的节点透明度
-    // 当选中节点变化时，先获取最新的normalized数据，再计算视觉显著性
-    await fetchNormalizedData();
-    calculateVisualSalience();
+    
+    // 当选中节点变化时，只有在不是通过updatePerceptionScope或analyzeSvg时才计算显著性
+    if (!fromPerceptionScope.value) {
+        // 当选中节点变化时且非fromPerceptionScope状态，先获取最新的normalized数据，再计算视觉显著性
+        await fetchNormalizedData();
+        calculateVisualSalience();
+    }
+});
+
+// 监听fromPerceptionScope的变化，主要是跟踪用户在界面上直接对SVG的选择操作
+watch(fromPerceptionScope, (newValue) => {
+    // 当fromPerceptionScope从true变为false时，表示从手动选择模式进入
+    if (!newValue) {
+        // 在这里可以根据需要进行其他操作
+    }
 });
 
 // 监听selectedElements的变化
@@ -894,30 +962,168 @@ watch(() => analyzing.value, (newValue) => {
 const selectionMode = ref('click'); // 默认为点击选择模式
 
 const setSelectionMode = (mode) => {
+    const oldMode = selectionMode.value;
     selectionMode.value = mode;
+    console.log(`切换选择模式: ${oldMode} -> ${mode}`);
 
-    if (mode === 'lasso') {
-        if (!isTracking.value) {
-            toggleTrackMode(); // 启用多选模式
-        }
-        // 添加lasso模式的鼠标样式
-        nextTick(() => {
-            if (controlSvgContainer.value) {
-                controlSvgContainer.value.classList.add('lasso-cursor');
-                controlSvgContainer.value.classList.remove('click-cursor');
+    try {
+        if (mode === 'lasso') {
+            console.log('启用lasso选择模式');
+            // 启用控制区的多选模式
+            if (!isTracking.value) {
+                console.log('为控制区启用lasso模式');
+                toggleTrackMode();
             }
+            // 启用显示区的多选模式
+            if (!isDisplayTracking.value) {
+                console.log('为显示区启用lasso模式');
+                toggleDisplayTrackMode();
+            }
+            // 添加lasso模式的鼠标样式
+            nextTick(() => {
+                if (controlSvgContainer.value) {
+                    controlSvgContainer.value.classList.add('lasso-cursor');
+                    controlSvgContainer.value.classList.remove('click-cursor');
+                }
+                if (displaySvgContainer.value) {
+                    displaySvgContainer.value.classList.add('lasso-cursor');
+                    displaySvgContainer.value.classList.remove('grab-cursor');
+                }
+            });
+        } else {
+            console.log('禁用lasso选择模式');
+            // 禁用控制区的多选模式
+            if (isTracking.value) {
+                console.log('为控制区禁用lasso模式');
+                toggleTrackMode();
+            }
+            // 禁用显示区的多选模式
+            if (isDisplayTracking.value) {
+                console.log('为显示区禁用lasso模式');
+                toggleDisplayTrackMode();
+            }
+            // 添加clicking模式的鼠标样式
+            nextTick(() => {
+                if (controlSvgContainer.value) {
+                    controlSvgContainer.value.classList.add('click-cursor');
+                    controlSvgContainer.value.classList.remove('lasso-cursor');
+                }
+                if (displaySvgContainer.value) {
+                    displaySvgContainer.value.classList.add('grab-cursor');
+                    displaySvgContainer.value.classList.remove('lasso-cursor');
+                }
+            });
+        }
+    } catch (error) {
+        console.error('切换选择模式时出错:', error);
+    }
+};
+
+// 显示区域的追踪模式变量
+const isDisplayTracking = ref(false);
+const displayCurrentTransform = ref(null);
+
+// 显示区域的追踪模式切换函数
+const toggleDisplayTrackMode = () => {
+    isDisplayTracking.value = !isDisplayTracking.value;
+    const svg = d3.select(displaySvgContainer.value).select('svg'); // 在显示区启用路径选择
+
+    if (isDisplayTracking.value) {
+        nextTick(() => {
+            displaySvgContainer.value.classList.add('lasso-cursor');
+            displaySvgContainer.value.classList.remove('grab-cursor');
         });
+        enableDisplayTrackMode();
+
+        const transform = d3.zoomTransform(svg.node());
+        displayCurrentTransform.value = transform;
+        svg.on('.zoom', null); // 禁用显示区SVG的缩放
     } else {
-        if (isTracking.value) {
-            toggleTrackMode(); // 禁用多选模式
+        displaySvgContainer.value.classList.remove('lasso-cursor');
+        displaySvgContainer.value.classList.add('grab-cursor');
+        disableDisplayTrackMode();
+
+        const zoom = d3.zoom()
+            .scaleExtent([0.5, 10])
+            .on('zoom', (event) => {
+                if (!isDisplayTracking.value) {
+                    svg.select('g.zoom-wrapper').attr('transform', event.transform);
+                    syncOtherSvgZoom(svg, event.transform, 'display');
+                }
+            });
+
+        svg.call(zoom);
+        if (displayCurrentTransform.value) {
+            svg.call(zoom.transform, displayCurrentTransform.value);
         }
-        // 添加clicking模式的鼠标样式
-        nextTick(() => {
-            if (controlSvgContainer.value) {
-                controlSvgContainer.value.classList.add('click-cursor');
-                controlSvgContainer.value.classList.remove('lasso-cursor');
+    }
+};
+
+// 显示区域启用追踪模式
+const enableDisplayTrackMode = () => {
+    let isMouseDown = false;
+    let clickedElements = new Set();
+    const svg = displaySvgContainer.value.querySelector('svg'); // 使用显示区SVG
+
+    const handleMouseDown = () => {
+        isMouseDown = true;
+        clickedElements.clear();
+        // 在lasso模式开始时重置fromPerceptionScope，确保能够正常取消选择
+        fromPerceptionScope.value = false;
+    };
+
+    const handleMouseUp = (event) => {
+        if (isMouseDown && clickedElements.size > 0) {
+            // 如果已经选中了元素，阻止事件冒泡以避免触发点击事件
+            event.stopPropagation();
+        }
+        isMouseDown = false;
+    };
+
+    const handleMouseMove = (event) => {
+        if (isMouseDown) {
+            const point = svg.createSVGPoint();
+            point.x = event.clientX;
+            point.y = event.clientY;
+            const svgPoint = point.matrixTransform(svg.getScreenCTM().inverse());
+
+            const node = document.elementFromPoint(event.clientX, event.clientY);
+            if (node && node.id && !clickedElements.has(node) &&
+                node.tagName && node.tagName.toLowerCase() !== 'svg' &&
+                node.tagName.toLowerCase() !== 'g') {
+                clickedElements.add(node);
+                node.dispatchEvent(new Event('click', { bubbles: true }));
             }
-        });
+        }
+    };
+    
+    // 阻止SVG的默认拖拽行为，确保lasso选择能够正常工作
+    const handleDragStart = (event) => {
+        event.preventDefault();
+    };
+    
+    svg.addEventListener('dragstart', handleDragStart);
+    svg.addEventListener('mousedown', handleMouseDown);
+    svg.addEventListener('mouseup', handleMouseUp);
+    svg.addEventListener('mousemove', handleMouseMove);
+
+    nodeEventHandlers.set(svg, { handleMouseDown, handleMouseUp, handleMouseMove, handleDragStart });
+};
+
+// 显示区域禁用追踪模式
+const disableDisplayTrackMode = () => {
+    const svg = displaySvgContainer.value.querySelector('svg'); // 使用显示区SVG
+    if (svg) {
+        const handlers = nodeEventHandlers.get(svg);
+        if (handlers) {
+            svg.removeEventListener('mousedown', handlers.handleMouseDown);
+            svg.removeEventListener('mouseup', handlers.handleMouseUp);
+            svg.removeEventListener('mousemove', handlers.handleMouseMove);
+            // 如果存在dragstart处理函数，也移除它
+            if (handlers.handleDragStart) {
+                svg.removeEventListener('dragstart', handlers.handleDragStart);
+            }
+        }
     }
 };
 
@@ -1249,20 +1455,68 @@ const setupDisplaySvgInteractions = () => {
     if (oldClickHandler) {
         svg.removeEventListener('click', oldClickHandler);
     }
+    
+    // 移除现有的悬停处理器
+    const oldMouseoverHandler = svg._mouseoverHandler;
+    const oldMouseoutHandler = svg._mouseoutHandler;
+    if (oldMouseoverHandler) {
+        svg.removeEventListener('mouseover', oldMouseoverHandler);
+    }
+    if (oldMouseoutHandler) {
+        svg.removeEventListener('mouseout', oldMouseoutHandler);
+    }
 
-    // 添加新的点击事件处理器
+    // 保存新的事件处理器引用
     svg._clickHandler = handleDisplaySvgClick;
+    svg._mouseoverHandler = handleDisplaySvgMouseover;
+    svg._mouseoutHandler = handleDisplaySvgMouseout;
+
+    // 添加新的事件监听器
     svg.addEventListener('click', svg._clickHandler);
+    svg.addEventListener('mouseover', svg._mouseoverHandler);
+    svg.addEventListener('mouseout', svg._mouseoutHandler);
 
     // 更新显示区节点的高亮状态
     updateDisplayNodeOpacity();
 
-    // 添加拖拽鼠标样式
+    // 根据当前选择模式设置鼠标样式
     nextTick(() => {
         if (svgContainer) {
-            svgContainer.classList.add('grab-cursor');
+            if (selectionMode.value === 'lasso') {
+                svgContainer.classList.add('lasso-cursor');
+                svgContainer.classList.remove('grab-cursor');
+            } else {
+                svgContainer.classList.add('grab-cursor');
+                svgContainer.classList.remove('lasso-cursor');
+            }
         }
     });
+};
+
+// 显示区鼠标悬停处理
+const handleDisplaySvgMouseover = (event) => {
+    const target = event.target;
+    if (!target || !target.tagName) return;
+
+    const nodeType = target.tagName.toLowerCase();
+
+    // 只有当元素类型在选中列表中时，才改变鼠标样式
+    if (selectedElements.value.includes(nodeType) && target.id) {
+        target.style.cursor = selectionMode.value === 'lasso' ? 'crosshair' : 'pointer';
+    }
+};
+
+// 显示区鼠标移出处理
+const handleDisplaySvgMouseout = (event) => {
+    const target = event.target;
+    if (!target || !target.tagName) return;
+
+    // 恢复原始样式
+    const nodeType = target.tagName.toLowerCase();
+    if (selectedElements.value.includes(nodeType)) {
+        // 恢复默认鼠标样式
+        target.style.cursor = '';
+    }
 };
 
 // 显示区SVG点击处理函数
@@ -1271,6 +1525,15 @@ const handleDisplaySvgClick = (event) => {
     const target = event.target;
     if (target.tagName.toLowerCase() === 'svg' ||
         (target.tagName.toLowerCase() === 'g' && target.classList.contains('zoom-wrapper'))) {
+        // 如果点击的是空白区域且不在lasso模式下，可以清除选择
+        if (selectionMode.value !== 'lasso') {
+            // 清空selectedNodes
+            store.dispatch('clearSelectedNodes');
+            // 更新显示区视图
+            nextTick(() => {
+                updateDisplayNodeOpacity();
+            });
+        }
         return;
     }
 
@@ -1283,9 +1546,13 @@ const handleDisplaySvgClick = (event) => {
     // 如果点击的是具体的SVG元素，则执行选中逻辑
     const nodeId = target.id;
     if (!nodeId) return;
+    
+    // 当在Selected elements区域直接选择元素时，将fromPerceptionScope设为false
+    // 这样可以允许计算显著性
+    fromPerceptionScope.value = false;
 
     if (selectedNodeIds.value.includes(nodeId)) {
-        // 从selectedNodes中移除节点
+        // 从selectedNodes中移除节点，不管是否在lasso模式下
         store.dispatch('removeSelectedNode', nodeId);
     } else {
         // 添加节点到selectedNodes
@@ -1302,6 +1569,51 @@ const handleDisplaySvgClick = (event) => {
 watch(scopeNodes, () => {
     nextTick(() => {
         updateControlNodeOpacity(); // 更新控制区的节点透明度
+    });
+});
+
+// 监听selectionMode的变化
+watch(selectionMode, (newMode) => {
+    // 更新控制区和显示区的交互模式
+    if (newMode === 'lasso') {
+        // 启用lasso模式
+        if (!isTracking.value) {
+            toggleTrackMode();
+        }
+        if (!isDisplayTracking.value) {
+            toggleDisplayTrackMode();
+        }
+    } else {
+        // 禁用lasso模式
+        if (isTracking.value) {
+            toggleTrackMode();
+        }
+        if (isDisplayTracking.value) {
+            toggleDisplayTrackMode();
+        }
+    }
+    
+    // 更新两个区域的鼠标样式
+    nextTick(() => {
+        if (controlSvgContainer.value) {
+            if (newMode === 'lasso') {
+                controlSvgContainer.value.classList.add('lasso-cursor');
+                controlSvgContainer.value.classList.remove('click-cursor');
+            } else {
+                controlSvgContainer.value.classList.add('click-cursor');
+                controlSvgContainer.value.classList.remove('lasso-cursor');
+            }
+        }
+        
+        if (displaySvgContainer.value) {
+            if (newMode === 'lasso') {
+                displaySvgContainer.value.classList.add('lasso-cursor');
+                displaySvgContainer.value.classList.remove('grab-cursor');
+            } else {
+                displaySvgContainer.value.classList.add('grab-cursor');
+                displaySvgContainer.value.classList.remove('lasso-cursor');
+            }
+        }
     });
 });
 
