@@ -578,10 +578,52 @@ const debounce = (fn, delay) => {
 // 格式化SVG代码
 const formatSvgCode = (svgString) => {
   try {
+    // 尝试修复SVG常见错误，防止解析失败
+    let fixedSvgString = svgString
+      // 修复不匹配的引号
+      .replace(/=(['"])(.*?)(?!\1)(['"])/g, '=$1$2$1')
+      // 修复缺少引号的属性值
+      .replace(/=([^"'][^\s>]*)/g, '="$1"')
+      // 修复特殊字符
+      .replace(/&(?!(amp;|lt;|gt;|quot;|apos;|#\d+;))/g, '&amp;')
+      // 修复自闭合标签
+      .replace(/<([a-zA-Z]+)([^>]*[^\/])>/g, (match, p1, p2) => {
+        const selfClosing = ['br', 'hr', 'img', 'input', 'link', 'meta', 'area', 'base', 'col', 'command', 'embed', 'keygen', 'param', 'source', 'track', 'wbr'];
+        return selfClosing.includes(p1.toLowerCase()) ? `<${p1}${p2}/>` : match;
+      });
+      
     // 创建一个DOMParser实例
     const parser = new DOMParser()
     // 解析SVG字符串
-    const doc = parser.parseFromString(svgString, 'image/svg+xml')
+    const doc = parser.parseFromString(fixedSvgString, 'image/svg+xml')
+    
+    // 检查是否有解析错误
+    const parseError = doc.querySelector('parsererror')
+    if (parseError) {
+      console.error('SVG parsing error detected:', parseError.textContent)
+      
+      // 对已修复的字符串尝试更强的修复措施
+      fixedSvgString = fixedSvgString
+        // 移除或修复可能导致问题的XML属性
+        .replace(/xmlns:NS\d+=""/g, '')
+        .replace(/NS\d+:/g, '')
+        // 修复未闭合的CDATA部分
+        .replace(/<!\[CDATA\[(.*?)(?!\]\]>)/g, '<![CDATA[$1]]>')
+        // 修复属性中的大于号和小于号
+        .replace(/="([^"]*>[^"]*<[^"]*)"/g, (match, p1) => {
+          return `="${p1.replace(/>/g, '&gt;').replace(/</g, '&lt;')}"`;
+        })
+        // 移除非法字符
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+        
+      // 尝试建立基本的SVG结构
+      if (!fixedSvgString.includes('<svg')) {
+        fixedSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${fixedSvgString}</svg>`;
+      }
+      
+      // 返回修复后的SVG字符串，不再尝试解析和格式化
+      return fixedSvgString;
+    }
 
     // 格式化函数
     const format = (node, level) => {
@@ -629,22 +671,48 @@ const formatSvgCode = (svgString) => {
 // 更新预览
 const updatePreview = () => {
   nextTick(() => {
-    // 格式化SVG代码
-    const formattedSvg = formatSvgCode(svgCode.value)
-    svgCode.value = formattedSvg
-    svgOutput.value = formattedSvg
+    try {
+      // 检查SVG代码是否有效
+      const parser = new DOMParser();
+      const testDoc = parser.parseFromString(svgCode.value, 'image/svg+xml');
+      const parseError = testDoc.querySelector('parsererror');
+      
+      if (parseError) {
+        console.error('SVG parsing error detected in updatePreview:', parseError.textContent);
+        // 使用修复函数尝试修复SVG
+        const fixedSvg = formatSvgCode(svgCode.value);
+        svgCode.value = fixedSvg;
+        svgOutput.value = fixedSvg;
+      } else {
+        // 正常格式化SVG代码
+        const formattedSvg = formatSvgCode(svgCode.value);
+        svgCode.value = formattedSvg;
+        svgOutput.value = formattedSvg;
+      }
 
-    // 确保SVG编辑器内容同步
-    if (svgEditor && svgEditor.getValue() !== formattedSvg) {
-      svgEditor.setValue(formattedSvg)
-      // 更新后格式化
-      setTimeout(() => {
-        formatSvgEditor()
-      }, 300)
+      // 确保SVG编辑器内容同步
+      if (svgEditor && svgEditor.getValue() !== svgCode.value) {
+        svgEditor.setValue(svgCode.value);
+        // 更新后格式化
+        setTimeout(() => {
+          formatSvgEditor();
+        }, 300);
+      }
+      setupZoomAndPan();
+    } catch (error) {
+      console.error('Error in updatePreview:', error);
+      // 创建基本的错误SVG
+      const errorSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 50">
+        <text x="10" y="20" fill="red">Error: ${error.message}</text>
+      </svg>`;
+      svgCode.value = errorSvg;
+      svgOutput.value = errorSvg;
+      if (svgEditor) {
+        svgEditor.setValue(errorSvg);
+      }
     }
-    setupZoomAndPan()
-  })
-}
+  });
+};
 
 // 生成SVG的主函数
 const generateSvg = async () => {
