@@ -496,111 +496,6 @@ const drawConnectionLines = () => {
     }
 };
 
-// 创建弧线路径的辅助函数
-const createArcPath = (x1, y1, x2, y2, verticalOffset) => {
-    // 计算两点之间的距离
-    const distance = Math.abs(x2 - x1);
-    
-    // 设置圆角半径
-    const cornerRadius = 5;
-    
-    // 使用传入的垂直偏移量，如果没有传入则计算
-    const offset = verticalOffset !== undefined ? verticalOffset : (() => {
-        // 根据距离计算垂直线段的高度
-        const minOffset = 8; // 最小高度
-        const maxOffset = 25; // 最大高度
-        const normalizedDistance = Math.min(distance / 200, 1); // 归一化距离，最大200px
-        return minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset));
-    })();
-    
-    // 计算垂直线段的Y坐标
-    const verticalY = y1 - offset;
-    
-    // 创建圆角方形路径，确保圆角方向正确
-    if (x1 < x2) {
-        // 从左到右
-        return `M ${x1} ${y1} 
-                L ${x1} ${y1 - cornerRadius} 
-                Q ${x1} ${verticalY} ${x1 + cornerRadius} ${verticalY} 
-                L ${x2 - cornerRadius} ${verticalY} 
-                Q ${x2} ${verticalY} ${x2} ${verticalY + cornerRadius} 
-                L ${x2} ${y2}`;
-    } else {
-        // 从右到左
-        return `M ${x1} ${y1} 
-                L ${x1} ${y1 - cornerRadius} 
-                Q ${x1} ${verticalY} ${x1 - cornerRadius} ${verticalY} 
-                L ${x2 + cornerRadius} ${verticalY} 
-                Q ${x2} ${verticalY} ${x2} ${verticalY + cornerRadius} 
-                L ${x2} ${y2}`;
-    }
-};
-
-// 计算弧线中点的辅助函数
-const calculateArcMidPoint = (x1, y1, x2, y2, verticalOffset) => {
-    // 计算两点之间的距离
-    const distance = Math.abs(x2 - x1);
-    
-    // 使用传入的垂直偏移量，如果没有传入则计算
-    const offset = verticalOffset !== undefined ? verticalOffset : (() => {
-        // 使用与createArcPath相同的逻辑计算高度
-        const minOffset = 8;
-        const maxOffset = 25;
-        const normalizedDistance = Math.min(distance / 200, 1);
-        return minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset));
-    })();
-    
-    // 计算水平线段的中点
-    const midX = (x1 + x2) / 2;
-    const midY = y1 - offset;
-    
-    return { x: midX, y: midY };
-};
-
-// 计算箭头角度的辅助函数
-const calculateArrowAngle = (coreX, coreY, extX, extY) => {
-    // 对于水平线段，箭头角度为0度（向右）
-    // 如果从核心到外延是从右到左，则箭头角度为180度（向左）
-    return coreX < extX ? 0 : 180;
-};
-
-// 标记总览条中当前可见的卡片
-const updateVisibleCards = () => {
-    if (!cardsWrapper.value || !overviewSvg.value) return;
-
-    try {
-        const containerRect = cardsWrapper.value.getBoundingClientRect();
-        const cards = document.querySelectorAll('.card');
-
-        // 不再添加或移除可见标记，保持矩形样式不变
-        /*
-        // 清除所有当前可见标记
-        const clusterItems = document.querySelectorAll('.cluster-item rect');
-        clusterItems.forEach(item => {
-            item.classList.remove('visible-in-viewport');
-        });
-        
-        // 标记当前可见的卡片
-        cards.forEach(card => {
-            const cardRect = card.getBoundingClientRect();
-            const nodeId = card.getAttribute('data-node-id');
-            
-            // 检查卡片是否在视口中可见（中心点在视口内）
-            const cardCenterX = cardRect.left + cardRect.width / 2;
-            if (cardCenterX > containerRect.left && cardCenterX < containerRect.right) {
-                // 找到对应的总览项并标记
-                const overviewItem = document.querySelector(`.cluster-item[data-node-id="${nodeId}"] rect`);
-                if (overviewItem) {
-                    overviewItem.classList.add('visible-in-viewport');
-                }
-            }
-        });
-        */
-    } catch (error) {
-        console.error('Error updating visible cards:', error);
-    }
-};
-
 // 创建节点的缩略图
 function createThumbnail(nodeData) {
     const cacheKey = JSON.stringify(nodeData.originalNodes);
@@ -688,129 +583,259 @@ function createThumbnail(nodeData) {
 function processGraphData(coreData, revelioGoodGroups = new Map()) {
     const processedNodes = [];
     
-    // 首先收集所有reveliogood组及其元素，内部去重
-    const revelioGoodSets = new Map();
-    if (revelioGoodGroups instanceof Map) {
-        revelioGoodGroups.forEach((elementIds, groupKey) => {
-            // 对每个组内元素进行去重
-            const uniqueElementIds = [...new Set(elementIds)];
-            if (uniqueElementIds.length > 0) {
-                revelioGoodSets.set(groupKey, new Set(uniqueElementIds));
+    // 首先收集所有API聚类的元素ID集合，用于后续去重
+    const apiClusters = [];
+    
+    if (coreData && coreData.core_clusters) {
+        coreData.core_clusters.forEach((cluster, clusterIndex) => {
+            // 收集核心聚类的元素
+            if (cluster.core_nodes && cluster.core_nodes.length > 0) {
+                apiClusters.push({
+                    id: `core_${clusterIndex}`,
+                    elements: new Set(cluster.core_nodes),
+                    data: {
+                        id: `core_${clusterIndex}`,
+                        name: `Core ${clusterIndex + 1} (Z_${cluster.core_dimensions.join(',Z_')})`,
+                        type: 'core',
+                        originalNodes: cluster.core_nodes,
+                        dimensions: cluster.core_dimensions,
+                        extensionCount: cluster.extensions.length,
+                        extensions: [],
+                        value: 1
+                    }
+                });
+            }
+            
+            // 收集扩展节点的元素
+            if (cluster.extensions) {
+                cluster.extensions.forEach((extension, extIndex) => {
+                    if (extension.nodes && extension.nodes.length > 0) {
+                        apiClusters.push({
+                            id: `ext_${clusterIndex}_${extIndex}`,
+                            elements: new Set(extension.nodes),
+                            parentId: `core_${clusterIndex}`,
+                            coreId: clusterIndex, // 添加核心聚类ID，用于后续去重处理
+                            data: {
+                                id: `ext_${clusterIndex}_${extIndex}`,
+                                name: `Extension ${clusterIndex + 1}.${extIndex + 1}`,
+                                type: 'extension',
+                                originalNodes: extension.nodes,
+                                dimensions: extension.dimensions,
+                                parentCoreId: `core_${clusterIndex}`,
+                                value: 1
+                            }
+                        });
+                    }
+                });
             }
         });
     }
     
-    // 收集接口提供的聚类（每个组作为一个Set）
-    const apiClusterSets = [];
+    // 收集所有reveliogood组
+    const revelioGoodClusters = [];
     
-    // 处理接口聚类（coreData）
-    coreData.core_clusters.forEach((cluster, clusterIndex) => {
-        const coreNodeId = `core_${clusterIndex}`;
-        const coreNodeSet = new Set(cluster.core_nodes);
-        
-        // 检查是否与reveliogood组重复
-        let isDuplicate = false;
-        revelioGoodSets.forEach((revelioSet) => {
-            // 只有当完全相同时才认为是重复
-            if (revelioSet.size === coreNodeSet.size && 
-                [...coreNodeSet].every(id => revelioSet.has(id))) {
-                isDuplicate = true;
+    if (revelioGoodGroups instanceof Map) {
+        console.log(`共发现 ${revelioGoodGroups.size} 个RevelioGood组`);
+        revelioGoodGroups.forEach((elementIds, groupKey) => {
+            // 对每个组内元素进行去重
+            const uniqueElementIds = [...new Set(elementIds)];
+            if (uniqueElementIds.length > 0) {
+                // 显示类型名称，根据组类型显示不同的名称
+                let displayName = '';
+                if (groupKey === 'reveliogood_all') {
+                    // 跳过reveliogood_all组，不处理
+                    return;
+                } else if (groupKey === 'reveliogood_basic') {
+                    displayName = 'Basic RevelioGood';
+                } else if (groupKey.startsWith('reveliogood_')) {
+                    displayName = groupKey.replace('reveliogood_', 'RevelioGood_');
+                } else {
+                    displayName = 'RevelioGood';
+                }
+                
+                revelioGoodClusters.push({
+                    id: `revelioGood_${groupKey}`,
+                    elements: new Set(uniqueElementIds),
+                    groupKey: groupKey,
+                    displayName: displayName
+                });
             }
         });
-        
-        // 如果与reveliogood组重复，不添加这个接口聚类
-        if (isDuplicate) {
-            return; // 跳过这个聚类
+    } else if (Array.isArray(revelioGoodGroups) && revelioGoodGroups.length > 0) {
+        // 处理数组格式的reveliogood元素
+        const uniqueElementIds = [...new Set(revelioGoodGroups)];
+        if (uniqueElementIds.length > 0) {
+            revelioGoodClusters.push({
+                id: 'revelioGood_array',
+                elements: new Set(uniqueElementIds),
+                groupKey: 'revelioGood_array',
+                displayName: 'All RevelioGood'
+            });
         }
-        
-        // 将这个核心聚类添加到apiClusterSets用于后续去重
-        apiClusterSets.push(coreNodeSet);
-        
-        // 添加核心节点
-        processedNodes.push({
-            id: coreNodeId,
-            name: `Core ${clusterIndex + 1} (Z_${cluster.core_dimensions.join(',Z_')})`,
-            type: 'core',
-            originalNodes: cluster.core_nodes,
-            dimensions: cluster.core_dimensions,
-            extensionCount: cluster.extensions.length,
-            extensions: [],  // 初始化为空数组
-            value: 1
+    }
+    
+    // 检查reveliogood组与API聚类的重复情况
+    const duplicateRevelioGoodClusters = new Set();
+    
+    // 处理API聚类元素ID，将长格式(svg/xxx/xxx/id)转为短格式(id)
+    const processedApiClusters = apiClusters.map(cluster => {
+        const shortElements = new Set();
+        cluster.elements.forEach(id => {
+            // 提取最后一个斜杠后面的部分作为简短ID
+            const shortId = id.split('/').pop();
+            if (shortId) {
+                shortElements.add(shortId);
+            }
         });
         
-        // 添加外延节点
-        cluster.extensions.forEach((extension, extIndex) => {
-            const extensionNode = {
-                id: `ext_${clusterIndex}_${extIndex}`,
-                name: `Extension ${clusterIndex + 1}.${extIndex + 1}`,
-                type: 'extension',
-                originalNodes: extension.nodes,
-                dimensions: extension.dimensions,
-                parentCoreId: coreNodeId,
-                value: 1
-            };
+        return {
+            ...cluster,
+            shortElements
+        };
+    });
+    
+    // API聚类外延的去重处理
+    // 创建一个Map用于存储已处理的外延聚类的元素集合，键为元素集合的字符串表示
+    const processedExtensionSets = new Map();
+    const duplicateExtensions = new Set();
+    
+    // 遍历所有外延聚类
+    processedApiClusters.forEach(cluster => {
+        // 只处理外延聚类
+        if (!cluster.parentId) return;
+        
+        // 将元素集合转换为排序后的字符串进行比较
+        const elementsKey = [...cluster.shortElements].sort().join(',');
+        
+        if (processedExtensionSets.has(elementsKey)) {
+            // 如果已存在相同元素集合的外延聚类
+            const existingCluster = processedExtensionSets.get(elementsKey);
             
-            // 将扩展节点添加到对应核心节点的extensions数组中
-            const coreNode = processedNodes.find(n => n.id === coreNodeId);
-            if (coreNode) {
-                coreNode.extensions.push(extensionNode);
+            // 只有当两个外延聚类不属于同一个核心聚类时，才标记为重复
+            if (existingCluster.coreId !== cluster.coreId) {
+                duplicateExtensions.add(cluster.id);
+                console.log(`找到重复的外延聚类: "${cluster.id}" 与 "${existingCluster.id}", 它们分别属于不同的核心聚类，将只保留一个`);
             }
-            
-            // 收集外延聚类的元素集合用于后续检查
-            apiClusterSets.push(new Set(extension.nodes));
+        } else {
+            // 记录这个元素集合
+            processedExtensionSets.set(elementsKey, cluster);
+        }
+    });
+    
+    // 调试信息：输出示例ID格式
+    if (apiClusters.length > 0 && apiClusters[0].elements.size > 0) {
+        const firstApiElement = [...apiClusters[0].elements][0];
+        const firstShortApiElement = [...processedApiClusters[0].shortElements][0];
+        console.log(`API聚类元素ID示例: 原始格式="${firstApiElement}", 处理后="${firstShortApiElement}"`);
+    }
+    
+    if (revelioGoodClusters.length > 0 && revelioGoodClusters[0].elements.size > 0) {
+        const firstRevelioElement = [...revelioGoodClusters[0].elements][0];
+        console.log(`RevelioGood聚类元素ID示例: "${firstRevelioElement}"`);
+    }
+    
+    // 对每个reveliogood组
+    revelioGoodClusters.forEach(revelioCluster => {
+        // 检查与每个API聚类的重复
+        processedApiClusters.forEach(apiCluster => {
+            // 首先检查元素数量是否相同，这是完全重复的必要条件
+            if (apiCluster.shortElements.size === revelioCluster.elements.size) {
+                // 检查集合元素是否完全相同
+                const allElementsMatch = [...revelioCluster.elements].every(id => 
+                    apiCluster.shortElements.has(id)
+                );
+                
+                if (allElementsMatch) {
+                    // 如果元素完全相同，标记该reveliogood组为重复
+                    duplicateRevelioGoodClusters.add(revelioCluster.id);
+                    console.log(`重复聚类: RevelioGood聚类 "${revelioCluster.displayName}" 与API聚类 "${apiCluster.data?.name || apiCluster.id}" 重复，将只保留API聚类`);
+                    
+                    // 输出部分匹配成功的元素ID示例，每个聚类最多显示3个
+                    const revelioSample = [...revelioCluster.elements].slice(0, 3);
+                    const apiSample = [...apiCluster.shortElements].slice(0, 3);
+                    console.log(`匹配成功的元素ID示例 - RevelioGood: ${revelioSample.join(', ')} | API: ${apiSample.join(', ')}`);
+                }
+            }
         });
     });
     
-    // 处理每个reveliogood组，创建独立聚类
-    let revelioGoodClusterIndex = processedNodes.length;
+    console.log(`发现 ${duplicateRevelioGoodClusters.size} 个重复的RevelioGood聚类将被跳过，只保留API聚类`);
+    console.log(`发现 ${duplicateExtensions.size} 个重复的API外延聚类将被跳过，只保留一个实例`);
     
-    // 处理所有的reveliogood组
-    revelioGoodSets.forEach((elementSet, groupKey) => {
-        // 检查是否与接口聚类重复
-        let isDuplicate = false;
+    // 先添加所有API核心聚类及其扩展（API聚类始终保留，不受重复检查影响）
+    const coreApiClusters = apiClusters.filter(cluster => 
+        cluster.type !== 'extension' && !cluster.parentId
+    );
+    
+    coreApiClusters.forEach(apiCluster => {
+        // 添加核心节点
+        processedNodes.push(apiCluster.data);
         
-        // 首先检查这个组是否与其他reveliogood组重复
-        revelioGoodSets.forEach((otherSet, otherKey) => {
-            if (groupKey !== otherKey && elementSet.size === otherSet.size && 
-                [...elementSet].every(id => otherSet.has(id))) {
-                isDuplicate = true;
+        // 添加其扩展节点，但排除重复的外延聚类
+        const extensions = apiClusters.filter(ext => 
+            ext.parentId === apiCluster.id && !duplicateExtensions.has(ext.id)
+        );
+        
+        extensions.forEach(ext => {
+            // 找到对应的核心节点并添加扩展
+            const coreNode = processedNodes.find(n => n.id === apiCluster.id);
+            if (coreNode) {
+                coreNode.extensions.push(ext.data);
             }
         });
-        
-        // 只检查与核心节点聚类的重复，不检查与外延聚类的重复
-        apiClusterSets.forEach((apiSet, index) => {
-            // 只有当完全相同时才认为是重复
-            if (elementSet.size === apiSet.size && 
-                [...elementSet].every(id => apiSet.has(id))) {
-                // 我们更偏向于保留reveliogood组，所以这里不标记为重复
-                // isDuplicate = true;
-            }
-        });
-        
-        // 如果是重复组，跳过
-        if (isDuplicate) return;
-        
-        // 不是重复组，创建新的聚类
-        const newClusterId = `core_${revelioGoodClusterIndex}`;
-        
-        // 显示类型名称，根据组类型显示不同的名称
-        let displayName = '';
-        if (groupKey === 'reveliogood_all') {
-            displayName = 'All RevelioGood Elements';
-        } else if (groupKey === 'reveliogood_basic') {
-            displayName = 'Basic RevelioGood';
-        } else if (groupKey.startsWith('reveliogood_')) {
-            displayName = groupKey.replace('reveliogood_', 'RevelioGood_');
-        } else {
-            displayName = 'RevelioGood';
+    });
+    
+    // 处理每个非重复的reveliogood组
+    let revelioGoodClusterIndex = processedNodes.length;
+    console.log(`已添加 ${processedNodes.length} 个API聚类，开始处理非重复的RevelioGood聚类`);
+    
+    // 创建一个已处理组的跟踪集合，用于reveliogood组的内部去重
+    const processedRevelioGoodKeys = new Map();
+    
+    revelioGoodClusters.forEach(revelioCluster => {
+        // 如果该reveliogood组与API聚类重复，跳过，不添加到处理结果中
+        if (duplicateRevelioGoodClusters.has(revelioCluster.id)) {
+            return; // 跳过重复的reveliogood聚类
         }
+        
+        // 创建用于比较的字符串表示（用于reveliogood组之间的去重）
+        const setKey = [...revelioCluster.elements].sort().join(',');
+        
+        // 检查这个元素组合是否已经存在于其他reveliogood组中
+        if (processedRevelioGoodKeys.has(setKey)) {
+            // 如果已存在，检查是否需要替换
+            const existingKey = processedRevelioGoodKeys.get(setKey);
+            const existingGroupKey = existingKey.split('_').slice(1).join('_');
+            
+            // 如果现有组是reveliogood_n格式，并且当前组也是相同格式，跳过
+            if (existingGroupKey.startsWith('revelioGood_') && 
+                revelioCluster.groupKey.startsWith('revelioGood_')) {
+                return;
+            }
+            
+            // 如果现有组是基本组，而当前组是reveliogood_n，则替换
+            if (existingGroupKey === 'revelioGood_basic' && 
+                 revelioCluster.groupKey.startsWith('revelioGood_')) {
+                // 更新字典，下面会添加当前组
+                processedRevelioGoodKeys.set(setKey, revelioCluster.id);
+            } else {
+                // 其他情况保留现有组
+                return;
+            }
+        } else {
+            // 如果这个元素组合不存在，添加到跟踪集合
+            processedRevelioGoodKeys.set(setKey, revelioCluster.id);
+        }
+        
+        // 创建新的聚类ID
+        const newClusterId = `core_${revelioGoodClusterIndex}`;
         
         // 创建一个新的聚类节点
         const newCluster = {
             id: newClusterId,
-            name: `Core ${revelioGoodClusterIndex + 1} (${displayName})`,
+            name: `Core ${revelioGoodClusterIndex + 1} (${revelioCluster.displayName})`,
             type: 'core',
-            originalNodes: [...elementSet],
+            originalNodes: [...revelioCluster.elements],
             dimensions: [],
             extensionCount: 0,
             extensions: [],
@@ -826,43 +851,31 @@ function processGraphData(coreData, revelioGoodGroups = new Map()) {
         revelioGoodClusterIndex++;
     });
     
-    // 处理旧版本的数组格式
-    if (Array.isArray(revelioGoodGroups) && revelioGoodGroups.length > 0) {
-        // 对数组元素去重
-        const uniqueRevelioGoodIds = [...new Set(revelioGoodGroups)];
-        const revelioGoodSet = new Set(uniqueRevelioGoodIds);
-        
-        // 检查是否与其他聚类重复
-        let isDuplicate = false;
-        apiClusterSets.forEach(apiSet => {
-            if (revelioGoodSet.size === apiSet.size && 
-                [...revelioGoodSet].every(id => apiSet.has(id))) {
-                // 我们更偏向于保留reveliogood组，所以这里不标记为重复
-                // isDuplicate = true;
-            }
-        });
-        
-        // 如果不是重复组，创建新的聚类
-        if (!isDuplicate) {
-            const newClusterId = `core_${revelioGoodClusterIndex}`;
+    console.log(`最终处理结果：共${processedNodes.length}个聚类，其中包含${processedNodes.length - coreApiClusters.length}个非重复的RevelioGood聚类`);
+    
+    // 收集最终被渲染的reveliogood节点的ID组，包括所有被额外加分的节点
+    const finalRevelioGoodClusters = [];
+    
+    // 遍历已处理的节点，找出所有带有isRevelioGood标记的节点
+    // 这些节点在calculateAttentionProbability函数中会获得额外的显著性分数
+    processedNodes.forEach(node => {
+        if (node.isRevelioGood && node.originalNodes && node.originalNodes.length > 0) {
+            // 所有带isRevelioGood标记的节点都会获得额外显著性分数，应全部收集
+            finalRevelioGoodClusters.push([...node.originalNodes]);
             
-            // 创建一个新的聚类节点
-            const newCluster = {
-                id: newClusterId,
-                name: `Core ${revelioGoodClusterIndex + 1} (All RevelioGood)`,
-                type: 'core',
-                originalNodes: uniqueRevelioGoodIds,
-                dimensions: [],
-                extensionCount: 0,
-                extensions: [],
-                value: 1,
-                // 标记为reveliogood聚类
-                isRevelioGood: true
-            };
-            
-            // 将新聚类添加到节点列表中
-            processedNodes.push(newCluster);
+            // 额外记录节点信息，便于调试
+            console.log(`收集到isRevelioGood节点: ${node.id}, 名称: ${node.name}, 包含${node.originalNodes.length}个元素`);
         }
+    });
+    
+    // 如果有reveliogood节点，存入store
+    if (finalRevelioGoodClusters.length > 0) {
+        console.log(`最终收集到${finalRevelioGoodClusters.length}个会获得额外显著性分数的RevelioGood节点ID组，存入store`);
+        store.dispatch('setRevelioGoodClusters', finalRevelioGoodClusters);
+    } else {
+        // 如果没有找到reveliogood节点，清空store中的数据
+        console.log('未找到任何会获得额外显著性分数的RevelioGood节点，清空store中的数据');
+        store.dispatch('setRevelioGoodClusters', []);
     }
     
     return { nodes: processedNodes };
@@ -1393,9 +1406,6 @@ function extractRevelioGoodElements(svgContent) {
         // 创建一个Map来存储不同类型的reveliogood元素组
         const revelioGoodGroups = new Map();
         
-        // 初始化一个"all"组来保存所有reveliogood相关的元素
-        revelioGoodGroups.set('reveliogood_all', []);
-        
         // 初始化一个普通的reveliogood组
         revelioGoodGroups.set('reveliogood_basic', []);
         
@@ -1409,15 +1419,12 @@ function extractRevelioGoodElements(svgContent) {
             const classAttr = node.getAttribute('class') || '';
             const elementId = node.id;
             
-            // 1. 添加到"所有reveliogood元素"组
-            revelioGoodGroups.get('reveliogood_all').push(elementId);
-            
-            // 2. 检查是否包含普通的reveliogood类（不带数字）
+            // 检查是否包含普通的reveliogood类（不带数字）
             if (classAttr.match(/\breveliogood\b/)) {
                 revelioGoodGroups.get('reveliogood_basic').push(elementId);
             }
             
-            // 3. 检查所有reveliogood_n格式的类
+            // 检查所有reveliogood_n格式的类
             const matches = classAttr.match(/reveliogood_\d+/g);
             if (matches && matches.length > 0) {
                 // 将元素添加到每一个匹配的reveliogood_n组
@@ -1927,7 +1934,7 @@ const calculateAttentionProbability = (node, returnRawScore = false) => {
         
         // 检查是否是reveliogood聚类，如果是则额外加5分
         if (node.isRevelioGood) {
-            salienceScore += 0.5;
+            salienceScore += 0.5; // 
         }
 
         // 如果需要返回原始分数（用于排序），直接返回
@@ -2105,6 +2112,121 @@ const handleOverviewClick = (nodeId, event) => {
         wasRecentlyDragging.value = false;
     }
 };
+
+// 添加缺失的更新可见卡片的函数
+function updateVisibleCards() {
+    try {
+        if (!cardsWrapper.value || !overviewSvg.value) return;
+        
+        // 获取所有卡片元素
+        const cards = document.querySelectorAll('.card');
+        if (cards.length === 0) return;
+        
+        // 获取总览条中的所有卡片指示器
+        const clusterItems = overviewSvg.value.querySelectorAll('.cluster-item');
+        if (clusterItems.length === 0) return;
+        
+        // 获取容器的可视范围
+        const containerRect = cardsWrapper.value.getBoundingClientRect();
+        const containerLeft = containerRect.left;
+        const containerRight = containerRect.right;
+        
+        // 移除所有现有的可见标记
+        clusterItems.forEach(item => {
+            item.classList.remove('cluster-visible');
+        });
+        
+        // 检查每个卡片是否在可视范围内
+        cards.forEach(card => {
+            const cardRect = card.getBoundingClientRect();
+            const cardLeft = cardRect.left;
+            const cardRight = cardRect.right;
+            
+            // 如果卡片有一部分在可视范围内
+            if (cardRight > containerLeft && cardLeft < containerRight) {
+                const nodeId = card.getAttribute('data-node-id');
+                const clusterItem = overviewSvg.value.querySelector(`.cluster-item[data-node-id="${nodeId}"]`);
+                
+                if (clusterItem) {
+                    clusterItem.classList.add('cluster-visible');
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error updating visible cards:', error);
+    }
+}
+
+// 添加缺失的createArcPath函数
+// 创建弧线路径的辅助函数
+function createArcPath(x1, y1, x2, y2, verticalOffset) {
+    // 计算两点之间的距离
+    const distance = Math.abs(x2 - x1);
+    
+    // 设置圆角半径
+    const cornerRadius = 5;
+    
+    // 使用传入的垂直偏移量，如果没有传入则计算
+    const offset = verticalOffset !== undefined ? verticalOffset : (() => {
+        // 根据距离计算垂直线段的高度
+        const minOffset = 8; // 最小高度
+        const maxOffset = 25; // 最大高度
+        const normalizedDistance = Math.min(distance / 200, 1); // 归一化距离，最大200px
+        return minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset));
+    })();
+    
+    // 计算垂直线段的Y坐标
+    const verticalY = y1 - offset;
+    
+    // 创建圆角方形路径，确保圆角方向正确
+    if (x1 < x2) {
+        // 从左到右
+        return `M ${x1} ${y1} 
+                L ${x1} ${y1 - cornerRadius} 
+                Q ${x1} ${verticalY} ${x1 + cornerRadius} ${verticalY} 
+                L ${x2 - cornerRadius} ${verticalY} 
+                Q ${x2} ${verticalY} ${x2} ${verticalY + cornerRadius} 
+                L ${x2} ${y2}`;
+    } else {
+        // 从右到左
+        return `M ${x1} ${y1} 
+                L ${x1} ${y1 - cornerRadius} 
+                Q ${x1} ${verticalY} ${x1 - cornerRadius} ${verticalY} 
+                L ${x2 + cornerRadius} ${verticalY} 
+                Q ${x2} ${verticalY} ${x2} ${verticalY + cornerRadius} 
+                L ${x2} ${y2}`;
+    }
+}
+
+// 添加缺失的calculateArcMidPoint和calculateArrowAngle函数
+// 计算弧线中点的辅助函数
+function calculateArcMidPoint(x1, y1, x2, y2, verticalOffset) {
+    // 计算两点之间的距离
+    const distance = Math.abs(x2 - x1);
+    
+    // 使用传入的垂直偏移量，如果没有传入则计算
+    const offset = verticalOffset !== undefined ? verticalOffset : (() => {
+        // 使用与createArcPath相同的逻辑计算高度
+        const minOffset = 8;
+        const maxOffset = 25;
+        const normalizedDistance = Math.min(distance / 200, 1);
+        return minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset));
+    })();
+    
+    // 计算垂直线段的Y坐标
+    const verticalY = y1 - offset;
+    
+    // 计算水平线段的中点
+    const midX = (x1 + x2) / 2;
+    
+    return { x: midX, y: verticalY };
+}
+
+// 计算箭头角度的辅助函数
+function calculateArrowAngle(x1, y1, x2, y2) {
+    // 确定箭头方向 - 从核心指向外延
+    return x1 < x2 ? 0 : 180; // 水平向右或水平向左
+}
 </script>
 
 <style scoped>

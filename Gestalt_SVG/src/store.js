@@ -17,7 +17,8 @@ export default createStore({
       visualSalience: [],            // 视觉显著性数组，存储所有卡片的显著性值
       copiedValue: null,             // 存储复制的值
       copiedValueType: null,         // 存储复制值的类型（color, stroke-width, area）
-      copiedFeatureName: null        // 存储复制值的特征名称
+      copiedFeatureName: null,        // 存储复制值的特征名称
+      revelioGoodClusters: []        // 存储reveliogood_n类的ID组，二维数组
     };
   },
   mutations: {
@@ -73,6 +74,10 @@ export default createStore({
       state.copiedValue = null;
       state.copiedValueType = null;
       state.copiedFeatureName = null;
+    },
+    SET_REVELIOGOOD_CLUSTERS(state, clusters) {
+      // 设置reveliogood_n类的ID组
+      state.revelioGoodClusters = clusters;
     }
   },
   actions: {
@@ -93,6 +98,9 @@ export default createStore({
     },
     clearCopiedValue({ commit }) {
       commit('CLEAR_COPIED_VALUE');
+    },
+    setRevelioGoodClusters({ commit }, clusters) {
+      commit('SET_REVELIOGOOD_CLUSTERS', clusters);
     }
   },
   getters: {
@@ -114,6 +122,10 @@ export default createStore({
         type: state.copiedValueType,
         featureName: state.copiedFeatureName
       };
+    },
+    getRevelioGoodClusters(state) {
+      // 获取reveliogood_n类的ID组
+      return state.revelioGoodClusters;
     }
   }
 });

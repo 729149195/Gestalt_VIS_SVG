@@ -1,13 +1,13 @@
 <template>
   <div class="analysis-words-container">
     <!-- 修改按钮图标为更合适的展开图标 -->
-    <button class="apple-button-corner" @click="showDrawer = true">
+    <!-- <button class="apple-button-corner" @click="showDrawer = true">
       <div class="arrow-wrapper">
         <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </div>
-    </button>
+    </button> -->
 
     <!-- 保持大标题在顶部 -->
     <div class="title">Visual Encodings Assessment</div>
@@ -40,7 +40,7 @@
     </div>
 
     <!-- 使用 Teleport 将抽屉传送到 body -->
-    <Teleport to="body">
+    <!-- <Teleport to="body">
       <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
       <div class="side-drawer" :class="{ 'drawer-open': showDrawer }">
         <button class="close-button" @click="showDrawer = false">×</button>
@@ -48,7 +48,7 @@
           <maxstic :key="componentKey" />
         </div>
       </div>
-    </Teleport>
+    </Teleport> -->
 
     <!-- 添加复制成功提示 -->
     <div v-if="copyTooltip.visible" 
@@ -824,6 +824,9 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
     // 按uniqueSelectedValueCount从大到小排序processedSignificantFeatures
     processedSignificantFeatures.sort((a, b) => b.uniqueSelectedValueCount - a.uniqueSelectedValueCount);
 
+    // 初始化processedDiverseFeatures变量，避免在使用时报错
+    const processedDiverseFeatures = [];
+    
     // 筛选出可能的改进特征，这些特征在未选中元素中有非零值，但在选中元素中没有或很少
     const negativeFeatures = featureArray
       .filter(feature =>
@@ -884,7 +887,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
     // 检查visual salience值是否小于85
     // 直接从store获取最新的visualSalience值，而不是使用计算属性
     const currentVisualSalience = store.state.visualSalience * 100;
-    if (currentVisualSalience < 90) {
+    if (currentVisualSalience < 100) {
       // 创建三区块布局
       analysis += `<div class="suggestions-container">`;
 
@@ -1047,6 +1050,26 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             // 过滤掉所有Bbox相关编码
             !feature.name.toLowerCase().includes('bbox')
           )
+          // 添加对颜色特征的过滤
+          .filter(feature => {
+            const featureKey = feature.featureKeys[0];
+            
+            // 检查是否为颜色特征
+            if (isColorFeature(featureKey)) {
+              // 获取颜色族名称（fill或stroke）
+              const colorFamily = featureKey.startsWith('fill_') ? 'fill' : 'stroke';
+              
+              // 检查selected elements的used encodings中是否存在同一颜色族的特征
+              const selectedEncodingsHasColorFamily = processedSignificantFeatures.some(f => 
+                f.name.toLowerCase().includes(colorFamily)
+              );
+              
+              // 只检查Selected elements中的用户编码
+              return !selectedEncodingsHasColorFamily;
+            }
+            
+            return true;
+          })
           .slice(0, 5);
 
         if (addFeatures.length > 0) {
@@ -1243,6 +1266,26 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             // 过滤掉所有Bbox相关编码
             !feature.name.toLowerCase().includes('bbox')
           )
+          // 添加对颜色特征的过滤
+          .filter(feature => {
+            const featureKey = feature.featureKeys[0];
+            
+            // 检查是否为颜色特征
+            if (isColorFeature(featureKey)) {
+              // 获取颜色族名称（fill或stroke）
+              const colorFamily = featureKey.startsWith('fill_') ? 'fill' : 'stroke';
+              
+              // 检查selected elements的used encodings中是否存在同一颜色族的特征
+              const selectedEncodingsHasColorFamily = processedSignificantFeatures.some(f => 
+                f.name.toLowerCase().includes(colorFamily)
+              );
+              
+              // 只检查Selected elements中的用户编码
+              return !selectedEncodingsHasColorFamily;
+            }
+            
+            return true;
+          })
           .slice(0, 5); // 最多显示5个
 
         if (resetFeatures.length > 0) {
@@ -1480,7 +1523,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       analysis += `
                   <div class="feature-item">
                     <span class="feature-tag all-elements-tag annotation-tag">
-                        ${annotationText}
+                        <span class="copyable-value" data-value="${annotationText}">${annotationText}</span>
                     </span>
                   </div>
               `;
@@ -1539,32 +1582,160 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
     const usedConflictGroups = new Set(); // 用于记录已使用的冲突组
 
     // 处理多样性高的特征（Used encodings
-    for (const feature of diverseFeatures) {
-      const featureKey = feature.featureKeys[0];
-      const group = getConflictGroup(featureKey);
-
-      if (group) {
-        // 如果特征属于某个冲突组
-        const groupKey = group.join(',');
-
-        // 如果该冲突组已经有特征被选中，则跳过
-        if (usedConflictGroups.has(groupKey)) {
-          continue;
+    // 修改：只统计 selectedNodeIds 中的元素而不是所有元素
+    if (selectedNodeIds && selectedNodeIds.length > 0) {
+      // 过滤出仅存在于 selectedNodeIds 中的元素
+      const filteredData = normalData.filter(node => 
+        selectedNodeIds.some(id => node.id === id || node.id.endsWith(`/${id}`))
+      );
+      
+      // 重新计算每个特征在选中元素中的方差和多样性
+      const filteredFeatureStats = {};
+      
+      // 初始化特征统计数据
+      Object.keys(featureGroups).forEach(displayName => {
+        filteredFeatureStats[displayName] = {
+          values: [],
+          featureIndices: featureGroups[displayName].indices,
+          featureKeys: featureGroups[displayName].keys,
+          hasNonZeroValues: false,
+          variance: 0,
+          uniqueValues: new Set()
+        };
+      });
+      
+      // 收集所有特征值
+      filteredData.forEach(node => {
+        Object.keys(filteredFeatureStats).forEach(displayName => {
+          const featureIndices = filteredFeatureStats[displayName].featureIndices;
+          
+          // 只有在索引有效时才计算
+          if (featureIndices.length > 0 && featureIndices[0] < node.features.length) {
+            // 计算特征组的平均值
+            const sum = featureIndices.reduce((acc, index) => {
+              // 确保索引有效
+              if (index < node.features.length) {
+                return acc + Math.abs(node.features[index]);
+              }
+              return acc;
+            }, 0);
+            
+            const value = sum / featureIndices.length;
+            
+            // 添加到所有值数组
+            filteredFeatureStats[displayName].values.push(value);
+            
+            // 收集唯一值
+            filteredFeatureStats[displayName].uniqueValues.add(value.toFixed(4));
+            
+            // 检查是否有非零值
+            if (value > 0) {
+              filteredFeatureStats[displayName].hasNonZeroValues = true;
+            }
+          }
+        });
+      });
+      
+      // 计算每个特征的统计数据
+      Object.keys(filteredFeatureStats).forEach(displayName => {
+        const feature = filteredFeatureStats[displayName];
+        
+        // 跳过没有值的特征
+        if (feature.values.length === 0) {
+          delete filteredFeatureStats[displayName];
+          return;
         }
-
-        // 找出该组中多样性最高的特征
-        const highestDiversityFeature = diverseFeatures
-          .filter(f => group.includes(f.featureKeys[0]))
-          .sort((a, b) => b.variance - a.variance)[0];
-
-        // 如果当前特征是多样性最高的，则保留
-        if (feature === highestDiversityFeature) {
+        
+        // 计算全局统计量
+        const allValues = feature.values;
+        const mean = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+        const variance = allValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / allValues.length;
+        const stdDev = Math.sqrt(variance);
+        
+        feature.mean = mean;
+        feature.variance = variance;
+        feature.stdDev = stdDev;
+        
+        // 计算唯一值数量
+        feature.uniqueValueCount = feature.uniqueValues.size;
+      });
+      
+      // 转换为数组进行排序
+      const filteredFeatureArray = Object.entries(filteredFeatureStats)
+        .map(([name, stats]) => ({
+          name,
+          ...stats
+        }));
+      
+      // 使用选中节点的元素进行分析，筛选出有变化的特征
+      const filteredDiverseFeatures = filteredFeatureArray
+        .filter(feature =>
+          feature.variance > 0.001 && // 确保有明显变化
+          feature.hasNonZeroValues // 确保有非零值
+        )
+        .sort((a, b) => {
+          // 按方差大小排序
+          return b.variance - a.variance;
+        });
+      
+      // 处理冲突关系，筛选出不冲突的特征
+      for (const feature of filteredDiverseFeatures) {
+        const featureKey = feature.featureKeys[0];
+        const group = getConflictGroup(featureKey);
+        
+        if (group) {
+          // 如果特征属于某个冲突组
+          const groupKey = group.join(',');
+          
+          // 如果该冲突组已经有特征被选中，则跳过
+          if (usedConflictGroups.has(groupKey)) {
+            continue;
+          }
+          
+          // 找出该组中多样性最高的特征
+          const highestDiversityFeature = filteredDiverseFeatures
+            .filter(f => group.includes(f.featureKeys[0]))
+            .sort((a, b) => b.variance - a.variance)[0];
+          
+          // 如果当前特征是多样性最高的，则保留
+          if (feature === highestDiversityFeature) {
+            processedDiverseFeatures.push(feature);
+            usedConflictGroups.add(groupKey);
+          }
+        } else {
+          // 如果不是冲突组中的特征，直接保留
           processedDiverseFeatures.push(feature);
-          usedConflictGroups.add(groupKey);
         }
-      } else {
-        // 如果不是冲突组中的特征，直接保留
-        processedDiverseFeatures.push(feature);
+      }
+    } else {
+      // 如果没有选中节点，则按原来的方式处理所有元素
+      for (const feature of diverseFeatures) {
+        const featureKey = feature.featureKeys[0];
+        const group = getConflictGroup(featureKey);
+        
+        if (group) {
+          // 如果特征属于某个冲突组
+          const groupKey = group.join(',');
+          
+          // 如果该冲突组已经有特征被选中，则跳过
+          if (usedConflictGroups.has(groupKey)) {
+            continue;
+          }
+          
+          // 找出该组中多样性最高的特征
+          const highestDiversityFeature = diverseFeatures
+            .filter(f => group.includes(f.featureKeys[0]))
+            .sort((a, b) => b.variance - a.variance)[0];
+          
+          // 如果当前特征是多样性最高的，则保留
+          if (feature === highestDiversityFeature) {
+            processedDiverseFeatures.push(feature);
+            usedConflictGroups.add(groupKey);
+          }
+        } else {
+          // 如果不是冲突组中的特征，直接保留
+          processedDiverseFeatures.push(feature);
+        }
       }
     }
 

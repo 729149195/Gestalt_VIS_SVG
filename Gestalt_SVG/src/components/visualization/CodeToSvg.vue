@@ -434,6 +434,11 @@ watch([copiedValue, selectedNodeIds], async ([newCopiedValue, newSelectedNodeIds
         element.setAttribute('stroke', newCopiedValue.value);
         break;
       case 'stroke-width':
+        // 检查元素是否具有stroke属性，如果没有则添加默认黑色stroke
+        if (!element.hasAttribute('stroke')) {
+          element.setAttribute('stroke', 'rgb(0,0,0)');
+        }
+        
         // 获取当前stroke-width值（如果存在）
         let currentWidth = element.getAttribute('stroke-width');
         let newWidth;

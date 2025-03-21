@@ -1071,6 +1071,46 @@ const calculateVisualSalience = () => {
         if (highlightedAvgArea < areaThreshold) {
             salienceScore = salienceScore / 3;
         }
+        
+        // 检查当前选中元素是否与store中的reveliogood_n组完全匹配
+        const reveliogoodClusters = store.getters.getRevelioGoodClusters || [];
+        console.log('当前store中的reveliogood_n组：', reveliogoodClusters);
+        if (reveliogoodClusters.length > 0) {
+            // 提取当前高亮元素的ID，并排序以便比较
+            const currentHighlightIds = [...highlightedIds].sort();
+            
+            // 检查是否与任一reveliogood_n组完全匹配
+            const isMatch = reveliogoodClusters.some(cluster => {
+                // 先检查元素数量是否一致
+                if (cluster.length !== currentHighlightIds.length) {
+                    return false;
+                }
+                
+                // 将cluster中的ID进行排序以便进行准确比较
+                const sortedClusterIds = [...cluster].sort();
+                
+                // 检查每个元素是否都完全匹配
+                for (let i = 0; i < currentHighlightIds.length; i++) {
+                    // 从ID中提取最后一部分用于比较
+                    const highlightIdParts = currentHighlightIds[i].split('/');
+                    const highlightIdLastPart = highlightIdParts[highlightIdParts.length - 1];
+                    
+                    // 检查cluster中的ID是否与当前高亮元素的ID匹配
+                    if (highlightIdLastPart !== sortedClusterIds[i]) {
+                        return false;
+                    }
+                }
+                
+                // 所有元素都匹配
+                return true;
+            });
+            
+            // 如果找到匹配，增加显著性分数
+            if (isMatch) {
+                console.log('发现与reveliogood_n组完全匹配，增加显著性分数');
+                salienceScore += 0.5;
+            }
+        }
 
         // 将分数映射到0-1范围内用于显示
         // 使用sigmoid函数进行平滑映射，确保结果在0-1范围内

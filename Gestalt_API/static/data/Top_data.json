@@ -1,49 +1,90 @@
 {
-    "400.0-440.0": {
+    "170.8-199.5": {
         "tags": [
-            "rect_11",
-            "rect_9",
-            "rect_7"
+            "circle_31",
+            "circle_28",
+            "circle_25",
+            "circle_17",
+            "circle_14",
+            "circle_10",
+            "circle_4",
+            "circle_2"
         ],
         "total": {
-            "rect": 3
+            "circle": 8
         }
     },
-    "360.0-400.0": {
+    "285.8-314.5": {
         "tags": [
-            "rect_10",
-            "rect_8",
-            "rect_6"
+            "circle_30",
+            "circle_24",
+            "circle_16",
+            "circle_15",
+            "circle_6",
+            "circle_3"
         ],
         "total": {
-            "rect": 3
+            "circle": 6
         }
     },
-    "160.0-200.0": {
+    "228.2-257.0": {
         "tags": [
-            "rect_5",
-            "rect_2"
+            "circle_29",
+            "circle_18",
+            "circle_8"
         ],
         "total": {
-            "rect": 2
+            "circle": 3
         }
     },
-    "120.0-160.0": {
+    "142.0-170.8": {
         "tags": [
-            "rect_4",
-            "rect_1",
-            "rect"
+            "circle_27",
+            "circle_11"
         ],
         "total": {
-            "rect": 3
+            "circle": 2
         }
     },
-    "200.0-240.0": {
+    "199.5-228.2": {
         "tags": [
-            "rect_3"
+            "circle_26",
+            "circle_5"
         ],
         "total": {
-            "rect": 1
+            "circle": 2
+        }
+    },
+    "314.5-343.2": {
+        "tags": [
+            "circle_23",
+            "circle_22",
+            "circle_13",
+            "circle_12",
+            "circle_7",
+            "circle"
+        ],
+        "total": {
+            "circle": 6
+        }
+    },
+    "343.2-372.0": {
+        "tags": [
+            "circle_21",
+            "circle_20",
+            "circle_19"
+        ],
+        "total": {
+            "circle": 3
+        }
+    },
+    "257.0-285.8": {
+        "tags": [
+            "circle_9",
+            "circle_1"
+        ],
+        "total": {
+            "circle": 2
         }
     }
 }

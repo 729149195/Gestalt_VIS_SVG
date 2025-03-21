@@ -1,75 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg height="600" id="svg" tag_name="svg" version="1.1" width="800" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<text font-family="Arial" font-size="20" font-weight="bold" id="text_14" tag_name="svg/text_14" text-anchor="middle" x="400" y="30">
-    Quarterly Product Sales Analysis 2023
+<text font-family="Arial" font-size="20" font-weight="bold" id="text_2" tag_name="svg/text_2" text-anchor="middle" x="400" y="30">
+    Product Sales Trend Analysis 2023
   </text>
-<line id="line_12" stroke="black" stroke-width="2" tag_name="svg/line_12" x1="100" x2="700" y1="500" y2="500"/>
-<line id="line_11" stroke="black" stroke-width="2" tag_name="svg/line_11" x1="100" x2="100" y1="500" y2="100"/>
-<line id="line_10" stroke="black" stroke-width="2" tag_name="svg/line_10" x1="95" x2="100" y1="500" y2="500"/>
-<text font-family="Arial" font-size="12" id="text_13" tag_name="svg/text_13" text-anchor="end" x="85" y="505">
-    0
+<text font-family="Arial" font-size="14" id="text_1" tag_name="svg/text_1" text-anchor="middle" x="400" y="60">
+    Data Source: Sales Department Monthly Report 2023
   </text>
-<line id="line_9" stroke="black" stroke-width="2" tag_name="svg/line_9" x1="95" x2="100" y1="420" y2="420"/>
-<text font-family="Arial" font-size="12" id="text_12" tag_name="svg/text_12" text-anchor="end" x="85" y="425">
-    200
-  </text>
-<line id="line_8" stroke="black" stroke-width="2" tag_name="svg/line_8" x1="95" x2="100" y1="340" y2="340"/>
-<text font-family="Arial" font-size="12" id="text_11" tag_name="svg/text_11" text-anchor="end" x="85" y="345">
-    400
-  </text>
-<line id="line_7" stroke="black" stroke-width="2" tag_name="svg/line_7" x1="95" x2="100" y1="260" y2="260"/>
-<text font-family="Arial" font-size="12" id="text_10" tag_name="svg/text_10" text-anchor="end" x="85" y="265">
-    600
-  </text>
-<line id="line_6" stroke="black" stroke-width="2" tag_name="svg/line_6" x1="95" x2="100" y1="180" y2="180"/>
-<text font-family="Arial" font-size="12" id="text_9" tag_name="svg/text_9" text-anchor="end" x="85" y="185">
-    800
-  </text>
-<line id="line_5" stroke="black" stroke-width="2" tag_name="svg/line_5" x1="95" x2="100" y1="100" y2="100"/>
-<text font-family="Arial" font-size="12" id="text_8" tag_name="svg/text_8" text-anchor="end" x="85" y="105">
-    1000
-  </text>
-<g id="g" stroke="#dddddd" stroke-dasharray="5,5" tag_name="svg/g">
-<line id="line_4" tag_name="svg/g/line_4" x1="100" x2="700" y1="420" y2="420"/>
-<line id="line_3" tag_name="svg/g/line_3" x1="100" x2="700" y1="340" y2="340"/>
-<line id="line_2" tag_name="svg/g/line_2" x1="100" x2="700" y1="260" y2="260"/>
-<line id="line_1" tag_name="svg/g/line_1" x1="100" x2="700" y1="180" y2="180"/>
-<line id="line" tag_name="svg/g/line" x1="100" x2="700" y1="100" y2="100"/>
-</g>
-<text font-family="Arial" font-size="16" id="text_7" tag_name="svg/text_7" text-anchor="middle" x="400" y="545">
-    Product Model
-  </text>
-<text font-family="Arial" font-size="16" id="text_6" tag_name="svg/text_6" text-anchor="middle" transform="rotate(-90, 45, 300)" x="45" y="300">
-    Sales (pcs)
-  </text>
-<rect class="reveliogood_2" fill="red" height="90" id="rect_11" stroke-width="2" tag_name="svg/rect_11" width="30" x="130" y="410"/>
-<rect class="reveliogood_2" fill="red" height="100" id="rect_10" stroke-width="2" tag_name="svg/rect_10" width="30" x="230" y="400"/>
-<rect class="reveliogood_2" fill="red" height="80" id="rect_9" stroke-width="2" tag_name="svg/rect_9" width="30" x="330" y="420"/>
-<rect class="reveliogood_2" fill="red" height="100" id="rect_8" stroke-width="2" tag_name="svg/rect_8" width="30" x="430" y="400"/>
-<rect class="reveliogood_2 reveliogood_3 reveliogood_4 reveliogood_5 reveliogood_6 reveliogood_7" fill="rgb(0, 224, 86)" height="60" id="rect_7" stroke="rgb(0, 0, 0)" stroke-width="4" tag_name="svg/rect_7" width="30" x="530" y="440"/>
-<rect class="reveliogood_2" fill="red" height="110" id="rect_6" stroke-width="2" tag_name="svg/rect_6" width="30" x="630" y="390"/>
-<rect class="reveliogood" fill="#4fc3f7" height="320" id="rect_5" stroke-width="2" tag_name="svg/rect_5" width="30" x="170" y="180"/>
-<rect class="reveliogood" fill="#4fc3f7" height="360" id="rect_4" stroke-width="2" tag_name="svg/rect_4" width="30" x="270" y="140"/>
-<rect class="reveliogood" fill="#4fc3f7" height="280" id="rect_3" stroke-width="2" tag_name="svg/rect_3" width="30" x="370" y="220"/>
-<rect class="reveliogood" fill="#4fc3f7" height="300" id="rect_2" stroke-width="2" tag_name="svg/rect_2" width="30" x="470" y="200"/>
-<rect class="reveliogood" fill="#4fc3f7" height="380" id="rect_1" stroke-width="2" tag_name="svg/rect_1" width="30" x="570" y="120"/>
-<rect class="reveliogood" fill="#4fc3f7" height="340" id="rect" stroke-width="2" tag_name="svg/rect" width="30" x="670" y="160"/>
-<text font-family="Arial" font-size="12" id="text_5" tag_name="svg/text_5" text-anchor="middle" x="150" y="520">
-    Product A
-  </text>
-<text font-family="Arial" font-size="12" id="text_4" tag_name="svg/text_4" text-anchor="middle" x="250" y="520">
-    Product B
-  </text>
-<text font-family="Arial" font-size="12" id="text_3" tag_name="svg/text_3" text-anchor="middle" x="350" y="520">
-    Product C
-  </text>
-<text font-family="Arial" font-size="12" id="text_2" tag_name="svg/text_2" text-anchor="middle" x="450" y="520">
-    Product D
-  </text>
-<text font-family="Arial" font-size="12" id="text_1" tag_name="svg/text_1" text-anchor="middle" x="550" y="520">
-    Product E
-  </text>
-<text font-family="Arial" font-size="12" id="text" tag_name="svg/text" text-anchor="middle" x="650" y="520">
-    Product F
+<line id="line_42" stroke="#cccccc" stroke-width="1" tag_name="svg/line_42" x1="200" x2="280" y1="200" y2="250"/>
+<line id="line_41" stroke="#cccccc" stroke-width="1" tag_name="svg/line_41" x1="200" x2="150" y1="200" y2="300"/>
+<line id="line_40" stroke="#cccccc" stroke-width="1" tag_name="svg/line_40" x1="200" x2="300" y1="200" y2="180"/>
+<line id="line_39" stroke="#cccccc" stroke-width="1" tag_name="svg/line_39" x1="280" x2="350" y1="250" y2="220"/>
+<line id="line_38" stroke="#cccccc" stroke-width="1" tag_name="svg/line_38" x1="280" x2="320" y1="250" y2="300"/>
+<line id="line_37" stroke="#cccccc" stroke-width="1" tag_name="svg/line_37" x1="150" x2="100" y1="300" y2="350"/>
+<line id="line_36" stroke="#cccccc" stroke-width="1" tag_name="svg/line_36" x1="150" x2="220" y1="300" y2="350"/>
+<line id="line_35" stroke="#cccccc" stroke-width="1" tag_name="svg/line_35" x1="300" x2="350" y1="180" y2="150"/>
+<line id="line_34" stroke="#cccccc" stroke-width="1" tag_name="svg/line_34" x1="300" x2="350" y1="180" y2="220"/>
+<line id="line_33" stroke="#cccccc" stroke-width="1" tag_name="svg/line_33" x1="350" x2="400" y1="220" y2="180"/>
+<line id="line_32" stroke="#cccccc" stroke-width="1" tag_name="svg/line_32" x1="350" x2="400" y1="220" y2="270"/>
+<line id="line_31" stroke="#cccccc" stroke-width="1" tag_name="svg/line_31" x1="320" x2="400" y1="300" y2="270"/>
+<line id="line_30" stroke="#cccccc" stroke-width="1" tag_name="svg/line_30" x1="320" x2="270" y1="300" y2="370"/>
+<line id="line_29" stroke="#cccccc" stroke-width="1" tag_name="svg/line_29" x1="600" x2="650" y1="250" y2="200"/>
+<line id="line_28" stroke="#cccccc" stroke-width="1" tag_name="svg/line_28" x1="600" x2="550" y1="250" y2="300"/>
+<line id="line_27" stroke="#cccccc" stroke-width="1" tag_name="svg/line_27" x1="600" x2="670" y1="250" y2="300"/>
+<line id="line_26" stroke="#cccccc" stroke-width="1" tag_name="svg/line_26" x1="650" x2="700" y1="200" y2="180"/>
+<line id="line_25" stroke="#cccccc" stroke-width="1" tag_name="svg/line_25" x1="550" x2="500" y1="300" y2="350"/>
+<line id="line_24" stroke="#cccccc" stroke-width="1" tag_name="svg/line_24" x1="670" x2="720" y1="300" y2="330"/>
+<line id="line_23" stroke="#cccccc" stroke-width="1" tag_name="svg/line_23" x1="400" x2="450" y1="270" y2="250"/>
+<line id="line_22" stroke="#cccccc" stroke-width="1" tag_name="svg/line_22" x1="400" x2="380" y1="270" y2="330"/>
+<line id="line_21" stroke="#cccccc" stroke-width="1" tag_name="svg/line_21" x1="400" x2="450" y1="270" y2="320"/>
+<line id="line_20" stroke="#cccccc" stroke-width="1" tag_name="svg/line_20" x1="450" x2="500" y1="250" y2="230"/>
+<line id="line_19" stroke="#cccccc" stroke-width="1" tag_name="svg/line_19" x1="450" x2="450" y1="250" y2="190"/>
+<line id="line_18" stroke="#cccccc" stroke-width="1" tag_name="svg/line_18" x1="450" x2="500" y1="250" y2="300"/>
+<line id="line_17" stroke="#cccccc" stroke-width="1" tag_name="svg/line_17" x1="380" x2="450" y1="330" y2="320"/>
+<line id="line_16" stroke="#cccccc" stroke-width="1" tag_name="svg/line_16" x1="380" x2="330" y1="330" y2="380"/>
+<line id="line_15" stroke="#cccccc" stroke-width="1" tag_name="svg/line_15" x1="450" x2="500" y1="320" y2="300"/>
+<line id="line_14" stroke="#cccccc" stroke-width="1" tag_name="svg/line_14" x1="450" x2="420" y1="320" y2="380"/>
+<line id="line_13" stroke="#cccccc" stroke-width="1" tag_name="svg/line_13" x1="500" x2="550" y1="230" y2="200"/>
+<line id="line_12" stroke="#cccccc" stroke-width="1" tag_name="svg/line_12" x1="500" x2="450" y1="230" y2="190"/>
+<line id="line_11" stroke="#cccccc" stroke-width="1" tag_name="svg/line_11" x1="500" x2="550" y1="230" y2="280"/>
+<line id="line_10" stroke="#cccccc" stroke-width="1" tag_name="svg/line_10" x1="500" x2="550" y1="300" y2="280"/>
+<line id="line_9" stroke="#cccccc" stroke-width="1" tag_name="svg/line_9" x1="500" x2="550" y1="300" y2="350"/>
+<line id="line_8" stroke="#cccccc" stroke-width="1" tag_name="svg/line_8" x1="550" x2="600" y1="200" y2="250"/>
+<line id="line_7" stroke="#cccccc" stroke-width="1" tag_name="svg/line_7" x1="550" x2="550" y1="280" y2="350"/>
+<line id="line_6" stroke="#cccccc" stroke-width="1" tag_name="svg/line_6" x1="550" x2="600" y1="280" y2="250"/>
+<line id="line_5" stroke="#cccccc" stroke-width="1" tag_name="svg/line_5" x1="400" x2="450" y1="180" y2="190"/>
+<line id="line_4" stroke="#cccccc" stroke-width="1" tag_name="svg/line_4" x1="550" x2="500" y1="350" y2="350"/>
+<line id="line_3" stroke="#cccccc" stroke-width="1" tag_name="svg/line_3" x1="270" x2="330" y1="370" y2="380"/>
+<line id="line_2" stroke="#cccccc" stroke-width="1" tag_name="svg/line_2" x1="330" x2="420" y1="380" y2="380"/>
+<line id="line_1" stroke="#cccccc" stroke-width="1" tag_name="svg/line_1" x1="120" x2="200" y1="150" y2="200"/>
+<line id="line" stroke="#cccccc" stroke-width="1" tag_name="svg/line" x1="120" x2="100" y1="150" y2="200"/>
+<circle cx="200" cy="200" fill="#90caf9" id="circle_31" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_31"/>
+<circle cx="150" cy="300" fill="#90caf9" id="circle_30" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_30"/>
+<circle cx="280" cy="250" fill="#90caf9" id="circle_29" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_29"/>
+<circle cx="300" cy="180" fill="#90caf9" id="circle_28" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_28"/>
+<circle cx="350" cy="150" fill="#90caf9" id="circle_27" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_27"/>
+<circle cx="350" cy="220" fill="#90caf9" id="circle_26" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_26"/>
+<circle cx="400" cy="180" fill="#90caf9" id="circle_25" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_25"/>
+<circle cx="320" cy="300" fill="#90caf9" id="circle_24" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_24"/>
+<circle cx="100" cy="350" fill="#90caf9" id="circle_23" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_23"/>
+<circle cx="220" cy="350" fill="#90caf9" id="circle_22" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_22"/>
+<circle cx="270" cy="370" fill="#90caf9" id="circle_21" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_21"/>
+<circle cx="330" cy="380" fill="#90caf9" id="circle_20" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_20"/>
+<circle cx="420" cy="380" fill="#90caf9" id="circle_19" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_19"/>
+<circle cx="600" cy="250" fill="#90caf9" id="circle_18" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_18"/>
+<circle cx="650" cy="200" fill="#90caf9" id="circle_17" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_17"/>
+<circle cx="550" cy="300" fill="#90caf9" id="circle_16" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_16"/>
+<circle cx="670" cy="300" fill="#90caf9" id="circle_15" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_15"/>
+<circle cx="700" cy="180" fill="#90caf9" id="circle_14" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_14"/>
+<circle cx="500" cy="350" fill="#90caf9" id="circle_13" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_13"/>
+<circle cx="720" cy="330" fill="#90caf9" id="circle_12" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_12"/>
+<circle cx="120" cy="150" fill="#90caf9" id="circle_11" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_11"/>
+<circle cx="100" cy="200" fill="#90caf9" id="circle_10" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_10"/>
+<circle cx="400" cy="270" fill="#90caf9" id="circle_9" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_9"/>
+<circle cx="450" cy="250" fill="#90caf9" id="circle_8" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_8"/>
+<circle cx="380" cy="330" fill="#90caf9" id="circle_7" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_7"/>
+<circle cx="450" cy="320" fill="#90caf9" id="circle_6" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_6"/>
+<circle cx="500" cy="230" fill="#90caf9" id="circle_5" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_5"/>
+<circle cx="450" cy="190" fill="#90caf9" id="circle_4" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_4"/>
+<circle cx="500" cy="300" fill="#90caf9" id="circle_3" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_3"/>
+<circle cx="550" cy="200" fill="#90caf9" id="circle_2" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_2"/>
+<circle cx="550" cy="280" fill="#90caf9" id="circle_1" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_1"/>
+<circle cx="550" cy="350" fill="#90caf9" id="circle" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle"/>
+<text font-family="Arial" font-size="12" id="text" tag_name="svg/text" text-anchor="middle" x="400" y="450">
+    Data Source: Sales Department Monthly Report 2023
   </text>
 </svg>
