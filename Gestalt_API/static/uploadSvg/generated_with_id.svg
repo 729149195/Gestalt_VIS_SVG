@@ -1,87 +1,215 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg height="600" id="svg" tag_name="svg" version="1.1" width="800" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<text font-family="Arial" font-size="20" font-weight="bold" id="text_2" tag_name="svg/text_2" text-anchor="middle" x="400" y="30">
-    Product Sales Trend Analysis 2023
+<svg aria-hidden="false" aria-label="Interactive chart" class="highcharts-root" height="400" style="font-family: -apple-system, BlinkMacSystemFont, " xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif; font-size: 1rem;" version="1.1" viewBox="0 0 600 400" width="600" id="svg" tag_name="svg"&gt;
+  <desc aria-hidden="true" id="desc" tag_name="svg/desc">
+    Created with Highcharts 12.1.2
+  </desc>
+<defs aria-hidden="true" id="defs" tag_name="svg/defs">
+<filter id="filter" tag_name="svg/defs/filter">
+<fedropshadow dx="1" dy="1" flood-color="#000000" flood-opacity="0.75" id="fedropshadow" stdDeviation="2.5" tag_name="svg/defs/filter/fedropshadow"/>
+</filter>
+<clippath id="clipPath_3" tag_name="svg/defs/clipPath_3">
+<rect fill="none" height="440.6083696659685" id="rect_7" tag_name="svg/defs/clipPath_3/rect_7" width="93.5" x="0" y="0"/>
+</clippath>
+<clippath id="clipPath_2" tag_name="svg/defs/clipPath_2">
+<path d="M 406.875 137.5 A 116.875 116.875 0 1 1 406.8749999998289 137.49980000000002 M 313.3749999999658 137.49996000000002 A 23.375 23.375 0 1 0 313.375 137.5" fill="none" id="path_43" tag_name="svg/defs/clipPath_2/path_43"/>
+</clippath>
+<clippath id="clipPath_1" tag_name="svg/defs/clipPath_1">
+<path d="M 406.875 137.5 A 116.875 116.875 0 1 1 406.8749999998289 137.49980000000002 M 313.3749999999658 137.49996000000002 A 23.375 23.375 0 1 0 313.375 137.5" fill="none" id="path_42" tag_name="svg/defs/clipPath_1/path_42"/>
+</clippath>
+<clippath id="clipPath" tag_name="svg/defs/clipPath">
+<path d="M 406.875 137.5 A 116.875 116.875 0 1 1 406.8749999998289 137.49980000000002 M 313.3749999999658 137.49996000000002 A 23.375 23.375 0 1 0 313.375 137.5" fill="none" id="path_41" tag_name="svg/defs/clipPath/path_41"/>
+</clippath>
+</defs>
+<rect aria-hidden="true" class="highcharts-background" fill="#ffffff" filter="none" height="400" id="rect_6" rx="0" ry="0" tag_name="svg/rect_6" width="600" x="0" y="0"/>
+<rect aria-hidden="true" class="highcharts-plot-background" fill="none" filter="none" height="275" id="rect_5" tag_name="svg/rect_5" width="580" x="10" y="68"/>
+<g aria-hidden="true" class="highcharts-pane-group" data-z-index="0" id="g_19" tag_name="svg/g_19"/>
+<g aria-hidden="true" class="highcharts-grid highcharts-xaxis-grid highcharts-radial-axis-grid" data-z-index="1" id="g_18" tag_name="svg/g_18">
+<path class="highcharts-grid-line" d="M 300 107.32499999999999 A 98.17500000000001 98.17500000000001 0 1 1 201.825 205.5 M 300 205.5 A 0 0 0 1 0 300 205.5" data-z-index="1" fill="none" id="path_40" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_18/path_40"/>
+<path class="highcharts-grid-line" d="M 300 126.025 A 79.475 79.475 0 1 1 220.525 205.5 M 300 205.5 A 0 0 0 1 0 300 205.5" data-z-index="1" fill="none" id="path_39" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_18/path_39"/>
+<path class="highcharts-grid-line" d="M 300 144.725 A 60.775 60.775 0 1 1 239.225 205.5 M 300 205.5 A 0 0 0 1 0 300 205.5" data-z-index="1" fill="none" id="path_38" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_18/path_38"/>
+<path class="highcharts-grid-line" d="M 300 163.425 A 42.074999999999996 42.074999999999996 0 1 1 257.925 205.5 M 300 205.5 A 0 0 0 1 0 300 205.5" data-z-index="1" fill="none" id="path_37" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_18/path_37"/>
+<path class="highcharts-grid-line" d="M 300 182.125 A 23.375000000000007 23.375000000000007 0 1 1 276.625 205.5 M 300 205.5 A 0 0 0 1 0 300 205.5" data-z-index="1" fill="none" id="path_36" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_18/path_36"/>
+<path class="highcharts-grid-line" d="M 300 182.125 A 23.375 23.375 0 1 1 276.625 205.5 M 300 205.5 A 0 0 0 1 0 300 205.5" data-z-index="1" fill="none" id="path_35" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_18/path_35"/>
+<path class="highcharts-grid-line" d="M 300 88.625 A 116.875 116.875 0 1 1 183.125 205.50000000000003 M 300 205.5 A 0 0 0 1 0 300 205.5" data-z-index="1" fill="none" id="path_34" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_18/path_34"/>
+</g>
+<g aria-hidden="true" class="highcharts-grid highcharts-yaxis-grid highcharts-radial-axis-grid" data-z-index="1" id="g_17" tag_name="svg/g_17">
+<path class="highcharts-grid-line" d="M 300 182.125 L 300 88.625" data-z-index="1" fill="none" id="path_33" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_33"/>
+<path class="highcharts-grid-line" d="M 306.78540433082304 183.1315196522596 L 333.92702165411526 93.65759826129808" data-z-index="1" fill="none" id="path_32" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_32"/>
+<path class="highcharts-grid-line" d="M 312.9864541968332 186.064397812428 L 364.93227098416605 108.32198906214002" data-z-index="1" fill="none" id="path_31" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_31"/>
+<path class="highcharts-grid-line" d="M 318.069119347354 190.6710569826748 L 390.3455967367699 131.35528491337394" data-z-index="1" fill="none" id="path_30" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_30"/>
+<path class="highcharts-grid-line" d="M 321.5956840724513 196.55477476846602 L 407.97842036225666 160.77387384233015" data-z-index="1" fill="none" id="path_29" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_29"/>
+<path class="highcharts-grid-line" d="M 323.2624429859626 203.2088493447965 L 416.312214929813 194.04424672398258" data-z-index="1" fill="none" id="path_28" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_28"/>
+<path class="highcharts-grid-line" d="M 322.9258559294255 210.060236277127 L 414.62927964712753 228.301181385635" data-z-index="1" fill="none" id="path_27" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_27"/>
+<path class="highcharts-grid-line" d="M 320.6149095541428 216.5188987233077 L 403.074547770714 260.59449361653844" data-z-index="1" fill="none" id="path_26" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_26"/>
+<path class="highcharts-grid-line" d="M 316.52862101023555 222.02862101023555 L 382.6431050511777 288.1431050511777" data-z-index="1" fill="none" id="path_25" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_25"/>
+<path class="highcharts-grid-line" d="M 311.0188987233077 226.1149095541428 L 355.0944936165385 308.574547770714" data-z-index="1" fill="none" id="path_24" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_24"/>
+<path class="highcharts-grid-line" d="M 304.560236277127 228.4258559294255 L 322.801181385635 320.12927964712753" data-z-index="1" fill="none" id="path_23" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_23"/>
+<path class="highcharts-grid-line" d="M 297.70884934479653 228.7624429859626 L 288.54424672398267 321.812214929813" data-z-index="1" fill="none" id="path_22" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_22"/>
+<path class="highcharts-grid-line" d="M 291.054774768466 227.09568407245132 L 255.27387384233015 313.47842036225666" data-z-index="1" fill="none" id="path_21" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_21"/>
+<path class="highcharts-grid-line" d="M 285.17105698267477 223.569119347354 L 225.85528491337396 295.8455967367699" data-z-index="1" fill="none" id="path_20" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_20"/>
+<path class="highcharts-grid-line" d="M 280.564397812428 218.48645419683322 L 202.82198906214006 270.43227098416605" data-z-index="1" fill="none" id="path_19" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_19"/>
+<path class="highcharts-grid-line" d="M 277.6315196522596 212.28540433082307 L 188.1575982612981 239.4270216541153" data-z-index="1" fill="none" id="path_18" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_18"/>
+<path class="highcharts-grid-line" d="M 276.625 205.5 L 183.125 205.50000000000003" data-z-index="1" fill="none" id="path_17" opacity="1" stroke="#e6e6e6" stroke-dasharray="none" stroke-width="0" tag_name="svg/g_17/path_17"/>
+</g>
+<rect aria-hidden="true" class="highcharts-plot-border" data-z-index="1" fill="none" height="275" id="rect_4" stroke="#cccccc" stroke-width="0" tag_name="svg/rect_4" width="580" x="10" y="68"/>
+<g aria-hidden="true" class="highcharts-axis highcharts-xaxis highcharts-radial-axis" data-z-index="2" id="g_16" tag_name="svg/g_16">
+<path class="highcharts-axis-line" d="M 300 182.125 L 300 88.625" data-z-index="7" fill="none" id="path_16" stroke="#333333" stroke-width="0" tag_name="svg/g_16/path_16"/>
+</g>
+<g aria-hidden="true" class="highcharts-axis highcharts-yaxis highcharts-radial-axis" data-z-index="2" id="g_15" tag_name="svg/g_15">
+<path class="highcharts-axis-line" d="M 300 88.625 A 116.875 116.875 0 1 1 183.125 205.50000000000003 M 300 205.5 A 0 0 0 1 0 300 205.5" data-z-index="7" fill="none" id="path_15" stroke="#333333" stroke-width="0" tag_name="svg/g_15/path_15"/>
+</g>
+<g aria-hidden="false" class="highcharts-series-group" data-z-index="3" filter="none" id="g_8" tag_name="svg/g_8">
+<g aria-hidden="false" aria-label="Gold medals, bar series 1 of 3 with 5 bars." class="highcharts-series highcharts-series-0 highcharts-column-series highcharts-color-0" clip-path="url(#highcharts-h7b1ipc-47)" data-z-index="0.1" id="g_14" opacity="1" role="region" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_14" transform="translate(10,68) scale(1 1)">
+<path aria-label="Norway , 148. Gold medals." class="highcharts-point highcharts-color-0" d="M 290 30.174380504932557 A 6.545000000000002 6.545000000000002 0 0 1 296.9433913043478 23.64151670958063 A 114.07000000000001 114.07000000000001 0 0 1 403.356824771074 150.23558706224497 A 6.545000000000002 6.545000000000002 0 0 1 395.72746869992955 155.9523971967172 L 395.72746869992955 155.9523971967172 A 6.545000000000002 6.545000000000002 0 0 1 390.34866455144254 148.77412625182342 A 100.98 100.98 0 0 0 296.14660869565216 36.707244300284486 A 6.545000000000002 6.545000000000002 0 0 1 290 30.174380504932557 Z" fill="#FFD700" filter="none" id="path_14" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_14/path_14"/>
+<path aria-label="United States , 113. Gold medals." class="highcharts-point highcharts-color-0" d="M 290 48.916459768193945 A 6.545000000000002 6.545000000000002 0 0 1 297.02726315789477 42.389251540587196 A 95.37 95.37 0 0 1 380.72762360942363 108.10722513632382 A 6.545000000000002 6.545000000000002 0 0 1 376.0540981310608 116.48248837636206 L 376.0540981310608 116.48248837636206 A 6.545000000000002 6.545000000000002 0 0 1 368.2748125257773 112.1415275685931 A 82.28 82.28 0 0 0 296.06273684210527 55.44366799580072 A 6.545000000000002 6.545000000000002 0 0 1 290 48.916459768193945 Z" fill="#FFD700" filter="none" id="path_13" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_14/path_13"/>
+<path aria-label="Germany , 104. Gold medals." class="highcharts-point highcharts-color-0" d="M 290 67.68110141229668 A 6.545000000000002 6.545000000000002 0 0 1 297.15586666666667 61.164670877444365 A 76.67 76.67 0 0 1 359.39847977098475 104.90951203991844 A 6.545000000000002 6.545000000000002 0 0 1 355.6912589907354 113.84969149858446 L 355.6912589907354 113.84969149858446 A 6.545000000000002 6.545000000000002 0 0 1 347.54995883447515 110.47374169163967 A 63.58 63.58 0 0 0 295.9341333333333 74.197531947149 A 6.545000000000002 6.545000000000002 0 0 1 290 67.68110141229668 Z" fill="#FFD700" filter="none" id="path_12" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_14/path_12"/>
+<path aria-label="Austria , 71. Gold medals." class="highcharts-point highcharts-color-0" d="M 290 86.49320045327289 A 6.544999999999998 6.544999999999998 0 0 1 297.378 80.00142596550762 A 57.97 57.97 0 0 1 327.7353502402556 93.4935886234149 A 6.544999999999998 6.544999999999998 0 0 1 327.86073034375767 103.32020044182137 L 327.86073034375767 103.32020044182137 A 6.544999999999998 6.544999999999998 0 0 1 319.2144647021334 103.43052022457928 A 44.88 44.88 0 0 0 295.712 92.98497494103816 A 6.544999999999998 6.544999999999998 0 0 1 290 86.49320045327289 Z" fill="#FFD700" filter="none" id="path_11" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_14/path_11"/>
+<path aria-label="Canada , 77. Gold medals." class="highcharts-point highcharts-color-0" d="M 290 105.4361792669682 A 6.544999999999998 6.544999999999998 0 0 1 297.854 99.02341512036185 A 39.269999999999996 39.269999999999996 0 0 1 315.4715184376244 107.61129563728534 A 6.544999999999998 6.544999999999998 0 0 1 315.2580197342028 117.74851805289985 L 315.2580197342028 117.74851805289985 A 6.544999999999998 6.544999999999998 0 0 1 306.9810122917496 117.57419709152356 A 26.18 26.18 0 0 0 295.236 111.84894341357456 A 6.544999999999998 6.544999999999998 0 0 1 290 105.4361792669682 Z" fill="#FFD700" filter="none" id="path_10" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_14/path_10"/>
+</g>
+<g aria-hidden="true" class="highcharts-markers highcharts-series-0 highcharts-column-series highcharts-color-0" clip-path="none" data-z-index="0.1" id="g_13" opacity="1" tag_name="svg/g_8/g_13" transform="translate(10,68) scale(1 1)"/>
+<g aria-hidden="false" aria-label="Silver medals, bar series 2 of 3 with 5 bars." class="highcharts-series highcharts-series-1 highcharts-column-series highcharts-color-1" clip-path="url(#highcharts-h7b1ipc-53)" data-z-index="0.1" id="g_12" opacity="1" role="region" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_12" transform="translate(10,68) scale(1 1)">
+<path aria-label="Norway , 113. Silver medals." class="highcharts-point highcharts-color-1" d="M 395.72746869992955 155.9523971967172 A 6.545000000000002 6.545000000000002 0 0 1 400.96928273138525 163.915586120355 A 114.07000000000001 114.07000000000001 0 0 1 304.5233405671871 250.6416699486511 A 6.545000000000002 6.545000000000002 0 0 1 297.1596134175642 244.58654694083208 L 297.1596134175642 244.58654694083208 A 6.545000000000002 6.545000000000002 0 0 1 302.85672771521484 237.65819962667473 A 100.98 100.98 0 0 0 388.23510274581645 160.8842893524454 A 6.545000000000002 6.545000000000002 0 0 1 395.72746869992955 155.9523971967172 Z" fill="#C0C0C0" filter="none" id="path_9" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_12/path_9"/>
+<path aria-label="United States , 122. Silver medals." class="highcharts-point highcharts-color-1" d="M 376.0540981310608 116.48248837636206 A 6.545000000000002 6.545000000000002 0 0 1 384.06222921938064 121.76043411396942 A 95.37 95.37 0 0 1 331.2089544379942 223.5073193055528 A 6.545000000000002 6.545000000000002 0 0 1 322.2860871893512 219.9903156376651 L 322.2860871893512 219.9903156376651 A 6.545000000000002 6.545000000000002 0 0 1 325.55282343670086 211.7023931263593 A 82.28 82.28 0 0 0 371.15172716966174 123.92076668656185 A 6.545000000000002 6.545000000000002 0 0 1 376.0540981310608 116.48248837636206 Z" fill="#C0C0C0" filter="none" id="path_8" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_12/path_8"/>
+<path aria-label="Germany , 98. Silver medals." class="highcharts-point highcharts-color-1" d="M 355.6912589907354 113.84969149858446 A 6.545000000000002 6.545000000000002 0 0 1 364.2464065554233 118.37514670365293 A 76.67 76.67 0 0 1 347.86832446445 187.79459139586623 A 6.545000000000002 6.545000000000002 0 0 1 338.1925813419646 188.01884503428522 L 338.1925813419646 188.01884503428522 A 6.545000000000002 6.545000000000002 0 0 1 337.9883666290561 179.2077099380354 A 63.58 63.58 0 0 0 351.57019080205833 121.64036555912682 A 6.545000000000002 6.545000000000002 0 0 1 355.6912589907354 113.84969149858446 Z" fill="#C0C0C0" filter="none" id="path_7" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_12/path_7"/>
+<path aria-label="Austria , 88. Silver medals." class="highcharts-point highcharts-color-1" d="M 327.86073034375767 103.32020044182137 A 6.544999999999998 6.544999999999998 0 0 1 337.6233872620344 104.44649964541874 A 57.97 57.97 0 0 1 347.0870238395871 147.57931590627126 A 6.544999999999998 6.544999999999998 0 0 1 338.6926697298246 152.68938822277653 L 338.6926697298246 152.68938822277653 A 6.544999999999998 6.544999999999998 0 0 1 334.1964055532287 145.30334134679066 A 44.88 44.88 0 0 0 326.86971917060725 111.91019327387258 A 6.544999999999998 6.544999999999998 0 0 1 327.86073034375767 103.32020044182137 Z" fill="#C0C0C0" filter="none" id="path_6" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_12/path_6"/>
+<path aria-label="Canada , 72. Silver medals." class="highcharts-point highcharts-color-1" d="M 315.2580197342028 117.74851805289985 A 6.544999999999998 6.544999999999998 0 0 1 325.1477289244622 119.98514768967429 A 39.269999999999996 39.269999999999996 0 0 1 329.26446536999566 136.84071310614442 A 6.544999999999998 6.544999999999998 0 0 1 321.5192333949333 143.38443083022685 L 321.5192333949333 143.38443083022685 A 6.544999999999998 6.544999999999998 0 0 1 316.1763102466638 137.06047540409628 A 26.18 26.18 0 0 0 313.4318192829748 125.8234317931162 A 6.544999999999998 6.544999999999998 0 0 1 315.2580197342028 117.74851805289985 Z" fill="#C0C0C0" filter="none" id="path_5" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_12/path_5"/>
+</g>
+<g aria-hidden="true" class="highcharts-markers highcharts-series-1 highcharts-column-series highcharts-color-1" clip-path="none" data-z-index="0.1" id="g_11" opacity="1" tag_name="svg/g_8/g_11" transform="translate(10,68) scale(1 1)"/>
+<g aria-hidden="false" aria-label="Bronze medals, bar series 3 of 3 with 5 bars." class="highcharts-series highcharts-series-2 highcharts-column-series highcharts-color-2" clip-path="url(#highcharts-h7b1ipc-59)" data-z-index="0.1" id="g_10" opacity="1" role="region" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_10" transform="translate(10,68) scale(1 1)">
+<path aria-label="Norway , 124. Bronze medals." class="highcharts-point highcharts-color-2" d="M 297.1596134175642 244.58654694083208 A 6.545000000000002 6.545000000000002 0 0 1 290.66749137964473 251.56804703885354 A 114.07000000000001 114.07000000000001 0 0 1 179.13530640792507 164.35115667406794 A 6.545000000000002 6.545000000000002 0 0 1 184.3458087323492 156.36744464888292 L 184.3458087323492 156.36744464888292 A 6.545000000000002 6.545000000000002 0 0 1 191.85748436111402 161.26987639999456 A 100.98 100.98 0 0 0 290.59089400821006 238.478271149149 A 6.545000000000002 6.545000000000002 0 0 1 297.1596134175642 244.58654694083208 Z" fill="#CD7F32" filter="none" id="path_4" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_10/path_4"/>
+<path aria-label="United States , 95. Bronze medals." class="highcharts-point highcharts-color-2" d="M 322.2860871893512 219.9903156376651 A 6.545000000000002 6.545000000000002 0 0 1 318.1211696317704 228.6297795374333 A 95.37 95.37 0 0 1 230.59903055412474 212.11207495365744 A 6.545000000000002 6.545000000000002 0 0 1 229.86942684870274 202.54888755771685 L 229.86942684870274 202.54888755771685 A 6.545000000000002 6.545000000000002 0 0 1 238.7521047917939 201.8712019208025 A 82.28 82.28 0 0 0 314.2614012509392 216.121770581315 A 6.545000000000002 6.545000000000002 0 0 1 322.2860871893512 219.9903156376651 Z" fill="#CD7F32" filter="none" id="path_3" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_10/path_3"/>
+<path aria-label="Germany , 65. Bronze medals." class="highcharts-point highcharts-color-2" d="M 338.1925813419646 188.01884503428522 A 6.545000000000002 6.545000000000002 0 0 1 337.512786736646 197.6732830791041 A 76.67 76.67 0 0 1 296.8560441244989 213.86284148041457 A 6.545000000000002 6.545000000000002 0 0 1 289.72582253108874 207.31836024081016 L 289.72582253108874 207.31836024081016 A 6.545000000000002 6.545000000000002 0 0 1 295.685500005682 200.82528317888037 A 63.58 63.58 0 0 0 329.40084753770645 187.39979572413512 A 6.545000000000002 6.545000000000002 0 0 1 338.1925813419646 188.01884503428522 Z" fill="#CD7F32" filter="none" id="path_2" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_10/path_2"/>
+<path aria-label="Austria , 91. Bronze medals." class="highcharts-point highcharts-color-2" d="M 338.6926697298246 152.68938822277653 A 6.544999999999998 6.544999999999998 0 0 1 342.692813369472 161.6658502687158 A 57.97 57.97 0 0 1 308.45364912267235 192.4543786613705 A 6.544999999999998 6.544999999999998 0 0 1 299.9509329485831 187.5267181959081 L 299.9509329485831 187.5267181959081 A 6.544999999999998 6.544999999999998 0 0 1 304.28669609497217 180.04532541525458 A 44.88 44.88 0 0 0 330.7944361570106 156.20904536932835 A 6.544999999999998 6.544999999999998 0 0 1 338.6926697298246 152.68938822277653 Z" fill="#CD7F32" filter="none" id="path_1" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_10/path_1"/>
+<path aria-label="Canada , 76. Bronze medals." class="highcharts-point highcharts-color-2" d="M 321.5192333949333 143.38443083022685 A 6.544999999999998 6.544999999999998 0 0 1 326.38169477784413 152.28192088640003 A 39.269999999999996 39.269999999999996 0 0 1 315.06434616666195 167.7309684138259 A 6.544999999999998 6.544999999999998 0 0 1 305.11478046372497 165.7777653207144 L 305.11478046372497 165.7777653207144 A 6.544999999999998 6.544999999999998 0 0 1 306.70956411110797 157.6539789425506 A 26.18 26.18 0 0 0 314.25446318522944 147.3546139242667 A 6.544999999999998 6.544999999999998 0 0 1 321.5192333949333 143.38443083022685 Z" fill="#CD7F32" filter="none" id="path" opacity="1" role="img" stroke="#ffffff" stroke-width="0" style="outline: none;" tabindex="-1" tag_name="svg/g_8/g_10/path"/>
+</g>
+<g aria-hidden="true" class="highcharts-markers highcharts-series-2 highcharts-column-series highcharts-color-2" clip-path="none" data-z-index="0.1" id="g_9" opacity="1" tag_name="svg/g_8/g_9" transform="translate(10,68) scale(1 1)"/>
+</g>
+<text aria-hidden="true" class="highcharts-title" data-z-index="4" id="text_29" style="font-size: 1.2em; color: rgb(51, 51, 51); font-weight: bold; fill: rgb(51, 51, 51);" tag_name="svg/text_29" text-anchor="middle" transform="translate(0,0) scale(1 1)" transform-origin="246.18057250976562 22" x="300" y="25">
+    Winter Olympic medals per existing country (TOP 5)
   </text>
-<text font-family="Arial" font-size="14" id="text_1" tag_name="svg/text_1" text-anchor="middle" x="400" y="60">
-    Data Source: Sales Department Monthly Report 2023
-  </text>
-<line id="line_42" stroke="#cccccc" stroke-width="1" tag_name="svg/line_42" x1="200" x2="280" y1="200" y2="250"/>
-<line id="line_41" stroke="#cccccc" stroke-width="1" tag_name="svg/line_41" x1="200" x2="150" y1="200" y2="300"/>
-<line id="line_40" stroke="#cccccc" stroke-width="1" tag_name="svg/line_40" x1="200" x2="300" y1="200" y2="180"/>
-<line id="line_39" stroke="#cccccc" stroke-width="1" tag_name="svg/line_39" x1="280" x2="350" y1="250" y2="220"/>
-<line id="line_38" stroke="#cccccc" stroke-width="1" tag_name="svg/line_38" x1="280" x2="320" y1="250" y2="300"/>
-<line id="line_37" stroke="#cccccc" stroke-width="1" tag_name="svg/line_37" x1="150" x2="100" y1="300" y2="350"/>
-<line id="line_36" stroke="#cccccc" stroke-width="1" tag_name="svg/line_36" x1="150" x2="220" y1="300" y2="350"/>
-<line id="line_35" stroke="#cccccc" stroke-width="1" tag_name="svg/line_35" x1="300" x2="350" y1="180" y2="150"/>
-<line id="line_34" stroke="#cccccc" stroke-width="1" tag_name="svg/line_34" x1="300" x2="350" y1="180" y2="220"/>
-<line id="line_33" stroke="#cccccc" stroke-width="1" tag_name="svg/line_33" x1="350" x2="400" y1="220" y2="180"/>
-<line id="line_32" stroke="#cccccc" stroke-width="1" tag_name="svg/line_32" x1="350" x2="400" y1="220" y2="270"/>
-<line id="line_31" stroke="#cccccc" stroke-width="1" tag_name="svg/line_31" x1="320" x2="400" y1="300" y2="270"/>
-<line id="line_30" stroke="#cccccc" stroke-width="1" tag_name="svg/line_30" x1="320" x2="270" y1="300" y2="370"/>
-<line id="line_29" stroke="#cccccc" stroke-width="1" tag_name="svg/line_29" x1="600" x2="650" y1="250" y2="200"/>
-<line id="line_28" stroke="#cccccc" stroke-width="1" tag_name="svg/line_28" x1="600" x2="550" y1="250" y2="300"/>
-<line id="line_27" stroke="#cccccc" stroke-width="1" tag_name="svg/line_27" x1="600" x2="670" y1="250" y2="300"/>
-<line id="line_26" stroke="#cccccc" stroke-width="1" tag_name="svg/line_26" x1="650" x2="700" y1="200" y2="180"/>
-<line id="line_25" stroke="#cccccc" stroke-width="1" tag_name="svg/line_25" x1="550" x2="500" y1="300" y2="350"/>
-<line id="line_24" stroke="#cccccc" stroke-width="1" tag_name="svg/line_24" x1="670" x2="720" y1="300" y2="330"/>
-<line id="line_23" stroke="#cccccc" stroke-width="1" tag_name="svg/line_23" x1="400" x2="450" y1="270" y2="250"/>
-<line id="line_22" stroke="#cccccc" stroke-width="1" tag_name="svg/line_22" x1="400" x2="380" y1="270" y2="330"/>
-<line id="line_21" stroke="#cccccc" stroke-width="1" tag_name="svg/line_21" x1="400" x2="450" y1="270" y2="320"/>
-<line id="line_20" stroke="#cccccc" stroke-width="1" tag_name="svg/line_20" x1="450" x2="500" y1="250" y2="230"/>
-<line id="line_19" stroke="#cccccc" stroke-width="1" tag_name="svg/line_19" x1="450" x2="450" y1="250" y2="190"/>
-<line id="line_18" stroke="#cccccc" stroke-width="1" tag_name="svg/line_18" x1="450" x2="500" y1="250" y2="300"/>
-<line id="line_17" stroke="#cccccc" stroke-width="1" tag_name="svg/line_17" x1="380" x2="450" y1="330" y2="320"/>
-<line id="line_16" stroke="#cccccc" stroke-width="1" tag_name="svg/line_16" x1="380" x2="330" y1="330" y2="380"/>
-<line id="line_15" stroke="#cccccc" stroke-width="1" tag_name="svg/line_15" x1="450" x2="500" y1="320" y2="300"/>
-<line id="line_14" stroke="#cccccc" stroke-width="1" tag_name="svg/line_14" x1="450" x2="420" y1="320" y2="380"/>
-<line id="line_13" stroke="#cccccc" stroke-width="1" tag_name="svg/line_13" x1="500" x2="550" y1="230" y2="200"/>
-<line id="line_12" stroke="#cccccc" stroke-width="1" tag_name="svg/line_12" x1="500" x2="450" y1="230" y2="190"/>
-<line id="line_11" stroke="#cccccc" stroke-width="1" tag_name="svg/line_11" x1="500" x2="550" y1="230" y2="280"/>
-<line id="line_10" stroke="#cccccc" stroke-width="1" tag_name="svg/line_10" x1="500" x2="550" y1="300" y2="280"/>
-<line id="line_9" stroke="#cccccc" stroke-width="1" tag_name="svg/line_9" x1="500" x2="550" y1="300" y2="350"/>
-<line id="line_8" stroke="#cccccc" stroke-width="1" tag_name="svg/line_8" x1="550" x2="600" y1="200" y2="250"/>
-<line id="line_7" stroke="#cccccc" stroke-width="1" tag_name="svg/line_7" x1="550" x2="550" y1="280" y2="350"/>
-<line id="line_6" stroke="#cccccc" stroke-width="1" tag_name="svg/line_6" x1="550" x2="600" y1="280" y2="250"/>
-<line id="line_5" stroke="#cccccc" stroke-width="1" tag_name="svg/line_5" x1="400" x2="450" y1="180" y2="190"/>
-<line id="line_4" stroke="#cccccc" stroke-width="1" tag_name="svg/line_4" x1="550" x2="500" y1="350" y2="350"/>
-<line id="line_3" stroke="#cccccc" stroke-width="1" tag_name="svg/line_3" x1="270" x2="330" y1="370" y2="380"/>
-<line id="line_2" stroke="#cccccc" stroke-width="1" tag_name="svg/line_2" x1="330" x2="420" y1="380" y2="380"/>
-<line id="line_1" stroke="#cccccc" stroke-width="1" tag_name="svg/line_1" x1="120" x2="200" y1="150" y2="200"/>
-<line id="line" stroke="#cccccc" stroke-width="1" tag_name="svg/line" x1="120" x2="100" y1="150" y2="200"/>
-<circle cx="200" cy="200" fill="#90caf9" id="circle_31" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_31"/>
-<circle cx="150" cy="300" fill="#90caf9" id="circle_30" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_30"/>
-<circle cx="280" cy="250" fill="#90caf9" id="circle_29" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_29"/>
-<circle cx="300" cy="180" fill="#90caf9" id="circle_28" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_28"/>
-<circle cx="350" cy="150" fill="#90caf9" id="circle_27" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_27"/>
-<circle cx="350" cy="220" fill="#90caf9" id="circle_26" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_26"/>
-<circle cx="400" cy="180" fill="#90caf9" id="circle_25" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_25"/>
-<circle cx="320" cy="300" fill="#90caf9" id="circle_24" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_24"/>
-<circle cx="100" cy="350" fill="#90caf9" id="circle_23" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_23"/>
-<circle cx="220" cy="350" fill="#90caf9" id="circle_22" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_22"/>
-<circle cx="270" cy="370" fill="#90caf9" id="circle_21" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_21"/>
-<circle cx="330" cy="380" fill="#90caf9" id="circle_20" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_20"/>
-<circle cx="420" cy="380" fill="#90caf9" id="circle_19" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_19"/>
-<circle cx="600" cy="250" fill="#90caf9" id="circle_18" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_18"/>
-<circle cx="650" cy="200" fill="#90caf9" id="circle_17" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_17"/>
-<circle cx="550" cy="300" fill="#90caf9" id="circle_16" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_16"/>
-<circle cx="670" cy="300" fill="#90caf9" id="circle_15" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_15"/>
-<circle cx="700" cy="180" fill="#90caf9" id="circle_14" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_14"/>
-<circle cx="500" cy="350" fill="#90caf9" id="circle_13" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_13"/>
-<circle cx="720" cy="330" fill="#90caf9" id="circle_12" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_12"/>
-<circle cx="120" cy="150" fill="#90caf9" id="circle_11" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_11"/>
-<circle cx="100" cy="200" fill="#90caf9" id="circle_10" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_10"/>
-<circle cx="400" cy="270" fill="#90caf9" id="circle_9" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_9"/>
-<circle cx="450" cy="250" fill="#90caf9" id="circle_8" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_8"/>
-<circle cx="380" cy="330" fill="#90caf9" id="circle_7" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_7"/>
-<circle cx="450" cy="320" fill="#90caf9" id="circle_6" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_6"/>
-<circle cx="500" cy="230" fill="#90caf9" id="circle_5" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_5"/>
-<circle cx="450" cy="190" fill="#90caf9" id="circle_4" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_4"/>
-<circle cx="500" cy="300" fill="#90caf9" id="circle_3" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_3"/>
-<circle cx="550" cy="200" fill="#90caf9" id="circle_2" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_2"/>
-<circle cx="550" cy="280" fill="#90caf9" id="circle_1" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle_1"/>
-<circle cx="550" cy="350" fill="#90caf9" id="circle" r="8" stroke="#64b5f6" stroke-width="1.5" tag_name="svg/circle"/>
-<text font-family="Arial" font-size="12" id="text" tag_name="svg/text" text-anchor="middle" x="400" y="450">
-    Data Source: Sales Department Monthly Report 2023
+<text aria-hidden="true" class="highcharts-subtitle" data-z-index="4" id="text_28" style="color: rgb(102, 102, 102); font-size: 0.8em; fill: rgb(102, 102, 102);" tag_name="svg/text_28" text-anchor="middle" transform="translate(0,0) scale(1 1)" transform-origin="60.468719482421875 15" x="300" y="50">
+    Source:
+    <a id="a" tag_name="svg/text_28/a">
+<tspan id="tspan_10" tag_name="svg/text_28/a/tspan_10">
+        Wikipedia
+      </tspan>
+</a>
+</text>
+<text aria-hidden="true" class="highcharts-caption" data-z-index="4" id="text_27" style="color: rgb(102, 102, 102); font-size: 0.8em; fill: rgb(102, 102, 102);" tag_name="svg/text_27" text-anchor="start" transform="translate(0,0) scale(1 1)" transform-origin="10 15" x="10" y="397"/>
+<g aria-hidden="true" class="highcharts-legend highcharts-no-tooltip" data-z-index="7" id="g_2" tag_name="svg/g_2" transform="translate(127,355)">
+<rect class="highcharts-legend-box" fill="none" filter="none" height="30" id="rect_3" rx="0" ry="0" stroke="#999999" stroke-width="0" tag_name="svg/g_2/rect_3" width="347" x="0" y="0"/>
+<g data-z-index="1" id="g_3" tag_name="svg/g_2/g_3">
+<g id="g_4" tag_name="svg/g_2/g_3/g_4">
+<g class="highcharts-legend-item highcharts-column-series highcharts-color-0 highcharts-series-0" data-z-index="1" id="g_7" tag_name="svg/g_2/g_3/g_4/g_7" transform="translate(8,3)">
+<text data-z-index="2" id="text_26" style="color: rgb(51, 51, 51); cursor: pointer; font-size: 0.8em; text-decoration: none; fill: rgb(51, 51, 51);" tag_name="svg/g_2/g_3/g_4/g_7/text_26" text-anchor="start" x="21" y="17">
+            Gold medals
+          </text>
+<rect class="highcharts-point" data-z-index="3" fill="#FFD700" height="12" id="rect_2" rx="6" ry="6" tag_name="svg/g_2/g_3/g_4/g_7/rect_2" width="12" x="2" y="6"/>
+</g>
+<g class="highcharts-legend-item highcharts-column-series highcharts-color-1 highcharts-series-1" data-z-index="1" id="g_6" tag_name="svg/g_2/g_3/g_4/g_6" transform="translate(119.8492431640625,3)">
+<text data-z-index="2" id="text_25" style="color: rgb(51, 51, 51); cursor: pointer; font-size: 0.8em; text-decoration: none; fill: rgb(51, 51, 51);" tag_name="svg/g_2/g_3/g_4/g_6/text_25" text-anchor="start" x="21" y="17">
+            Silver medals
+          </text>
+<rect class="highcharts-point" data-z-index="3" fill="#C0C0C0" height="12" id="rect_1" rx="6" ry="6" tag_name="svg/g_2/g_3/g_4/g_6/rect_1" width="12" x="2" y="6"/>
+</g>
+<g class="highcharts-legend-item highcharts-column-series highcharts-color-2 highcharts-series-2" data-z-index="1" id="g_5" tag_name="svg/g_2/g_3/g_4/g_5" transform="translate(235.05470275878906,3)">
+<text data-z-index="2" id="text_24" style="color: rgb(51, 51, 51); cursor: pointer; font-size: 0.8em; text-decoration: none; fill: rgb(51, 51, 51);" tag_name="svg/g_2/g_3/g_4/g_5/text_24" text-anchor="start" x="21" y="17">
+            Bronze medals
+          </text>
+<rect class="highcharts-point" data-z-index="3" fill="#CD7F32" height="12" id="rect" rx="6" ry="6" tag_name="svg/g_2/g_3/g_4/g_5/rect" width="12" x="2" y="6"/>
+</g>
+</g>
+</g>
+</g>
+<g aria-hidden="true" class="highcharts-axis-labels highcharts-xaxis-labels highcharts-radial-axis-labels" data-z-index="7" id="g_1" tag_name="svg/g_1">
+<text id="text_23" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 13px; fill: rgb(51, 51, 51);" tag_name="svg/g_1/text_23" text-anchor="end" transform="translate(0,0)" x="297" y="100.975">
+      Norway
+      <tspan class="f16" id="tspan_8" tag_name="svg/g_1/text_23/tspan_8">
+<tspan class="flag no" id="tspan_9" tag_name="svg/g_1/text_23/tspan_8/tspan_9"/>
+</tspan>
+</text>
+<text id="text_22" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 13px; fill: rgb(51, 51, 51);" tag_name="svg/g_1/text_22" text-anchor="end" transform="translate(0,0)" x="297" y="119.675">
+      United States
+      <tspan class="f16" id="tspan_6" tag_name="svg/g_1/text_22/tspan_6">
+<tspan class="flag us" id="tspan_7" tag_name="svg/g_1/text_22/tspan_6/tspan_7"/>
+</tspan>
+</text>
+<text id="text_21" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 13px; fill: rgb(51, 51, 51);" tag_name="svg/g_1/text_21" text-anchor="end" transform="translate(0,0)" x="297" y="138.375">
+      Germany
+      <tspan class="f16" id="tspan_4" tag_name="svg/g_1/text_21/tspan_4">
+<tspan class="flag de" id="tspan_5" tag_name="svg/g_1/text_21/tspan_4/tspan_5"/>
+</tspan>
+</text>
+<text id="text_20" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 13px; fill: rgb(51, 51, 51);" tag_name="svg/g_1/text_20" text-anchor="end" transform="translate(0,0)" x="297" y="157.075">
+      Austria
+      <tspan class="f16" id="tspan_2" tag_name="svg/g_1/text_20/tspan_2">
+<tspan class="flag at" id="tspan_3" tag_name="svg/g_1/text_20/tspan_2/tspan_3"/>
+</tspan>
+</text>
+<text id="text_19" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 13px; fill: rgb(51, 51, 51);" tag_name="svg/g_1/text_19" text-anchor="end" transform="translate(0,0)" x="297" y="175.775">
+      Canada
+      <tspan class="f16" id="tspan" tag_name="svg/g_1/text_19/tspan">
+<tspan class="flag ca" id="tspan_1" tag_name="svg/g_1/text_19/tspan/tspan_1"/>
+</tspan>
+</text>
+<text id="text_18" style="color: rgb(51, 51, 51); cursor: default; font-size: 13px; fill: rgb(51, 51, 51);" tag_name="svg/g_1/text_18" text-anchor="end" transform="translate(0,0)" visibility="hidden" x="0">
+      5
+    </text>
+</g>
+<g aria-hidden="true" class="highcharts-axis-labels highcharts-yaxis-labels highcharts-radial-axis-labels" data-z-index="7" id="g" tag_name="svg/g">
+<text id="text_17" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_17" text-anchor="middle" transform="translate(0,0)" x="300" y="77.29166603088379">
+      0
+    </text>
+<text id="text_16" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_16" text-anchor="middle" transform="translate(0,0)" x="338.28129181293224" y="82.97015925619874">
+      25
+    </text>
+<text id="text_15" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_15" text-anchor="start" transform="translate(0,0)" x="373.26582447946004" y="99.51661090848563">
+      50
+    </text>
+<text id="text_14" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_14" text-anchor="start" transform="translate(0,0)" x="401.9407535372109" y="125.50605168180304">
+      75
+    </text>
+<text id="text_13" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_13" text-anchor="start" transform="translate(0,0)" x="421.8366133499259" y="158.70028838773757">
+      100
+    </text>
+<text id="text_12" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_12" text-anchor="start" transform="translate(0,0)" x="431.239985829896" y="196.24065564992296">
+      125
+    </text>
+<text id="text_11" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_11" text-anchor="start" transform="translate(0,0)" x="429.34105885317604" y="234.8942022467607">
+      150
+    </text>
+<text id="text_10" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_10" text-anchor="start" transform="translate(0,0)" x="416.30336673593933" y="271.3321106998122">
+      175
+    </text>
+<text id="text_9" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_9" text-anchor="start" transform="translate(0,0)" x="393.24970676897595" y="302.41637279985974">
+      200
+    </text>
+<text id="text_8" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_8" text-anchor="start" transform="translate(0,0)" x="362.16544466892844" y="325.4700327668231">
+      225
+    </text>
+<text id="text_7" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_7" text-anchor="middle" transform="translate(0,0)" x="325.72753621587697" y="338.5077248840598">
+      250
+    </text>
+<text id="text_6" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_6" text-anchor="middle" transform="translate(0,0)" x="287.07398961903925" y="340.4066518607798">
+      275
+    </text>
+<text id="text_5" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_5" text-anchor="end" transform="translate(0,0)" x="249.53362235685378" y="331.0032793808097">
+      300
+    </text>
+<text id="text_4" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_4" text-anchor="end" transform="translate(0,0)" x="216.33938565091927" y="311.10741956809477">
+      325
+    </text>
+<text id="text_3" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_3" text-anchor="end" transform="translate(0,0)" x="190.3499448776019" y="282.4324905103439">
+      350
+    </text>
+<text id="text_2" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_2" text-anchor="end" transform="translate(0,0)" x="173.80349322531498" y="247.44795784381603">
+      375
+    </text>
+<text id="text_1" opacity="1" style="color: rgb(51, 51, 51); cursor: default; font-size: 0.8em; fill: rgb(51, 51, 51);" tag_name="svg/g/text_1" text-anchor="end" transform="translate(0,0)" x="168.125" y="209.16666603088382">
+      400
+    </text>
+</g>
+<text aria-hidden="false" aria-label="Chart credits: Highcharts.com" class="highcharts-credits" data-z-index="8" id="text" style="cursor: pointer; color: rgb(153, 153, 153); font-size: 0.6em; fill: rgb(153, 153, 153);" tag_name="svg/text" text-anchor="end" x="590" y="395">
+    Highcharts.com
   </text>
 </svg>

@@ -1,90 +1,44 @@
 {
-    "169.5-247.0": {
+    "0.0-45.5": {
         "tags": [
-            "circle_31",
-            "circle_22"
+            "rect_6",
+            "rect_5",
+            "rect_4"
         ],
         "total": {
-            "circle": 2
+            "rect": 3
         }
     },
-    "92.0-169.5": {
+    "91.0-136.5": {
         "tags": [
-            "circle_30",
-            "circle_23",
-            "circle_11",
-            "circle_10"
+            "rect_3"
         ],
         "total": {
-            "circle": 4
+            "rect": 1
         }
     },
-    "247.0-324.5": {
+    "136.5-182.0": {
         "tags": [
-            "circle_29",
-            "circle_28",
-            "circle_24",
-            "circle_21",
-            "circle_20"
+            "rect_2"
         ],
         "total": {
-            "circle": 5
+            "rect": 1
         }
     },
-    "324.5-402.0": {
+    "227.5-273.0": {
         "tags": [
-            "circle_27",
-            "circle_26",
-            "circle_25",
-            "circle_9",
-            "circle_7"
+            "rect_1"
         ],
         "total": {
-            "circle": 5
+            "rect": 1
         }
     },
-    "402.0-479.5": {
+    "318.5-364.1": {
         "tags": [
-            "circle_19",
-            "circle_8",
-            "circle_6",
-            "circle_4"
+            "rect"
         ],
         "total": {
-            "circle": 4
-        }
-    },
-    "557.0-634.5": {
-        "tags": [
-            "circle_18"
-        ],
-        "total": {
-            "circle": 1
-        }
-    },
-    "634.5-712.0": {
-        "tags": [
-            "circle_17",
-            "circle_15",
-            "circle_14",
-            "circle_12"
-        ],
-        "total": {
-            "circle": 4
-        }
-    },
-    "479.5-557.0": {
-        "tags": [
-            "circle_16",
-            "circle_13",
-            "circle_5",
-            "circle_3",
-            "circle_2",
-            "circle_1",
-            "circle"
-        ],
-        "total": {
-            "circle": 7
+            "rect": 1
         }
     }
 }

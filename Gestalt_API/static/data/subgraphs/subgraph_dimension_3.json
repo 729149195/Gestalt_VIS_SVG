@@ -1,10 +1,65 @@
 {
-    "nodes": [],
-    "links": [],
-    "clusters": 0,
+    "nodes": [
+        {
+            "id": "svg/rect_6",
+            "name": "svg/rect_6",
+            "cluster": 2
+        },
+        {
+            "id": "svg/rect_5",
+            "name": "svg/rect_5",
+            "cluster": 0
+        },
+        {
+            "id": "svg/rect_4",
+            "name": "svg/rect_4",
+            "cluster": 0
+        },
+        {
+            "id": "svg/g_2/rect_3",
+            "name": "svg/g_2/rect_3",
+            "cluster": 4
+        },
+        {
+            "id": "svg/g_2/g_3/g_4/g_7/rect_2",
+            "name": "svg/g_2/g_3/g_4/g_7/rect_2",
+            "cluster": 3
+        },
+        {
+            "id": "svg/g_2/g_3/g_4/g_6/rect_1",
+            "name": "svg/g_2/g_3/g_4/g_6/rect_1",
+            "cluster": 1
+        },
+        {
+            "id": "svg/g_2/g_3/g_4/g_5/rect",
+            "name": "svg/g_2/g_3/g_4/g_5/rect",
+            "cluster": 0
+        }
+    ],
+    "links": [
+        {
+            "source": "svg/rect_5",
+            "target": "svg/rect_4",
+            "value": 0.9999853672738275,
+            "cluster": 0
+        },
+        {
+            "source": "svg/rect_5",
+            "target": "svg/g_2/g_3/g_4/g_5/rect",
+            "value": 0.8696155586251709,
+            "cluster": 0
+        },
+        {
+            "source": "svg/rect_4",
+            "target": "svg/g_2/g_3/g_4/g_5/rect",
+            "value": 0.869626624652273,
+            "cluster": 0
+        }
+    ],
+    "clusters": 5,
     "dimensions": [
         3
     ],
-    "filtered": true,
-    "filter_reason": "\u8fc7\u6ee4(\u65e0\u533a\u5206\u5ea6)"
+    "filtered": false,
+    "filter_reason": null
 }

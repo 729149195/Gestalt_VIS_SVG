@@ -222,83 +222,116 @@ def apply_transform(transform_str, points):
     center_scale_match = re.search(center_scale_pattern, transform_str)
     
     if center_scale_match:
-        # 提取参数
-        cx = float(center_scale_match.group(1))
-        cy = float(center_scale_match.group(2))
-        scale_factor = float(center_scale_match.group(3))
-        neg_cx = float(center_scale_match.group(4))
-        neg_cy = float(center_scale_match.group(5))
-        
-        # 确认是否是中心缩放模式（第一个translate的x和第二个translate的x符号相反，y也一样）
-        if abs(cx + neg_cx) < 0.001 and abs(cy + neg_cy) < 0.001:
-            # 创建中心缩放矩阵
-            matrix = np.array([
-                [scale_factor, 0, cx * (1 - scale_factor)],
-                [0, scale_factor, cy * (1 - scale_factor)],
-                [0, 0, 1]
-            ])
-            transform_matrix = np.dot(transform_matrix, matrix)
+        try:
+            # 提取参数
+            cx = float(center_scale_match.group(1))
+            cy = float(center_scale_match.group(2))
             
-            # 从transform_str中移除已处理的模式
-            transform_str = transform_str.replace(center_scale_match.group(0), '')
+            # 处理scale参数，这里可能有"1 1"这样的多值参数
+            scale_str = center_scale_match.group(3)
+            scale_values = re.findall(r'[-\d.]+', scale_str)
+            if len(scale_values) == 1:
+                # 单个scale值
+                scale_factor = float(scale_values[0])
+                scale_x = scale_y = scale_factor
+            elif len(scale_values) >= 2:
+                # 多个scale值 (x和y方向可能不同)
+                scale_x = float(scale_values[0])
+                scale_y = float(scale_values[1])
+                scale_factor = scale_x  # 使用x方向的scale作为一般scale_factor
+            else:
+                # 如果没有有效的scale值，使用默认值1
+                scale_x = scale_y = scale_factor = 1.0
+                
+            neg_cx = float(center_scale_match.group(4))
+            neg_cy = float(center_scale_match.group(5))
+            
+            # 确认是否是中心缩放模式（第一个translate的x和第二个translate的x符号相反，y也一样）
+            if abs(cx + neg_cx) < 0.001 and abs(cy + neg_cy) < 0.001:
+                # 创建中心缩放矩阵，支持不同的x和y缩放因子
+                matrix = np.array([
+                    [scale_x, 0, cx * (1 - scale_x)],
+                    [0, scale_y, cy * (1 - scale_y)],
+                    [0, 0, 1]
+                ])
+                transform_matrix = np.dot(transform_matrix, matrix)
+                
+                # 从transform_str中移除已处理的模式
+                transform_str = transform_str.replace(center_scale_match.group(0), '')
+        except (ValueError, IndexError) as e:
+            # 出现解析错误时，跳过这个特殊模式
+            print(f"警告: 处理中心缩放模式时出错: {e}, transform={center_scale_match.group(0)}")
     
     # 处理其他常规变换
     transform_commands = re.findall(r'\w+\([^)]+\)', transform_str)
     for command in transform_commands:
-        cmd_type = command.split('(')[0]
-        values = list(map(float, re.findall(r'[-\d.]+', command)))
-        if cmd_type == 'translate':
-            dx, dy = values if len(values) == 2 else (values[0], 0)
-            matrix = np.array([
-                [1, 0, dx],
-                [0, 1, dy],
-                [0, 0, 1]
-            ])
-            transform_matrix = np.dot(transform_matrix, matrix)
-        elif cmd_type == 'scale':
-            if len(values) == 1:
-                sx, sy = values[0], values[0]
-            else:
-                sx, sy = values
-            matrix = np.array([
-                [sx, 0, 0],
-                [0, sy, 0],
-                [0, 0, 1]
-            ])
-            transform_matrix = np.dot(transform_matrix, matrix)
-        elif cmd_type == 'rotate':
-            angle = np.radians(values[0])
-            cos_val, sin_val = np.cos(angle), np.sin(angle)
-            if len(values) == 3:
-                cx, cy = values[1], values[2]
+        try:
+            cmd_type = command.split('(')[0]
+            # 使用正则表达式安全提取数值，处理可能的多值参数
+            values = list(map(float, re.findall(r'[-\d.]+', command)))
+            
+            if cmd_type == 'translate':
+                dx, dy = values if len(values) == 2 else (values[0], 0)
                 matrix = np.array([
-                    [cos_val, -sin_val, cx - cos_val * cx + sin_val * cy],
-                    [sin_val, cos_val, cy - sin_val * cx - cos_val * cy],
-                    [0, 0, 1]
-                ])
-            else:
-                matrix = np.array([
-                    [cos_val, -sin_val, 0],
-                    [sin_val, cos_val, 0],
-                    [0, 0, 1]
-                ])
-            transform_matrix = np.dot(transform_matrix, matrix)
-        elif cmd_type == 'matrix':
-            if len(values) == 6:
-                a, b, c, d, e, f = values
-                matrix = np.array([
-                    [a, c, e],
-                    [b, d, f],
+                    [1, 0, dx],
+                    [0, 1, dy],
                     [0, 0, 1]
                 ])
                 transform_matrix = np.dot(transform_matrix, matrix)
+            elif cmd_type == 'scale':
+                if len(values) == 0:
+                    # 如果没有值，默认使用1.0
+                    sx, sy = 1.0, 1.0
+                elif len(values) == 1:
+                    # 只有一个值时，x和y方向使用相同的缩放因子
+                    sx, sy = values[0], values[0]
+                else:
+                    # 有多个值时，第一个用于x方向，第二个用于y方向
+                    sx, sy = values[0], values[1]
+                    
+                matrix = np.array([
+                    [sx, 0, 0],
+                    [0, sy, 0],
+                    [0, 0, 1]
+                ])
+                transform_matrix = np.dot(transform_matrix, matrix)
+            elif cmd_type == 'rotate':
+                angle = np.radians(values[0])
+                cos_val, sin_val = np.cos(angle), np.sin(angle)
+                if len(values) == 3:
+                    cx, cy = values[1], values[2]
+                    matrix = np.array([
+                        [cos_val, -sin_val, cx - cos_val * cx + sin_val * cy],
+                        [sin_val, cos_val, cy - sin_val * cx - cos_val * cy],
+                        [0, 0, 1]
+                    ])
+                else:
+                    matrix = np.array([
+                        [cos_val, -sin_val, 0],
+                        [sin_val, cos_val, 0],
+                        [0, 0, 1]
+                    ])
+                transform_matrix = np.dot(transform_matrix, matrix)
+            elif cmd_type == 'matrix':
+                if len(values) == 6:
+                    a, b, c, d, e, f = values
+                    matrix = np.array([
+                        [a, c, e],
+                        [b, d, f],
+                        [0, 0, 1]
+                    ])
+                    transform_matrix = np.dot(transform_matrix, matrix)
+                else:
+                    # 无效的矩阵，跳过
+                    print(f"警告: 无效的 matrix 变换: {command}")
+                    continue
             else:
-                # 无效的矩阵，跳过
-                print(f"警告: 无效的 matrix 变换: {command}")
+                # 未知的变换命令，跳过
+                print(f"警告: 未知的变换命令: {cmd_type}")
                 continue
-        else:
-            # 未知的变换命令，跳过
-            print(f"警告: 未知的变换命令: {cmd_type}")
+        except Exception as e:
+            # 增强错误处理，如果发生任何错误，打印日志并继续
+            print(f"警告: 处理变换命令时出错: {e}, command={command}")
             continue
 
     # 应用最终的变换矩阵到点上

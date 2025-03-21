@@ -642,9 +642,12 @@ function processGraphData(coreData, revelioGoodGroups = new Map()) {
             if (uniqueElementIds.length > 0) {
                 // 显示类型名称，根据组类型显示不同的名称
                 let displayName = '';
+                
+                // 不再创建或处理"reveliogood_all"组
                 if (groupKey === 'reveliogood_all') {
-                    // 跳过reveliogood_all组，不处理
-                    return;
+                    // 跳过"all"组，不创建包含所有元素的大组
+                    console.log(`跳过All组: reveliogood_all, 包含${uniqueElementIds.length}个元素`);
+                    return; // 跳出当前迭代
                 } else if (groupKey === 'reveliogood_basic') {
                     displayName = 'Basic RevelioGood';
                 } else if (groupKey.startsWith('reveliogood_')) {
@@ -663,15 +666,9 @@ function processGraphData(coreData, revelioGoodGroups = new Map()) {
         });
     } else if (Array.isArray(revelioGoodGroups) && revelioGoodGroups.length > 0) {
         // 处理数组格式的reveliogood元素
-        const uniqueElementIds = [...new Set(revelioGoodGroups)];
-        if (uniqueElementIds.length > 0) {
-            revelioGoodClusters.push({
-                id: 'revelioGood_array',
-                elements: new Set(uniqueElementIds),
-                groupKey: 'revelioGood_array',
-                displayName: 'All RevelioGood'
-            });
-        }
+        // 将数组格式也改为不创建包含所有元素的大组
+        console.log(`跳过数组格式的所有元素，不创建All组，元素数量: ${revelioGoodGroups.length}`);
+        // 不再创建包含所有元素的全局组
     }
     
     // 检查reveliogood组与API聚类的重复情况
@@ -814,7 +811,7 @@ function processGraphData(coreData, revelioGoodGroups = new Map()) {
             }
             
             // 如果现有组是基本组，而当前组是reveliogood_n，则替换
-            if (existingGroupKey === 'revelioGood_basic' && 
+            if ((existingGroupKey === 'revelioGood_all' || existingGroupKey === 'revelioGood_basic') && 
                  revelioCluster.groupKey.startsWith('revelioGood_')) {
                 // 更新字典，下面会添加当前组
                 processedRevelioGoodKeys.set(setKey, revelioCluster.id);
@@ -860,11 +857,22 @@ function processGraphData(coreData, revelioGoodGroups = new Map()) {
     // 这些节点在calculateAttentionProbability函数中会获得额外的显著性分数
     processedNodes.forEach(node => {
         if (node.isRevelioGood && node.originalNodes && node.originalNodes.length > 0) {
-            // 所有带isRevelioGood标记的节点都会获得额外显著性分数，应全部收集
-            finalRevelioGoodClusters.push([...node.originalNodes]);
+            // 确保不收集全部元素的总组
+            // 只收集特定类型的组，例如reveliogood_1, reveliogood_2等
+            const nodeName = node.name || '';
             
-            // 额外记录节点信息，便于调试
-            console.log(`收集到isRevelioGood节点: ${node.id}, 名称: ${node.name}, 包含${node.originalNodes.length}个元素`);
+            if (nodeName.includes('RevelioGood_') || 
+                // 收集特定标记的普通reveliogood组，但不收集包含所有元素的总组
+                (nodeName.includes('RevelioGood') && !nodeName.includes('All RevelioGood Elements'))) {
+                
+                // 只收集符合条件的reveliogood组
+                finalRevelioGoodClusters.push([...node.originalNodes]);
+                
+                // 额外记录节点信息，便于调试
+                console.log(`收集到isRevelioGood节点: ${node.id}, 名称: ${node.name}, 包含${node.originalNodes.length}个元素`);
+            } else {
+                console.log(`跳过总组: ${node.id}, 名称: ${node.name}, 包含${node.originalNodes.length}个元素`);
+            }
         }
     });
     
@@ -1190,15 +1198,14 @@ const generateAnalysis = (nodeData) => {
 
     // 遍历normalized数据
     normalizedData.value.forEach(item => {
-        // 标准化ID格式以便比较
-        const normalizedItemId = item.id;
+        // 从完整路径中提取最后的ID部分
+        const normalizedItemLastId = item.id.split('/').pop();
 
         // 检查当前元素是否是高亮元素
         const isHighlighted = nodesToAnalyze.some(analyzeNode => {
-            // 移除开头的 'svg/' 并标准化分析节点的路径
-            const normalizedAnalyzeNode = analyzeNode.replace(/^svg\//, '');
-            return normalizedItemId === `svg/${normalizedAnalyzeNode}` ||
-                normalizedItemId === normalizedAnalyzeNode;
+            // 从分析节点路径中提取最后的ID部分
+            const analyzeNodeLastId = analyzeNode.split('/').pop();
+            return normalizedItemLastId === analyzeNodeLastId;
         });
 
         if (isHighlighted) {
@@ -1406,6 +1413,9 @@ function extractRevelioGoodElements(svgContent) {
         // 创建一个Map来存储不同类型的reveliogood元素组
         const revelioGoodGroups = new Map();
         
+        // 不再创建"all"组，避免将所有元素混合到一个组中
+        // 只保留特定reveliogood_n组和基础reveliogood组
+        
         // 初始化一个普通的reveliogood组
         revelioGoodGroups.set('reveliogood_basic', []);
         
@@ -1418,6 +1428,8 @@ function extractRevelioGoodElements(svgContent) {
             
             const classAttr = node.getAttribute('class') || '';
             const elementId = node.id;
+            
+            // 不再添加到"所有reveliogood元素"组
             
             // 检查是否包含普通的reveliogood类（不带数字）
             if (classAttr.match(/\breveliogood\b/)) {
@@ -1442,6 +1454,12 @@ function extractRevelioGoodElements(svgContent) {
             if (elements.length === 0) {
                 revelioGoodGroups.delete(key);
             }
+        }
+        
+        // 打印收集到的组信息用于调试
+        console.log("收集到的revelioGood组：");
+        for (const [key, elements] of revelioGoodGroups.entries()) {
+            console.log(`- ${key}: ${elements.length}个元素`);
         }
         
         return revelioGoodGroups;
@@ -1777,23 +1795,22 @@ const calculateAttentionProbability = (node, returnRawScore = false) => {
 
         // 遍历normalized数据
         normalizedData.value.forEach(item => {
-            // 标准化ID格式以便比较
-            const normalizedItemId = item.id;
+            // 从完整路径中提取最后的ID部分
+            const normalizedItemLastId = item.id.split('/').pop();
 
             // 检查当前元素是否是高亮元素
             const isHighlighted = nodesToAnalyze.some(analyzeNode => {
-                // 移除开头的 'svg/' 并标准化分析节点的路径
-                const normalizedAnalyzeNode = analyzeNode.replace(/^svg\//, '');
-                return normalizedItemId === `svg/${normalizedAnalyzeNode}` ||
-                    normalizedItemId === normalizedAnalyzeNode;
+                // 从分析节点路径中提取最后的ID部分
+                const analyzeNodeLastId = analyzeNode.split('/').pop();
+                return normalizedItemLastId === analyzeNodeLastId;
             });
 
             if (isHighlighted) {
                 highlightedFeatures.push(item.features);
-                highlightedIds.push(normalizedItemId);
+                highlightedIds.push(normalizedItemLastId);
             } else {
                 nonHighlightedFeatures.push(item.features);
-                nonHighlightedIds.push(normalizedItemId);
+                nonHighlightedIds.push(normalizedItemLastId);
             }
         });
 
