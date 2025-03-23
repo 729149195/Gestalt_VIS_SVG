@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="800" id="svg" tag_name="svg" viewBox="0 0 1000 800" width="1000">
+  <title id="title" tag_name="svg/title">
+    Website User Activity Heatmap
+  </title>
+  <text font-family="Arial" font-size="24" font-weight="bold" id="text_24" tag_name="svg/text_24" text-anchor="middle" x="500" y="50">
+    User Activity Heatmap by Hour
+  </text>
+  <line id="line_32" stroke="black" stroke-width="2" tag_name="svg/line_32" x1="100" x2="950" y1="650" y2="650"/>
+  <line id="line_31" stroke="black" stroke-width="2" tag_name="svg/line_31" x1="100" x2="100" y1="650" y2="100"/>
+  <g font-family="Arial" font-size="10" id="g_2" tag_name="svg/g_2" text-anchor="middle">
+    <line id="line_30" stroke="black" tag_name="svg/g_2/line_30" x1="170" x2="170" y1="650" y2="655"/>
+    <text id="text_23" tag_name="svg/g_2/text_23" x="170" y="670">
+      00:00
+    </text>
+    <line id="line_29" stroke="black" tag_name="svg/g_2/line_29" x1="240" x2="240" y1="650" y2="655"/>
+    <text id="text_22" tag_name="svg/g_2/text_22" x="240" y="670">
+      03:00
+    </text>
+    <line id="line_28" stroke="black" tag_name="svg/g_2/line_28" x1="310" x2="310" y1="650" y2="655"/>
+    <text id="text_21" tag_name="svg/g_2/text_21" x="310" y="670">
+      06:00
+    </text>
+    <line id="line_27" stroke="black" tag_name="svg/g_2/line_27" x1="380" x2="380" y1="650" y2="655"/>
+    <text id="text_20" tag_name="svg/g_2/text_20" x="380" y="670">
+      09:00
+    </text>
+    <line id="line_26" stroke="black" tag_name="svg/g_2/line_26" x1="450" x2="450" y1="650" y2="655"/>
+    <text id="text_19" tag_name="svg/g_2/text_19" x="450" y="670">
+      12:00
+    </text>
+    <line id="line_25" stroke="black" tag_name="svg/g_2/line_25" x1="520" x2="520" y1="650" y2="655"/>
+    <text id="text_18" tag_name="svg/g_2/text_18" x="520" y="670">
+      15:00
+    </text>
+    <line id="line_24" stroke="black" tag_name="svg/g_2/line_24" x1="590" x2="590" y1="650" y2="655"/>
+    <text id="text_17" tag_name="svg/g_2/text_17" x="590" y="670">
+      18:00
+    </text>
+    <line id="line_23" stroke="black" tag_name="svg/g_2/line_23" x1="660" x2="660" y1="650" y2="655"/>
+    <text id="text_16" tag_name="svg/g_2/text_16" x="660" y="670">
+      21:00
+    </text>
+    <line id="line_22" stroke="black" tag_name="svg/g_2/line_22" x1="730" x2="730" y1="650" y2="655"/>
+    <text id="text_15" tag_name="svg/g_2/text_15" x="730" y="670">
+      24:00
+    </text>
+  </g>
+  <g font-family="Arial" font-size="12" id="g_1" tag_name="svg/g_1" text-anchor="end">
+    <line id="line_21" stroke="black" tag_name="svg/g_1/line_21" x1="95" x2="100" y1="170" y2="170"/>
+    <text id="text_14" tag_name="svg/g_1/text_14" x="90" y="175">
+      Monday
+    </text>
+    <line id="line_20" stroke="black" tag_name="svg/g_1/line_20" x1="95" x2="100" y1="250" y2="250"/>
+    <text id="text_13" tag_name="svg/g_1/text_13" x="90" y="255">
+      Tuesday
+    </text>
+    <line id="line_19" stroke="black" tag_name="svg/g_1/line_19" x1="95" x2="100" y1="330" y2="330"/>
+    <text id="text_12" tag_name="svg/g_1/text_12" x="90" y="335">
+      Wednesday
+    </text>
+    <line id="line_18" stroke="black" tag_name="svg/g_1/line_18" x1="95" x2="100" y1="410" y2="410"/>
+    <text id="text_11" tag_name="svg/g_1/text_11" x="90" y="415">
+      Thursday
+    </text>
+    <line id="line_17" stroke="black" tag_name="svg/g_1/line_17" x1="95" x2="100" y1="490" y2="490"/>
+    <text id="text_10" tag_name="svg/g_1/text_10" x="90" y="495">
+      Friday
+    </text>
+    <line id="line_16" stroke="black" tag_name="svg/g_1/line_16" x1="95" x2="100" y1="570" y2="570"/>
+    <text id="text_9" tag_name="svg/g_1/text_9" x="90" y="575">
+      Saturday
+    </text>
+    <line id="line_15" stroke="black" tag_name="svg/g_1/line_15" x1="95" x2="100" y1="650" y2="650"/>
+    <text id="text_8" tag_name="svg/g_1/text_8" x="90" y="655">
+      Sunday
+    </text>
+  </g>
+  <text font-family="Arial" font-size="14" id="text_7" tag_name="svg/text_7" text-anchor="middle" x="525" y="695">
+    Hour of Day
+  </text>
+  <text font-family="Arial" font-size="14" id="text_6" tag_name="svg/text_6" text-anchor="middle" transform="rotate(-90, 50, 375)" x="50" y="375">
+    Day of Week
+  </text>
+  <g id="g" stroke="#e0e0e0" stroke-dasharray="2,2" stroke-width="1" tag_name="svg/g">
+    <line id="line_14" tag_name="svg/g/line_14" x1="170" x2="170" y1="100" y2="650"/>
+    <line id="line_13" tag_name="svg/g/line_13" x1="240" x2="240" y1="100" y2="650"/>
+    <line id="line_12" tag_name="svg/g/line_12" x1="310" x2="310" y1="100" y2="650"/>
+    <line id="line_11" tag_name="svg/g/line_11" x1="380" x2="380" y1="100" y2="650"/>
+    <line id="line_10" tag_name="svg/g/line_10" x1="450" x2="450" y1="100" y2="650"/>
+    <line id="line_9" tag_name="svg/g/line_9" x1="520" x2="520" y1="100" y2="650"/>
+    <line id="line_8" tag_name="svg/g/line_8" x1="590" x2="590" y1="100" y2="650"/>
+    <line id="line_7" tag_name="svg/g/line_7" x1="660" x2="660" y1="100" y2="650"/>
+    <line id="line_6" tag_name="svg/g/line_6" x1="730" x2="730" y1="100" y2="650"/>
+    <line id="line_5" tag_name="svg/g/line_5" x1="100" x2="730" y1="170" y2="170"/>
+    <line id="line_4" tag_name="svg/g/line_4" x1="100" x2="730" y1="250" y2="250"/>
+    <line id="line_3" tag_name="svg/g/line_3" x1="100" x2="730" y1="330" y2="330"/>
+    <line id="line_2" tag_name="svg/g/line_2" x1="100" x2="730" y1="410" y2="410"/>
+    <line id="line_1" tag_name="svg/g/line_1" x1="100" x2="730" y1="490" y2="490"/>
+    <line id="line" tag_name="svg/g/line" x1="100" x2="730" y1="570" y2="570"/>
+  </g>
+  <rect fill="#2171b5" height="70" id="rect_28" tag_name="svg/rect_28" width="70" x="380" y="100"/>
+  <rect fill="#08519c" height="80" id="rect_27" tag_name="svg/rect_27" width="70" x="380" y="170"/>
+  <rect fill="#08519c" height="80" id="rect_26" tag_name="svg/rect_26" width="70" x="380" y="250"/>
+  <rect fill="#08306b" height="80" id="rect_25" tag_name="svg/rect_25" width="70" x="380" y="330"/>
+  <rect fill="#08306b" height="80" id="rect_24" tag_name="svg/rect_24" width="70" x="380" y="410"/>
+  <rect fill="#08519c" height="70" id="rect_23" tag_name="svg/rect_23" width="70" x="590" y="100"/>
+  <rect fill="#08306b" height="80" id="rect_22" tag_name="svg/rect_22" width="70" x="590" y="170"/>
+  <rect fill="#08306b" height="80" id="rect_21" tag_name="svg/rect_21" width="70" x="590" y="250"/>
+  <rect fill="#08519c" height="80" id="rect_20" tag_name="svg/rect_20" width="70" x="590" y="330"/>
+  <rect fill="#08306b" height="80" id="rect_19" tag_name="svg/rect_19" width="70" x="590" y="410"/>
+  <rect fill="#2171b5" height="80" id="rect_18" tag_name="svg/rect_18" width="70" x="660" y="490"/>
+  <rect fill="#08306b" height="80" id="rect_17" tag_name="svg/rect_17" width="70" x="730" y="490"/>
+  <rect fill="#08306b" height="80" id="rect_16" tag_name="svg/rect_16" width="70" x="800" y="490"/>
+  <rect fill="#4292c6" height="80" id="rect_15" tag_name="svg/rect_15" width="70" x="660" y="570"/>
+  <rect fill="#08519c" height="80" id="rect_14" tag_name="svg/rect_14" width="70" x="730" y="570"/>
+  <rect fill="#08306b" height="80" id="rect_13" tag_name="svg/rect_13" width="70" x="800" y="570"/>
+  <rect fill="#f7fbff" height="70" id="rect_12" tag_name="svg/rect_12" width="70" x="170" y="100"/>
+  <rect fill="#f7fbff" height="80" id="rect_11" tag_name="svg/rect_11" width="70" x="170" y="170"/>
+  <rect fill="#deebf7" height="80" id="rect_10" tag_name="svg/rect_10" width="70" x="170" y="250"/>
+  <rect fill="#deebf7" height="80" id="rect_9" tag_name="svg/rect_9" width="70" x="170" y="330"/>
+  <rect fill="#deebf7" height="80" id="rect_8" tag_name="svg/rect_8" width="70" x="170" y="410"/>
+  <rect fill="#f7fbff" height="80" id="rect_7" tag_name="svg/rect_7" width="70" x="170" y="490"/>
+</svg>

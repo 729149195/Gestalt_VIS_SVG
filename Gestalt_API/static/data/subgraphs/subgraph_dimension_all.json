@@ -2,89 +2,102 @@
     "core_clusters": [
         {
             "core_nodes": [
-                "svg/g_41/rect_8",
-                "svg/g_41/rect_11",
-                "svg/g_41/rect_18",
-                "svg/g_41/rect_22",
-                "svg/g_41/rect_25",
-                "svg/g_41/rect_17",
-                "svg/g_41/rect_7",
-                "svg/g_41/rect_6",
-                "svg/g_41/rect_12",
-                "svg/g_41/rect_14"
+                "svg/g_18/path_18",
+                "svg/g_18/path_19",
+                "svg/g_8/g_12/path_3",
+                "svg/g_18/path_20",
+                "svg/g_18/path_21",
+                "svg/g_15/path_9"
             ],
             "core_dimensions": [
-                "1"
-            ],
-            "extensions": [
-                {
-                    "dimension": "cluster_A_1",
-                    "nodes": [
-                        "svg/g_41/rect_8",
-                        "svg/g_41/rect_5",
-                        "svg/g_41/rect_11",
-                        "svg/g_41/rect_18",
-                        "svg/g_41/rect_22",
-                        "svg/g_41/rect_25",
-                        "svg/g_41/rect_17",
-                        "svg/g_41/rect_7",
-                        "svg/g_41/rect_6",
-                        "svg/g_41/rect_23",
-                        "svg/g_41/rect_12",
-                        "svg/g_41/rect_14"
-                    ]
-                },
-                {
-                    "dimension": "cluster_B_4",
-                    "nodes": [
-                        "svg/g_41/rect_8",
-                        "svg/g_41/rect_11",
-                        "svg/g_41/rect_18",
-                        "svg/g_41/rect_21",
-                        "svg/g_41/rect_22",
-                        "svg/g_41/rect_25",
-                        "svg/g_41/rect_17",
-                        "svg/g_41/rect_7",
-                        "svg/g_41/rect_6",
-                        "svg/g_41/rect_12",
-                        "svg/g_41/rect_14"
-                    ]
-                }
-            ]
-        },
-        {
-            "core_nodes": [
-                "svg/g_41/rect_8",
-                "svg/g_41/rect_5",
-                "svg/g_41/rect_11",
-                "svg/g_41/rect_18",
-                "svg/g_41/rect_22",
-                "svg/g_41/rect_25",
-                "svg/g_41/rect_17",
-                "svg/g_41/rect_7",
-                "svg/g_41/rect_6",
-                "svg/g_41/rect_23",
-                "svg/g_41/rect_12",
-                "svg/g_41/rect_14"
-            ],
-            "core_dimensions": [
-                "1"
+                "2"
             ],
             "extensions": []
         },
         {
             "core_nodes": [
-                "svg/g_41/rect_8",
-                "svg/g_41/rect_11",
-                "svg/g_41/rect_18",
-                "svg/g_41/rect_21",
-                "svg/g_41/rect_22",
-                "svg/g_41/rect_25",
-                "svg/g_41/rect_17",
-                "svg/g_41/rect_7",
-                "svg/g_41/rect_6",
-                "svg/g_41/rect_12",
-                "svg/g_41/rect_14"
+                "svg/g_17/path_11",
+                "svg/g_17/path_17",
+                "svg/g_17/path_16",
+                "svg/g_8/g_12/path_4",
+                "svg/g_17/path_15",
+                "svg/g_17/path_14",
+                "svg/g_8/g_14/path_6",
+                "svg/g_8/g_12/path_5",
+                "svg/g_17/path_12",
+                "svg/g_17/path_13"
+            ],
+            "core_dimensions": [
+                "2"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g_8/g_14/path_7",
+                "svg/g_8/g_10/path_1",
+                "svg/g_8/g_10/path",
+                "svg/g_8/g_10/path_2",
+                "svg/g_8/g_14/path_8"
+            ],
+            "core_dimensions": [
+                "2"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g_18/path_18",
+                "svg/g_8/g_14/path_7",
+                "svg/g_18/path_19",
+                "svg/g_8/g_12/path_3",
+                "svg/g_18/path_20",
+                "svg/g_8/g_12/path_4",
+                "svg/g_8/g_12/path_5",
+                "svg/g_18/path_21",
+                "svg/g_15/path_9",
+                "svg/g_8/g_14/path_8"
+            ],
+            "core_dimensions": [
+                "3"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g_17/path_11",
+                "svg/g_17/path_17",
+                "svg/g_17/path_16",
+                "svg/g_17/path_15",
+                "svg/g_17/path_14",
+                "svg/g_8/g_14/path_6",
+                "svg/g_17/path_12",
+                "svg/g_17/path_13"
+            ],
+            "core_dimensions": [
+                "3"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g_8/g_10/path",
+                "svg/g_8/g_10/path_1",
+                "svg/g_8/g_10/path_2"
+            ],
+            "core_dimensions": [
+                "3"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g_18/path_18",
+                "svg/g_8/g_14/path_7",
+                "svg/g_8/g_10/path_1",
+                "svg/g_8/g_14/path_6",
+                "svg/g_18/path_21",
+                "svg/g_15/path_9"
             ],
             "core_dimensions": [
                 "4"
@@ -93,150 +106,29 @@
         },
         {
             "core_nodes": [
-                "svg/g_41/rect_19",
-                "svg/g_41/rect_1",
-                "svg/g_41/rect_10",
-                "svg/g_41/rect_4",
-                "svg/g_41/rect_24",
-                "svg/g_41/rect_20",
-                "svg/g_41/rect_3",
-                "svg/g_41/rect_13"
+                "svg/g_17/path_11",
+                "svg/g_18/path_19",
+                "svg/g_8/g_12/path_3",
+                "svg/g_18/path_20",
+                "svg/g_17/path_17",
+                "svg/g_17/path_16",
+                "svg/g_8/g_12/path_4",
+                "svg/g_17/path_15",
+                "svg/g_17/path_14",
+                "svg/g_8/g_12/path_5",
+                "svg/g_17/path_12",
+                "svg/g_17/path_13"
             ],
             "core_dimensions": [
-                "1"
+                "4"
             ],
             "extensions": []
         },
         {
             "core_nodes": [
-                "svg/g_41/rect_9",
-                "svg/g_41/rect_21",
-                "svg/g_41/rect_16",
-                "svg/g_41/rect_2",
-                "svg/g_41/rect"
-            ],
-            "core_dimensions": [
-                "1"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/g_41/rect_15"
-            ],
-            "core_dimensions": [
-                "1"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/g_41/rect_8",
-                "svg/g_41/rect_11",
-                "svg/g_41/rect_18",
-                "svg/g_41/rect_25",
-                "svg/g_41/rect_17",
-                "svg/g_41/rect_7",
-                "svg/g_41/rect_6",
-                "svg/g_41/rect_12"
-            ],
-            "core_dimensions": [
-                "2"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/g_41/rect_19",
-                "svg/g_41/rect_5",
-                "svg/g_41/rect_1",
-                "svg/g_41/rect_10",
-                "svg/g_41/rect_21",
-                "svg/g_41/rect_22",
-                "svg/g_41/rect_24",
-                "svg/g_41/rect_20",
-                "svg/g_41/rect_23",
-                "svg/g_41/rect_3",
-                "svg/g_41/rect_13",
-                "svg/g_41/rect_14"
-            ],
-            "core_dimensions": [
-                "2"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/g_41/rect_9",
-                "svg/g_41/rect_16",
-                "svg/g_41/rect_4",
-                "svg/g_41/rect_2",
-                "svg/g_41/rect_15",
-                "svg/g_41/rect"
-            ],
-            "core_dimensions": [
-                "2"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/g_41/rect_8",
-                "svg/g_41/rect_5",
-                "svg/g_41/rect_11",
-                "svg/g_41/rect_9",
-                "svg/g_41/rect_18",
-                "svg/g_41/rect_21",
-                "svg/g_41/rect_22",
-                "svg/g_41/rect",
-                "svg/g_41/rect_25",
-                "svg/g_41/rect_17",
-                "svg/g_41/rect_7",
-                "svg/g_41/rect_6",
-                "svg/g_41/rect_23",
-                "svg/g_41/rect_12",
-                "svg/g_41/rect_14"
-            ],
-            "core_dimensions": [
-                "3"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/g_41/rect_19",
-                "svg/g_41/rect_1",
-                "svg/g_41/rect_10",
-                "svg/g_41/rect_16",
-                "svg/g_41/rect_4",
-                "svg/g_41/rect_24",
-                "svg/g_41/rect_20",
-                "svg/g_41/rect_2",
-                "svg/g_41/rect_3",
-                "svg/g_41/rect_13",
-                "svg/g_41/rect_15"
-            ],
-            "core_dimensions": [
-                "3"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/g_41/rect_19",
-                "svg/g_41/rect_5",
-                "svg/g_41/rect_1",
-                "svg/g_41/rect_9",
-                "svg/g_41/rect_10",
-                "svg/g_41/rect_16",
-                "svg/g_41/rect_4",
-                "svg/g_41/rect_24",
-                "svg/g_41/rect_20",
-                "svg/g_41/rect_2",
-                "svg/g_41/rect_23",
-                "svg/g_41/rect_3",
-                "svg/g_41/rect_13",
-                "svg/g_41/rect"
+                "svg/g_8/g_10/path",
+                "svg/g_8/g_10/path_2",
+                "svg/g_8/g_14/path_8"
             ],
             "core_dimensions": [
                 "4"
@@ -244,5 +136,5 @@
             "extensions": []
         }
     ],
-    "total_cores": 12
+    "total_cores": 9
 }

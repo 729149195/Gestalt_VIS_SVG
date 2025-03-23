@@ -182,6 +182,7 @@ def get_color_features(color, current_color='black'):
             rgb = tuple(int(color[i:i + lv // 3], 16) / 255.0 for i in range(0, lv, lv // 3))
         elif color.startswith('rgb'):
             rgb = tuple(map(int, re.findall(r'\d+', color)))
+            # 确保只有三个值(r,g,b)
             rgb = (rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
         elif color.startswith('hsl'):
             h, s, l = map(float, re.findall(r'[\d.]+', color))
@@ -194,9 +195,19 @@ def get_color_features(color, current_color='black'):
             rgb = mcolors.to_rgb(color)
     except ValueError:
         rgb = (0.0, 0.0, 0.0)
+    except IndexError:
+        # 如果提取的值不足3个，使用默认值
+        rgb = (0.0, 0.0, 0.0)
 
     if rgb == (0.0, 0.0, 0.0):
         return 0.0, 0.0, 0.0
+
+    # 确保rgb只包含3个值(r,g,b)，截断多余的值
+    if len(rgb) > 3:
+        rgb = rgb[:3]
+    elif len(rgb) < 3:
+        # 如果值不足，填充为0
+        rgb = tuple(list(rgb) + [0.0] * (3 - len(rgb)))
 
     h, l, s = colorsys.rgb_to_hls(*rgb)
     return h * 360.0, s * 100.0, l * 100.0

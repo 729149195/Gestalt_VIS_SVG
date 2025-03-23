@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" width="1486" height="1105" style="position: absolute; left: 0px; top: 0px; user-select: none;">
+    <!-- 标题 -->
+    <text x="400" y="30" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold">Customer Segment Analysis - Feature Correlation</text>
+
+    <!-- 坐标轴 -->
+    <line x1="150" y1="500" x2="150" y2="100" stroke="black" stroke-width="2" />
+    <line x1="275" y1="500" x2="275" y2="100" stroke="black" stroke-width="2" />
+    <line x1="400" y1="500" x2="400" y2="100" stroke="black" stroke-width="2" />
+    <line x1="525" y1="500" x2="525" y2="100" stroke="black" stroke-width="2" />
+    <line x1="650" y1="500" x2="650" y2="100" stroke="black" stroke-width="2" />
+
+    <!-- 轴标签 -->
+    <text x="150" y="520" font-family="Arial" font-size="14" text-anchor="middle">Age</text>
+    <text x="275" y="520" font-family="Arial" font-size="14" text-anchor="middle">Income</text>
+    <text x="400" y="520" font-family="Arial" font-size="14" text-anchor="middle">Spending</text>
+    <text x="525" y="520" font-family="Arial" font-size="14" text-anchor="middle">Visits</text>
+    <text x="650" y="520" font-family="Arial" font-size="14" text-anchor="middle">Loyalty</text>
+
+    <!-- 刻度 - Age -->
+    <line x1="145" y1="480" x2="155" y2="480" stroke="black" stroke-width="1" />
+    <text x="135" y="485" font-family="Arial" font-size="10" text-anchor="end">20</text>
+    
+    <line x1="145" y1="400" x2="155" y2="400" stroke="black" stroke-width="1" />
+    <text x="135" y="405" font-family="Arial" font-size="10" text-anchor="end">30</text>
+    
+    <line x1="145" y1="320" x2="155" y2="320" stroke="black" stroke-width="1" />
+    <text x="135" y="325" font-family="Arial" font-size="10" text-anchor="end">40</text>
+    
+    <line x1="145" y1="240" x2="155" y2="240" stroke="black" stroke-width="1" />
+    <text x="135" y="245" font-family="Arial" font-size="10" text-anchor="end">50</text>
+    
+    <line x1="145" y1="160" x2="155" y2="160" stroke="black" stroke-width="1" />
+    <text x="135" y="165" font-family="Arial" font-size="10" text-anchor="end">60</text>
+
+    <!-- 刻度 - Income -->
+    <line x1="270" y1="480" x2="280" y2="480" stroke="black" stroke-width="1" />
+    <text x="260" y="485" font-family="Arial" font-size="10" text-anchor="end">30K</text>
+    
+    <line x1="270" y1="400" x2="280" y2="400" stroke="black" stroke-width="1" />
+    <text x="260" y="405" font-family="Arial" font-size="10" text-anchor="end">60K</text>
+    
+    <line x1="270" y1="320" x2="280" y2="320" stroke="black" stroke-width="1" />
+    <text x="260" y="325" font-family="Arial" font-size="10" text-anchor="end">90K</text>
+    
+    <line x1="270" y1="240" x2="280" y2="240" stroke="black" stroke-width="1" />
+    <text x="260" y="245" font-family="Arial" font-size="10" text-anchor="end">120K</text>
+    
+    <line x1="270" y1="160" x2="280" y2="160" stroke="black" stroke-width="1" />
+    <text x="260" y="165" font-family="Arial" font-size="10" text-anchor="end">150K</text>
+
+    <!-- 刻度 - Spending -->
+    <line x1="395" y1="480" x2="405" y2="480" stroke="black" stroke-width="1" />
+    <text x="385" y="485" font-family="Arial" font-size="10" text-anchor="end">1K</text>
+    
+    <line x1="395" y1="400" x2="405" y2="400" stroke="black" stroke-width="1" />
+    <text x="385" y="405" font-family="Arial" font-size="10" text-anchor="end">3K</text>
+    
+    <line x1="395" y1="320" x2="405" y2="320" stroke="black" stroke-width="1" />
+    <text x="385" y="325" font-family="Arial" font-size="10" text-anchor="end">5K</text>
+    
+    <line x1="395" y1="240" x2="405" y2="240" stroke="black" stroke-width="1" />
+    <text x="385" y="245" font-family="Arial" font-size="10" text-anchor="end">7K</text>
+    
+    <line x1="395" y1="160" x2="405" y2="160" stroke="black" stroke-width="1" />
+    <text x="385" y="165" font-family="Arial" font-size="10" text-anchor="end">9K</text>
+
+    <!-- 刻度 - Visits -->
+    <line x1="520" y1="480" x2="530" y2="480" stroke="black" stroke-width="1" />
+    <text x="510" y="485" font-family="Arial" font-size="10" text-anchor="end">5</text>
+    
+    <line x1="520" y1="400" x2="530" y2="400" stroke="black" stroke-width="1" />
+    <text x="510" y="405" font-family="Arial" font-size="10" text-anchor="end">10</text>
+    
+    <line x1="520" y1="320" x2="530" y2="320" stroke="black" stroke-width="1" />
+    <text x="510" y="325" font-family="Arial" font-size="10" text-anchor="end">15</text>
+    
+    <line x1="520" y1="240" x2="530" y2="240" stroke="black" stroke-width="1" />
+    <text x="510" y="245" font-family="Arial" font-size="10" text-anchor="end">20</text>
+    
+    <line x1="520" y1="160" x2="530" y2="160" stroke="black" stroke-width="1" />
+    <text x="510" y="165" font-family="Arial" font-size="10" text-anchor="end">25</text>
+
+    <!-- 刻度 - Loyalty -->
+    <line x1="645" y1="480" x2="655" y2="480" stroke="black" stroke-width="1" />
+    <text x="635" y="485" font-family="Arial" font-size="10" text-anchor="end">1</text>
+    
+    <line x1="645" y1="400" x2="655" y2="400" stroke="black" stroke-width="1" />
+    <text x="635" y="405" font-family="Arial" font-size="10" text-anchor="end">2</text>
+    
+    <line x1="645" y1="320" x2="655" y2="320" stroke="black" stroke-width="1" />
+    <text x="635" y="325" font-family="Arial" font-size="10" text-anchor="end">3</text>
+    
+    <line x1="645" y1="240" x2="655" y2="240" stroke="black" stroke-width="1" />
+    <text x="635" y="245" font-family="Arial" font-size="10" text-anchor="end">4</text>
+    
+    <line x1="645" y1="160" x2="655" y2="160" stroke="black" stroke-width="1" />
+    <text x="635" y="165" font-family="Arial" font-size="10" text-anchor="end">5</text>
+
+    <!-- 高价值客户群体 - 红色 -->
+    <path d="M150,320 L275,180 L400,160 L525,200 L650,180" fill="none" stroke="#e74c3c" stroke-width="1.5" opacity="0.9" />
+    <path d="M150,300 L275,200 L400,180 L525,220 L650,160" fill="none" stroke="#e74c3c" stroke-width="1.5" opacity="0.9" />
+    <path d="M150,340 L275,160 L400,200 L525,180 L650,200" fill="none" stroke="#e74c3c" stroke-width="1.5" opacity="0.9" />
+    <path d="M150,360 L275,190 L400,170 L525,190 L650,170" fill="none" stroke="#e74c3c" stroke-width="1.5" opacity="0.9" />
+    <path d="M150,330 L275,220 L400,190 L525,210 L650,190" fill="none" stroke="#e74c3c" stroke-width="1.5" opacity="0.9" />
+
+    <!-- 中等价值客户 - 蓝色 -->
+    <path d="M150,380 L275,320 L400,300 L525,280 L650,280" fill="none" stroke="#3498db" stroke-width="1" opacity="0.5" />
+    <path d="M150,400 L275,300 L400,320 L525,300 L650,300" fill="none" stroke="#3498db" stroke-width="1" opacity="0.5" />
+    <path d="M150,360 L275,280 L400,290 L525,310 L650,320" fill="none" stroke="#3498db" stroke-width="1" opacity="0.5" />
+    <path d="M150,340 L275,340 L400,280 L525,330 L650,290" fill="none" stroke="#3498db" stroke-width="1" opacity="0.5" />
+    <path d="M150,420 L275,330 L400,340 L525,290 L650,310" fill="none" stroke="#3498db" stroke-width="1" opacity="0.5" />
+    <path d="M150,390 L275,310 L400,330 L525,320 L650,330" fill="none" stroke="#3498db" stroke-width="1" opacity="0.5" />
+
+    <!-- 低价值客户 - 灰色 -->
+    <path d="M150,440 L275,420 L400,420 L525,400 L650,400" fill="none" stroke="#95a5a6" stroke-width="1" opacity="0.5" />
+    <path d="M150,460 L275,400 L400,440 L525,420 L650,380" fill="none" stroke="#95a5a6" stroke-width="1" opacity="0.5" />
+    <path d="M150,420 L275,440 L400,400 L525,440 L650,420" fill="none" stroke="#95a5a6" stroke-width="1" opacity="0.5" />
+    <path d="M150,480 L275,450 L400,450 L525,450 L650,430" fill="none" stroke="#95a5a6" stroke-width="1" opacity="0.5" />
+    <path d="M150,450 L275,430 L400,430 L525,430 L650,410" fill="none" stroke="#95a5a6" stroke-width="1" opacity="0.5" />
+    <path d="M150,470 L275,460 L400,460 L525,410 L650,440" fill="none" stroke="#95a5a6" stroke-width="1" opacity="0.5" />
+
+    <!-- 图例 -->
+    <rect x="750" y="150" width="180" height="100" fill="white" stroke="#dddddd" stroke-width="1" />
+    
+    <line x1="760" y1="175" x2="790" y2="175" stroke="#e74c3c" stroke-width="1.5" />
+    <text x="800" y="180" font-family="Arial" font-size="14" text-anchor="start">High-Value Customers</text>
+    
+    <line x1="760" y1="205" x2="790" y2="205" stroke="#3498db" stroke-width="1" opacity="0.5" />
+    <text x="800" y="210" font-family="Arial" font-size="14" text-anchor="start">Medium-Value Customers</text>
+    
+    <line x1="760" y1="235" x2="790" y2="235" stroke="#95a5a6" stroke-width="1" opacity="0.5" />
+    <text x="800" y="240" font-family="Arial" font-size="14" text-anchor="start">Low-Value Customers</text>
+</svg> 
