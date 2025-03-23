@@ -172,43 +172,153 @@ def get_color_features(color, current_color='black'):
         return 0.0, 0.0, 0.0
     if color == 'currentColor':
         color = current_color
-    if color.lower() == 'none':
+    if color is None or (isinstance(color, str) and color.lower() == 'none'):
         return -1.0, -1.0, -1.0
 
     try:
+        # 处理非字符串类型的颜色值
+        if not isinstance(color, str):
+            try:
+                color = str(color)
+            except:
+                return 0.0, 0.0, 0.0
+                
+        color = color.strip().lower()
+        
         if color.startswith('#'):
+            # 处理十六进制颜色
             color = color.lstrip('#')
-            lv = len(color)
-            rgb = tuple(int(color[i:i + lv // 3], 16) / 255.0 for i in range(0, lv, lv // 3))
+            # 处理缩写形式 #RGB
+            if len(color) == 3:
+                color = ''.join([c*2 for c in color])
+            # 处理 #RGBA
+            if len(color) == 4:
+                color = ''.join([c*2 for c in color])
+                alpha = int(color[6:8], 16) / 255.0
+                rgb = tuple(int(color[i:i+2], 16) / 255.0 for i in range(0, 6, 2))
+                # 与白色背景混合
+                rgb = tuple(c * alpha + (1.0 - alpha) for c in rgb)
+            # 处理 #RRGGBB
+            elif len(color) == 6:
+                rgb = tuple(int(color[i:i+2], 16) / 255.0 for i in range(0, 6, 2))
+            # 处理 #RRGGBBAA
+            elif len(color) == 8:
+                alpha = int(color[6:8], 16) / 255.0
+                rgb = tuple(int(color[i:i+2], 16) / 255.0 for i in range(0, 6, 2))
+                # 与白色背景混合
+                rgb = tuple(c * alpha + (1.0 - alpha) for c in rgb)
+            else:
+                # 处理不规范的十六进制颜色
+                if len(color) > 0:
+                    lv = len(color)
+                    chunk_size = max(1, lv // 3)
+                    rgb = tuple(int(color[i:i+chunk_size].ljust(2, '0'), 16) / 255.0 for i in range(0, min(lv, 3*chunk_size), chunk_size))
+                    # 确保rgb有3个值
+                    rgb = list(rgb) + [0.0] * (3 - len(rgb))
+                    rgb = tuple(rgb[:3])
+                else:
+                    rgb = (0.0, 0.0, 0.0)
+                    
+        elif color.startswith('rgba'):
+            # 处理rgba格式
+            values = re.findall(r'[\d.]+', color)
+            # 确保有足够的值
+            if len(values) >= 4:
+                r = float(values[0]) / 255.0
+                g = float(values[1]) / 255.0
+                b = float(values[2]) / 255.0
+                a = float(values[3])
+                # 限制alpha值在[0,1]范围内
+                a = max(0.0, min(1.0, a))
+                # 与白色背景混合
+                r = r * a + (1.0 - a)
+                g = g * a + (1.0 - a)
+                b = b * a + (1.0 - a)
+                rgb = (r, g, b)
+            else:
+                rgb = (0.0, 0.0, 0.0)
+                
         elif color.startswith('rgb'):
-            rgb = tuple(map(int, re.findall(r'\d+', color)))
-            # 确保只有三个值(r,g,b)
-            rgb = (rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
+            # 处理rgb格式
+            values = re.findall(r'[\d.]+', color)
+            if len(values) >= 3:
+                rgb = (
+                    float(values[0]) / 255.0,
+                    float(values[1]) / 255.0,
+                    float(values[2]) / 255.0
+                )
+            else:
+                rgb = (0.0, 0.0, 0.0)
+                
+        elif color.startswith('hsla'):
+            # 处理hsla格式
+            values = re.findall(r'[\d.]+', color)
+            if len(values) >= 4:
+                h = float(values[0])
+                s = float(values[1]) / 100.0
+                l = float(values[2]) / 100.0
+                a = float(values[3])
+                # 限制值在有效范围内
+                h = h % 360
+                s = max(0.0, min(1.0, s))
+                l = max(0.0, min(1.0, l))
+                a = max(0.0, min(1.0, a))
+                # 转换为RGB
+                r, g, b = colorsys.hls_to_rgb(h / 360.0, l, s)
+                # 与白色背景混合
+                r = r * a + (1.0 - a)
+                g = g * a + (1.0 - a)
+                b = b * a + (1.0 - a)
+                rgb = (r, g, b)
+            else:
+                rgb = (0.0, 0.0, 0.0)
+                
         elif color.startswith('hsl'):
-            h, s, l = map(float, re.findall(r'[\d.]+', color))
-            s /= 100.0
-            l /= 100.0
-            if l == 1.0:
-                return h, 0.0, l * 100.0
-            rgb = colorsys.hls_to_rgb(h / 360.0, l, s)
+            # 处理hsl格式
+            values = re.findall(r'[\d.]+', color)
+            if len(values) >= 3:
+                h = float(values[0])
+                s = float(values[1]) / 100.0
+                l = float(values[2]) / 100.0
+                # 限制值在有效范围内
+                h = h % 360
+                s = max(0.0, min(1.0, s))
+                l = max(0.0, min(1.0, l))
+                if l == 1.0:
+                    return h, 0.0, 100.0
+                rgb = colorsys.hls_to_rgb(h / 360.0, l, s)
+            else:
+                rgb = (0.0, 0.0, 0.0)
         else:
-            rgb = mcolors.to_rgb(color)
-    except ValueError:
-        rgb = (0.0, 0.0, 0.0)
-    except IndexError:
-        # 如果提取的值不足3个，使用默认值
+            # 尝试解析命名颜色或其他格式
+            try:
+                rgb = mcolors.to_rgb(color)
+            except ValueError:
+                # 如果是未知颜色名，则返回黑色
+                rgb = (0.0, 0.0, 0.0)
+    except Exception as e:
+        # 捕获所有异常，确保不会中断处理
+        # print(f"Warning: color parsing error - {e}, using default black")
         rgb = (0.0, 0.0, 0.0)
 
-    if rgb == (0.0, 0.0, 0.0):
+    # 确保rgb是有效值
+    if not rgb or len(rgb) == 0:
         return 0.0, 0.0, 0.0
-
-    # 确保rgb只包含3个值(r,g,b)，截断多余的值
+        
+    # 确保rgb只包含3个值
     if len(rgb) > 3:
         rgb = rgb[:3]
     elif len(rgb) < 3:
-        # 如果值不足，填充为0
         rgb = tuple(list(rgb) + [0.0] * (3 - len(rgb)))
-
+        
+    # 确保所有值都在[0,1]范围内
+    rgb = tuple(max(0.0, min(1.0, c)) for c in rgb)
+    
+    # 如果是纯黑色，直接返回
+    if rgb == (0.0, 0.0, 0.0):
+        return 0.0, 0.0, 0.0
+    
+    # 转换为HSL颜色空间
     h, l, s = colorsys.rgb_to_hls(*rgb)
     return h * 360.0, s * 100.0, l * 100.0
 

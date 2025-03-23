@@ -249,11 +249,10 @@ const handleSvgUploaded = async (event) => {
                 await nextTick();
                 setupDualSvgInteractions();
                 
-                // 自动执行updatePerceptionScope
+                // 仅在文件名相同时自动执行updatePerceptionScope和analyzeSvg
                 await nextTick();
                 updatePerceptionScope();
                 
-                // 自动执行analyzeSvg
                 await nextTick();
                 analyzeSvg();
             } else {
@@ -270,6 +269,8 @@ const handleSvgUploaded = async (event) => {
                 
                 // 更新lastFilename，保存当前文件名
                 lastFilename.value = filename;
+                
+                // 不自动执行updatePerceptionScope和analyzeSvg，等待用户手动操作
             }
         }
     } catch (error) {

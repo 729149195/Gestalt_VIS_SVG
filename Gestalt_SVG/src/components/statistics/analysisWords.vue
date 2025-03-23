@@ -729,6 +729,41 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
     }
   });
 
+  // 同步颜色多样性计算
+  // 计算fill颜色的整体多样性
+  const fillColorDiversity = calculateColorDiversity(featureStats, 'fill');
+  if (fillColorDiversity !== null) {
+    // 将fill颜色各组成部分的多样性同步为最大值
+    ['fill_h_cos', 'fill_h_sin', 'fill_s_n', 'fill_l_n'].forEach(key => {
+      if (featureStats[key]) {
+        featureStats[key].variance = fillColorDiversity;
+        featureStats[key].stdDev = Math.sqrt(fillColorDiversity);
+        // 更新区分度
+        featureStats[key].distinctiveness = Math.min(1, featureStats[key].stdDev / (Math.abs(featureStats[key].mean) + 0.0001));
+      }
+    });
+  }
+
+  // 计算stroke颜色的整体多样性
+  const strokeColorDiversity = calculateColorDiversity(featureStats, 'stroke');
+  if (strokeColorDiversity !== null) {
+    // 将stroke颜色各组成部分的多样性同步为最大值
+    ['stroke_h_cos', 'stroke_h_sin', 'stroke_s_n', 'stroke_l_n'].forEach(key => {
+      if (featureStats[key]) {
+        featureStats[key].variance = strokeColorDiversity;
+        featureStats[key].stdDev = Math.sqrt(strokeColorDiversity);
+        // 更新区分度
+        featureStats[key].distinctiveness = Math.min(1, featureStats[key].stdDev / (Math.abs(featureStats[key].mean) + 0.0001));
+      }
+    });
+  }
+
+  // 存储颜色多样性值，以便在建议过滤时使用
+  const colorDiversityValues = {
+    fill: fillColorDiversity,
+    stroke: strokeColorDiversity
+  };
+
   // 转换特征统计为数组，以便排序
   let featureArray = Object.entries(featureStats)
     .map(([name, stats]) => ({
@@ -1064,8 +1099,23 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                 f.name.toLowerCase().includes(colorFamily)
               );
               
-              // 只检查Selected elements中的用户编码
-              return !selectedEncodingsHasColorFamily;
+              // 1. 首先检查是否已经存在同类颜色族的特征
+              if (selectedEncodingsHasColorFamily) {
+                return false;
+              }
+              
+              // 2. 然后检查该颜色族的多样性
+              const colorDiversity = colorDiversityValues[colorFamily];
+              
+              // 使用featureStats直接获取特征的多样性值
+              if (featureStats[featureKey]) {
+                const featureVariance = featureStats[featureKey].variance || 0;
+                
+                // 如果这个特征的多样性不是该颜色族的最大多样性，则不推荐
+                // 这样确保我们只推荐颜色族中多样性最高的特征
+                const isMaxDiversityComponent = Math.abs(featureVariance - colorDiversity) < 0.000001;
+                return isMaxDiversityComponent;
+              }
             }
             
             return true;
@@ -1222,20 +1272,23 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
       // 从selected elements的used encodings中找多样性为1的编码
       // 获取used encodings中的编码
-      const usedEncodings = processedSignificantFeatures.filter(feature => 
-        // 多样性为1
-        feature.uniqueSelectedValueCount === 1 &&
-        // 过滤掉shape、vertical center和horizontal center
-        feature.name !== 'shape' && 
-        feature.name !== 'vertical center' && 
-        feature.name !== 'horizontal center' &&
-        // 过滤掉width、height和area
-        feature.name !== 'width' &&
-        feature.name !== 'height' &&
-        feature.name !== 'area' &&
-        // 过滤掉所有Bbox相关编码
-        !feature.name.toLowerCase().includes('bbox')
-      );
+      const usedEncodings = processedSignificantFeatures.filter(feature => {
+        // 首先检查是否为需要排除的特征名称
+        if (
+          feature.name === 'shape' || 
+          feature.name === 'vertical center' || 
+          feature.name === 'horizontal center' ||
+          feature.name === 'width' ||
+          feature.name === 'height' ||
+          feature.name === 'area' ||
+          feature.name.toLowerCase().includes('bbox')
+        ) {
+          return false;
+        }
+        
+        // 对于所有特征，包括fill和stroke相关特征，都要求selected elements中多样性为1，且all elements多样性不为1
+        return feature.uniqueSelectedValueCount === 1 && feature.uniqueValueCount > 1;
+      });
 
       // 合并usedEncodings和resetFeaturesList，并去重
       const combinedResetFeatures = [...usedEncodings];
@@ -1251,40 +1304,25 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
       // 使用新的Reset特征列表
       if (combinedResetFeatures.length > 0) {
-        // 过滤掉MDS特征，最多显示5个
+        // 过滤特征，最多显示5个
         const resetFeatures = combinedResetFeatures
-          .filter(feature => !isMdsFeature(feature.featureKeys[0]))
-          // 过滤掉shape、vertical center和horizontal center
-          .filter(feature => 
-            feature.name !== 'shape' && 
-            feature.name !== 'vertical center' && 
-            feature.name !== 'horizontal center' &&
-            // 过滤掉width、height和area
-            feature.name !== 'width' &&
-            feature.name !== 'height' &&
-            feature.name !== 'area' &&
-            // 过滤掉所有Bbox相关编码
-            !feature.name.toLowerCase().includes('bbox')
-          )
-          // 添加对颜色特征的过滤
           .filter(feature => {
-            const featureKey = feature.featureKeys[0];
-            
-            // 检查是否为颜色特征
-            if (isColorFeature(featureKey)) {
-              // 获取颜色族名称（fill或stroke）
-              const colorFamily = featureKey.startsWith('fill_') ? 'fill' : 'stroke';
-              
-              // 检查selected elements的used encodings中是否存在同一颜色族的特征
-              const selectedEncodingsHasColorFamily = processedSignificantFeatures.some(f => 
-                f.name.toLowerCase().includes(colorFamily)
-              );
-              
-              // 只检查Selected elements中的用户编码
-              return !selectedEncodingsHasColorFamily;
+            // 首先检查是否为需要排除的特征名称
+            if (
+              feature.name === 'shape' || 
+              feature.name === 'vertical center' || 
+              feature.name === 'horizontal center' ||
+              feature.name === 'width' ||
+              feature.name === 'height' ||
+              feature.name === 'area' ||
+              feature.name.toLowerCase().includes('bbox') ||
+              isMdsFeature(feature.featureKeys[0])
+            ) {
+              return false;
             }
             
-            return true;
+            // 对于所有特征，包括颜色特征，都要求selected elements中多样性为1，且all elements多样性不为1
+            return feature.uniqueSelectedValueCount === 1 && feature.uniqueValueCount > 1;
           })
           .slice(0, 5); // 最多显示5个
 
@@ -2299,6 +2337,30 @@ const isPositionOrBboxFeature = (featureKey) => {
 const isMdsFeature = (featureKey) => {
   return featureKey === 'bbox_mds_1' || featureKey === 'bbox_mds_2';
 };
+
+// 添加计算颜色多样性的函数
+function calculateColorDiversity(featureStats, colorType) {
+  // 获取颜色的各个组成部分
+  const h_cos_key = `${colorType}_h_cos`;
+  const h_sin_key = `${colorType}_h_sin`;
+  const s_key = `${colorType}_s_n`;
+  const l_key = `${colorType}_l_n`;
+  
+  // 检查所有组成部分是否都存在
+  if (!featureStats[h_cos_key] || !featureStats[h_sin_key] || 
+      !featureStats[s_key] || !featureStats[l_key]) {
+    return null;
+  }
+  
+  // 获取各个组成部分的多样性（使用variance作为多样性指标）
+  const h_cos_diversity = featureStats[h_cos_key].variance;
+  const h_sin_diversity = featureStats[h_sin_key].variance;
+  const s_diversity = featureStats[s_key].variance;
+  const l_diversity = featureStats[l_key].variance;
+  
+  // 取最大值作为颜色的整体多样性
+  return Math.max(h_cos_diversity, h_sin_diversity, s_diversity, l_diversity);
+}
 </script>
 
 <style scoped>
