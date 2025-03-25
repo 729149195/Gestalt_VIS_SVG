@@ -2,7 +2,8 @@
     "core_clusters": [
         {
             "core_nodes": [
-                "svg/g_8/g_11/path_14"
+                "svg/rect_3",
+                "svg/rect_11"
             ],
             "core_dimensions": [
                 "1"
@@ -11,10 +12,10 @@
         },
         {
             "core_nodes": [
-                "svg/g_8/g_11/path_13",
-                "svg/g_8/g_11/path_10",
-                "svg/g_8/g_11/path_12",
-                "svg/g_8/g_11/path_11"
+                "svg/rect_1",
+                "svg/rect_10",
+                "svg/rect_2",
+                "svg/rect"
             ],
             "core_dimensions": [
                 "1"
@@ -23,66 +24,10 @@
         },
         {
             "core_nodes": [
-                "svg/g_8/g_10/path_7",
-                "svg/g_8/g_10/path_9",
-                "svg/g_8/g_9/path_3",
-                "svg/g_8/g_9/path_1",
-                "svg/g_8/g_10/path_5",
-                "svg/g_8/g_10/path_8",
-                "svg/g_8/g_9/path_2",
-                "svg/g_8/g_9/path",
-                "svg/g_8/g_10/path_6",
-                "svg/g_8/g_9/path_4"
-            ],
-            "core_dimensions": [
-                "1"
-            ],
-            "extensions": [
-                {
-                    "dimension": "cluster_A_1",
-                    "nodes": [
-                        "svg/g_8/g_10/path_7",
-                        "svg/g_8/g_10/path_9",
-                        "svg/g_8/g_9/path_3",
-                        "svg/g_8/g_9/path_1",
-                        "svg/g_8/g_10/path_5",
-                        "svg/g_8/g_10/path_8",
-                        "svg/g_8/g_9/path_2",
-                        "svg/g_8/g_9/path",
-                        "svg/g_8/g_10/path_6",
-                        "svg/g_8/g_9/path_4"
-                    ]
-                },
-                {
-                    "dimension": "cluster_B_2",
-                    "nodes": [
-                        "svg/g_8/g_10/path_7",
-                        "svg/g_8/g_10/path_9",
-                        "svg/g_8/g_9/path_3",
-                        "svg/g_8/g_9/path_1",
-                        "svg/g_8/g_10/path_5",
-                        "svg/g_8/g_10/path_8",
-                        "svg/g_8/g_9/path_2",
-                        "svg/g_8/g_9/path",
-                        "svg/g_8/g_10/path_6",
-                        "svg/g_8/g_9/path_4",
-                        "svg/g_8/g_11/path_14"
-                    ]
-                }
-            ]
-        },
-        {
-            "core_nodes": [
-                "svg/g_8/g_10/path_7",
-                "svg/g_8/g_10/path_9",
-                "svg/g_8/g_9/path_3",
-                "svg/g_8/g_9/path_1",
-                "svg/g_8/g_10/path_5",
-                "svg/g_8/g_10/path_8",
-                "svg/g_8/g_9/path_2",
-                "svg/g_8/g_9/path",
-                "svg/g_8/g_10/path_6",
-                "svg/g_8/g_9/path_4"
+                "svg/rect_9",
+                "svg/rect_8",
+                "svg/rect_6",
+                "svg/rect_7"
             ],
             "core_dimensions": [
                 "1"
@@ -91,17 +36,27 @@
         },
         {
             "core_nodes": [
-                "svg/g_8/g_10/path_7",
-                "svg/g_8/g_10/path_9",
-                "svg/g_8/g_9/path_3",
-                "svg/g_8/g_9/path_1",
-                "svg/g_8/g_10/path_5",
-                "svg/g_8/g_10/path_8",
-                "svg/g_8/g_9/path_2",
-                "svg/g_8/g_9/path",
-                "svg/g_8/g_10/path_6",
-                "svg/g_8/g_9/path_4",
-                "svg/g_8/g_11/path_14"
+                "svg/rect_5"
+            ],
+            "core_dimensions": [
+                "1"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/rect_4"
+            ],
+            "core_dimensions": [
+                "1"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/rect_10",
+                "svg/rect_5",
+                "svg/rect_11"
             ],
             "core_dimensions": [
                 "2"
@@ -110,8 +65,9 @@
         },
         {
             "core_nodes": [
-                "svg/g_8/g_11/path_13",
-                "svg/g_8/g_11/path_12"
+                "svg/rect_9",
+                "svg/rect_8",
+                "svg/rect_6"
             ],
             "core_dimensions": [
                 "2"
@@ -120,8 +76,7 @@
         },
         {
             "core_nodes": [
-                "svg/g_8/g_11/path_10",
-                "svg/g_8/g_11/path_11"
+                "svg/rect_7"
             ],
             "core_dimensions": [
                 "2"
@@ -130,15 +85,60 @@
         },
         {
             "core_nodes": [
-                "svg/g_8/g_10/path_7",
-                "svg/g_8/g_11/path_11",
-                "svg/g_8/g_10/path_5",
-                "svg/g_8/g_9/path_1",
-                "svg/g_8/g_11/path_13",
-                "svg/g_8/g_9/path",
-                "svg/g_8/g_10/path_6",
-                "svg/g_8/g_9/path_4",
-                "svg/g_8/g_11/path_14"
+                "svg/rect_3",
+                "svg/rect",
+                "svg/rect_2",
+                "svg/rect_1"
+            ],
+            "core_dimensions": [
+                "2"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/rect_3",
+                "svg/rect_10",
+                "svg/rect_11",
+                "svg/rect",
+                "svg/rect_2",
+                "svg/rect_4",
+                "svg/rect_5",
+                "svg/rect_1"
+            ],
+            "core_dimensions": [
+                "3"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/rect_9"
+            ],
+            "core_dimensions": [
+                "3"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/rect_8",
+                "svg/rect_6"
+            ],
+            "core_dimensions": [
+                "3"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/rect_3",
+                "svg/rect_10",
+                "svg/rect_11",
+                "svg/rect_6",
+                "svg/rect_8",
+                "svg/rect_2",
+                "svg/rect_9"
             ],
             "core_dimensions": [
                 "4"
@@ -147,28 +147,11 @@
         },
         {
             "core_nodes": [
-                "svg/g_8/g_11/path_12",
-                "svg/g_8/g_11/path_10"
-            ],
-            "core_dimensions": [
-                "4"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/g_8/g_10/path_9"
-            ],
-            "core_dimensions": [
-                "4"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/g_8/g_10/path_8",
-                "svg/g_8/g_9/path_3",
-                "svg/g_8/g_9/path_2"
+                "svg/rect",
+                "svg/rect_4",
+                "svg/rect_5",
+                "svg/rect_7",
+                "svg/rect_1"
             ],
             "core_dimensions": [
                 "4"
@@ -176,5 +159,5 @@
             "extensions": []
         }
     ],
-    "total_cores": 11
+    "total_cores": 14
 }

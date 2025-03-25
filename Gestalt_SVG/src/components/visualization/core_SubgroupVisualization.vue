@@ -171,7 +171,7 @@ const flattenedNodes = computed(() => {
     // 按照修改后的排序逻辑排序
     nodeScores.sort((a, b) => {
         // 如果显著性分数差值不超过0.03 (3%)，则按面积排序
-        if (Math.abs(a.rawScore - b.rawScore) <= 0.01) {
+        if (Math.abs(a.rawScore - b.rawScore) <= 0.0) {
             return b.totalArea - a.totalArea; // 面积大的排前面
         }
         // 否则按显著性分数排序
