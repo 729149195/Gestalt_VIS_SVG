@@ -1,0 +1,91 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- 坐标轴 -->
+  <line x1="50" y1="550" x2="750" y2="550" stroke="#333" stroke-width="2" />
+  <line x1="50" y1="50" x2="50" y2="550" stroke="#333" stroke-width="2" />
+  
+  <!-- X轴标签 -->
+  <text x="400" y="590" font-family="Arial" font-size="16" text-anchor="middle">Average Order Value ($)</text>
+  <text x="100" y="570" font-family="Arial" font-size="12" text-anchor="middle">50</text>
+  <text x="200" y="570" font-family="Arial" font-size="12" text-anchor="middle">100</text>
+  <text x="300" y="570" font-family="Arial" font-size="12" text-anchor="middle">150</text>
+  <text x="400" y="570" font-family="Arial" font-size="12" text-anchor="middle">200</text>
+  <text x="500" y="570" font-family="Arial" font-size="12" text-anchor="middle">250</text>
+  <text x="600" y="570" font-family="Arial" font-size="12" text-anchor="middle">300</text>
+  <text x="700" y="570" font-family="Arial" font-size="12" text-anchor="middle">350</text>
+  
+  <!-- Y轴标签 -->
+  <text x="20" y="300" font-family="Arial" font-size="16" text-anchor="middle" transform="rotate(-90, 20, 300)">Purchase Frequency (per year)</text>
+  <text x="40" y="500" font-family="Arial" font-size="12" text-anchor="end">5</text>
+  <text x="40" y="400" font-family="Arial" font-size="12" text-anchor="end">10</text>
+  <text x="40" y="300" font-family="Arial" font-size="12" text-anchor="end">15</text>
+  <text x="40" y="200" font-family="Arial" font-size="12" text-anchor="end">20</text>
+  <text x="40" y="100" font-family="Arial" font-size="12" text-anchor="end">25</text>
+  
+  <!-- 图例 -->
+  <circle cx="580" cy="450" r="7" fill="#8a2be2" />
+  <text x="600" y="455" font-family="Arial" font-size="14">High-Value Customers</text>
+  
+  <circle cx="580" cy="480" r="6" fill="#ff8c00" />
+  <text x="600" y="485" font-family="Arial" font-size="14">Regular Customers</text>
+  
+  <polygon points="580,510 573,520 587,520" fill="#32cd32" stroke="#006400" stroke-width="1.5" />
+  <text x="600" y="520" font-family="A  rial" font-size="14">Low-Frequency Customers</text>
+  
+  <!-- 高价值客户数据点 (紫色圆形) -->
+  <circle cx="620" cy="120" r="12" fill="#8a2be2" opacity="0.8" />
+  <circle cx="580" cy="140" r="11" fill="#8a2be2" opacity="0.8" />
+  <circle cx="650" cy="100" r="13" fill="#8a2be2" opacity="0.8" />
+  <circle cx="600" cy="90" r="10" fill="#8a2be2" opacity="0.8" />
+  <circle cx="630" cy="110" r="12" fill="#8a2be2" opacity="0.8" />
+  <circle cx="610" cy="130" r="11" fill="#8a2be2" opacity="0.8" />
+  <circle cx="590" cy="120" r="10" fill="#8a2be2" opacity="0.8" />
+  <circle cx="640" cy="80" r="12" fill="#8a2be2" opacity="0.8" />
+  <circle cx="660" cy="130" r="13" fill="#8a2be2" opacity="0.8" />
+  <circle cx="670" cy="110" r="14" fill="#8a2be2" opacity="0.8" />
+  <circle cx="680" cy="90" r="12" fill="#8a2be2" opacity="0.8" />
+  <circle cx="690" cy="120" r="13" fill="#8a2be2" opacity="0.8" />
+  <circle cx="700" cy="100" r="15" fill="#8a2be2" opacity="0.8" />
+  
+  <!-- 普通客户数据点 (橙色圆形) -->
+  <circle cx="350" cy="250" r="8" fill="#ff8c00" opacity="0.7" />
+  <circle cx="380" cy="280" r="7" fill="#ff8c00" opacity="0.7" />
+  <circle cx="410" cy="260" r="9" fill="#ff8c00" opacity="0.7" />
+  <circle cx="330" cy="290" r="8" fill="#ff8c00" opacity="0.7" />
+  <circle cx="360" cy="270" r="7" fill="#ff8c00" opacity="0.7" />
+  <circle cx="390" cy="240" r="8" fill="#ff8c00" opacity="0.7" />
+  <circle cx="420" cy="280" r="7" fill="#ff8c00" opacity="0.7" />
+  <circle cx="340" cy="230" r="9" fill="#ff8c00" opacity="0.7" />
+  <circle cx="370" cy="250" r="8" fill="#ff8c00" opacity="0.7" />
+  <circle cx="400" cy="270" r="7" fill="#ff8c00" opacity="0.7" />
+  <circle cx="430" cy="250" r="8" fill="#ff8c00" opacity="0.7" />
+  <circle cx="450" cy="260" r="9" fill="#ff8c00" opacity="0.7" />
+  <circle cx="470" cy="240" r="7" fill="#ff8c00" opacity="0.7" />
+  <circle cx="490" cy="270" r="8" fill="#ff8c00" opacity="0.7" />
+  <circle cx="510" cy="240" r="9" fill="#ff8c00" opacity="0.7" />
+  <circle cx="440" cy="290" r="8" fill="#ff8c00" opacity="0.7" />
+  <circle cx="460" cy="230" r="7" fill="#ff8c00" opacity="0.7" />
+  <circle cx="480" cy="260" r="8" fill="#ff8c00" opacity="0.7" />
+  
+  <!-- 低频客户数据点 (绿色三角形) -->
+  <polygon points="180,440 170,455 190,455" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="150,420 140,435 160,435" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="210,450 200,465 220,465" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="120,430 110,445 130,445" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="240,410 230,425 250,425" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="90,400 80,415 100,415" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="270,380 260,395 280,395" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="140,470 130,485 150,485" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="170,400 160,415 180,415" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="200,460 190,475 210,475" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="230,420 220,435 240,435" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="260,450 250,465 270,465" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="290,430 280,445 300,445" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="160,490 150,505 170,505" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  <polygon points="190,410 180,425 200,425" fill="#32cd32" stroke="#006400" stroke-width="1.5" opacity="0.8" />
+  
+  <!-- 标题 -->
+  <text x="400" y="30" font-family="Arial" font-size="20" font-weight="bold" text-anchor="middle">Customer Segmentation Analysis</text>
+</svg>
