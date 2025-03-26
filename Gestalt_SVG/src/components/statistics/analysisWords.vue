@@ -62,6 +62,25 @@
         <el-color-picker ref="directColorPickerRef" v-model="directColorPicker.currentValue" size="small" :predefine="colorPickerOptions.predefine" :show-alpha="false" popper-class="color-picker-popper" :teleported="true" placement="bottom-start" color-format="rgb" @change="handleDirectColorChange">
         </el-color-picker>
       </div>
+      
+      <!-- 添加一个直接的数值编辑器 -->
+      <div 
+        v-if="directNumberEditor.visible" 
+        class="direct-number-editor" 
+        :style="getDirectNumberEditorStyle()">
+        <el-input-number 
+          v-model="directNumberEditor.currentValue" 
+          size="small"
+          :step="0.1"
+          :precision="1"
+          :min="0"
+          @change="handleDirectNumberChange"
+          @blur="directNumberEditor.visible = false">
+        </el-input-number>
+        <span class="close-button" @click="directNumberEditor.visible = false">
+          <i class="el-icon-close"></i>
+        </span>
+      </div>
     </Teleport>
   </div>
 </template>
@@ -579,82 +598,56 @@ const globalMouseOverHandler = (event) => {
   const analysisContent = event.target.closest('.analysis-content');
   if (!analysisContent) return;
 
-  // 移除鼠标悬停打开色卡的功能
-  // 仅保留其他非颜色相关的功能
+  // 检查是否悬停在可复制值上
   const copyableValue = event.target.closest('.copyable-value');
-  if (copyableValue && !copyableValue.previousElementSibling?.classList.contains('color-preview-inline') && copyableValue.getAttribute('data-type') !== 'color') {
-    // 获取元素位置
-    const rect = copyableValue.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
-
-    // 计算最佳位置
-    let tooltipX = rect.left + rect.width / 2;
-    let tooltipY = rect.top;
-    let position = 'top'; // 默认在上方
-
-    // 如果元素在视口右侧，将提示框显示在左侧
-    if (rect.right > viewportWidth - 200) { // 200px是工具提示的最小宽度
-      tooltipX = rect.left - 10;
-      position = 'left';
-    }
-    // 如果元素在视口左侧，将提示框显示在右侧
-    else if (rect.left < 200) {
-      tooltipX = rect.right + 10;
-      position = 'right';
-    }
-
-    // 如果元素靠近顶部，将提示框显示在下方
-    if (rect.top < 150) { // 150px 是工具提示的预估高度
-      tooltipY = rect.bottom + 10;
-      position = 'bottom';
-    }
-
-    // 移除其他元素的编辑状态
-    document.querySelectorAll('.copyable-value.editing').forEach(el => {
-      if (el !== copyableValue) {
-        el.classList.remove('editing');
-      }
-    });
-
-    copyableValue.classList.add('editing');
-
+  if (copyableValue) {
+    // 检查是否是颜色类型
+    const isColor = copyableValue.getAttribute('data-type') === 'color';
     const textValue = copyableValue.getAttribute('data-value');
     const featureName = copyableValue.closest('.feature-name-container')?.textContent;
-
-    // 确定编辑器类型和初始值
-    let editorType = 'number';
-    let hasUnit = false;
-    let initialValue = textValue;
-    let unit = '';
-
-    if (textValue.includes('px')) {
-      editorType = 'number';
-      hasUnit = true;
-      unit = 'px';
-      initialValue = parseFloat(textValue.replace('px', ''));
-    } else {
-      const numValue = parseFloat(textValue);
-      if (!isNaN(numValue)) {
-        editorType = 'number';
-        initialValue = numValue;
-      }
+    
+    // 如果是颜色值，不作特殊处理，点击时会显示颜色选择器
+    if (isColor) {
+      return;
     }
-
-    // 更新编辑工具提示状态
-    editTooltip.value = {
-      visible: true,
-      x: tooltipX,
-      y: tooltipY,
-      position: position, // 添加位置信息
-      type: editorType,
-      originalValue: textValue,
-      currentValue: initialValue,
-      targetElement: copyableValue,
-      hasUnit: hasUnit,
-      unit: unit,
-      featureName: featureName
-    };
+    
+    // 如果是数值类型，悬停时显示数值编辑器
+    if (!isColor && textValue) {
+      const rect = copyableValue.getBoundingClientRect();
+      let initialValue = textValue;
+      let hasUnit = false;
+      let unit = '';
+      
+      // 检查是否包含单位
+      if (textValue.includes('px')) {
+        hasUnit = true;
+        unit = 'px';
+        initialValue = parseFloat(textValue.replace('px', '').replace('+', ''));
+      } else {
+        // 移除可能存在的+号
+        initialValue = parseFloat(textValue.replace('+', ''));
+      }
+      
+      // 激活数值编辑器
+      directNumberEditor.value = {
+        visible: true,
+        x: rect.left,
+        y: rect.top - 45, // 在数值上方显示
+        currentValue: initialValue,
+        hasUnit: hasUnit,
+        unit: unit,
+        targetElement: copyableValue
+      };
+      
+      // 确保输入框获得焦点
+      setTimeout(() => {
+        const inputEl = document.querySelector('.direct-number-editor .el-input__inner');
+        if (inputEl) {
+          inputEl.focus();
+          inputEl.select();
+        }
+      }, 50);
+    }
   }
 };
 
@@ -727,7 +720,7 @@ const globalClickHandler = (event) => {
     }
   }
 
-  // 检查是否点击在颜色选择器之外的地方
+  // 检查是否点击在颜色选择器或数值编辑器之外的地方
   if (directColorPicker.value.visible) {
     const isClickOnPicker = event.target.closest('.el-color-dropdown') || 
                             event.target.closest('.direct-color-picker') || 
@@ -737,71 +730,62 @@ const globalClickHandler = (event) => {
       directColorPicker.value.visible = false;
     }
   }
+  
+  if (directNumberEditor.value.visible) {
+    const isClickOnEditor = event.target.closest('.direct-number-editor') || 
+                           event.target.closest('.el-input-number');
+                           
+    if (!isClickOnEditor) {
+      directNumberEditor.value.visible = false;
+    }
+  }
 
   const copyableValue = event.target.closest('.copyable-value');
   if (copyableValue) {
     // 检查是否是颜色类型
     const isColor = copyableValue.getAttribute('data-type') === 'color';
     const textToCopy = copyableValue.getAttribute('data-value');
-    const featureName = copyableValue.closest('.feature-name-container')?.textContent;
     
-    // 如果是颜色值且直接点击的是颜色值（不是色块），也打开颜色选择器
-    if (isColor) {
-      const rect = copyableValue.getBoundingClientRect();
-      
-      // 直接激活颜色选择器
-      directColorPicker.value = {
-        visible: true,
-        x: rect.left,
-        y: rect.bottom + 5, // 在颜色值下方5px处显示
-        currentValue: textToCopy,
-        targetElement: copyableValue
-      };
-      
-      // 确保颜色选择器立即打开下拉菜单
-      setTimeout(() => {
-        const colorPickerEl = document.querySelector('.direct-color-picker .el-color-picker__trigger');
-        if (colorPickerEl) {
-          colorPickerEl.click();
-        }
-      }, 50);
-      
-      return;
-    }
-    
+    // 不再区分颜色值和数值，直接执行复制功能，因为颜色选择器只能通过点击色块打开
     if (textToCopy) {
       // 进行二次处理
       let finalTextToCopy = textToCopy;
       let valueType = null;
+      const featureName = copyableValue.closest('.feature-name-container')?.textContent;
 
       // 判断内容类型并进行相应处理
-      if (textToCopy.startsWith('rgb') || textToCopy.includes('rgb(')) {
-        // 处理fill颜色
-        if (featureName?.includes('fill')) {
-          finalTextToCopy = `fill="${textToCopy}"`;
-          valueType = 'color-fill';
+      if (featureName) {
+        // 处理不同类型的值
+        if (isColor) {
+          // 处理fill颜色
+          if (featureName.includes('fill')) {
+            finalTextToCopy = `fill="${textToCopy}"`;
+            valueType = 'color-fill';
+          }
+          // 处理stroke颜色
+          else if (featureName.includes('stroke')) {
+            finalTextToCopy = `stroke="${textToCopy}"`;
+            valueType = 'color-stroke';
+          }
+        } else {
+          // 处理stroke-width
+          if (featureName.includes('stroke width')) {
+            // 去掉px并加1
+            const numValue = parseFloat(textToCopy.replace('px', ''));
+            finalTextToCopy = `stroke-width="${numValue + 1}"`;
+            valueType = 'stroke-width';
+          }
+          // 处理area
+          else if (featureName.includes('area')) {
+            // 计算 1+原来的数值
+            const numValue = parseFloat(textToCopy);
+            finalTextToCopy = `area up ${1 + numValue}`;
+            valueType = 'area';
+          }
         }
-        // 处理stroke颜色
-        else if (featureName?.includes('stroke')) {
-          finalTextToCopy = `stroke="${textToCopy}"`;
-          valueType = 'color-stroke';
-        }
-      }
-      // 处理stroke-width
-      else if (featureName?.includes('stroke width')) {
-        // 去掉px并加1
-        const numValue = parseFloat(textToCopy.replace('px', ''));
-        finalTextToCopy = `stroke-width="${numValue + 1}"`;
-        valueType = 'stroke-width';
-      }
-      // 处理area
-      else if (featureName?.includes('area')) {
-        // 计算 1+原来的数值
-        const numValue = parseFloat(textToCopy);
-        finalTextToCopy = `area up ${1 + numValue}`;
-        valueType = 'area';
       }
 
+      // 执行复制操作
       navigator.clipboard.writeText(finalTextToCopy).then(() => {
         // 更新到 store
         if (valueType) {
@@ -811,8 +795,8 @@ const globalClickHandler = (event) => {
             featureName: featureName
           });
         }
-
-        // 显示复制提示
+        
+        // 显示复制成功提示
         copyTooltip.value = {
           visible: true,
           text: `已复制: ${finalTextToCopy}`,
@@ -837,14 +821,6 @@ const globalClickHandler = (event) => {
           type: 'error',
           duration: 1500
         });
-      });
-
-      // 隐藏编辑工具提示
-      editTooltip.value.visible = false;
-
-      // 移除编辑中的高亮类
-      document.querySelectorAll('.copyable-value.editing').forEach(el => {
-        el.classList.remove('editing');
       });
     }
   }
@@ -1962,7 +1938,9 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       analysis += `</div>`; // 关闭共享容器
     } else {
       // 当visual salience值大于等于85时显示的信息，使用更紧凑的样式
-      analysis += `
+      // 检查currentVisualSalience是否为NaN，如果是则不显示该信息
+      if (!isNaN(currentVisualSalience)) {
+        analysis += `
                 <div class="high-salience-notice">
                     <div class="salience-icon">✓</div>
                     <div class="salience-content">
@@ -1973,6 +1951,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     </div>
                 </div>
             `;
+      }
     }
 
     analysis += `</div>`; // 关闭内容容器
@@ -2791,6 +2770,17 @@ const directColorPicker = ref({
 // 添加一个直接颜色选择器的引用
 const directColorPickerRef = ref(null);
 
+// 添加一个直接数值编辑器的状态
+const directNumberEditor = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  currentValue: 0,
+  hasUnit: false,
+  unit: '',
+  targetElement: null
+});
+
 // 获取直接颜色选择器的样式
 const getDirectColorPickerStyle = () => {
   if (!directColorPicker.value.visible) return {};
@@ -2801,6 +2791,18 @@ const getDirectColorPickerStyle = () => {
     top: `${directColorPicker.value.y}px`,
     zIndex: 1000000,
     opacity: 0 // 设置为透明，只显示弹出的选择器
+  };
+};
+
+// 获取直接数值编辑器的样式
+const getDirectNumberEditorStyle = () => {
+  if (!directNumberEditor.value.visible) return {};
+
+  return {
+    position: 'fixed',
+    left: `${directNumberEditor.value.x}px`,
+    top: `${directNumberEditor.value.y}px`,
+    zIndex: 1000000
   };
 };
 
@@ -2832,6 +2834,41 @@ const handleDirectColorChange = (color) => {
       directColorPicker.value.visible = false;
     }, 100);
   }
+};
+
+// 处理直接数值变化
+const handleDirectNumberChange = (value) => {
+  if (directNumberEditor.value.targetElement) {
+    // 处理带单位的值
+    let formattedValue = value;
+    if (directNumberEditor.value.hasUnit) {
+      formattedValue = `${value}${directNumberEditor.value.unit}`;
+    }
+
+    // 更新可复制的值
+    const targetElement = directNumberEditor.value.targetElement;
+    targetElement.setAttribute('data-value', formattedValue);
+    
+    // 处理显示格式
+    const featureName = targetElement.closest('.feature-name-container')?.textContent;
+    if (featureName && 
+        (featureName.includes('stroke width') || 
+         featureName.includes('area'))) {
+      targetElement.textContent = `+${formattedValue}`;
+    } else {
+      targetElement.textContent = formattedValue;
+    }
+    
+    // 关闭数值编辑器
+    setTimeout(() => {
+      directNumberEditor.value.visible = false;
+    }, 100);
+  }
+};
+
+// 关闭直接数值编辑器
+const closeDirectNumberEditor = () => {
+  directNumberEditor.value.visible = false;
 };
 </script>
 
@@ -4301,24 +4338,6 @@ const handleDirectColorChange = (color) => {
   font-style: italic;
 }
 
-.color-editor,
-.number-editor,
-.unit-selector {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  justify-content: center;
-  padding: 4px 0;
-}
-
-.color-preview {
-  width: 12px;
-  height: 12x;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
 /* 自定义Element UI组件样式 */
 :deep(.el-color-picker__trigger) {
   border-color: rgba(255, 255, 255, 0.2);
@@ -4507,6 +4526,44 @@ const handleDirectColorChange = (color) => {
 /* 调整颜色选择器下拉菜单样式 */
 :deep(.el-color-dropdown) {
   z-index: 1000002 !important;
+}
+
+.direct-number-editor {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+}
+
+.direct-number-editor .close-button {
+  margin-left: 6px;
+  cursor: pointer;
+  color: #606266;
+}
+
+.direct-number-editor .close-button:hover {
+  color: #409EFF;
+}
+
+/* 确保数值编辑器里的文本颜色为深色 */
+.direct-number-editor :deep(.el-input-number) {
+  background-color: #ffffff;
+}
+
+.direct-number-editor :deep(.el-input__inner) {
+  color: #333333 !important;
+  background-color: #ffffff !important;
+}
+
+.direct-number-editor :deep(.el-input-number__decrease),
+.direct-number-editor :deep(.el-input-number__increase) {
+  background-color: #f5f7fa;
+  color: #606266;
+  border-color: #dcdfe6;
 }
 </style>
 

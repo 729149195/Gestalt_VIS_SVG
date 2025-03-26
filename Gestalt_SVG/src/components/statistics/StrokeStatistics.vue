@@ -156,7 +156,7 @@ const render = (data) => {
     }
 
     try {
-        // 为确保DOM已更新，测量容器大小
+
         const container = chartContainer.value;
         
         const width = container.clientWidth || 300;

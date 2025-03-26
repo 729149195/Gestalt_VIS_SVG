@@ -500,12 +500,12 @@ const updatePerceptionScope = () => {
 
     // 更新完成后，使用ElMessage通知用户
     ElMessage({
-        message: '感知范围已更新，包含' + (selectedNodeIds.value.length === 0 ? '所有可见元素' : selectedNodeIds.value.length + '个元素'),
+        message: 'The perceptual range has been updated to include' + (selectedNodeIds.value.length === 0 ? 'All visible elements' : selectedNodeIds.value.length + 'individual element'),
         type: 'success',
         duration: 3000
     });
     
-    console.log('更新感知范围完成，selectionMode:', selectionMode.value);
+    console.log('Update Perception Scope Complete, selectionMode:', selectionMode.value);
     
     // 重置fromPerceptionScope，以便随后的lasso选择能正常工作
     setTimeout(() => { fromPerceptionScope.value = false; }, 100);

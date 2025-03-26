@@ -299,6 +299,78 @@ const initEditors = () => {
 
     svgEditor.onDidChangeModelContent(() => {
       svgCode.value = svgEditor.getValue()
+      
+      // 同步更新originalSvgCode.value，确保原始代码与编辑器内容保持一致
+      try {
+        if (originalSvgCode.value) {
+          // 解析当前编辑器内容
+          const parser = new DOMParser()
+          const editedDoc = parser.parseFromString(svgCode.value, 'image/svg+xml')
+          
+          // 解析原始SVG代码
+          const originalDoc = parser.parseFromString(originalSvgCode.value, 'image/svg+xml')
+          
+          // 检查是否有解析错误
+          const parseError = editedDoc.querySelector('parsererror')
+          if (parseError) {
+            console.error('SVG解析错误:', parseError.textContent)
+            return
+          }
+          
+          // 递归更新节点属性和内容，但保留class属性
+          function updateNode(editedNode, originalNode) {
+            // 更新属性
+            for (const attr of editedNode.attributes) {
+              if (attr.name !== 'class') {
+                originalNode.setAttribute(attr.name, attr.value)
+              }
+            }
+            
+            // 如果是文本节点，直接更新文本内容
+            if (editedNode.childNodes.length === 1 && editedNode.firstChild.nodeType === 3) {
+              originalNode.textContent = editedNode.textContent
+              return
+            }
+            
+            // 递归处理子节点，尝试按照ID或位置匹配
+            const editedChildren = Array.from(editedNode.children)
+            const originalChildren = Array.from(originalNode.children)
+            
+            for (let i = 0; i < editedChildren.length; i++) {
+              const editedChild = editedChildren[i]
+              const editedId = editedChild.getAttribute('id')
+              
+              // 尝试通过ID匹配
+              let matchedOriginalChild = null
+              if (editedId) {
+                matchedOriginalChild = originalDoc.getElementById(editedId)
+              }
+              
+              // 如果通过ID没找到匹配，尝试使用相同位置的节点
+              if (!matchedOriginalChild && i < originalChildren.length) {
+                matchedOriginalChild = originalChildren[i]
+              }
+              
+              // 如果找到了匹配节点，递归更新
+              if (matchedOriginalChild) {
+                updateNode(editedChild, matchedOriginalChild)
+              }
+            }
+          }
+          
+          // 从根元素开始更新
+          updateNode(editedDoc.documentElement, originalDoc.documentElement)
+          
+          // 更新originalSvgCode.value为新的序列化内容
+          const serializer = new XMLSerializer()
+          originalSvgCode.value = serializer.serializeToString(originalDoc)
+        } else {
+          // 如果originalSvgCode.value不存在，则直接使用当前编辑器内容
+          originalSvgCode.value = svgCode.value
+        }
+      } catch (error) {
+        console.error('更新原始SVG代码时出错:', error)
+      }
     })
 
     // 添加失去焦点时自动格式化的事件监听

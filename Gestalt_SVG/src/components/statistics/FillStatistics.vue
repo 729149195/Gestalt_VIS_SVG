@@ -145,25 +145,24 @@ watch([() => chartContainer.value, () => isInitialized.value], ([newContainer, n
 
 const render = (data) => {
     if (!chartContainer.value) {
-        console.error('渲染失败：chartContainer不存在');
+        console.error('Rendering failed: chartContainer does not exist');
         return;
     }
     
     if (!data || !Array.isArray(data) || data.length === 0) {
-        console.error('渲染失败：数据为空或格式不正确', data);
+        console.error('Rendering failure: empty or incorrectly formatted data', data);
         hasData.value = false;
         return;
     }
 
     try {
-        // 为确保DOM已更新，测量容器大小
         const container = chartContainer.value;
         
         const width = container.clientWidth || 300;
         const height = container.clientHeight || 200;
         
         if (width <= 0 || height <= 0) {
-            console.warn('容器尺寸异常，使用默认值');
+            console.warn('Container size exception, use default value');
         }
         
         const marginTop = height * 0.08;

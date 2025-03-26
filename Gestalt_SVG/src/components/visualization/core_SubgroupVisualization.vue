@@ -1487,7 +1487,6 @@ async function loadAndRenderGraph() {
         // 在数据加载和渲染完成后，更新视觉显著性数据
         nextTick(() => {
             updateVisualSalienceData();
-            // 再次更新总览条，确保显著性数据已更新
             updateOverview();
         });
     }
@@ -2257,16 +2256,15 @@ function updateVisualSalienceData() {
         // 将结果存储到Vuex store中
         store.commit('SET_VISUAL_SALIENCE', salienceData);
 
-        console.log('视觉显著性数据已更新:', salienceData);
+        console.log('Visual saliency data has been updated:', salienceData);
     } catch (error) {
-        console.error('计算视觉显著性时出错:', error);
+        console.error('Error in calculating visual saliency:', error);
     }
 }
 
 // 在数据更新后重新计算视觉显著性
 watch(normalizedData, (newVal) => {
     if (newVal && newVal.length > 0 && !isInitialRender.value) {
-        // 延迟执行，确保DOM已更新
         nextTick(() => {
             updateVisualSalienceData();
         });
