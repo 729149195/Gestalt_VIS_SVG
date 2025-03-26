@@ -9,6 +9,9 @@ import io
 import matplotlib
 import queue
 import time
+import math
+import tempfile
+import shutil
 
 # from Gestalt_API.static.modules.batch_evaluation import BatchEvaluator
 matplotlib.use('Agg')  # 在导入 pyplot 之前设置后端
@@ -16,6 +19,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.mixture import GaussianMixture
+import pandas as pd
+from sklearn.metrics.pairwise import cosine_similarity
 
 # 设置中文字体
 matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun', 'KaiTi', 'FangSong']
@@ -445,7 +450,6 @@ def get_upload_svg():
                     
                 # 复制一份作为generated_with_id.svg
                 generated_path = os.path.join(app.config['UPLOAD_FOLDER'], 'generated_with_id.svg')
-                import shutil
                 shutil.copy2(svg_with_ids_path, generated_path)
                 
                 # 读取生成的文件
@@ -1232,40 +1236,6 @@ def calculate_gmm():
             'error': f'GMM计算错误: {str(e)}'
         }), 500
 
-# @app.route('/batch_evaluate', methods=['POST'])
-# def batch_evaluate():
-#     """批量评估SVG文件的API端点"""
-#     try:
-#         # 设置路径
-#         svg_dir = os.path.join(app.config['DATA_FOLDER'], 'newData3')
-#         ground_truth_dir = os.path.join(app.config['DATA_FOLDER'], 'StepGroups_3')
-#         output_dir = app.config['DATA_FOLDER']
-        
-#         # 创建评估器
-#         evaluator = BatchEvaluator(svg_dir, ground_truth_dir, output_dir)
-        
-#         # 运行批量评估
-#         results = evaluator.batch_evaluate()
-        
-#         # 保存可视化结果
-#         results_path = os.path.join(app.config['DATA_FOLDER'], 'batch_evaluation_results.png')
-#         evaluator.visualize_results(results_path)
-        
-#         return jsonify({
-#             'success': True,
-#             'message': '批量评估完成',
-#             'results': results,
-#             'visualization_path': '/static/data/batch_evaluation_results.png'
-#         }), 200
-        
-#     except Exception as e:
-#         print(f"批量评估出错: {str(e)}")
-#         print(f"错误堆栈: {traceback.format_exc()}")
-#         return jsonify({
-#             'success': False,
-#             'error': str(e)
-#         }), 500
-
 @app.route('/original_features', methods=['GET'])
 def original_features():
     """获取原始的features.csv文件内容"""
@@ -1276,6 +1246,523 @@ def original_features():
             return csv_file.read(), 200, {'Content-Type': 'text/csv'}
     else:
         return jsonify({'error': 'features.csv file not found'}), 404
+
+@app.route('/modify_and_calculate_salience', methods=['POST'])
+def modify_and_calculate_salience():
+    """
+    修改SVG元素的属性并计算显著性
+    
+    请求参数:
+    - modify_elements: 需要修改的元素列表，每个元素包含ids和要修改的属性
+        [{
+            "ids": ["元素ID1", "元素ID2", ...],  # 元素ID数组
+            "attributes": {"属性名": "属性值"}   # 应用于所有指定元素的属性
+        }]
+    - debug: 布尔值，是否输出详细调试信息
+    
+    返回:
+    - success: 布尔值，表示操作是否成功
+    - salience: 显著性值
+    - debug_info: 如果debug=True，返回详细的调试信息
+    """
+    try:
+        data = request.json
+        modify_elements = data.get('modify_elements', [])
+        debug_mode = data.get('debug', False)
+        
+        # 用于存储调试信息
+        debug_info = {}
+        
+        # 检查必要的参数
+        if not modify_elements:
+            return jsonify({'success': False, 'error': 'No elements to modify'}), 400
+        
+        # 获取与/get_svg相同的SVG文件
+        svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
+        if not os.path.exists(svg_with_ids_path):
+            # 如果svg_with_ids.svg不存在，尝试使用generated_with_id.svg
+            svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'generated_with_id.svg')
+            if not os.path.exists(svg_with_ids_path):
+                return jsonify({'success': False, 'error': 'No SVG file found. Please upload the file first.'}), 404
+        
+        if debug_mode:
+            debug_info['svg_file_path'] = svg_with_ids_path
+            
+        # 读取SVG文件内容
+        with open(svg_with_ids_path, 'r', encoding='utf-8') as f:
+            svg_content = f.read()
+        
+        # 解析SVG内容，提取所有元素ID作为感知范围
+        try:
+            soup = BeautifulSoup(svg_content, 'xml')
+            
+            # 提取所有具有id属性的元素，排除id="svg"的元素
+            scope_elements = []
+            elements_with_id = soup.find_all(id=True)
+            for element in elements_with_id:
+                element_id = element.get('id')
+                if element_id and element_id != 'svg':
+                    scope_elements.append(element_id)
+            
+            if not scope_elements:
+                return jsonify({'success': False, 'error': 'No elements with ID found in SVG'}), 400
+                
+            print(f"从SVG中提取的感知范围元素数量: {len(scope_elements)}")
+            if debug_mode:
+                debug_info['scope_elements_count'] = len(scope_elements)
+                debug_info['scope_elements'] = scope_elements
+            
+            # 处理每个modify_element组
+            # 创建一个包含所有需要修改的元素ID的列表
+            all_modify_ids = []
+            
+            for element_group in modify_elements:
+                # 获取IDs数组和属性
+                element_ids = element_group.get('ids', [])
+                attributes = element_group.get('attributes', {})
+                
+                if not element_ids or not attributes:
+                    continue
+                
+                # 将当前组的IDs添加到所有修改ID的列表中
+                all_modify_ids.extend(element_ids)
+                
+                # 处理特殊属性名转换
+                processed_attributes = {}
+                for attr_name, attr_value in attributes.items():
+                    # 处理stroke相关属性
+                    if attr_name in ['stroke lightness', 'stroke hue', 'stroke saturation']:
+                        # 将stroke颜色属性转换为stroke属性
+                        processed_attributes['stroke'] = attr_value
+                    # 处理fill相关属性
+                    elif attr_name in ['fill lightness', 'fill hue', 'fill saturation']:
+                        # 将fill颜色属性转换为fill属性
+                        processed_attributes['fill'] = attr_value
+                    else:
+                        # 其他属性保持不变
+                        processed_attributes[attr_name] = attr_value
+                
+                # 对每个ID应用处理后的属性
+                for element_id in element_ids:
+                    # 查找元素
+                    element = soup.find(id=element_id)
+                    if not element:
+                        print(f"未找到ID为{element_id}的元素")
+                        continue
+                    
+                    # 修改属性
+                    for attr_name, attr_value in processed_attributes.items():
+                        # 特殊处理stroke-width属性
+                        if attr_name == 'stroke-width':
+                            # 获取原始stroke-width值，默认为1
+                            original_width = element.get('stroke-width', '1')
+                            
+                            # 如果有单位（如px），去掉单位
+                            if original_width.endswith('px'):
+                                original_width = original_width[:-2]
+                            
+                            try:
+                                # 将原始值转为数字并加上新的值
+                                new_width = float(original_width) + float(attr_value)
+                                element[attr_name] = f"{new_width}"
+                            except ValueError:
+                                print(f"无法处理stroke-width: {original_width} + {attr_value}")
+                                element[attr_name] = f"{attr_value}"
+                        
+                        # 特殊处理area属性（调整元素尺寸）
+                        elif attr_name == 'area':
+                            # 根据元素类型不同，调整方式也不同
+                            tag_name = element.name
+                            
+                            # 获取原始尺寸和位置
+                            if tag_name == 'rect':
+                                # 获取矩形的宽度和高度
+                                try:
+                                    width = float(element.get('width', '0'))
+                                    height = float(element.get('height', '0'))
+                                    x = float(element.get('x', '0'))
+                                    y = float(element.get('y', '0'))
+                                    
+                                    # 计算缩放系数
+                                    scale = float(attr_value)
+                                    
+                                    # 计算新的宽高
+                                    new_width = width * scale
+                                    new_height = height * scale
+                                    
+                                    # 计算新的位置，保持中心不变
+                                    new_x = x - (new_width - width) / 2
+                                    new_y = y - (new_height - height) / 2
+                                    
+                                    # 应用新的属性
+                                    element['width'] = str(new_width)
+                                    element['height'] = str(new_height)
+                                    element['x'] = str(new_x)
+                                    element['y'] = str(new_y)
+                                except (ValueError, TypeError) as e:
+                                    print(f"调整rect尺寸时出错: {str(e)}")
+                                    
+                            elif tag_name == 'circle':
+                                # 获取圆的半径
+                                try:
+                                    r = float(element.get('r', '0'))
+                                    cx = float(element.get('cx', '0'))
+                                    cy = float(element.get('cy', '0'))
+                                    
+                                    # 计算缩放系数，圆形面积与半径平方成正比
+                                    scale = float(attr_value)
+                                    radius_scale = math.sqrt(scale)
+                                    
+                                    # 应用新的半径
+                                    element['r'] = str(r * radius_scale)
+                                except (ValueError, TypeError) as e:
+                                    print(f"调整circle尺寸时出错: {str(e)}")
+                                    
+                            elif tag_name == 'ellipse':
+                                # 获取椭圆的半径
+                                try:
+                                    rx = float(element.get('rx', '0'))
+                                    ry = float(element.get('ry', '0'))
+                                    cx = float(element.get('cx', '0'))
+                                    cy = float(element.get('cy', '0'))
+                                    
+                                    # 计算缩放系数，椭圆面积与两个半径的乘积成正比
+                                    scale = float(attr_value)
+                                    radius_scale = math.sqrt(scale)
+                                    
+                                    # 应用新的半径
+                                    element['rx'] = str(rx * radius_scale)
+                                    element['ry'] = str(ry * radius_scale)
+                                except (ValueError, TypeError) as e:
+                                    print(f"调整ellipse尺寸时出错: {str(e)}")
+                                    
+                            # 其他类型元素暂不支持调整面积
+                            else:
+                                print(f"不支持调整{tag_name}元素的面积")
+                        else:
+                            # 其他属性直接设置
+                            element[attr_name] = attr_value
+            
+            if debug_mode:
+                debug_info['modify_ids'] = all_modify_ids
+            
+            # 将修改后的SVG转为字符串
+            modified_svg_str = str(soup)
+        except Exception as e:
+            print(f"修改SVG元素属性时出错: {str(e)}")
+            return jsonify({'success': False, 'error': f'Error modifying SVG: {str(e)}'}), 500
+        
+        # 创建临时文件
+        temp_dir = tempfile.mkdtemp()
+        temp_svg_path = os.path.join(temp_dir, 'modified.svg')
+        
+        # 保存修改后的SVG
+        with open(temp_svg_path, 'w', encoding='utf-8') as f:
+            f.write(modified_svg_str)
+        
+        # 使用featureCSV处理修改后的SVG
+        temp_csv_path = os.path.join(temp_dir, 'features.csv')
+        temp_svg_with_ids_path = os.path.join(temp_dir, 'svg_with_ids.svg')
+        
+        # 处理SVG提取特征，添加id和tag_name属性
+        featureCSV.process_and_save_features(
+            temp_svg_path, 
+            temp_csv_path, 
+            temp_svg_with_ids_path,
+            add_ids=True, 
+            add_tag_names=True
+        )
+        
+        # 使用normalized_features处理特征
+        temp_normalized_csv_path = os.path.join(temp_dir, 'normalized_features.csv')
+        normalized_features.normalize_features(temp_csv_path, temp_normalized_csv_path)
+        
+        # 读取归一化的特征
+        df = pd.read_csv(temp_normalized_csv_path)
+        
+        # 将数据转换为JSON格式，与SvgUploader.vue中的格式一致
+        feature_data = []
+        for _, row in df.iterrows():
+            element_id = row['tag_name']
+            features = row.iloc[1:].tolist()  # 跳过第一列tag_name
+            feature_data.append({
+                'id': element_id,
+                'features': features
+            })
+            
+        # 将特征数据添加到debug信息中
+        if debug_mode:
+            debug_info['normalized_features'] = feature_data
+        
+        # 计算显著性
+        # 将所有节点分为高亮组和非高亮组（即modify_elements和其他）
+        # 使用与SvgUploader.vue相同的处理逻辑
+        
+        # 将所有节点分为高亮组和非高亮组
+        highlighted_features = []
+        non_highlighted_features = []
+        highlighted_ids = []
+        non_highlighted_ids = []
+        
+        # 提取元素ID的最后部分并进行比较
+        for item in feature_data:
+            normalized_item_id = item['id']
+            id_parts = normalized_item_id.split('/')
+            item_id_last_part = id_parts[-1]
+            
+            # 判断是否是要修改的元素（在组内）
+            if item_id_last_part in all_modify_ids:
+                highlighted_features.append(item['features'])
+                highlighted_ids.append(item_id_last_part)
+            # 判断是否在感知范围内但不是要修改的元素（在组外）
+            elif item_id_last_part in scope_elements:
+                non_highlighted_features.append(item['features'])
+                non_highlighted_ids.append(item_id_last_part)
+        
+        if debug_mode:
+            debug_info['highlighted_count'] = len(highlighted_features)
+            debug_info['non_highlighted_count'] = len(non_highlighted_features)
+            debug_info['highlighted_ids'] = highlighted_ids
+            debug_info['non_highlighted_ids'] = non_highlighted_ids
+        
+        # 如果没有足够的元素用于比较，返回默认值
+        if len(highlighted_features) == 0 or len(non_highlighted_features) == 0:
+            return jsonify({
+                'success': True,
+                'salience': 0.1,
+                'debug_info': debug_info if debug_mode else None
+            }), 200
+        
+        # 定义余弦相似度计算函数，与SvgUploader.vue一致
+        def cosine_similarity_function(vec_a, vec_b):
+            # 计算点积
+            dot_product = sum(a * b for a, b in zip(vec_a, vec_b))
+            
+            # 计算向量长度
+            vec_a_magnitude = math.sqrt(sum(a * a for a in vec_a))
+            vec_b_magnitude = math.sqrt(sum(b * b for b in vec_b))
+            
+            # 避免除以零
+            if vec_a_magnitude == 0 or vec_b_magnitude == 0:
+                return 0
+            
+            # 计算余弦相似度
+            return dot_product / (vec_a_magnitude * vec_b_magnitude)
+        
+        # 计算组内元素的平均相似度
+        intra_group_similarity = 1.0  # 默认设置为最大值
+        
+        # 如果组内有多个元素，计算它们之间的平均相似度
+        if len(highlighted_features) > 1:
+            similarity_sum = 0
+            pair_count = 0
+            
+            # 计算组内所有元素对之间的相似度
+            for i in range(len(highlighted_features)):
+                for j in range(i + 1, len(highlighted_features)):
+                    # 计算特征向量之间的余弦相似度
+                    sim = cosine_similarity_function(highlighted_features[i], highlighted_features[j])
+                    similarity_sum += sim
+                    pair_count += 1
+            
+            # 计算平均相似度
+            intra_group_similarity = similarity_sum / pair_count if pair_count > 0 else 1.0
+        
+        if debug_mode:
+            debug_info['intra_group_similarity'] = intra_group_similarity
+        
+        # 计算组内与组外元素之间的平均相似度
+        inter_group_similarity = 0
+        inter_pair_count = 0
+        
+        # 计算每个组内元素与每个组外元素之间的相似度
+        for i in range(len(highlighted_features)):
+            for j in range(len(non_highlighted_features)):
+                # 计算特征向量之间的余弦相似度
+                sim = cosine_similarity_function(highlighted_features[i], non_highlighted_features[j])
+                inter_group_similarity += sim
+                inter_pair_count += 1
+        
+        # 计算平均相似度，避免除以零
+        inter_group_similarity = inter_group_similarity / inter_pair_count if inter_pair_count > 0 else 0
+        
+        if debug_mode:
+            debug_info['inter_group_similarity'] = inter_group_similarity
+        
+        # 避免除以零，如果组间相似度为0，设置显著性为最大值
+        salience_score = intra_group_similarity / inter_group_similarity if inter_group_similarity > 0 else 1.0
+        
+        if debug_mode:
+            debug_info['salience_score_base'] = salience_score
+        
+        # 考虑面积因素，参考SvgUploader.vue中的计算方法
+        AREA_INDEX = 19  # bbox_fill_area 在特征向量中的索引是19
+        
+        # 计算所有元素的平均面积（包括高亮和非高亮元素）
+        all_features = highlighted_features + non_highlighted_features
+        all_elements_avg_area = sum(features[AREA_INDEX] for features in all_features) / len(all_features)
+        
+        # 计算高亮元素的平均面积
+        highlighted_avg_area = sum(features[AREA_INDEX] for features in highlighted_features) / len(highlighted_features)
+        
+        # 使用所有元素平均面积的1.1倍作为阈值
+        area_threshold = all_elements_avg_area * 1.1
+        
+        if debug_mode:
+            debug_info['all_elements_avg_area'] = all_elements_avg_area
+            debug_info['highlighted_avg_area'] = highlighted_avg_area
+            debug_info['area_threshold'] = area_threshold
+        
+        # 如果高亮元素的平均面积小于阈值，显著降低显著性
+        if highlighted_avg_area < area_threshold:
+            salience_score = salience_score / 3
+            if debug_mode:
+                debug_info['applied_area_penalty'] = True
+                debug_info['salience_score_after_area'] = salience_score
+        else:
+            if debug_mode:
+                debug_info['applied_area_penalty'] = False
+        
+        # 检查是否与API聚类结果匹配
+        add_bonus = True  # 默认添加额外分数
+        
+        # 对修改后的SVG重新运行聚类和子图检测，生成临时的API聚类结果
+        try:
+            # 创建临时目录用于存储聚类结果
+            temp_clustering_dir = os.path.join(temp_dir, 'data')
+            os.makedirs(temp_clustering_dir, exist_ok=True)
+            
+            # 准备数据目录
+            temp_subgraphs_dir = os.path.join(temp_clustering_dir, 'subgraphs')
+            os.makedirs(temp_subgraphs_dir, exist_ok=True)
+            
+            # 转为CSV为JSON
+            temp_init_json = os.path.join(temp_clustering_dir, 'init_json.json')
+            temp_normalized_init_json = os.path.join(temp_clustering_dir, 'normalized_init_json.json')
+            
+            featureCSV.process_csv_to_json(temp_csv_path, temp_init_json)
+            featureCSV.process_csv_to_json(temp_normalized_csv_path, temp_normalized_init_json)
+            
+            # 运行聚类
+            temp_community_data = os.path.join(temp_clustering_dir, 'community_data_mult.json')
+            temp_features_data = os.path.join(temp_clustering_dir, 'cluster_features.json')
+            
+            run_clustering(
+                temp_normalized_csv_path,
+                temp_community_data,
+                temp_features_data
+            )
+            
+            # 运行子图检测
+            run_subgraph_detection(
+                features_json_path=temp_features_data,
+                output_dir=temp_clustering_dir,
+                clustering_method='gmm',
+                subgraph_dimensions=[[0], [1], [2], [3], [0,1], [0,2], [0,3], [1,2], [1,3], [2,3],
+                                   [0,1,2], [0,1,3], [0,2,3], [1,2,3], [0,1,2,3]]
+            )
+            
+            # 读取子图维度信息
+            temp_subgraph_all_path = os.path.join(temp_clustering_dir, 'subgraphs', 'subgraph_dimension_all.json')
+            
+            if os.path.exists(temp_subgraph_all_path):
+                with open(temp_subgraph_all_path, 'r', encoding='utf-8') as f:
+                    subgraph_data = json.load(f)
+                
+                # 获取所有核心聚类
+                api_clusters = []
+                if 'core_clusters' in subgraph_data:
+                    for cluster in subgraph_data['core_clusters']:
+                        nodes = []
+                        for node_id in cluster['core_nodes']:
+                            # 提取ID最后部分
+                            node_id_last_part = node_id.split('/')[-1]
+                            nodes.append(node_id_last_part)
+                        
+                        if nodes:
+                            api_clusters.append(sorted(nodes))
+                
+                # 将高亮ID排序，以便进行比较
+                sorted_highlighted_ids = sorted(highlighted_ids)
+                
+                # 检查高亮组是否与任何API聚类完全匹配
+                for cluster in api_clusters:
+                    if len(cluster) == len(sorted_highlighted_ids):
+                        match = True
+                        for i in range(len(cluster)):
+                            if cluster[i] != sorted_highlighted_ids[i]:
+                                match = False
+                                break
+                        
+                        if match:
+                            add_bonus = False
+                            if debug_mode:
+                                debug_info['cluster_match_found'] = True
+                                debug_info['matched_cluster'] = cluster
+                            break
+                
+                if debug_mode:
+                    debug_info['api_clusters_count'] = len(api_clusters)
+                    debug_info['highlighted_group'] = sorted_highlighted_ids
+                    if not debug_info.get('cluster_match_found', False):
+                        debug_info['all_api_clusters'] = api_clusters
+            else:
+                if debug_mode:
+                    debug_info['subgraph_file_missing'] = True
+                    debug_info['expected_path'] = temp_subgraph_all_path
+            
+        except Exception as e:
+            print(f"运行API聚类和子图检测时出错: {str(e)}")
+            print(f"错误堆栈: {traceback.format_exc()}")
+            # 出错时仍然添加额外分数
+            add_bonus = True
+            if debug_mode:
+                debug_info['clustering_error'] = str(e)
+        
+        # 只有在需要时添加额外显著性分数
+        if add_bonus:
+            salience_score += 0.4
+            if debug_mode:
+                debug_info['bonus_added'] = True
+        else:
+            if debug_mode:
+                debug_info['bonus_added'] = False
+        
+        if debug_mode:
+            debug_info['salience_score_after_bonus'] = salience_score
+        
+        # 使用与SvgUploader.vue完全相同的sigmoid函数进行平滑映射
+        normalized_score = min(max(1 / (0.8 + math.exp(-salience_score)), 0), 1)
+        
+        if debug_mode:
+            debug_info['final_normalized_score'] = normalized_score
+            # 计算与目标值的差异
+            debug_info['target_score'] = 0.67177
+            debug_info['difference'] = abs(normalized_score - 0.67177)
+            # 获取与目标显著性相对应的原始显著性分值
+            target_salience_raw = -math.log(1/0.67177 - 0.8)
+            debug_info['target_salience_raw'] = target_salience_raw
+            
+        # 清理临时文件
+        shutil.rmtree(temp_dir)
+        
+        response_data = {
+            'success': True,
+            'salience': normalized_score
+        }
+        
+        if debug_mode:
+            response_data['debug_info'] = debug_info
+            
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        print(f"计算显著性时出错: {str(e)}")
+        print(f"错误堆栈: {traceback.format_exc()}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -102,35 +102,6 @@ import { useStore } from 'vuex'
 // 添加调试模式标志
 const isDebugMode = ref(false); // 关闭默认调试模式
 
-// 调试函数：显示示例工具提示
-const debugShowSampleTooltip = () => {
-  editTooltip.value = {
-    visible: true,
-    x: window.innerWidth / 2,
-    y: window.innerHeight / 2,
-    type: 'color',
-    originalValue: 'rgb(255, 0, 0)',
-    currentValue: 'rgb(255, 0, 0)',
-    targetElement: null,
-    hasUnit: false,
-    unit: '',
-    featureName: '调试颜色'
-  };
-
-  console.log('显示示例工具提示:', editTooltip.value);
-
-  // 延迟检查工具提示是否显示
-  setTimeout(() => {
-    const tooltip = document.querySelector('.edit-tooltip');
-    if (tooltip) {
-      console.log('找到工具提示元素:', tooltip);
-      console.log('工具提示样式:', window.getComputedStyle(tooltip));
-      console.log('工具提示位置:', tooltip.getBoundingClientRect());
-    } else {
-      console.error('未找到工具提示元素!');
-    }
-  }, 100);
-};
 
 // 在组件加载时检查URL参数是否开启调试模式
 onMounted(() => {
@@ -241,21 +212,6 @@ function getConflictGroup(featureKey) {
     }
   }
   return null;
-}
-
-// 检查特征是否与高多样性特征冲突
-function isConflictWithHighDiversity(featureKey, diverseFeatures) {
-  const group = getConflictGroup(featureKey);
-  if (!group) return false;
-
-  // 检查该组中是否有高多样性特征
-  for (const key of group) {
-    if (key !== featureKey && diverseFeatures.some(f => f.key === key)) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 // 获取冲突组中的优先特征
@@ -391,76 +347,51 @@ const calculateVisualSalience = (selectedNodes, allNodes) => {
   }
 };
 
-// 预测修改特征后的视觉显著性
-const predictVisualSalience = (selectedNodes, allNodes, featureKey, newValue = null) => {
+// 在script setup部分合适的位置添加新的API URL常量
+const SALIENCE_API_URL = "http://127.0.0.1:5000/modify_and_calculate_salience";
+
+// 修改计算预测显著性的函数，使用API替代本地计算
+const predictVisualSalience = async (selectedNodes, allNodes, featureKey, newValue = null) => {
   if (!selectedNodes || selectedNodes.length === 0 || !allNodes || allNodes.length === 0) {
     return 0.1;
   }
 
   try {
-    // 创建深拷贝以避免修改原始数据
-    const modifiedNodes = JSON.parse(JSON.stringify(allNodes));
-
-    // 找到特征在特征向量中的索引
-    const featureIndex = getFeatureIndex(featureKey);
-    if (featureIndex === -1) {
-      return 0.1; // 如果找不到特征索引，返回默认值
+    // 获取选中节点的ID
+    const ids = selectedNodes.map(node => node.id);
+    
+    // 确定要修改的属性
+    let attributes = {};
+    
+    // 根据不同特征类型构建attributes
+    if (featureKey.includes('fill_h')) {
+      // 处理fill颜色
+      const colorValue = getCompleteColorValue(featureKey, newValue, allNodes, ids);
+      attributes = {"fill": colorValue};
+    } else if (featureKey.includes('stroke_h')) {
+      // 处理stroke颜色
+      const colorValue = getCompleteColorValue(featureKey, newValue, allNodes, ids);
+      attributes = {"stroke": colorValue};
+    } else if (featureKey.includes('fill_s') || featureKey.includes('fill_l')) {
+      // 处理fill饱和度或亮度
+      const colorValue = getCompleteColorValue(featureKey, newValue, allNodes, ids);
+      attributes = {"fill": colorValue};
+    } else if (featureKey.includes('stroke_s') || featureKey.includes('stroke_l')) {
+      // 处理stroke饱和度或亮度
+      const colorValue = getCompleteColorValue(featureKey, newValue, allNodes, ids);
+      attributes = {"stroke": colorValue};
+    } else if (featureKey === 'stroke_width') {
+      // 处理stroke-width
+      attributes = {"stroke-width": String(newValue + 1)};
+    } else if (featureKey.includes('area') || featureKey === 'bbox_fill_area') {
+      // 处理面积
+      attributes = {"area": newValue};
     }
-
-    // 如果没有提供新值，则根据featureRanges的q1和q3选择最合适的值
-    if (newValue === null && featureRanges[featureKey]) {
-      // 找出高亮组元素
-      const highlightedNodes = modifiedNodes.filter(node =>
-        selectedNodes.some(selectedNode =>
-          selectedNode.id === node.id || node.id.endsWith(`/${selectedNode.id}`)
-        )
-      );
-
-      // 计算高亮组中该特征的平均值
-      let featureSum = 0;
-      let featureCount = 0;
-
-      highlightedNodes.forEach(node => {
-        if (node.features && featureIndex < node.features.length) {
-          featureSum += node.features[featureIndex];
-          featureCount++;
-        }
-      });
-
-      const featureAvg = featureCount > 0 ? featureSum / featureCount : 0;
-
-      // 获取q1和q3值
-      const q1 = featureRanges[featureKey]?.q1 || 0;
-      const q3 = featureRanges[featureKey]?.q3 || 1;
-
-      // 计算与平均值的差距，选择差距较大的值
-      const distanceToQ1 = Math.abs(featureAvg - q1);
-      const distanceToQ3 = Math.abs(featureAvg - q3);
-
-      // 确定使用的是q1还是q3及其具体值
-      const usedValue = distanceToQ1 > distanceToQ3 ? q1 : q3;
-      const usedValueType = distanceToQ1 > distanceToQ3 ? 'q1' : 'q3';
-
-      console.log(`特征 ${featureKey} 的平均值是 ${featureAvg}，选择 ${usedValueType} 值: ${usedValue}`);
-
-      // 使用 usedValue 作为新值
-      newValue = usedValue;
-    }
-
-    // 修改选中节点的特征值
-    for (const node of modifiedNodes) {
-      if (selectedNodes.some(selectedNode =>
-        selectedNode.id === node.id || node.id.endsWith(`/${selectedNode.id}`)
-      )) {
-        // 修改特征值
-        if (node.features && featureIndex < node.features.length) {
-          node.features[featureIndex] = newValue;
-        }
-      }
-    }
-
-    // 使用修改后的数据计算视觉显著性
-    return calculateVisualSalience(selectedNodes, modifiedNodes);
+    
+    // 使用API计算预测显著性
+    const predictedSalience = await calculateSuggestionSalience(ids, attributes);
+    return predictedSalience;
+    
   } catch (error) {
     console.error('预测视觉显著性时出错:', error);
     return 0.2;
@@ -1571,54 +1502,159 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           featuresWithSalience.forEach(feature => {
             const featureKey = feature.featureKeys[0];
 
+            // 生成唯一标识，用于后续DOM更新
+            const featureUniqueId = `feature-${featureKey}-${Math.random().toString(36).substring(2, 9)}`;
+
             // 检查是否为颜色特征
             if (isColorFeature(featureKey)) {
               const rgbValue = getCompleteColorValue(featureKey, feature.usedValue, normalData, selectedNodeIds);
-
+              
+              // 生成HTML元素，初始显示"wait..."
               analysis += `
-                                    <div class="feature-item">
-                                        <span class="feature-tag all-elements-tag">
-                                            <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
-                                            <span class="predicted-salience">${feature.formattedSalience}</span>
-                                        </span>
-                                    </div>
-                                `;
+                <div class="feature-item">
+                    <span class="feature-tag all-elements-tag">
+                        <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
+                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                    </span>
+                </div>
+              `;
+              
+              // 构造属性对象用于API调用
+              let attributes = {};
+              if (featureKey.startsWith('fill')) {
+                attributes = {"fill": rgbValue};
+              } else if (featureKey.startsWith('stroke')) {
+                attributes = {"stroke": rgbValue};
+              }
+              
+              // 调用API计算显著性
+              setTimeout(() => {
+                calculateSuggestionSalience(selectedNodeIds, attributes)
+                  .then(salience => {
+                    // 格式化显著性分值
+                    const formattedSalience = (salience * 100).toFixed(1);
+                    
+                    // 更新DOM元素显示计算的显著性分值
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = formattedSalience;
+                    }
+                  })
+                  .catch(error => {
+                    console.error('无法计算显著性:', error);
+                    // 更新DOM元素显示错误信息
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = "计算失败";
+                    }
+                  });
+              }, 10); // 短暂延迟确保DOM已更新
+              
             } else if (isStrokeWidthOrAreaFeature(featureKey, feature.name)) {
               // stroke-width或area特征，显示为+值的格式
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
+              
+              // 生成HTML元素，初始显示"wait..."
               analysis += `
-                                    <div class="feature-item">
-                                        <span class="feature-tag all-elements-tag">
-                                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
-                                            <span class="predicted-salience">${feature.formattedSalience}</span>
-                                        </span>
-                                    </div>
-                                `;
+                <div class="feature-item">
+                    <span class="feature-tag all-elements-tag">
+                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
+                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                    </span>
+                </div>
+              `;
+              
+              // 构造属性对象用于API调用
+              let attributes = {};
+              if (featureKey.includes('stroke_width')) {
+                attributes = {"stroke-width": String(feature.usedValue + 1)};
+              } else if (featureKey.includes('area')) {
+                attributes = {"area": feature.usedValue};
+              }
+              
+              // 调用API计算显著性
+              setTimeout(() => {
+                calculateSuggestionSalience(selectedNodeIds, attributes)
+                  .then(salience => {
+                    // 格式化显著性分值
+                    const formattedSalience = (salience * 100).toFixed(1);
+                    
+                    // 更新DOM元素显示计算的显著性分值
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = formattedSalience;
+                    }
+                  })
+                  .catch(error => {
+                    console.error('无法计算显著性:', error);
+                    // 更新DOM元素显示错误信息
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = "计算失败";
+                    }
+                  });
+              }, 10); // 短暂延迟确保DOM已更新
+              
             } else if (isPositionOrBboxFeature(featureKey)) {
               // 位置或bbox特征，显示推荐值
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
+              
+              // 生成HTML元素，初始显示"wait..."
               analysis += `
-                                    <div class="feature-item">
-                                        <span class="feature-tag all-elements-tag">
-                                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
-                                            <span class="predicted-salience">${feature.formattedSalience}</span>
-                                        </span>
-                                    </div>
-                                `;
+                <div class="feature-item">
+                    <span class="feature-tag all-elements-tag">
+                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
+                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                    </span>
+                </div>
+              `;
+              
+              // 构造属性对象用于API调用
+              let attributes = {};
+              if (featureKey.includes('width')) {
+                attributes = {"width": feature.usedValue};
+              } else if (featureKey.includes('height')) {
+                attributes = {"height": feature.usedValue};
+              } else if (featureKey.includes('area')) {
+                attributes = {"area": feature.usedValue};
+              }
+              
+              // 调用API计算显著性
+              setTimeout(() => {
+                calculateSuggestionSalience(selectedNodeIds, attributes)
+                  .then(salience => {
+                    // 格式化显著性分值
+                    const formattedSalience = (salience * 100).toFixed(1);
+                    
+                    // 更新DOM元素显示计算的显著性分值
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = formattedSalience;
+                    }
+                  })
+                  .catch(error => {
+                    console.error('无法计算显著性:', error);
+                    // 更新DOM元素显示错误信息
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = "计算失败";
+                    }
+                  });
+              }, 10); // 短暂延迟确保DOM已更新
             } else {
               // 其他特征，显示推荐值
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
               analysis += `
-                                    <div class="feature-item">
-                                        <span class="feature-tag all-elements-tag">
-                                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
-                                            <span class="predicted-salience">${feature.formattedSalience}</span>
-                                        </span>
-                                    </div>
-                                `;
+                <div class="feature-item">
+                    <span class="feature-tag all-elements-tag">
+                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
+                        <span class="predicted-salience">${feature.formattedSalience}</span>
+                    </span>
+                </div>
+              `;
             }
           });
         } else {
@@ -1773,54 +1809,159 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
           featuresWithSalience.forEach(feature => {
             const featureKey = feature.featureKeys[0];
 
+            // 生成唯一标识，用于后续DOM更新
+            const featureUniqueId = `feature-modify-${featureKey}-${Math.random().toString(36).substring(2, 9)}`;
+            
             // 检查是否为颜色特征
             if (isColorFeature(featureKey)) {
               const rgbValue = getCompleteColorValue(featureKey, feature.usedValue, normalData, selectedNodeIds);
-
+              
+              // 生成HTML元素，初始显示"wait..."
               analysis += `
-                            <div class="feature-item">
-                                <span class="feature-tag all-elements-tag">
-                                    <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
-                                    <span class="predicted-salience">${feature.formattedSalience}</span>
-                                </span>
-                            </div>
-                        `;
+                <div class="feature-item">
+                    <span class="feature-tag all-elements-tag">
+                        <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
+                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                    </span>
+                </div>
+              `;
+              
+              // 构造属性对象用于API调用
+              let attributes = {};
+              if (featureKey.startsWith('fill')) {
+                attributes = {"fill": rgbValue};
+              } else if (featureKey.startsWith('stroke')) {
+                attributes = {"stroke": rgbValue};
+              }
+              
+              // 调用API计算显著性
+              setTimeout(() => {
+                calculateSuggestionSalience(selectedNodeIds, attributes)
+                  .then(salience => {
+                    // 格式化显著性分值
+                    const formattedSalience = (salience * 100).toFixed(1);
+                    
+                    // 更新DOM元素显示计算的显著性分值
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = formattedSalience;
+                    }
+                  })
+                  .catch(error => {
+                    console.error('无法计算显著性:', error);
+                    // 更新DOM元素显示错误信息
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = "计算失败";
+                    }
+                  });
+              }, 10); // 短暂延迟确保DOM已更新
+              
             } else if (isStrokeWidthOrAreaFeature(featureKey, feature.name)) {
               // stroke-width或area特征，显示为+值的格式
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
+              
+              // 生成HTML元素，初始显示"wait..."
               analysis += `
-                            <div class="feature-item">
-                                <span class="feature-tag all-elements-tag">
-                                    <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
-                                    <span class="predicted-salience">${feature.formattedSalience}</span>
-                                </span>
-                            </div>
-                        `;
+                <div class="feature-item">
+                    <span class="feature-tag all-elements-tag">
+                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
+                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                    </span>
+                </div>
+              `;
+              
+              // 构造属性对象用于API调用
+              let attributes = {};
+              if (featureKey.includes('stroke_width')) {
+                attributes = {"stroke-width": String(feature.usedValue + 1)};
+              } else if (featureKey.includes('area')) {
+                attributes = {"area": feature.usedValue};
+              }
+              
+              // 调用API计算显著性
+              setTimeout(() => {
+                calculateSuggestionSalience(selectedNodeIds, attributes)
+                  .then(salience => {
+                    // 格式化显著性分值
+                    const formattedSalience = (salience * 100).toFixed(1);
+                    
+                    // 更新DOM元素显示计算的显著性分值
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = formattedSalience;
+                    }
+                  })
+                  .catch(error => {
+                    console.error('无法计算显著性:', error);
+                    // 更新DOM元素显示错误信息
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = "计算失败";
+                    }
+                  });
+              }, 10); // 短暂延迟确保DOM已更新
+              
             } else if (isPositionOrBboxFeature(featureKey)) {
               // 位置或bbox特征，显示推荐值
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
+              
+              // 生成HTML元素，初始显示"wait..."
               analysis += `
-                            <div class="feature-item">
-                                <span class="feature-tag all-elements-tag">
-                                    <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
-                                    <span class="predicted-salience">${feature.formattedSalience}</span>
-                                </span>
-                            </div>
-                        `;
+                <div class="feature-item">
+                    <span class="feature-tag all-elements-tag">
+                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
+                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                    </span>
+                </div>
+              `;
+              
+              // 构造属性对象用于API调用
+              let attributes = {};
+              if (featureKey.includes('width')) {
+                attributes = {"width": feature.usedValue};
+              } else if (featureKey.includes('height')) {
+                attributes = {"height": feature.usedValue};
+              } else if (featureKey.includes('area')) {
+                attributes = {"area": feature.usedValue};
+              }
+              
+              // 调用API计算显著性
+              setTimeout(() => {
+                calculateSuggestionSalience(selectedNodeIds, attributes)
+                  .then(salience => {
+                    // 格式化显著性分值
+                    const formattedSalience = (salience * 100).toFixed(1);
+                    
+                    // 更新DOM元素显示计算的显著性分值
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = formattedSalience;
+                    }
+                  })
+                  .catch(error => {
+                    console.error('无法计算显著性:', error);
+                    // 更新DOM元素显示错误信息
+                    const predSalienceElement = document.getElementById(featureUniqueId);
+                    if (predSalienceElement) {
+                      predSalienceElement.textContent = "计算失败";
+                    }
+                  });
+              }, 10); // 短暂延迟确保DOM已更新
             } else {
               // 其他特征，显示推荐值
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
               analysis += `
-                            <div class="feature-item">
-                                <span class="feature-tag all-elements-tag">
-                                    <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
-                                    <span class="predicted-salience">${feature.formattedSalience}</span>
-                                </span>
-                            </div>
-                        `;
+                <div class="feature-item">
+                    <span class="feature-tag all-elements-tag">
+                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
+                        <span class="predicted-salience">${feature.formattedSalience}</span>
+                    </span>
+                </div>
+              `;
             }
           });
         } else {
@@ -2687,21 +2828,6 @@ const isColorFeature = (featureKey) => {
   return colorFeatures.includes(featureKey);
 };
 
-// 获取颜色特征的原始名称（用于显示）
-const getOriginalFeatureName = (featureKey) => {
-  const mapping = {
-    'fill_h_cos': 'fill_h',
-    'fill_h_sin': 'fill_h',
-    'fill_s_n': 'fill_s',
-    'fill_l_n': 'fill_l',
-    'stroke_h_cos': 'stroke_h',
-    'stroke_h_sin': 'stroke_h',
-    'stroke_s_n': 'stroke_s',
-    'stroke_l_n': 'stroke_l'
-  };
-  return mapping[featureKey] || featureKey;
-};
-
 // 检查特征是否为位置或bbox相关特征
 const isPositionOrBboxFeature = (featureKey) => {
   const positionFeatures = [
@@ -2829,6 +2955,46 @@ const handleDirectColorChange = (color) => {
       previewBlock.style.backgroundColor = rgbColor;
     }
     
+    // 重新计算预测显著性
+    // 首先找到特征名称
+    const featureNameContainer = targetElement.closest('.feature-name-container');
+    if (featureNameContainer) {
+      const featureName = featureNameContainer.textContent.split('→')[0].trim();
+      
+      // 构造属性对象用于API调用
+      let attributes = {};
+      if (featureName.includes('fill')) {
+        attributes = {"fill": rgbColor};
+      } else if (featureName.includes('stroke')) {
+        attributes = {"stroke": rgbColor};
+      }
+      
+      // 找到显示显著性的元素
+      const featureItem = targetElement.closest('.feature-item');
+      if (featureItem) {
+        const predSalienceElement = featureItem.querySelector('.predicted-salience');
+        if (predSalienceElement) {
+          // 更新为"wait..."
+          predSalienceElement.textContent = "wait...";
+          
+          // 调用API计算显著性
+          calculateSuggestionSalience(store.state.selectedNodes.nodeIds, attributes)
+            .then(salience => {
+              // 格式化显著性分值
+              const formattedSalience = (salience * 100).toFixed(1);
+              
+              // 更新DOM元素显示计算的显著性分值
+              predSalienceElement.textContent = formattedSalience;
+            })
+            .catch(error => {
+              console.error('无法计算显著性:', error);
+              // 更新DOM元素显示错误信息
+              predSalienceElement.textContent = "计算失败";
+            });
+        }
+      }
+    }
+    
     // 关闭颜色选择器
     setTimeout(() => {
       directColorPicker.value.visible = false;
@@ -2850,13 +3016,57 @@ const handleDirectNumberChange = (value) => {
     targetElement.setAttribute('data-value', formattedValue);
     
     // 处理显示格式
-    const featureName = targetElement.closest('.feature-name-container')?.textContent;
+    const featureNameContainer = targetElement.closest('.feature-name-container');
+    const featureName = featureNameContainer ? featureNameContainer.textContent.split('→')[0].trim() : '';
+    
     if (featureName && 
         (featureName.includes('stroke width') || 
          featureName.includes('area'))) {
       targetElement.textContent = `+${formattedValue}`;
     } else {
       targetElement.textContent = formattedValue;
+    }
+    
+    // 重新计算预测显著性
+    if (featureNameContainer) {
+      // 构造属性对象用于API调用
+      let attributes = {};
+      if (featureName.includes('stroke width')) {
+        // 对于stroke-width，只传数值，不加px单位
+        attributes = {"stroke-width": String(value + 1)};
+      } else if (featureName.includes('area')) {
+        // 对于area，直接使用用户修改的值
+        attributes = {"area": value};
+      } else if (featureName.includes('width')) {
+        attributes = {"width": value};
+      } else if (featureName.includes('height')) {
+        attributes = {"height": value};
+      }
+      
+      // 找到显示显著性的元素
+      const featureItem = targetElement.closest('.feature-item');
+      if (featureItem && Object.keys(attributes).length > 0) {
+        const predSalienceElement = featureItem.querySelector('.predicted-salience');
+        if (predSalienceElement) {
+          // 更新为"计算中..."
+          predSalienceElement.textContent = "wait...";
+          
+          // 调用API计算显著性
+          calculateSuggestionSalience(store.state.selectedNodes.nodeIds, attributes)
+            .then(salience => {
+              // 格式化显著性分值
+              const formattedSalience = (salience * 100).toFixed(1);
+              
+              // 更新DOM元素显示计算的显著性分值
+              predSalienceElement.textContent = formattedSalience;
+            })
+            .catch(error => {
+              console.error('Unable to calculate significance:', error);
+              // 更新DOM元素显示错误信息
+              predSalienceElement.textContent = "failure of calculation";
+            });
+        }
+      }
     }
     
     // 关闭数值编辑器
@@ -2869,6 +3079,58 @@ const handleDirectNumberChange = (value) => {
 // 关闭直接数值编辑器
 const closeDirectNumberEditor = () => {
   directNumberEditor.value.visible = false;
+};
+
+// 计算建议的显著性分值
+const calculateSuggestionSalience = async (ids, attributes) => {
+  if (!ids || ids.length === 0 || !attributes) {
+    return 0;
+  }
+
+  try {
+    // 处理attributes
+    const processedAttributes = { ...attributes };
+    
+    // 特殊处理stroke-width属性，移除px单位
+    if (processedAttributes['stroke-width'] && typeof processedAttributes['stroke-width'] === 'string') {
+      // 如果stroke-width是字符串且包含px，移除px
+      processedAttributes['stroke-width'] = processedAttributes['stroke-width'].replace('px', '');
+    }
+    
+    // 构造请求数据
+    const requestData = {
+      svg_file: window.localStorage.getItem('currentSvgName'),
+      modify_elements: [{
+        ids: ids,
+        attributes: processedAttributes
+      }],
+      debug: true
+    };
+
+    console.log('发送显著性预测请求:', requestData);
+
+    // 发送请求到预测API
+    const response = await fetch(SALIENCE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`API响应错误: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('获取显著性预测结果:', result);
+    
+    // 返回计算的显著性分值
+    return result.salience;
+  } catch (error) {
+    console.error('计算建议显著性时出错:', error);
+    return 0;
+  }
 };
 </script>
 
