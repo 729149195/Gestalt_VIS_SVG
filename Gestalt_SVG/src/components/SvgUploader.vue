@@ -1360,7 +1360,7 @@ const calculateVisualSalience = () => {
             // 如果找到匹配，增加显著性分数
             if (isMatch) {
                 console.log('发现与reveliogood_n组完全匹配，增加显著性分数');
-                salienceScore += 0.1;
+                salienceScore += 0.4;
             }
         }
 
@@ -1597,8 +1597,11 @@ const handleDisplaySvgClick = (event) => {
     // 这样可以允许计算显著性
     fromPerceptionScope.value = false;
 
-    if (selectedNodeIds.value.includes(nodeId)) {
-        // 从selectedNodes中移除节点，不管是否在lasso模式下
+    // 确保selectedNodeIds是数组
+    const currentSelectedNodes = Array.isArray(selectedNodeIds.value) ? selectedNodeIds.value : [];
+
+    if (currentSelectedNodes.includes(nodeId)) {
+        // 从selectedNodes中移除节点
         store.dispatch('removeSelectedNode', nodeId);
     } else {
         // 添加节点到selectedNodes

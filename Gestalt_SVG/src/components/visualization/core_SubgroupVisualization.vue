@@ -217,7 +217,7 @@ function calculateTotalArea(nodeData) {
             const isHighlighted = nodesToAnalyze.some(analyzeNode => {
                 // 移除开头的 'svg/' 并标准化分析节点的路径
                 const normalizedAnalyzeNode = analyzeNode.replace(/^svg\//, '');
-                return normalizedItemLastId === `svg/${normalizedAnalyzeNode}` ||
+                return normalizedItemId === `svg/${normalizedAnalyzeNode}` ||
                     normalizedItemId === normalizedAnalyzeNode;
             });
 
@@ -779,166 +779,49 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
         }
     });
     
-    // 处理API聚类的重复情况（节点构成一致的聚类）
-    // 创建一个Map用于存储元素集合的字符串表示到聚类ID的映射
-    const processedApiElementSets = new Map();
-    // 记录需要被过滤的API聚类ID
-    const duplicateApiClusters = new Set();
-
-    // 首先，按照聚类类型进行分组
-    const coreClusters = processedApiClusters.filter(cluster => !cluster.parentId && cluster.data?.type === 'core');
-    const extensionClusters = processedApiClusters.filter(cluster => cluster.parentId && cluster.data?.type === 'extension');
-    const regularClusters = processedApiClusters.filter(cluster => 
-        (!cluster.data?.type || (cluster.data?.type !== 'core' && cluster.data?.type !== 'extension'))
-        && !cluster.parentId
-    );
-
-    // 创建一个映射，记录每个核心聚类ID和它的外延聚类
-    const coreToExtensionsMap = new Map();
+    // 调试信息：输出示例ID格式
+    if (apiClusters.length > 0 && apiClusters[0].elements.size > 0) {
+        const firstApiElement = [...apiClusters[0].elements][0];
+        const firstShortApiElement = [...processedApiClusters[0].shortElements][0];
+        console.log(`API聚类元素ID示例: 原始格式="${firstApiElement}", 处理后="${firstShortApiElement}"`);
+    }
     
-    // 收集每个核心聚类对应的所有外延聚类
-    extensionClusters.forEach(extCluster => {
-        if (!extCluster.parentId) return;
-        
-        if (!coreToExtensionsMap.has(extCluster.parentId)) {
-            coreToExtensionsMap.set(extCluster.parentId, []);
-        }
-        
-        coreToExtensionsMap.get(extCluster.parentId).push(extCluster);
-    });
+    if (revelioGoodClusters.length > 0 && revelioGoodClusters[0].elements.size > 0) {
+        const firstRevelioElement = [...revelioGoodClusters[0].elements][0];
+        console.log(`RevelioGood聚类元素ID示例: "${firstRevelioElement}"`);
+    }
     
-    // 为每个核心聚类创建包含其所有外延节点的完整节点集
-    const coreToFullElementsMap = new Map();
-    
-    coreClusters.forEach(coreCluster => {
-        // 获取核心聚类自身的节点
-        const coreElements = new Set([...coreCluster.shortElements]);
-        
-        // 获取该核心聚类的所有外延聚类
-        const extensions = coreToExtensionsMap.get(coreCluster.id) || [];
-        
-        // 合并所有外延聚类的节点
-        extensions.forEach(extCluster => {
-            extCluster.shortElements.forEach(element => {
-                coreElements.add(element);
-            });
-        });
-        
-        // 存储完整的节点集（核心节点 + 所有外延节点）
-        coreToFullElementsMap.set(coreCluster.id, coreElements);
-    });
-    
-    // 处理普通聚类之间的重复
-    regularClusters.forEach(regularClusterA => {
-        // 如果已经被标记为重复，跳过
-        if (duplicateApiClusters.has(regularClusterA.id)) return;
-        
-        const elementsKeyA = [...regularClusterA.shortElements].sort().join(',');
-        
-        // 检查与其他普通聚类的重复
-        regularClusters.forEach(regularClusterB => {
-            // 跳过自身比较或已处理过的聚类
-            if (regularClusterA.id === regularClusterB.id || duplicateApiClusters.has(regularClusterB.id)) return;
-            
-            const elementsKeyB = [...regularClusterB.shortElements].sort().join(',');
-            
-            // 如果节点构成完全相同，随机保留一个
-            if (elementsKeyA === elementsKeyB) {
-                // 随机决定保留哪一个（这里简单地选第二个，实际上可以基于其他标准）
-                duplicateApiClusters.add(regularClusterA.id);
-                console.log(`找到重复的普通API聚类: "${regularClusterA.id}" 与 "${regularClusterB.id}"，元素构成相同，随机保留一个`);
-                return; // 如果已标记为重复，直接返回
-            }
-        });
-        
-        // 如果这个普通聚类已经被标记为重复，跳过后续检查
-        if (duplicateApiClusters.has(regularClusterA.id)) return;
-        
-        // 检查与核心聚类的重复（考虑核心及其所有外延的节点）
-        coreClusters.forEach(coreCluster => {
-            // 获取核心聚类的完整节点集（包含其所有外延节点）
-            const coreFullElements = coreToFullElementsMap.get(coreCluster.id);
-            if (!coreFullElements) return;
-            
-            // 检查普通聚类的节点是否与核心聚类节点集合存在显著重叠
-            const regularElementsSet = new Set([...regularClusterA.shortElements]);
-            
-            // 计算两个集合的交集大小
-            let intersectionCount = 0;
-            regularElementsSet.forEach(elem => {
-                if (coreFullElements.has(elem)) {
-                    intersectionCount++;
+    // 对每个reveliogood组
+    revelioGoodClusters.forEach(revelioCluster => {
+        // 检查与每个API聚类的重复
+        processedApiClusters.forEach(apiCluster => {
+            // 首先检查元素数量是否相同，这是完全重复的必要条件
+            if (apiCluster.shortElements.size === revelioCluster.elements.size) {
+                // 检查集合元素是否完全相同
+                const allElementsMatch = [...revelioCluster.elements].every(id => 
+                    apiCluster.shortElements.has(id)
+                );
+                
+                if (allElementsMatch) {
+                    // 如果元素完全相同，标记该reveliogood组为重复
+                    duplicateRevelioGoodClusters.add(revelioCluster.id);
+                    console.log(`重复聚类: RevelioGood聚类 "${revelioCluster.displayName}" 与API聚类 "${apiCluster.data?.name || apiCluster.id}" 重复，将只保留API聚类`);
+                    
+                    // 输出部分匹配成功的元素ID示例，每个聚类最多显示3个
+                    const revelioSample = [...revelioCluster.elements].slice(0, 3);
+                    const apiSample = [...apiCluster.shortElements].slice(0, 3);
+                    console.log(`匹配成功的元素ID示例 - RevelioGood: ${revelioSample.join(', ')} | API: ${apiSample.join(', ')}`);
                 }
-            });
-            
-            // 如果交集超过75%，认为是重复聚类
-            const overlapThreshold = 0.75;
-            const regularSize = regularElementsSet.size;
-            const coreSize = coreFullElements.size;
-            
-            const overlapPercentageRegular = intersectionCount / regularSize;
-            const overlapPercentageCore = intersectionCount / coreSize;
-            
-            if (overlapPercentageRegular > overlapThreshold || overlapPercentageCore > overlapThreshold) {
-                // 发现重复，保留核心+外延聚类，去除普通聚类
-                duplicateApiClusters.add(regularClusterA.id);
-                console.log(`找到重复的API聚类: 普通聚类"${regularClusterA.id}" 与 核心聚类"${coreCluster.id}"重复(普通聚类重合率: ${(overlapPercentageRegular * 100).toFixed(1)}%, 核心聚类重合率: ${(overlapPercentageCore * 100).toFixed(1)}%)，保留核心聚类`);
-                return; // 如果已标记为重复，直接返回
-            }
-        });
-        
-        // 如果这个普通聚类已经被标记为重复，跳过后续检查
-        if (duplicateApiClusters.has(regularClusterA.id)) return;
-        
-        // 检查与独立的外延聚类的重复（考虑外延聚类自身节点 + 其核心聚类的节点）
-        extensionClusters.forEach(extCluster => {
-            if (!extCluster.parentId) return;
-            
-            // 找到这个外延聚类对应的核心聚类
-            const parentCore = coreClusters.find(core => core.id === extCluster.parentId);
-            if (!parentCore) return;
-            
-            // 创建包含外延和其核心节点的完整集合
-            const extFullElements = new Set([...extCluster.shortElements]);
-            parentCore.shortElements.forEach(elem => extFullElements.add(elem));
-            
-            // 检查普通聚类的节点是否与外延聚类节点集合存在显著重叠
-            const regularElementsSet = new Set([...regularClusterA.shortElements]);
-            
-            // 计算两个集合的交集大小
-            let intersectionCount = 0;
-            regularElementsSet.forEach(elem => {
-                if (extFullElements.has(elem)) {
-                    intersectionCount++;
-                }
-            });
-            
-            // 如果交集超过75%，认为是重复聚类
-            const overlapThreshold = 0.75;
-            const regularSize = regularElementsSet.size;
-            const extSize = extFullElements.size;
-            
-            const overlapPercentageRegular = intersectionCount / regularSize;
-            const overlapPercentageExt = intersectionCount / extSize;
-            
-            if (overlapPercentageRegular > overlapThreshold || overlapPercentageExt > overlapThreshold) {
-                // 发现重复，保留外延聚类，去除普通聚类
-                duplicateApiClusters.add(regularClusterA.id);
-                console.log(`找到重复的API聚类: 普通聚类"${regularClusterA.id}" 与 外延聚类"${extCluster.id}"重复(普通聚类重合率: ${(overlapPercentageRegular * 100).toFixed(1)}%, 外延聚类重合率: ${(overlapPercentageExt * 100).toFixed(1)}%)，保留外延聚类`);
-                return; // 如果已标记为重复，直接返回
             }
         });
     });
     
-    console.log(`发现 ${duplicateApiClusters.size} 个重复的API聚类将被过滤掉`);
     console.log(`发现 ${duplicateRevelioGoodClusters.size} 个重复的RevelioGood聚类将被跳过，只保留API聚类`);
     console.log(`发现 ${duplicateExtensions.size} 个重复的API外延聚类将被跳过，只保留一个实例`);
     
-    // 先添加所有API核心聚类及其扩展（核心和外延关系不做去重）
+    // 先添加所有API核心聚类及其扩展（API聚类始终保留，不受重复检查影响）
     const coreApiClusters = apiClusters.filter(cluster => 
-        cluster.type !== 'extension' && !cluster.parentId && 
-        !filteredApiClusters.has(cluster.id) &&
-        !duplicateApiClusters.has(cluster.id)  // 只过滤重复的普通聚类
+        cluster.type !== 'extension' && !cluster.parentId && !filteredApiClusters.has(cluster.id)
     );
     
     coreApiClusters.forEach(apiCluster => {
@@ -949,8 +832,7 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
         const extensions = apiClusters.filter(ext => 
             ext.parentId === apiCluster.id && 
             !duplicateExtensions.has(ext.id) &&
-            !filteredApiClusters.has(ext.id) &&
-            !duplicateApiClusters.has(ext.id)  // 添加对重复API聚类的过滤
+            !filteredApiClusters.has(ext.id)
         );
         
         extensions.forEach(ext => {
@@ -2259,7 +2141,7 @@ const calculateAttentionProbability = (node, returnRawScore = false) => {
         
         // 检查是否是reveliogood聚类，如果是则额外加5分
         if (node.isRevelioGood) {
-            salienceScore += 0.1; // 
+            salienceScore += 0.4; // 
         }
         
         // 获取所有元素的类名信息
@@ -2324,7 +2206,7 @@ const calculateAttentionProbability = (node, returnRawScore = false) => {
 
         // 否则，将分数映射到0-1范围内用于显示
         // 使用sigmoid函数进行平滑映射，确保结果在0-1范围内
-        const normalizedScore = Math.min(Math.max(1 / (0.8 + Math.exp(-salienceScore)), 0), 1);
+        const normalizedScore = Math.min(Math.max(1 / (0.8 + Math.exp(-salienceScore))));
 
         return normalizedScore;
 
