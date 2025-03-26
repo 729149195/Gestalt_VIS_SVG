@@ -31,7 +31,7 @@
               </el-option>
             </el-select>
             <el-button type="primary" @click="generateAndUpload" class="larger-text-btn">Upload</el-button>
-            <el-button @click="copyCode" class="larger-text-btn">Copy</el-button>
+            <el-button @click="resetToOriginal" class="larger-text-btn">Reset</el-button>
             <el-button @click="downloadSvg" class="larger-text-btn">Download</el-button>
             
             <div class="mode-tabs">
@@ -78,7 +78,7 @@
           
           <div class="side-mode-switch">
             <el-button type="primary" @click="generateAndUpload" class="larger-text-btn">Upload</el-button>
-            <el-button @click="copyCode" class="larger-text-btn">Copy</el-button>
+            <el-button @click="resetToOriginal" class="larger-text-btn">Reset</el-button>
             <el-button @click="downloadSvg" class="larger-text-btn">Download</el-button>
             <div class="mode-tabs">
               <div class="mode-tab larger-text-tab" :class="{ active: isDeclarativeMode }" @click="isDeclarativeMode = true">
@@ -140,6 +140,7 @@ const code = ref('')
 const svgCode = ref('')
 const svgOutput = ref('')
 const originalSvgCode = ref('') // 添加新变量存储原始SVG代码
+const originalFileContent = ref('') // 添加变量存储原始文件内容
 const selectedSyntax = ref('d3')
 const isDeclarativeMode = ref(true)
 const declarativeEditorContainer = ref(null)
@@ -1514,6 +1515,12 @@ const handleFileChange = (event) => {
   const selectedFile = event.target.files[0]
   if (selectedFile) {
     file.value = selectedFile
+    // 保存原始文件内容
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      originalFileContent.value = e.target.result
+    }
+    reader.readAsText(selectedFile)
     uploadFile()
   }
 }
@@ -1524,6 +1531,12 @@ const handleDrop = (event) => {
   const droppedFile = event.dataTransfer.files[0]
   if (droppedFile && droppedFile.type === 'image/svg+xml') {
     file.value = droppedFile
+    // 保存原始文件内容
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      originalFileContent.value = e.target.result
+    }
+    reader.readAsText(droppedFile)
     uploadFile()
   }
 }
@@ -1660,6 +1673,52 @@ const proceedWithUpload = () => {
       analyzing.value = false
       eventSource.close()
     })
+}
+
+// 添加重置函数
+const resetToOriginal = async () => {
+  if (!originalFileContent.value) {
+    ElMessage({
+      message: 'No original file content available',
+      type: 'warning',
+      position: 'top-right',
+      customClass: 'custom-message'
+    })
+    return
+  }
+
+  try {
+    // 更新SVG代码
+    svgCode.value = originalFileContent.value
+    originalSvgCode.value = originalFileContent.value
+
+    // 更新SVG编辑器内容
+    if (svgEditor) {
+      svgEditor.setValue(originalFileContent.value)
+      // 格式化编辑器内容
+      setTimeout(() => {
+        formatSvgEditor()
+      }, 300)
+    }
+
+    // 自动执行上传
+    await generateAndUpload()
+
+    ElMessage({
+      message: 'File has been reset to original version',
+      type: 'success',
+      position: 'top-right',
+      customClass: 'custom-message'
+    })
+  } catch (error) {
+    console.error('Error resetting file:', error)
+    ElMessage({
+      message: 'Failed to reset file: ' + error.message,
+      type: 'error',
+      position: 'top-right',
+      customClass: 'custom-message'
+    })
+  }
 }
 </script>
 

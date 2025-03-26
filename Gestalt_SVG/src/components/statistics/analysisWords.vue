@@ -56,6 +56,12 @@
           </el-input-number>
         </div>
       </div>
+      
+      <!-- 添加一个直接的颜色选择器，不需要通过tooltip激活 -->
+      <div v-if="directColorPicker.visible" class="direct-color-picker" :style="getDirectColorPickerStyle()">
+        <el-color-picker ref="directColorPickerRef" v-model="directColorPicker.currentValue" size="small" :predefine="colorPickerOptions.predefine" :show-alpha="false" popper-class="color-picker-popper" :teleported="true" placement="bottom-start" color-format="rgb" @change="handleDirectColorChange">
+        </el-color-picker>
+      </div>
     </Teleport>
   </div>
 </template>
@@ -573,8 +579,10 @@ const globalMouseOverHandler = (event) => {
   const analysisContent = event.target.closest('.analysis-content');
   if (!analysisContent) return;
 
+  // 移除鼠标悬停打开色卡的功能
+  // 仅保留其他非颜色相关的功能
   const copyableValue = event.target.closest('.copyable-value');
-  if (copyableValue) {
+  if (copyableValue && !copyableValue.previousElementSibling?.classList.contains('color-preview-inline') && copyableValue.getAttribute('data-type') !== 'color') {
     // 获取元素位置
     const rect = copyableValue.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
@@ -620,17 +628,7 @@ const globalMouseOverHandler = (event) => {
     let initialValue = textValue;
     let unit = '';
 
-    if (textValue.includes('rgb')) {
-      editorType = 'color';
-      if (textValue.startsWith('rgba')) {
-        const matches = textValue.match(/rgba\((\d+),\s*(\d+),\s*(\d+)/);
-        if (matches) {
-          initialValue = `rgb(${matches[1]}, ${matches[2]}, ${matches[3]})`;
-        }
-      } else {
-        initialValue = textValue;
-      }
-    } else if (textValue.includes('px')) {
+    if (textValue.includes('px')) {
       editorType = 'number';
       hasUnit = true;
       unit = 'px';
@@ -698,12 +696,79 @@ const globalMouseOutHandler = (event) => {
 
 // 全局点击事件处理函数
 const globalClickHandler = (event) => {
+  // 检查点击的是否是颜色预览块
+  const colorPreview = event.target.closest('.color-preview-inline');
+  if (colorPreview) {
+    const copyableValue = colorPreview.nextElementSibling;
+    if (copyableValue && copyableValue.classList.contains('copyable-value')) {
+      const textValue = copyableValue.getAttribute('data-value');
+      
+      // 计算位置 - 修改为直接在预览块位置显示颜色选择器
+      const rect = colorPreview.getBoundingClientRect();
+      
+      // 直接激活颜色选择器
+      directColorPicker.value = {
+        visible: true,
+        x: rect.left,
+        y: rect.bottom + 5, // 在预览块下方5px处显示
+        currentValue: textValue,
+        targetElement: copyableValue
+      };
+      
+      // 确保颜色选择器立即打开下拉菜单
+      setTimeout(() => {
+        const colorPickerEl = document.querySelector('.direct-color-picker .el-color-picker__trigger');
+        if (colorPickerEl) {
+          colorPickerEl.click();
+        }
+      }, 50);
+      
+      return;
+    }
+  }
+
+  // 检查是否点击在颜色选择器之外的地方
+  if (directColorPicker.value.visible) {
+    const isClickOnPicker = event.target.closest('.el-color-dropdown') || 
+                            event.target.closest('.direct-color-picker') || 
+                            event.target.closest('.el-color-picker');
+    
+    if (!isClickOnPicker) {
+      directColorPicker.value.visible = false;
+    }
+  }
+
   const copyableValue = event.target.closest('.copyable-value');
   if (copyableValue) {
+    // 检查是否是颜色类型
+    const isColor = copyableValue.getAttribute('data-type') === 'color';
     const textToCopy = copyableValue.getAttribute('data-value');
     const featureName = copyableValue.closest('.feature-name-container')?.textContent;
-    let processedText = textToCopy;
-
+    
+    // 如果是颜色值且直接点击的是颜色值（不是色块），也打开颜色选择器
+    if (isColor) {
+      const rect = copyableValue.getBoundingClientRect();
+      
+      // 直接激活颜色选择器
+      directColorPicker.value = {
+        visible: true,
+        x: rect.left,
+        y: rect.bottom + 5, // 在颜色值下方5px处显示
+        currentValue: textToCopy,
+        targetElement: copyableValue
+      };
+      
+      // 确保颜色选择器立即打开下拉菜单
+      setTimeout(() => {
+        const colorPickerEl = document.querySelector('.direct-color-picker .el-color-picker__trigger');
+        if (colorPickerEl) {
+          colorPickerEl.click();
+        }
+      }, 50);
+      
+      return;
+    }
+    
     if (textToCopy) {
       // 进行二次处理
       let finalTextToCopy = textToCopy;
@@ -1537,7 +1602,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               analysis += `
                                     <div class="feature-item">
                                         <span class="feature-tag all-elements-tag">
-                                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${rgbValue}">${rgbValue}</span></span>
+                                            <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
                                             <span class="predicted-salience">${feature.formattedSalience}</span>
                                         </span>
                                     </div>
@@ -1590,9 +1655,9 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       analysis += `</div>`; // 关闭内容单元格
       analysis += `</div>`; // 关闭表格行
 
-      // 2. Reset Visual Encodings 区域 - 修改为表格式行布局
+      // 2. Modify Visual Encodings 区域 - 修改为表格式行布局
       analysis += `<div class="suggestions-table-row">`;
-      analysis += `<div class="suggestions-section-title">Reset</div>`;
+      analysis += `<div class="suggestions-section-title">Modify</div>`;
       analysis += `<div class="suggestions-content-cell">`;
 
       // 从selected elements的used encodings中找多样性为1的编码
@@ -1739,7 +1804,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               analysis += `
                             <div class="feature-item">
                                 <span class="feature-tag all-elements-tag">
-                                    <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${rgbValue}">${rgbValue}</span></span>
+                                    <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
                                     <span class="predicted-salience">${feature.formattedSalience}</span>
                                 </span>
                             </div>
@@ -1783,10 +1848,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             }
           });
         } else {
-          analysis += `<div class="no-selection"><span>No reset feature found</span></div>`;
+          analysis += `<div class="no-selection"><span>No Modify feature found</span></div>`;
         }
       } else {
-        analysis += `<div class="no-selection"><span>No reset feature found</span></div>`;
+        analysis += `<div class="no-selection"><span>No Modify feature found</span></div>`;
       }
 
       analysis += `</div>`; // 关闭内容单元格
@@ -2713,6 +2778,61 @@ const colorPickerOptions = {
     'rgb(128, 128, 128)'
   ]
 };
+
+// 添加一个直接颜色选择器的状态
+const directColorPicker = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  currentValue: '',
+  targetElement: null
+});
+
+// 添加一个直接颜色选择器的引用
+const directColorPickerRef = ref(null);
+
+// 获取直接颜色选择器的样式
+const getDirectColorPickerStyle = () => {
+  if (!directColorPicker.value.visible) return {};
+
+  return {
+    position: 'fixed',
+    left: `${directColorPicker.value.x}px`,
+    top: `${directColorPicker.value.y}px`,
+    zIndex: 1000000,
+    opacity: 0 // 设置为透明，只显示弹出的选择器
+  };
+};
+
+// 处理直接颜色变化
+const handleDirectColorChange = (color) => {
+  if (directColorPicker.value.targetElement) {
+    // 将颜色转换为 rgb 格式
+    let rgbColor = color;
+    if (color.startsWith('rgba')) {
+      const matches = color.match(/rgba\((\d+),\s*(\d+),\s*(\d+)/);
+      if (matches) {
+        rgbColor = `rgb(${matches[1]}, ${matches[2]}, ${matches[3]})`;
+      }
+    }
+
+    // 更新目标元素的颜色值
+    const targetElement = directColorPicker.value.targetElement;
+    targetElement.setAttribute('data-value', rgbColor);
+    targetElement.textContent = rgbColor;
+    
+    // 更新预览块的背景颜色
+    const previewBlock = targetElement.previousElementSibling;
+    if (previewBlock && previewBlock.classList.contains('color-preview-inline')) {
+      previewBlock.style.backgroundColor = rgbColor;
+    }
+    
+    // 关闭颜色选择器
+    setTimeout(() => {
+      directColorPicker.value.visible = false;
+    }, 100);
+  }
+};
 </script>
 
 <style scoped>
@@ -3180,7 +3300,7 @@ const colorPickerOptions = {
   /* 确保最小高度足够显示提示文字 */
 }
 
-:deep(.suggestions-reset-section),
+:deep(.suggestions-Modify-section),
 :deep(.suggestions-stroke-section) {
   flex: 1;
   /* 平均分配空间 */
@@ -3546,7 +3666,7 @@ const colorPickerOptions = {
   min-height: 100px;
 }
 
-:deep(.suggestions-reset-section),
+:deep(.suggestions-Modify-section),
 :deep(.suggestions-stroke-section) {
   flex: 1;
   width: 100%;
@@ -3596,7 +3716,7 @@ const colorPickerOptions = {
 }
 
 :deep(.suggestions-add-section .feature-item),
-:deep(.suggestions-reset-section .feature-item),
+:deep(.suggestions-Modify-section .feature-item),
 :deep(.suggestions-stroke-section .feature-item) {
   height: 36px;
   /* 增加高度 */
@@ -3609,7 +3729,7 @@ const colorPickerOptions = {
 }
 
 :deep(.suggestions-add-section .feature-tag),
-:deep(.suggestions-reset-section .feature-tag),
+:deep(.suggestions-Modify-section .feature-tag),
 :deep(.suggestions-stroke-section .feature-tag) {
   height: 32px;
   display: flex;
@@ -3803,7 +3923,7 @@ const colorPickerOptions = {
 
 /* 修改各区域样式，使它们在共享容器中纵向排列成表格形式 */
 :deep(.suggestions-add-section),
-:deep(.suggestions-reset-section),
+:deep(.suggestions-Modify-section),
 :deep(.suggestions-stroke-section) {
   flex: none !important;
   /* 不使用flex比例 */
@@ -3859,7 +3979,7 @@ const colorPickerOptions = {
   border-left: none !important;
 }
 
-:deep(.suggestions-reset-section) {
+:deep(.suggestions-Modify-section) {
   border-left: none !important;
   margin-top: 0 !important;
 }
@@ -3966,7 +4086,7 @@ const colorPickerOptions = {
 
 /* 移除之前的区域样式 */
 :deep(.suggestions-add-section),
-:deep(.suggestions-reset-section),
+:deep(.suggestions-Modify-section),
 :deep(.suggestions-stroke-section) {
   display: none !important;
 }
@@ -4048,6 +4168,25 @@ const colorPickerOptions = {
 
 :deep(.feature-name-container .copyable-value:hover) {
   background-color: rgba(144, 95, 41, 0.1);
+}
+
+/* 添加颜色预览块样式 */
+:deep(.color-preview-inline) {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  margin-right: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+:deep(.color-preview-inline:hover) {
+  border-color: rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
 }
 
 /* 为注释标签添加特殊样式 */
@@ -4353,6 +4492,21 @@ const colorPickerOptions = {
   border-radius: 4px;
   border: 1px solid rgb(60, 60, 60);
   background-color: var(--el-color-white);
+}
+
+/* 添加直接颜色选择器样式 */
+.direct-color-picker {
+  position: fixed;
+  z-index: 1000001;
+}
+
+.direct-color-picker .el-color-picker {
+  opacity: 0; /* 隐藏触发器，只显示下拉菜单 */
+}
+
+/* 调整颜色选择器下拉菜单样式 */
+:deep(.el-color-dropdown) {
+  z-index: 1000002 !important;
 }
 </style>
 

@@ -33,7 +33,7 @@
                         <div v-html="displaySvgContent"></div>
                         <div class="visual-salience-indicator" @click="showSalienceDetail">
                             <span class="salience-label">Visual salience</span>
-                            <span class="salience-value" v-if="selectedNodeIds.length > 0 && !fromPerceptionScope">{{ (visualSalience * 100).toFixed(3) }}</span>
+                            <span class="salience-value" v-if="selectedNodeIds.length > 0 && !fromPerceptionScope && !isNaN(visualSalience)">{{ (visualSalience * 100).toFixed(3) }}</span>
                             <span class="salience-value" v-else>--.---</span>
                         </div>
                         <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
