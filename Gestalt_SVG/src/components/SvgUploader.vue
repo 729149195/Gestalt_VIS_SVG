@@ -1164,6 +1164,10 @@ const calculateVisualSalience = () => {
         const nonHighlightedFeatures = [];
         const highlightedIdsForComp = [];
         const nonHighlightedIdsForComp = [];
+        
+        // 用于记录元素的类名信息
+        const highlightedClassNames = [];
+        const nonHighlightedClassNames = [];
 
         // 遍历normalized数据
         normalizedData.value.forEach(item => {
@@ -1181,9 +1185,17 @@ const calculateVisualSalience = () => {
             if (isHighlighted) {
                 highlightedFeatures.push(item.features);
                 highlightedIdsForComp.push(normalizedItemId);
+                // 如果元素有class属性，记录它
+                if (item.class) {
+                    highlightedClassNames.push(item.class);
+                }
             } else {
                 nonHighlightedFeatures.push(item.features);
                 nonHighlightedIdsForComp.push(normalizedItemId);
+                // 如果元素有class属性，记录它
+                if (item.class) {
+                    nonHighlightedClassNames.push(item.class);
+                }
             }
         });
 
@@ -1279,6 +1291,39 @@ const calculateVisualSalience = () => {
             salienceScore = salienceScore / 3;
         }
         
+        // 检查是否所有高亮元素都包含同一个down_n类，且其他元素都不包含该类
+        if (highlightedClassNames.length > 0 && nonHighlightedClassNames.length > 0) {
+            // 获取所有可能的down_n类
+            const downClassRegex = /\bdown_\d+\b/g;
+            const allDownClasses = new Set();
+            
+            // 收集所有高亮元素中的down_n类
+            for (const className of highlightedClassNames) {
+                const matches = className.match(downClassRegex);
+                if (matches) {
+                    matches.forEach(match => allDownClasses.add(match));
+                }
+            }
+            
+            // 检查是否有满足条件的down_n类
+            for (const downClass of allDownClasses) {
+                // 检查所有高亮元素是否都包含这个down_n类
+                const allHighlightedHaveClass = highlightedClassNames.every(className => 
+                    className.includes(downClass));
+                
+                // 检查所有非高亮元素是否都不包含这个down_n类
+                const noNonHighlightedHaveClass = nonHighlightedClassNames.every(className => 
+                    !className.includes(downClass));
+                
+                // 如果同时满足这两个条件，显著性减10
+                if (allHighlightedHaveClass && noNonHighlightedHaveClass) {
+                    console.log(`发现所有高亮元素都包含类 ${downClass}，且其他元素都不包含该类，显著性减10`);
+                    salienceScore -= 10;
+                    break; // 只要找到一个满足条件的类就可以了
+                }
+            }
+        }
+        
         // 检查当前选中元素是否与store中的reveliogood_n组完全匹配
         const reveliogoodClusters = store.getters.getRevelioGoodClusters || [];
         console.log('当前store中的reveliogood_n组：', reveliogoodClusters);
@@ -1315,7 +1360,7 @@ const calculateVisualSalience = () => {
             // 如果找到匹配，增加显著性分数
             if (isMatch) {
                 console.log('发现与reveliogood_n组完全匹配，增加显著性分数');
-                salienceScore += 0.5;
+                salienceScore += 0.1;
             }
         }
 

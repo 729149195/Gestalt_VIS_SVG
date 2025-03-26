@@ -18,7 +18,8 @@ export default createStore({
       copiedValue: null,             // 存储复制的值
       copiedValueType: null,         // 存储复制值的类型（color, stroke-width, area）
       copiedFeatureName: null,        // 存储复制值的特征名称
-      revelioGoodClusters: []        // 存储reveliogood_n类的ID组，二维数组
+      revelioGoodClusters: [],        // 存储reveliogood_n类的ID组，二维数组
+      revelioBadClusters: []         // 存储reveliobad_n类的ID组，二维数组
     };
   },
   mutations: {
@@ -38,37 +39,35 @@ export default createStore({
       state.displaySvgContent = svgContent;
     },
     UPDATE_SELECTED_NODES(state, payload) {
-      // 更新选中的节点 ID 列表和组信息
-      state.selectedNodes.nodeIds = payload.nodeIds;
-      state.selectedNodes.group = payload.group || null;
+      state.selectedNodes = payload;
     },
     SET_ALL_VISIBLE_NODES(state, nodeIds) {
-      // 设置所有可见的节点 ID 列表
       state.AllVisiableNodes = nodeIds;
     },
     GET_ELE_NUM_DATA(state, data) {
       state.ele_num_data = data;
     },
     CLEAR_SELECTED_NODES(state) {
-      // 清空选中的节点和组信息
-      state.selectedNodes.nodeIds = [];
-      state.selectedNodes.group = null;
+      state.selectedNodes = {
+        nodeIds: [],
+        group: null
+      };
     },
-    ADD_SELECTED_NODE(state, newNodeId) {
-      // 替换整个数组，确保触发 Vue 的响应式系统
-      state.selectedNodes.nodeIds = [...state.selectedNodes.nodeIds, newNodeId];
+    ADD_SELECTED_NODE(state, nodeId) {
+      if (!state.selectedNodes.nodeIds.includes(nodeId)) {
+        state.selectedNodes.nodeIds.push(nodeId);
+      }
     },
-    REMOVE_SELECTED_NODE(state, nodeIdToRemove) {
-      state.selectedNodes.nodeIds = state.selectedNodes.nodeIds.filter(id => id !== nodeIdToRemove);
+    REMOVE_SELECTED_NODE(state, nodeId) {
+      state.selectedNodes.nodeIds = state.selectedNodes.nodeIds.filter(id => id !== nodeId);
     },
     SET_VISUAL_SALIENCE(state, value) {
-      // 设置视觉显著性数组
       state.visualSalience = value;
     },
-    SET_COPIED_VALUE(state, { value, type, featureName }) {
-      state.copiedValue = value;
-      state.copiedValueType = type;
-      state.copiedFeatureName = featureName;
+    SET_COPIED_VALUE(state, payload) {
+      state.copiedValue = payload.value;
+      state.copiedValueType = payload.type;
+      state.copiedFeatureName = payload.featureName;
     },
     CLEAR_COPIED_VALUE(state) {
       state.copiedValue = null;
@@ -76,8 +75,10 @@ export default createStore({
       state.copiedFeatureName = null;
     },
     SET_REVELIOGOOD_CLUSTERS(state, clusters) {
-      // 设置reveliogood_n类的ID组
       state.revelioGoodClusters = clusters;
+    },
+    SET_REVELIOBAD_CLUSTERS(state, clusters) {
+      state.revelioBadClusters = clusters;
     }
   },
   actions: {
@@ -101,19 +102,19 @@ export default createStore({
     },
     setRevelioGoodClusters({ commit }, clusters) {
       commit('SET_REVELIOGOOD_CLUSTERS', clusters);
+    },
+    setRevelioBadClusters({ commit }, clusters) {
+      commit('SET_REVELIOBAD_CLUSTERS', clusters);
     }
   },
   getters: {
     getSelectedNodes(state) {
-      // 获取当前选中的节点 ID 列表
       return state.selectedNodes.nodeIds;
     },
     isNodeSelected: (state) => (nodeId) => {
-      // 判断某个节点是否被选中
       return state.selectedNodes.nodeIds.includes(nodeId);
     },
     getSelectedGroup(state) {
-      // 获取当前选中的组信息
       return state.selectedNodes.group;
     },
     getCopiedValue(state) {
@@ -124,8 +125,10 @@ export default createStore({
       };
     },
     getRevelioGoodClusters(state) {
-      // 获取reveliogood_n类的ID组
       return state.revelioGoodClusters;
+    },
+    getRevelioBadClusters(state) {
+      return state.revelioBadClusters;
     }
   }
 });

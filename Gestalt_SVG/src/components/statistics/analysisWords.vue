@@ -194,8 +194,8 @@ const featureRanges = {
   'fill_l_n': { q1: 0.4431372549019607, q3: 0.6490196078431373 },
   'stroke_h_cos': { q1: 0.1008768404960534, q3: 0.4 },
   'stroke_h_sin': { q1: 0.3080825490934995, q3: 0.7198673605029529 },
-  'stroke_s_n': { q1: 0.40, q3: 1.80 },
-  'stroke_l_n': { q1: 0.20, q3: 5.9019607843137256 },
+  'stroke_s_n': { q1: 0.40, q3: 0.80 },
+  'stroke_l_n': { q1: 0.20, q3: 0.9019607843137256 },
   'stroke_width': { q1: 1, q3: 1 },
   'bbox_left_n': { q1: 0.1700821463926025, q3: 0.7009512482895623 },
   'bbox_right_n': { q1: 0.2615399988211845, q3: 0.7912006955511051 },
@@ -1581,10 +1581,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             }
           });
         } else {
-          analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No additional features found</span></div>`;
+          analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No additional visual encodings found</span></div>`;
         }
       } else {
-        analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No suitable features found</span></div>`;
+        analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No suitable visual encodings found</span></div>`;
       }
 
       analysis += `</div>`; // 关闭内容单元格

@@ -580,7 +580,7 @@ function createThumbnail(nodeData) {
 }
 
 // 处理核心聚类数据
-function processGraphData(coreData, revelioGoodGroups = new Map()) {
+function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGroups = new Map()) {
     const processedNodes = [];
     
     // 首先收集所有API聚类的元素ID集合，用于后续去重
@@ -669,6 +669,66 @@ function processGraphData(coreData, revelioGoodGroups = new Map()) {
         // 将数组格式也改为不创建包含所有元素的大组
         console.log(`跳过数组格式的所有元素，不创建All组，元素数量: ${revelioGoodGroups.length}`);
         // 不再创建包含所有元素的全局组
+    }
+    
+    // 检查各个组合是否应该被过滤掉（基于revelioBad）
+    // 记录需要过滤的API聚类和revelioGood聚类
+    const filteredApiClusters = new Set();
+    const filteredRevelioGoodClusters = new Set();
+    
+    // 处理revelioBad元素组，检查是否有组合中的所有元素都共享同一个revelioBad_n
+    if (revelioBadGroups instanceof Map && revelioBadGroups.size > 0) {
+        console.log(`共发现 ${revelioBadGroups.size} 个RevelioBAD组，将检查是否需要过滤元素组合`);
+        
+        // 首先处理API聚类
+        apiClusters.forEach(cluster => {
+            const elementIds = [...cluster.elements].map(id => id.split('/').pop()).filter(Boolean);
+            
+            if (elementIds.length === 0) return;
+            
+            // 检查API聚类中的元素是否都包含相同的revelioBad_n
+            revelioBadGroups.forEach((badElementIds, badGroupKey) => {
+                // 跳过基础组
+                if (badGroupKey === 'reveliobad_basic') return;
+                
+                // 检查当前revelioBad_n组中的元素是否包含所有API聚类中的元素
+                const allElementsHaveSameBad = elementIds.every(id => 
+                    badElementIds.includes(id)
+                );
+                
+                if (allElementsHaveSameBad && elementIds.length > 0) {
+                    // 如果所有元素都共享相同的revelioBad_n，标记该聚类为需要过滤
+                    filteredApiClusters.add(cluster.id);
+                    console.log(`过滤API聚类: "${cluster.data?.name || cluster.id}" 因为其所有元素都共享revelioBad标记 "${badGroupKey}"`);
+                }
+            });
+        });
+        
+        // 然后处理revelioGood聚类
+        revelioGoodClusters.forEach(revelioCluster => {
+            const elementIds = [...revelioCluster.elements];
+            
+            if (elementIds.length === 0) return;
+            
+            // 检查revelioGood聚类中的元素是否都包含相同的revelioBad_n
+            revelioBadGroups.forEach((badElementIds, badGroupKey) => {
+                // 跳过基础组
+                if (badGroupKey === 'reveliobad_basic') return;
+                
+                // 检查当前revelioBad_n组中的元素是否包含所有revelioGood聚类中的元素
+                const allElementsHaveSameBad = elementIds.every(id => 
+                    badElementIds.includes(id)
+                );
+                
+                if (allElementsHaveSameBad && elementIds.length > 0) {
+                    // 如果所有元素都共享相同的revelioBad_n，标记该聚类为需要过滤
+                    filteredRevelioGoodClusters.add(revelioCluster.id);
+                    console.log(`过滤RevelioGood聚类: "${revelioCluster.displayName}" 因为其所有元素都共享revelioBad标记 "${badGroupKey}"`);
+                }
+            });
+        });
+        
+        console.log(`共有 ${filteredApiClusters.size} 个API聚类和 ${filteredRevelioGoodClusters.size} 个RevelioGood聚类将被过滤`);
     }
     
     // 检查reveliogood组与API聚类的重复情况
@@ -761,16 +821,18 @@ function processGraphData(coreData, revelioGoodGroups = new Map()) {
     
     // 先添加所有API核心聚类及其扩展（API聚类始终保留，不受重复检查影响）
     const coreApiClusters = apiClusters.filter(cluster => 
-        cluster.type !== 'extension' && !cluster.parentId
+        cluster.type !== 'extension' && !cluster.parentId && !filteredApiClusters.has(cluster.id)
     );
     
     coreApiClusters.forEach(apiCluster => {
         // 添加核心节点
         processedNodes.push(apiCluster.data);
         
-        // 添加其扩展节点，但排除重复的外延聚类
+        // 添加其扩展节点，但排除重复的外延聚类和被过滤的聚类
         const extensions = apiClusters.filter(ext => 
-            ext.parentId === apiCluster.id && !duplicateExtensions.has(ext.id)
+            ext.parentId === apiCluster.id && 
+            !duplicateExtensions.has(ext.id) &&
+            !filteredApiClusters.has(ext.id)
         );
         
         extensions.forEach(ext => {
@@ -782,7 +844,7 @@ function processGraphData(coreData, revelioGoodGroups = new Map()) {
         });
     });
     
-    // 处理每个非重复的reveliogood组
+    // 处理每个非重复且未被过滤的reveliogood组
     let revelioGoodClusterIndex = processedNodes.length;
     console.log(`已添加 ${processedNodes.length} 个API聚类，开始处理非重复的RevelioGood聚类`);
     
@@ -790,9 +852,9 @@ function processGraphData(coreData, revelioGoodGroups = new Map()) {
     const processedRevelioGoodKeys = new Map();
     
     revelioGoodClusters.forEach(revelioCluster => {
-        // 如果该reveliogood组与API聚类重复，跳过，不添加到处理结果中
-        if (duplicateRevelioGoodClusters.has(revelioCluster.id)) {
-            return; // 跳过重复的reveliogood聚类
+        // 如果该reveliogood组与API聚类重复或需要被过滤，跳过，不添加到处理结果中
+        if (duplicateRevelioGoodClusters.has(revelioCluster.id) || filteredRevelioGoodClusters.has(revelioCluster.id)) {
+            return; // 跳过重复或被过滤的reveliogood聚类
         }
         
         // 创建用于比较的字符串表示（用于reveliogood组之间的去重）
@@ -884,6 +946,32 @@ function processGraphData(coreData, revelioGoodGroups = new Map()) {
         // 如果没有找到reveliogood节点，清空store中的数据
         console.log('未找到任何会获得额外显著性分数的RevelioGood节点，清空store中的数据');
         store.dispatch('setRevelioGoodClusters', []);
+    }
+    
+    // 收集revelioBad节点ID组，存入store，用于后续过滤
+    const finalRevelioGoodBadClusters = [];
+    if (revelioBadGroups instanceof Map && revelioBadGroups.size > 0) {
+        revelioBadGroups.forEach((elements, groupKey) => {
+            // 跳过基础组
+            if (groupKey === 'reveliobad_basic') return;
+            
+            // 只收集特定类型的reveliobad_n组
+            if (groupKey.startsWith('reveliobad_') && elements.length > 0) {
+                finalRevelioGoodBadClusters.push([...elements]);
+                console.log(`收集到revelioBad组: ${groupKey}, 包含${elements.length}个元素`);
+            }
+        });
+        
+        if (finalRevelioGoodBadClusters.length > 0) {
+            console.log(`最终收集到${finalRevelioGoodBadClusters.length}个revelioBad节点ID组，存入store`);
+            store.dispatch('setRevelioBadClusters', finalRevelioGoodBadClusters);
+        } else {
+            console.log('未找到任何revelioBad节点，清空store中的数据');
+            store.dispatch('setRevelioBadClusters', []);
+        }
+    } else {
+        console.log('未找到任何revelioBad组，清空store中的数据');
+        store.dispatch('setRevelioBadClusters', []);
     }
     
     return { nodes: processedNodes };
@@ -1331,6 +1419,7 @@ const clusterFeatures = ref(null);
 const normalizedData = ref(null);
 // 添加一个ref来存储从SVG中提取的reveliogood元素
 const revelioGoodElements = ref([]);
+const revelioBadElements = ref([]);
 
 // 在loadAndRenderGraph函数中添加获取特征数据的逻辑
 async function loadAndRenderGraph() {
@@ -1353,9 +1442,10 @@ async function loadAndRenderGraph() {
             normalDataResponse.json()
         ]);
 
-        // 从SVG中提取包含class="reveliogood"的元素，按组分类
-        const revelioGoodGroups = extractRevelioGoodElements(svgContent);
+        // 从SVG中提取包含class="reveliogood"和class="reveliobad"的元素，按组分类
+        const { revelioGoodGroups, revelioBadGroups } = extractSVGElements(svgContent);
         revelioGoodElements.value = Array.from(revelioGoodGroups.values()).flat();
+        revelioBadElements.value = Array.from(revelioBadGroups.values()).flat();
 
         // 检查数据是否更新
         if (originalSvgContent.value !== svgContent ||
@@ -1373,8 +1463,8 @@ async function loadAndRenderGraph() {
             thumbnailCache.clear();
             elementStats.value.clear();
 
-            // 处理数据，将扩展节点集成到核心节点中，并添加从SVG中提取的revelioGood元素聚类
-            const processedData = processGraphData(data, revelioGoodGroups);
+            // 处理数据，将扩展节点集成到核心节点中，并添加从SVG中提取的revelioGood和revelioBad元素聚类
+            const processedData = processGraphData(data, revelioGoodGroups, revelioBadGroups);
             nodes.value = processedData.nodes.filter(node => node.type === 'core');
 
             // 等待DOM更新后，一次性渲染所有卡片
@@ -1466,6 +1556,106 @@ function extractRevelioGoodElements(svgContent) {
     } catch (error) {
         console.error('Error extracting reveliogood elements:', error);
         return new Map();
+    }
+}
+
+// 添加一个函数用于解析SVG并提取class="reveliogood"和class="reveliobad"的元素
+function extractSVGElements(svgContent) {
+    try {
+        // 创建一个DOM解析器
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
+        
+        // 创建Map来存储不同类型的reveliogood和reveliobad元素组
+        const revelioGoodGroups = new Map();
+        const revelioBadGroups = new Map();
+        
+        // 初始化基础组
+        revelioGoodGroups.set('reveliogood_basic', []);
+        revelioBadGroups.set('reveliobad_basic', []);
+        
+        // 查找所有包含class="reveliogood"或class="reveliobad"的元素
+        const revelioGoodNodes = svgDoc.querySelectorAll('[class*="reveliogood"]');
+        const revelioBadNodes = svgDoc.querySelectorAll('[class*="reveliobad"]');
+        
+        // 处理revelioGood元素
+        revelioGoodNodes.forEach(node => {
+            if (!node.id) return;
+            
+            const classAttr = node.getAttribute('class') || '';
+            const elementId = node.id;
+            
+            // 检查是否包含普通的reveliogood类（不带数字）
+            if (classAttr.match(/\breveliogood\b/)) {
+                revelioGoodGroups.get('reveliogood_basic').push(elementId);
+            }
+            
+            // 检查所有reveliogood_n格式的类
+            const matches = classAttr.match(/reveliogood_\d+/g);
+            if (matches && matches.length > 0) {
+                // 将元素添加到每一个匹配的reveliogood_n组
+                matches.forEach(match => {
+                    if (!revelioGoodGroups.has(match)) {
+                        revelioGoodGroups.set(match, []);
+                    }
+                    revelioGoodGroups.get(match).push(elementId);
+                });
+            }
+        });
+        
+        // 处理revelioBad元素
+        revelioBadNodes.forEach(node => {
+            if (!node.id) return;
+            
+            const classAttr = node.getAttribute('class') || '';
+            const elementId = node.id;
+            
+            // 检查是否包含普通的reveliobad类（不带数字）
+            if (classAttr.match(/\breveliobad\b/)) {
+                revelioBadGroups.get('reveliobad_basic').push(elementId);
+            }
+            
+            // 检查所有reveliobad_n格式的类
+            const matches = classAttr.match(/reveliobad_\d+/g);
+            if (matches && matches.length > 0) {
+                // 将元素添加到每一个匹配的reveliobad_n组
+                matches.forEach(match => {
+                    if (!revelioBadGroups.has(match)) {
+                        revelioBadGroups.set(match, []);
+                    }
+                    revelioBadGroups.get(match).push(elementId);
+                });
+            }
+        });
+        
+        // 移除空组
+        for (const [key, elements] of revelioGoodGroups.entries()) {
+            if (elements.length === 0) {
+                revelioGoodGroups.delete(key);
+            }
+        }
+        
+        for (const [key, elements] of revelioBadGroups.entries()) {
+            if (elements.length === 0) {
+                revelioBadGroups.delete(key);
+            }
+        }
+        
+        // 打印收集到的组信息用于调试
+        console.log("收集到的revelioGood组：");
+        for (const [key, elements] of revelioGoodGroups.entries()) {
+            console.log(`- ${key}: ${elements.length}个元素`);
+        }
+        
+        console.log("收集到的revelioBad组：");
+        for (const [key, elements] of revelioBadGroups.entries()) {
+            console.log(`- ${key}: ${elements.length}个元素`);
+        }
+        
+        return { revelioGoodGroups, revelioBadGroups };
+    } catch (error) {
+        console.error('Error extracting revelio elements:', error);
+        return { revelioGoodGroups: new Map(), revelioBadGroups: new Map() };
     }
 }
 
@@ -1951,7 +2141,62 @@ const calculateAttentionProbability = (node, returnRawScore = false) => {
         
         // 检查是否是reveliogood聚类，如果是则额外加5分
         if (node.isRevelioGood) {
-            salienceScore += 0.5; // 
+            salienceScore += 0.1; // 
+        }
+        
+        // 获取所有元素的类名信息
+        const highlightedClassNames = [];
+        const nonHighlightedClassNames = [];
+        
+        // 从normalizedData中获取每个元素的class信息
+        normalizedData.value.forEach(item => {
+            // 从完整路径中提取最后的ID部分
+            const normalizedItemLastId = item.id.split('/').pop();
+            
+            // 检查当前元素是否是高亮元素
+            const isHighlighted = highlightedIds.includes(normalizedItemLastId);
+            
+            // 如果元素有class属性，记录它
+            if (item.class) {
+                if (isHighlighted) {
+                    highlightedClassNames.push(item.class);
+                } else {
+                    nonHighlightedClassNames.push(item.class);
+                }
+            }
+        });
+        
+        // 检查是否所有高亮元素都包含同一个down_n类，且其他元素都不包含该类
+        if (highlightedClassNames.length > 0 && nonHighlightedClassNames.length > 0) {
+            // 获取所有可能的down_n类
+            const downClassRegex = /\bdown_\d+\b/g;
+            const allDownClasses = new Set();
+            
+            // 收集所有高亮元素中的down_n类
+            for (const className of highlightedClassNames) {
+                const matches = className.match(downClassRegex);
+                if (matches) {
+                    matches.forEach(match => allDownClasses.add(match));
+                }
+            }
+            
+            // 检查是否有满足条件的down_n类
+            for (const downClass of allDownClasses) {
+                // 检查所有高亮元素是否都包含这个down_n类
+                const allHighlightedHaveClass = highlightedClassNames.every(className => 
+                    className.includes(downClass));
+                
+                // 检查所有非高亮元素是否都不包含这个down_n类
+                const noNonHighlightedHaveClass = nonHighlightedClassNames.every(className => 
+                    !className.includes(downClass));
+                
+                // 如果同时满足这两个条件，显著性减10
+                if (allHighlightedHaveClass && noNonHighlightedHaveClass) {
+                    console.log(`发现所有高亮元素都包含类 ${downClass}，且其他元素都不包含该类，显著性减10`);
+                    salienceScore -= 10;
+                    break; // 只要找到一个满足条件的类就可以了
+                }
+            }
         }
 
         // 如果需要返回原始分数（用于排序），直接返回

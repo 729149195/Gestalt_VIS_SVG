@@ -139,6 +139,7 @@ window.MonacoEnvironment = {
 const code = ref('')
 const svgCode = ref('')
 const svgOutput = ref('')
+const originalSvgCode = ref('') // 添加新变量存储原始SVG代码
 const selectedSyntax = ref('d3')
 const isDeclarativeMode = ref(true)
 const declarativeEditorContainer = ref(null)
@@ -380,8 +381,8 @@ const formatSvgEditor = () => {
 watch([copiedValue, selectedNodeIds], async ([newCopiedValue, newSelectedNodeIds]) => {
   if (!newCopiedValue?.value || !newSelectedNodeIds?.length) return;
 
-  // 获取当前SVG内容
-  const currentSvgContent = svgEditor.getValue();
+  // 获取当前SVG内容（使用原始SVG代码）
+  const currentSvgContent = originalSvgCode.value || svgEditor.getValue();
   const parser = new DOMParser();
   const doc = parser.parseFromString(currentSvgContent, 'image/svg+xml');
   
@@ -529,10 +530,13 @@ watch([copiedValue, selectedNodeIds], async ([newCopiedValue, newSelectedNodeIds
     }
   });
 
-  // 更新SVG编辑器的内容
+  // 更新原始SVG代码
   const serializer = new XMLSerializer();
   const updatedSvgContent = serializer.serializeToString(doc);
-  svgEditor.setValue(updatedSvgContent);
+  originalSvgCode.value = updatedSvgContent;
+
+  // 更新SVG编辑器的内容（显示过滤后的版本）
+  svgEditor.setValue(formatSvgCode(updatedSvgContent, true));
 
   // 格式化更新后的内容
   setTimeout(() => {
@@ -576,7 +580,7 @@ const debounce = (fn, delay) => {
 }
 
 // 格式化SVG代码
-const formatSvgCode = (svgString) => {
+const formatSvgCode = (svgString, shouldFilterClass = false) => {
   try {
     // 尝试修复SVG常见错误，防止解析失败
     let fixedSvgString = svgString
@@ -601,28 +605,15 @@ const formatSvgCode = (svgString) => {
     const parseError = doc.querySelector('parsererror')
     if (parseError) {
       console.error('SVG parsing error detected:', parseError.textContent)
-      
-      // 对已修复的字符串尝试更强的修复措施
-      fixedSvgString = fixedSvgString
-        // 移除或修复可能导致问题的XML属性
-        .replace(/xmlns:NS\d+=""/g, '')
-        .replace(/NS\d+:/g, '')
-        // 修复未闭合的CDATA部分
-        .replace(/<!\[CDATA\[(.*?)(?!\]\]>)/g, '<![CDATA[$1]]>')
-        // 修复属性中的大于号和小于号
-        .replace(/="([^"]*>[^"]*<[^"]*)"/g, (match, p1) => {
-          return `="${p1.replace(/>/g, '&gt;').replace(/</g, '&lt;')}"`;
-        })
-        // 移除非法字符
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-        
-      // 尝试建立基本的SVG结构
-      if (!fixedSvgString.includes('<svg')) {
-        fixedSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${fixedSvgString}</svg>`;
-      }
-      
-      // 返回修复后的SVG字符串，不再尝试解析和格式化
       return fixedSvgString;
+    }
+
+    // 如果需要过滤class属性
+    if (shouldFilterClass) {
+      const allElements = doc.querySelectorAll('*');
+      allElements.forEach(el => {
+        el.removeAttribute('class');
+      });
     }
 
     // 格式化函数
@@ -684,8 +675,8 @@ const updatePreview = () => {
         svgCode.value = fixedSvg;
         svgOutput.value = fixedSvg;
       } else {
-        // 正常格式化SVG代码
-        const formattedSvg = formatSvgCode(svgCode.value);
+        // 正常格式化SVG代码，显示时过滤class属性
+        const formattedSvg = formatSvgCode(svgCode.value, true);
         svgCode.value = formattedSvg;
         svgOutput.value = formattedSvg;
       }
@@ -736,9 +727,11 @@ const generateSvg = async () => {
         await handleHighchartsCode()
         break
     }
-    // 更新SVG编辑器的内容
+    // 保存原始SVG代码
+    originalSvgCode.value = svgCode.value;
+    // 更新SVG编辑器的内容（显示时过滤class）
     if (svgEditor) {
-      svgEditor.setValue(svgCode.value)
+      svgEditor.setValue(formatSvgCode(svgCode.value, true))
     }
   } catch (error) {
     console.error('generate an error:', error)
@@ -748,6 +741,7 @@ const generateSvg = async () => {
     </svg>`
     svgCode.value = errorSvg
     svgOutput.value = errorSvg
+    originalSvgCode.value = errorSvg
     // 更新错误信息到SVG编辑器
     if (svgEditor) {
       svgEditor.setValue(errorSvg)
@@ -1056,7 +1050,8 @@ const handleHighchartsCode = async () => {
 
 // 复制SVG代码
 const copyCode = () => {
-  navigator.clipboard.writeText(svgCode.value)
+  // 复制原始SVG代码（包含class属性）
+  navigator.clipboard.writeText(originalSvgCode.value)
     .then(() => ElMessage({
       message: 'SVG code has been copied to the clipboard',
       type: 'success',
@@ -1073,7 +1068,8 @@ const copyCode = () => {
 
 // 下载SVG文件
 const downloadSvg = () => {
-  const blob = new Blob([svgCode.value], { type: 'image/svg+xml' })
+  // 使用原始SVG代码（包含class属性）
+  const blob = new Blob([originalSvgCode.value], { type: 'image/svg+xml' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -1240,8 +1236,11 @@ const handleSvgContentUpdated = async (event) => {
 
     const svgContent = await response.text()
 
-    // 格式化SVG代码
-    const formattedSvg = formatSvgCode(svgContent)
+    // 保存原始SVG代码
+    originalSvgCode.value = svgContent
+
+    // 格式化SVG代码（显示时过滤class）
+    const formattedSvg = formatSvgCode(svgContent, true)
 
     // 更新SVG代码和预览
     svgCode.value = formattedSvg
@@ -1306,19 +1305,17 @@ const generateAndUpload = async () => {
       })
       .catch(error => {
         console.error('Error clearing upload folder:', error)
-        // 即使清除文件夹失败，我们仍然继续上传流程
       })
 
     // 根据当前模式获取要上传的内容
     let contentToUpload = ''
 
     if (isDeclarativeMode.value) {
-      // 如果是代码模式，先生成SVG
-      await generateSvg()
-      contentToUpload = svgCode.value
+      // 如果是代码模式，使用原始SVG代码
+      contentToUpload = originalSvgCode.value
     } else {
-      // 如果是SVG模式，直接使用SVG编辑器的内容
-      contentToUpload = svgEditor.getValue()
+      // 如果是SVG模式，使用原始SVG代码
+      contentToUpload = originalSvgCode.value
     }
 
     if (!contentToUpload) {
@@ -1333,8 +1330,6 @@ const generateAndUpload = async () => {
 
     // 创建Blob对象
     const blob = new Blob([contentToUpload], { type: 'image/svg+xml' })
-
-    
     const file = new File([blob], `generated_with_id.svg`, { type: 'image/svg+xml' })
 
     // 创建FormData
