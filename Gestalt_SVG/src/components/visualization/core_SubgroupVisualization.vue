@@ -711,17 +711,9 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
     const uniqueApiClusters = [];
     const apiCoreMap = new Map();  // 存储核心聚类
     const apiExtensionMap = new Map();  // 存储所有外延聚类的元素集合
+    const apiElementsMap = new Map();  // 存储所有元素集合与对应的聚类ID
     
-    // 首先收集所有核心聚类
-    apiClusters.forEach(cluster => {
-        if (!cluster.parentId) {
-            // 这是核心聚类
-            uniqueApiClusters.push(cluster);
-            apiCoreMap.set(cluster.id, cluster);
-        }
-    });
-    
-    // 然后处理外延聚类
+    // 首先处理所有外延聚类
     apiClusters.forEach(cluster => {
         if (cluster.parentId) {
             // 这是外延聚类
@@ -730,6 +722,7 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
             if (!apiExtensionMap.has(elementsKey)) {
                 // 如果这个元素集合尚未处理，添加到去重后的结果
                 apiExtensionMap.set(elementsKey, cluster);
+                apiElementsMap.set(elementsKey, cluster.id);
                 uniqueApiClusters.push(cluster);
             } else {
                 // 如果已存在相同元素集合的外延聚类
@@ -741,6 +734,40 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
                 } else {
                     console.log(`API内部去重：发现不同核心聚类的重复外延聚类 "${cluster.data.name}" 和 "${existingCluster.data.name}"，保留第一个`);
                 }
+            }
+        }
+    });
+    
+    // 然后处理所有核心聚类，检查是否与外延聚类重复
+    apiClusters.forEach(cluster => {
+        if (!cluster.parentId) {
+            // 这是核心聚类
+            const elementsKey = [...cluster.elements].sort().join(',');
+            
+            // 检查是否与已处理的外延聚类元素重复
+            if (apiElementsMap.has(elementsKey)) {
+                // 如果核心聚类与某个外延聚类重复，优先保留外延聚类
+                const duplicateExtensionId = apiElementsMap.get(elementsKey);
+                console.log(`API内部去重：核心聚类 "${cluster.data.name}" 与外延聚类重复，优先保留外延聚类 "${duplicateExtensionId}"`);
+                
+                // 检查该核心聚类是否有自己的外延聚类
+                const hasOwnExtensions = apiClusters.some(ext => ext.parentId === cluster.id);
+                
+                if (hasOwnExtensions) {
+                    // 如果核心聚类有自己的外延聚类，仍然保留该核心聚类，但标记它，后续可能需要特殊处理
+                    console.log(`API内部去重：尽管 "${cluster.data.name}" 与外延聚类重复，但因为它有自己的外延聚类，所以保留`);
+                    cluster.hasDuplicateExtension = true;
+                    apiCoreMap.set(cluster.id, cluster);
+                    uniqueApiClusters.push(cluster);
+                } else {
+                    // 如果核心聚类没有自己的外延聚类，不保留该核心聚类
+                    console.log(`API内部去重：核心聚类 "${cluster.data.name}" 没有自己的外延聚类，被外延聚类替代`);
+                }
+            } else {
+                // 如果核心聚类不与任何外延聚类重复，正常添加
+                apiCoreMap.set(cluster.id, cluster);
+                apiElementsMap.set(elementsKey, cluster.id);
+                uniqueApiClusters.push(cluster);
             }
         }
     });
@@ -888,6 +915,36 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
             // 在核心节点数据中添加扩展节点引用
             apiCluster.data.extensions = extensions.map(ext => ext.data);
             apiCluster.data.extensionCount = extensions.length;
+            
+            // 如果此核心聚类被标记为与外延聚类重复，添加特殊标记
+            if (apiCluster.hasDuplicateExtension) {
+                apiCluster.data.hasDuplicateExtension = true;
+                console.log(`标记核心聚类 "${apiCluster.data.name}" 为与外延聚类重复`);
+            }
+        } else if (apiCluster.parentId) {
+            // 检查父核心聚类是否存在于最终结果中
+            const parentExists = uniqueApiClusters.some(c => 
+                !c.parentId && c.id === apiCluster.parentId && !filteredApiIds.has(c.id)
+            );
+            
+            // 如果父核心聚类不存在（可能因重复被过滤掉），这个外延聚类应该被作为独立聚类添加
+            if (!parentExists) {
+                // 创建一个独立的聚类节点
+                const standaloneCluster = {
+                    id: `standalone_${apiCluster.id}`,
+                    name: `Standalone ${apiCluster.data.name}`,
+                    type: 'core', // 将其视为核心节点
+                    originalNodes: [...apiCluster.data.originalNodes],
+                    dimensions: apiCluster.data.dimensions || [],
+                    extensionCount: 0,
+                    extensions: [],
+                    value: 1,
+                    isStandaloneExtension: true // 标记为独立的外延聚类
+                };
+                
+                console.log(`添加独立外延聚类: "${standaloneCluster.name}" (原父聚类不存在)`);
+                processedNodes.push(standaloneCluster);
+            }
         }
     });
     

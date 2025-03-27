@@ -717,42 +717,104 @@ const globalClickHandler = (event) => {
       }
 
       // 执行复制操作
-      navigator.clipboard.writeText(finalTextToCopy).then(() => {
-        // 更新到 store
-        if (valueType) {
-          store.dispatch('setCopiedValue', {
-            value: textToCopy,
-            type: valueType,
-            featureName: featureName
+      if (navigator && navigator.clipboard) {
+        navigator.clipboard.writeText(finalTextToCopy).then(() => {
+          // 更新到 store
+          if (valueType) {
+            store.dispatch('setCopiedValue', {
+              value: textToCopy,
+              type: valueType,
+              featureName: featureName
+            });
+          }
+          
+          // 显示复制成功提示
+          copyTooltip.value = {
+            visible: true,
+            text: `已复制: ${finalTextToCopy}`,
+            x: event.clientX,
+            y: event.clientY
+          };
+
+          // 1.5秒后隐藏提示
+          setTimeout(() => {
+            copyTooltip.value.visible = false;
+          }, 1500);
+
+          ElMessage({
+            message: '复制成功',
+            type: 'success',
+            duration: 1500
+          });
+        }).catch(err => {
+          console.error('复制失败:', err);
+          ElMessage({
+            message: '复制失败',
+            type: 'error',
+            duration: 1500
+          });
+        });
+      } else {
+        // 备用复制方法
+        try {
+          // 创建临时文本区域
+          const textArea = document.createElement('textarea');
+          textArea.value = finalTextToCopy;
+          
+          // 确保文本区域在屏幕外
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          textArea.style.top = '-999999px';
+          document.body.appendChild(textArea);
+          
+          // 选择并复制文本
+          textArea.focus();
+          textArea.select();
+          const successful = document.execCommand('copy');
+          
+          // 移除临时元素
+          document.body.removeChild(textArea);
+          
+          if (successful) {
+            // 更新到 store
+            if (valueType) {
+              store.dispatch('setCopiedValue', {
+                value: textToCopy,
+                type: valueType,
+                featureName: featureName
+              });
+            }
+            
+            // 显示复制成功提示
+            copyTooltip.value = {
+              visible: true,
+              text: `已复制: ${finalTextToCopy}`,
+              x: event.clientX,
+              y: event.clientY
+            };
+
+            // 1.5秒后隐藏提示
+            setTimeout(() => {
+              copyTooltip.value.visible = false;
+            }, 1500);
+
+            ElMessage({
+              message: '复制成功',
+              type: 'success',
+              duration: 1500
+            });
+          } else {
+            throw new Error('复制操作失败');
+          }
+        } catch (err) {
+          console.error('复制失败:', err);
+          ElMessage({
+            message: '复制失败',
+            type: 'error',
+            duration: 1500
           });
         }
-        
-        // 显示复制成功提示
-        copyTooltip.value = {
-          visible: true,
-          text: `已复制: ${finalTextToCopy}`,
-          x: event.clientX,
-          y: event.clientY
-        };
-
-        // 1.5秒后隐藏提示
-        setTimeout(() => {
-          copyTooltip.value.visible = false;
-        }, 1500);
-
-        ElMessage({
-          message: '复制成功',
-          type: 'success',
-          duration: 1500
-        });
-      }).catch(err => {
-        console.error('复制失败:', err);
-        ElMessage({
-          message: '复制失败',
-          type: 'error',
-          duration: 1500
-        });
-      });
+      }
     }
   }
 };
