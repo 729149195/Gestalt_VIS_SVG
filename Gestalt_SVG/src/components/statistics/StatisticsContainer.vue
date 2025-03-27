@@ -31,7 +31,11 @@
       <div class="loading-spinner"></div>
       <div class="loading-text">Data loading...</div>
     </div>
-    <div v-else class="statistics-cards" :class="{'seven-items': hasSevenItems}">
+    <div v-else class="statistics-cards" :class="{
+      'seven-items': hasSevenItems,
+      'eight-items': hasEightItems,
+      'nine-items': hasNineItems
+    }">
       <template v-for="(component, index) in sortedComponents" :key="index">
         <v-card v-if="component.hasData" class="position-card">
           <!-- <div class="variance-info">Diversity  {{ component.variance.toFixed(2) }}</div> -->
@@ -98,6 +102,22 @@ const allComponents = [
     component: markRaw(PositionStatistics), 
     props: { position: 'left', title: 'left' },
     dataUrl: 'http://127.0.0.1:5000/left_position',
+    hasData: false,
+    variance: 0
+  },
+  { 
+    id: 'width-position', 
+    component: markRaw(PositionStatistics), 
+    props: { position: 'width', title: 'width' },
+    dataUrl: 'http://127.0.0.1:5000/width_position',
+    hasData: false,
+    variance: 0
+  },
+  { 
+    id: 'height-position', 
+    component: markRaw(PositionStatistics), 
+    props: { position: 'height', title: 'height' },
+    dataUrl: 'http://127.0.0.1:5000/height_position',
     hasData: false,
     variance: 0
   },
@@ -305,6 +325,16 @@ watch(() => props.componentKey, async () => {
 const hasSevenItems = computed(() => {
   return sortedComponents.value.length === 7;
 });
+
+// 计算是否有8个组件
+const hasEightItems = computed(() => {
+  return sortedComponents.value.length === 8;
+});
+
+// 计算是否有9个组件
+const hasNineItems = computed(() => {
+  return sortedComponents.value.length === 9;
+});
 </script>
 
 <style scoped>
@@ -406,6 +436,20 @@ const hasSevenItems = computed(() => {
 }
 
 .statistics-cards.seven-items .position-card:nth-child(n+5) {
+  flex: 0 0 calc(33.33% - 16px);
+}
+
+/* 当有8个组件时的布局 */
+.statistics-cards.eight-items .position-card {
+  flex: 0 0 calc(25% - 16px);
+}
+
+.statistics-cards.eight-items .position-card:nth-child(n+5) {
+  flex: 0 0 calc(25% - 16px);
+}
+
+/* 当有9个组件时的布局 */
+.statistics-cards.nine-items .position-card {
   flex: 0 0 calc(33.33% - 16px);
 }
 

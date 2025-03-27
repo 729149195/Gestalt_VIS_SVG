@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import * as d3 from 'd3';
 import { useStore } from 'vuex';
 
@@ -16,7 +16,7 @@ const props = defineProps({
     position: {
         type: String,
         required: true,
-        validator: (value) => ['top', 'bottom', 'left', 'right'].includes(value)
+        validator: (value) => ['top', 'bottom', 'left', 'right', 'width', 'height'].includes(value)
     },
     title: {
         type: String,
@@ -44,13 +44,25 @@ const calculateSelectedRatio = (tags, selectedNodes) => {
     return intersection.length / tags.length;
 };
 
-const eleURL = `http://127.0.0.1:5000/${props.position}_position`;
+// 计算API端点URL
+const eleURL = computed(() => {
+    // 根据不同的position属性返回不同的URL
+    const positionMap = {
+        'top': 'top_position',
+        'bottom': 'bottom_position',
+        'left': 'left_position',
+        'right': 'right_position',
+        'width': 'width_position',
+        'height': 'height_position'
+    };
+    return `http://127.0.0.1:5000/${positionMap[props.position]}`;
+});
 
 onMounted(async () => {
     if (!chartContainer.value) return;
 
     try {
-        const response = await fetch(eleURL);
+        const response = await fetch(eleURL.value);
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }

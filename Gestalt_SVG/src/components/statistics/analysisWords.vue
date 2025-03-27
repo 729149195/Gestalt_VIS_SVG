@@ -1511,7 +1511,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               
               // 生成HTML元素，初始显示"wait..."
               analysis += `
-                <div class="feature-item">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
                     <span class="feature-tag all-elements-tag">
                         <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
                         <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
@@ -1538,6 +1538,31 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     const predSalienceElement = document.getElementById(featureUniqueId);
                     if (predSalienceElement) {
                       predSalienceElement.textContent = formattedSalience;
+                      
+                      // 更新父元素的data-salience属性
+                      const featureItem = predSalienceElement.closest('.feature-item');
+                      if (featureItem) {
+                        featureItem.setAttribute('data-salience', salience);
+                        
+                        // 获取该特征所在的容器
+                        const container = featureItem.closest('.suggestions-content-cell');
+                        if (container) {
+                          // 获取容器中所有feature-item
+                          const items = Array.from(container.querySelectorAll('.feature-item'));
+                          
+                          // 按照salience属性从高到低对items进行排序
+                          items.sort((a, b) => {
+                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                            return salienceB - salienceA;
+                          });
+                          
+                          // 重新添加排序后的元素
+                          items.forEach(item => {
+                            container.appendChild(item);
+                          });
+                        }
+                      }
                     }
                   })
                   .catch(error => {
@@ -1557,7 +1582,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               
               // 生成HTML元素，初始显示"wait..."
               analysis += `
-                <div class="feature-item">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
                     <span class="feature-tag all-elements-tag">
                         <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
                         <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
@@ -1584,6 +1609,31 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     const predSalienceElement = document.getElementById(featureUniqueId);
                     if (predSalienceElement) {
                       predSalienceElement.textContent = formattedSalience;
+                      
+                      // 更新父元素的data-salience属性
+                      const featureItem = predSalienceElement.closest('.feature-item');
+                      if (featureItem) {
+                        featureItem.setAttribute('data-salience', salience);
+                        
+                        // 获取该特征所在的容器
+                        const container = featureItem.closest('.suggestions-content-cell');
+                        if (container) {
+                          // 获取容器中所有feature-item
+                          const items = Array.from(container.querySelectorAll('.feature-item'));
+                          
+                          // 按照salience属性从高到低对items进行排序
+                          items.sort((a, b) => {
+                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                            return salienceB - salienceA;
+                          });
+                          
+                          // 重新添加排序后的元素
+                          items.forEach(item => {
+                            container.appendChild(item);
+                          });
+                        }
+                      }
                     }
                   })
                   .catch(error => {
@@ -1595,7 +1645,6 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     }
                   });
               }, 10); // 短暂延迟确保DOM已更新
-              
             } else if (isPositionOrBboxFeature(featureKey)) {
               // 位置或bbox特征，显示推荐值
               const unit = isWidthFeature(featureKey) ? 'px' : '';
@@ -1603,7 +1652,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               
               // 生成HTML元素，初始显示"wait..."
               analysis += `
-                <div class="feature-item">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
                     <span class="feature-tag all-elements-tag">
                         <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
                         <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
@@ -1632,6 +1681,31 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     const predSalienceElement = document.getElementById(featureUniqueId);
                     if (predSalienceElement) {
                       predSalienceElement.textContent = formattedSalience;
+                      
+                      // 更新父元素的data-salience属性
+                      const featureItem = predSalienceElement.closest('.feature-item');
+                      if (featureItem) {
+                        featureItem.setAttribute('data-salience', salience);
+                        
+                        // 获取该特征所在的容器
+                        const container = featureItem.closest('.suggestions-content-cell');
+                        if (container) {
+                          // 获取容器中所有feature-item
+                          const items = Array.from(container.querySelectorAll('.feature-item'));
+                          
+                          // 按照salience属性从高到低对items进行排序
+                          items.sort((a, b) => {
+                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                            return salienceB - salienceA;
+                          });
+                          
+                          // 重新添加排序后的元素
+                          items.forEach(item => {
+                            container.appendChild(item);
+                          });
+                        }
+                      }
                     }
                   })
                   .catch(error => {
@@ -1648,7 +1722,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
               analysis += `
-                <div class="feature-item">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="${feature.predictedSalience}">
                     <span class="feature-tag all-elements-tag">
                         <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
                         <span class="predicted-salience">${feature.formattedSalience}</span>
@@ -1818,7 +1892,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               
               // 生成HTML元素，初始显示"wait..."
               analysis += `
-                <div class="feature-item">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
                     <span class="feature-tag all-elements-tag">
                         <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
                         <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
@@ -1845,6 +1919,31 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     const predSalienceElement = document.getElementById(featureUniqueId);
                     if (predSalienceElement) {
                       predSalienceElement.textContent = formattedSalience;
+                      
+                      // 更新父元素的data-salience属性
+                      const featureItem = predSalienceElement.closest('.feature-item');
+                      if (featureItem) {
+                        featureItem.setAttribute('data-salience', salience);
+                        
+                        // 获取该特征所在的容器
+                        const container = featureItem.closest('.suggestions-content-cell');
+                        if (container) {
+                          // 获取容器中所有feature-item
+                          const items = Array.from(container.querySelectorAll('.feature-item'));
+                          
+                          // 按照salience属性从高到低对items进行排序
+                          items.sort((a, b) => {
+                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                            return salienceB - salienceA;
+                          });
+                          
+                          // 重新添加排序后的元素
+                          items.forEach(item => {
+                            container.appendChild(item);
+                          });
+                        }
+                      }
                     }
                   })
                   .catch(error => {
@@ -1864,7 +1963,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               
               // 生成HTML元素，初始显示"wait..."
               analysis += `
-                <div class="feature-item">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
                     <span class="feature-tag all-elements-tag">
                         <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
                         <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
@@ -1891,6 +1990,31 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     const predSalienceElement = document.getElementById(featureUniqueId);
                     if (predSalienceElement) {
                       predSalienceElement.textContent = formattedSalience;
+                      
+                      // 更新父元素的data-salience属性
+                      const featureItem = predSalienceElement.closest('.feature-item');
+                      if (featureItem) {
+                        featureItem.setAttribute('data-salience', salience);
+                        
+                        // 获取该特征所在的容器
+                        const container = featureItem.closest('.suggestions-content-cell');
+                        if (container) {
+                          // 获取容器中所有feature-item
+                          const items = Array.from(container.querySelectorAll('.feature-item'));
+                          
+                          // 按照salience属性从高到低对items进行排序
+                          items.sort((a, b) => {
+                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                            return salienceB - salienceA;
+                          });
+                          
+                          // 重新添加排序后的元素
+                          items.forEach(item => {
+                            container.appendChild(item);
+                          });
+                        }
+                      }
                     }
                   })
                   .catch(error => {
@@ -1902,7 +2026,6 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     }
                   });
               }, 10); // 短暂延迟确保DOM已更新
-              
             } else if (isPositionOrBboxFeature(featureKey)) {
               // 位置或bbox特征，显示推荐值
               const unit = isWidthFeature(featureKey) ? 'px' : '';
@@ -1910,7 +2033,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               
               // 生成HTML元素，初始显示"wait..."
               analysis += `
-                <div class="feature-item">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
                     <span class="feature-tag all-elements-tag">
                         <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
                         <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
@@ -1939,6 +2062,31 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     const predSalienceElement = document.getElementById(featureUniqueId);
                     if (predSalienceElement) {
                       predSalienceElement.textContent = formattedSalience;
+                      
+                      // 更新父元素的data-salience属性
+                      const featureItem = predSalienceElement.closest('.feature-item');
+                      if (featureItem) {
+                        featureItem.setAttribute('data-salience', salience);
+                        
+                        // 获取该特征所在的容器
+                        const container = featureItem.closest('.suggestions-content-cell');
+                        if (container) {
+                          // 获取容器中所有feature-item
+                          const items = Array.from(container.querySelectorAll('.feature-item'));
+                          
+                          // 按照salience属性从高到低对items进行排序
+                          items.sort((a, b) => {
+                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                            return salienceB - salienceA;
+                          });
+                          
+                          // 重新添加排序后的元素
+                          items.forEach(item => {
+                            container.appendChild(item);
+                          });
+                        }
+                      }
                     }
                   })
                   .catch(error => {
@@ -1955,7 +2103,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
               analysis += `
-                <div class="feature-item">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="${feature.predictedSalience}">
                     <span class="feature-tag all-elements-tag">
                         <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
                         <span class="predicted-salience">${feature.formattedSalience}</span>

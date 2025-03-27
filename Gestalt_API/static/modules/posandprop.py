@@ -15,6 +15,9 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
     bottom_data = defaultdict(lambda: {"tags": [], "total": defaultdict(int)})
     left_data = defaultdict(lambda: {"tags": [], "total": defaultdict(int)})
     right_data = defaultdict(lambda: {"tags": [], "total": defaultdict(int)})
+    # 添加width和height数据结构
+    width_data = defaultdict(lambda: {"tags": [], "total": defaultdict(int)})
+    height_data = defaultdict(lambda: {"tags": [], "total": defaultdict(int)})
     
     # 获取过滤后SVG中的所有元素ID
     filtered_element_ids = set()
@@ -62,6 +65,9 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
     all_bottoms = [item['features'][11] for item in filtered_init_data]
     all_lefts = [item['features'][12] for item in filtered_init_data]
     all_rights = [item['features'][13] for item in filtered_init_data]
+    # 获取width和height的值范围
+    all_widths = [item['features'][16] for item in filtered_init_data]
+    all_heights = [item['features'][17] for item in filtered_init_data]
     
     # 确保有足够的数据点
     if len(all_tops) < 2:
@@ -71,12 +77,17 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
         all_bottoms = [min_val, max_val]
         all_lefts = [min_val, max_val]
         all_rights = [min_val, max_val]
+        all_widths = [min_val, max_val]
+        all_heights = [min_val, max_val]
     
     # 计算区间范围
     top_intervals = generate_intervals(min(all_tops), max(all_tops), 8)
     bottom_intervals = generate_intervals(min(all_bottoms), max(all_bottoms), 7)
     left_intervals = generate_intervals(min(all_lefts), max(all_lefts), 8)
     right_intervals = generate_intervals(min(all_rights), max(all_rights), 8)
+    # 计算width和height的区间范围
+    width_intervals = generate_intervals(min(all_widths), max(all_widths), 8)
+    height_intervals = generate_intervals(min(all_heights), max(all_heights), 8)
     
     # 处理每个元素
     for item in filtered_init_data:
@@ -101,6 +112,9 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
         process_position(item, tag_name, bottom_intervals, bottom_data, 11)
         process_position(item, tag_name, left_intervals, left_data, 12)
         process_position(item, tag_name, right_intervals, right_data, 13)
+        # 处理width和height数据
+        process_position(item, tag_name, width_intervals, width_data, 16)
+        process_position(item, tag_name, height_intervals, height_data, 17)
     
     # 处理颜色数据
     fill_colors = defaultdict(int)
@@ -131,6 +145,8 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
         'Bottom_data.json': dict(bottom_data),
         'Left_data.json': dict(left_data),
         'Right_data.json': dict(right_data),
+        'Width_data.json': dict(width_data),  # 添加width数据
+        'Height_data.json': dict(height_data),  # 添加height数据
         'fill_num.json': dict(fill_colors),
         'stroke_num.json': dict(stroke_colors),
         'attr_num.json': attr_data,

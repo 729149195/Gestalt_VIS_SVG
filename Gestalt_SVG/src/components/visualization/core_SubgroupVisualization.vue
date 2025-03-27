@@ -583,7 +583,7 @@ function createThumbnail(nodeData) {
 function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGroups = new Map()) {
     const processedNodes = [];
     
-    // 首先收集所有API聚类的元素ID集合，用于后续去重
+    // 首先收集所有API聚类的元素ID集合
     const apiClusters = [];
     
     if (coreData && coreData.core_clusters) {
@@ -614,7 +614,7 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
                             id: `ext_${clusterIndex}_${extIndex}`,
                             elements: new Set(extension.nodes),
                             parentId: `core_${clusterIndex}`,
-                            coreId: clusterIndex, // 添加核心聚类ID，用于后续去重处理
+                            coreId: clusterIndex,
                             data: {
                                 id: `ext_${clusterIndex}_${extIndex}`,
                                 name: `Extension ${clusterIndex + 1}.${extIndex + 1}`,
@@ -666,76 +666,93 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
         });
     } else if (Array.isArray(revelioGoodGroups) && revelioGoodGroups.length > 0) {
         // 处理数组格式的reveliogood元素
-        // 将数组格式也改为不创建包含所有元素的大组
         console.log(`跳过数组格式的所有元素，不创建All组，元素数量: ${revelioGoodGroups.length}`);
-        // 不再创建包含所有元素的全局组
     }
     
-    // 检查各个组合是否应该被过滤掉（基于revelioBad）
-    // 记录需要过滤的API聚类和revelioGood聚类
-    const filteredApiClusters = new Set();
-    const filteredRevelioGoodClusters = new Set();
+    // ==== 实现新的过滤逻辑 ====
     
-    // 处理revelioBad元素组，检查是否有组合中的所有元素都共享同一个revelioBad_n
-    if (revelioBadGroups instanceof Map && revelioBadGroups.size > 0) {
-        console.log(`共发现 ${revelioBadGroups.size} 个RevelioBAD组，将检查是否需要过滤元素组合`);
-        
-        // 首先处理API聚类
-        apiClusters.forEach(cluster => {
-            const elementIds = [...cluster.elements].map(id => id.split('/').pop()).filter(Boolean);
+    // 1. 在RevelioGood聚类内部进行去重
+    console.log("第1步：RevelioGood聚类内部去重");
+    const uniqueRevelioGoodClusters = [];
+    const revelioGoodElementsMap = new Map(); // 用于存储已处理的元素集合
+    
+    revelioGoodClusters.forEach(cluster => {
+        const elementsKey = [...cluster.elements].sort().join(',');
+        if (!revelioGoodElementsMap.has(elementsKey)) {
+            // 如果这个元素集合不存在，添加到去重后的结果中
+            revelioGoodElementsMap.set(elementsKey, cluster);
+            uniqueRevelioGoodClusters.push(cluster);
+        } else {
+            // 如果已存在相同元素集合的聚类，选择保留的聚类
+            const existingCluster = revelioGoodElementsMap.get(elementsKey);
             
-            if (elementIds.length === 0) return;
-            
-            // 检查API聚类中的元素是否都包含相同的revelioBad_n
-            revelioBadGroups.forEach((badElementIds, badGroupKey) => {
-                // 跳过基础组
-                if (badGroupKey === 'reveliobad_basic') return;
-                
-                // 检查当前revelioBad_n组中的元素是否包含所有API聚类中的元素
-                const allElementsHaveSameBad = elementIds.every(id => 
-                    badElementIds.includes(id)
-                );
-                
-                if (allElementsHaveSameBad && elementIds.length > 0) {
-                    // 如果所有元素都共享相同的revelioBad_n，标记该聚类为需要过滤
-                    filteredApiClusters.add(cluster.id);
-                    console.log(`过滤API聚类: "${cluster.data?.name || cluster.id}" 因为其所有元素都共享revelioBad标记 "${badGroupKey}"`);
+            // 优先级：reveliogood_n > reveliogood_basic > 其他
+            if (cluster.groupKey.match(/^reveliogood_\d+$/) && 
+                (existingCluster.groupKey === 'reveliogood_basic' || 
+                 !existingCluster.groupKey.match(/^reveliogood_\d+$/))) {
+                // 如果当前是 reveliogood_n 并且现有的不是，替换
+                revelioGoodElementsMap.set(elementsKey, cluster);
+                // 找到并替换 uniqueRevelioGoodClusters 中的现有聚类
+                const index = uniqueRevelioGoodClusters.findIndex(c => c.id === existingCluster.id);
+                if (index !== -1) {
+                    uniqueRevelioGoodClusters[index] = cluster;
                 }
-            });
-        });
-        
-        // 然后处理revelioGood聚类
-        revelioGoodClusters.forEach(revelioCluster => {
-            const elementIds = [...revelioCluster.elements];
+                console.log(`RevelioGood内部去重：替换 "${existingCluster.displayName}" 为优先级更高的 "${cluster.displayName}"`);
+            } else {
+                console.log(`RevelioGood内部去重：跳过重复聚类 "${cluster.displayName}"，保留已存在的 "${existingCluster.displayName}"`);
+            }
+        }
+    });
+    
+    console.log(`RevelioGood内部去重：原有 ${revelioGoodClusters.length} 个聚类，去重后 ${uniqueRevelioGoodClusters.length} 个聚类`);
+    
+    // 2. 在API聚类内部去重（外延聚类之间去重，但与所属的核心聚类不去重）
+    console.log("第2步：API聚类内部去重");
+    const uniqueApiClusters = [];
+    const apiCoreMap = new Map();  // 存储核心聚类
+    const apiExtensionMap = new Map();  // 存储所有外延聚类的元素集合
+    
+    // 首先收集所有核心聚类
+    apiClusters.forEach(cluster => {
+        if (!cluster.parentId) {
+            // 这是核心聚类
+            uniqueApiClusters.push(cluster);
+            apiCoreMap.set(cluster.id, cluster);
+        }
+    });
+    
+    // 然后处理外延聚类
+    apiClusters.forEach(cluster => {
+        if (cluster.parentId) {
+            // 这是外延聚类
+            const elementsKey = [...cluster.elements].sort().join(',');
             
-            if (elementIds.length === 0) return;
-            
-            // 检查revelioGood聚类中的元素是否都包含相同的revelioBad_n
-            revelioBadGroups.forEach((badElementIds, badGroupKey) => {
-                // 跳过基础组
-                if (badGroupKey === 'reveliobad_basic') return;
+            if (!apiExtensionMap.has(elementsKey)) {
+                // 如果这个元素集合尚未处理，添加到去重后的结果
+                apiExtensionMap.set(elementsKey, cluster);
+                uniqueApiClusters.push(cluster);
+            } else {
+                // 如果已存在相同元素集合的外延聚类
+                const existingCluster = apiExtensionMap.get(elementsKey);
                 
-                // 检查当前revelioBad_n组中的元素是否包含所有revelioGood聚类中的元素
-                const allElementsHaveSameBad = elementIds.every(id => 
-                    badElementIds.includes(id)
-                );
-                
-                if (allElementsHaveSameBad && elementIds.length > 0) {
-                    // 如果所有元素都共享相同的revelioBad_n，标记该聚类为需要过滤
-                    filteredRevelioGoodClusters.add(revelioCluster.id);
-                    console.log(`过滤RevelioGood聚类: "${revelioCluster.displayName}" 因为其所有元素都共享revelioBad标记 "${badGroupKey}"`);
+                // 两个外延聚类属于同一个核心聚类时，只保留一个
+                if (existingCluster.coreId === cluster.coreId) {
+                    console.log(`API内部去重：跳过属于同一核心聚类的重复外延聚类 "${cluster.data.name}"`);
+                } else {
+                    console.log(`API内部去重：发现不同核心聚类的重复外延聚类 "${cluster.data.name}" 和 "${existingCluster.data.name}"，保留第一个`);
                 }
-            });
-        });
-        
-        console.log(`共有 ${filteredApiClusters.size} 个API聚类和 ${filteredRevelioGoodClusters.size} 个RevelioGood聚类将被过滤`);
-    }
+            }
+        }
+    });
     
-    // 检查reveliogood组与API聚类的重复情况
-    const duplicateRevelioGoodClusters = new Set();
+    console.log(`API内部去重：原有 ${apiClusters.length} 个聚类，去重后 ${uniqueApiClusters.length} 个聚类`);
     
-    // 处理API聚类元素ID，将长格式(svg/xxx/xxx/id)转为短格式(id)
-    const processedApiClusters = apiClusters.map(cluster => {
+    // 3. 在已经内部去重后的reveliogood聚类和API聚类之间进行去重
+    console.log("第3步：RevelioGood聚类和API聚类之间去重");
+    const duplicateRevelioGoodIds = new Set();
+    
+    // 预处理API聚类的元素ID，将长格式(svg/xxx/xxx/id)转为短格式(id)
+    const processedApiClusters = uniqueApiClusters.map(cluster => {
         const shortElements = new Set();
         cluster.elements.forEach(id => {
             // 提取最后一个斜杠后面的部分作为简短ID
@@ -751,49 +768,20 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
         };
     });
     
-    // API聚类外延的去重处理
-    // 创建一个Map用于存储已处理的外延聚类的元素集合，键为元素集合的字符串表示
-    const processedExtensionSets = new Map();
-    const duplicateExtensions = new Set();
-    
-    // 遍历所有外延聚类
-    processedApiClusters.forEach(cluster => {
-        // 只处理外延聚类
-        if (!cluster.parentId) return;
-        
-        // 将元素集合转换为排序后的字符串进行比较
-        const elementsKey = [...cluster.shortElements].sort().join(',');
-        
-        if (processedExtensionSets.has(elementsKey)) {
-            // 如果已存在相同元素集合的外延聚类
-            const existingCluster = processedExtensionSets.get(elementsKey);
-            
-            // 只有当两个外延聚类不属于同一个核心聚类时，才标记为重复
-            if (existingCluster.coreId !== cluster.coreId) {
-                duplicateExtensions.add(cluster.id);
-                console.log(`找到重复的外延聚类: "${cluster.id}" 与 "${existingCluster.id}", 它们分别属于不同的核心聚类，将只保留一个`);
-            }
-        } else {
-            // 记录这个元素集合
-            processedExtensionSets.set(elementsKey, cluster);
-        }
-    });
-    
-    // 调试信息：输出示例ID格式
-    if (apiClusters.length > 0 && apiClusters[0].elements.size > 0) {
-        const firstApiElement = [...apiClusters[0].elements][0];
+    // 输出示例ID格式供调试
+    if (processedApiClusters.length > 0 && processedApiClusters[0].elements.size > 0) {
+        const firstApiElement = [...processedApiClusters[0].elements][0];
         const firstShortApiElement = [...processedApiClusters[0].shortElements][0];
         console.log(`API聚类元素ID示例: 原始格式="${firstApiElement}", 处理后="${firstShortApiElement}"`);
     }
     
-    if (revelioGoodClusters.length > 0 && revelioGoodClusters[0].elements.size > 0) {
-        const firstRevelioElement = [...revelioGoodClusters[0].elements][0];
+    if (uniqueRevelioGoodClusters.length > 0 && uniqueRevelioGoodClusters[0].elements.size > 0) {
+        const firstRevelioElement = [...uniqueRevelioGoodClusters[0].elements][0];
         console.log(`RevelioGood聚类元素ID示例: "${firstRevelioElement}"`);
     }
     
-    // 对每个reveliogood组
-    revelioGoodClusters.forEach(revelioCluster => {
-        // 检查与每个API聚类的重复
+    // 比较RevelioGood聚类和API聚类
+    uniqueRevelioGoodClusters.forEach(revelioCluster => {
         processedApiClusters.forEach(apiCluster => {
             // 首先检查元素数量是否相同，这是完全重复的必要条件
             if (apiCluster.shortElements.size === revelioCluster.elements.size) {
@@ -804,8 +792,8 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
                 
                 if (allElementsMatch) {
                     // 如果元素完全相同，标记该reveliogood组为重复
-                    duplicateRevelioGoodClusters.add(revelioCluster.id);
-                    console.log(`重复聚类: RevelioGood聚类 "${revelioCluster.displayName}" 与API聚类 "${apiCluster.data?.name || apiCluster.id}" 重复，将只保留API聚类`);
+                    duplicateRevelioGoodIds.add(revelioCluster.id);
+                    console.log(`跨类型去重：RevelioGood聚类 "${revelioCluster.displayName}" 与API聚类 "${apiCluster.data?.name || apiCluster.id}" 重复，将只保留API聚类`);
                     
                     // 输出部分匹配成功的元素ID示例，每个聚类最多显示3个
                     const revelioSample = [...revelioCluster.elements].slice(0, 3);
@@ -816,78 +804,104 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
         });
     });
     
-    console.log(`发现 ${duplicateRevelioGoodClusters.size} 个重复的RevelioGood聚类将被跳过，只保留API聚类`);
-    console.log(`发现 ${duplicateExtensions.size} 个重复的API外延聚类将被跳过，只保留一个实例`);
+    console.log(`跨类型去重：发现 ${duplicateRevelioGoodIds.size} 个重复的RevelioGood聚类将被跳过，只保留API聚类`);
     
-    // 先添加所有API核心聚类及其扩展（API聚类始终保留，不受重复检查影响）
-    const coreApiClusters = apiClusters.filter(cluster => 
-        cluster.type !== 'extension' && !cluster.parentId && !filteredApiClusters.has(cluster.id)
-    );
+    // 4. 移除reveliobad类
+    console.log("第4步：移除RevelioBAD类");
+    const filteredApiIds = new Set();
+    const filteredRevelioGoodIds = new Set();
     
-    coreApiClusters.forEach(apiCluster => {
-        // 添加核心节点
-        processedNodes.push(apiCluster.data);
+    // 处理revelioBad元素组，检查是否有聚类中的所有元素都共享同一个revelioBad_n
+    if (revelioBadGroups instanceof Map && revelioBadGroups.size > 0) {
+        console.log(`共发现 ${revelioBadGroups.size} 个RevelioBAD组，将检查是否需要过滤元素组合`);
         
-        // 添加其扩展节点，但排除重复的外延聚类和被过滤的聚类
-        const extensions = apiClusters.filter(ext => 
-            ext.parentId === apiCluster.id && 
-            !duplicateExtensions.has(ext.id) &&
-            !filteredApiClusters.has(ext.id)
-        );
-        
-        extensions.forEach(ext => {
-            // 找到对应的核心节点并添加扩展
-            const coreNode = processedNodes.find(n => n.id === apiCluster.id);
-            if (coreNode) {
-                coreNode.extensions.push(ext.data);
-            }
+        // 处理API聚类
+        processedApiClusters.forEach(cluster => {
+            const elementIds = [...cluster.shortElements];
+            
+            if (elementIds.length === 0) return;
+            
+            // 检查API聚类中的元素是否都在某个revelioBad_n组中
+            revelioBadGroups.forEach((badElementIds, badGroupKey) => {
+                // 跳过基础组
+                if (badGroupKey === 'reveliobad_basic') return;
+                
+                // 检查当前revelioBad_n组中的元素是否包含所有API聚类中的元素
+                const allElementsHaveSameBad = elementIds.every(id => 
+                    badElementIds.includes(id)
+                );
+                
+                if (allElementsHaveSameBad && elementIds.length > 0) {
+                    // 如果所有元素都共享相同的revelioBad_n，标记该聚类为需要过滤
+                    filteredApiIds.add(cluster.id);
+                    console.log(`过滤API聚类: "${cluster.data?.name || cluster.id}" 因为其所有元素都共享revelioBad标记 "${badGroupKey}"`);
+                }
+            });
         });
-    });
+        
+        // 处理revelioGood聚类
+        uniqueRevelioGoodClusters.forEach(revelioCluster => {
+            const elementIds = [...revelioCluster.elements];
+            
+            if (elementIds.length === 0) return;
+            
+            // 检查revelioGood聚类中的元素是否都在某个revelioBad_n组中
+            revelioBadGroups.forEach((badElementIds, badGroupKey) => {
+                // 跳过基础组
+                if (badGroupKey === 'reveliobad_basic') return;
+                
+                // 检查当前revelioBad_n组中的元素是否包含所有revelioGood聚类中的元素
+                const allElementsHaveSameBad = elementIds.every(id => 
+                    badElementIds.includes(id)
+                );
+                
+                if (allElementsHaveSameBad && elementIds.length > 0) {
+                    // 如果所有元素都共享相同的revelioBad_n，标记该聚类为需要过滤
+                    filteredRevelioGoodIds.add(revelioCluster.id);
+                    console.log(`过滤RevelioGood聚类: "${revelioCluster.displayName}" 因为其所有元素都共享revelioBad标记 "${badGroupKey}"`);
+                }
+            });
+        });
+        
+        console.log(`共有 ${filteredApiIds.size} 个API聚类和 ${filteredRevelioGoodIds.size} 个RevelioGood聚类将被过滤（因为RevelioBAD）`);
+    }
     
-    // 处理每个非重复且未被过滤的reveliogood组
-    let revelioGoodClusterIndex = processedNodes.length;
-    console.log(`已添加 ${processedNodes.length} 个API聚类，开始处理非重复的RevelioGood聚类`);
+    // 5. 最后合并结果并渲染卡片、list overview
+    console.log("第5步：合并最终结果并准备渲染");
     
-    // 创建一个已处理组的跟踪集合，用于reveliogood组的内部去重
-    const processedRevelioGoodKeys = new Map();
-    
-    revelioGoodClusters.forEach(revelioCluster => {
-        // 如果该reveliogood组与API聚类重复或需要被过滤，跳过，不添加到处理结果中
-        if (duplicateRevelioGoodClusters.has(revelioCluster.id) || filteredRevelioGoodClusters.has(revelioCluster.id)) {
-            return; // 跳过重复或被过滤的reveliogood聚类
+    // 添加API聚类（不受RevelioGood重复影响）
+    uniqueApiClusters.forEach(apiCluster => {
+        // 跳过被标记为RevelioBAD的聚类
+        if (filteredApiIds.has(apiCluster.id)) {
+            return;
         }
         
-        // 创建用于比较的字符串表示（用于reveliogood组之间的去重）
-        const setKey = [...revelioCluster.elements].sort().join(',');
-        
-        // 检查这个元素组合是否已经存在于其他reveliogood组中
-        if (processedRevelioGoodKeys.has(setKey)) {
-            // 如果已存在，检查是否需要替换
-            const existingKey = processedRevelioGoodKeys.get(setKey);
-            const existingGroupKey = existingKey.split('_').slice(1).join('_');
+        if (!apiCluster.parentId) {
+            // 添加核心节点
+            processedNodes.push(apiCluster.data);
             
-            // 如果现有组是reveliogood_n格式，并且当前组也是相同格式，跳过
-            if (existingGroupKey.startsWith('revelioGood_') && 
-                revelioCluster.groupKey.startsWith('revelioGood_')) {
-                return;
-            }
+            // 查找该核心聚类的所有扩展节点
+            const extensions = uniqueApiClusters.filter(ext => 
+                ext.parentId === apiCluster.id && !filteredApiIds.has(ext.id)
+            );
             
-            // 如果现有组是基本组，而当前组是reveliogood_n，则替换
-            if ((existingGroupKey === 'revelioGood_all' || existingGroupKey === 'revelioGood_basic') && 
-                 revelioCluster.groupKey.startsWith('revelioGood_')) {
-                // 更新字典，下面会添加当前组
-                processedRevelioGoodKeys.set(setKey, revelioCluster.id);
-            } else {
-                // 其他情况保留现有组
-                return;
-            }
-        } else {
-            // 如果这个元素组合不存在，添加到跟踪集合
-            processedRevelioGoodKeys.set(setKey, revelioCluster.id);
+            // 在核心节点数据中添加扩展节点引用
+            apiCluster.data.extensions = extensions.map(ext => ext.data);
+            apiCluster.data.extensionCount = extensions.length;
+        }
+    });
+    
+    // 添加RevelioGood聚类（跳过与API聚类重复的）
+    let revelioGoodClusterIndex = 0;
+    
+    uniqueRevelioGoodClusters.forEach(revelioCluster => {
+        // 如果聚类被标记为重复或被标记为RevelioBAD，跳过
+        if (duplicateRevelioGoodIds.has(revelioCluster.id) || filteredRevelioGoodIds.has(revelioCluster.id)) {
+            return;
         }
         
         // 创建新的聚类ID
-        const newClusterId = `core_${revelioGoodClusterIndex}`;
+        const newClusterId = `revelioGood_core_${revelioGoodClusterIndex}`;
         
         // 创建一个新的聚类节点
         const newCluster = {
@@ -910,24 +924,21 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
         revelioGoodClusterIndex++;
     });
     
-    console.log(`最终处理结果：共${processedNodes.length}个聚类，其中包含${processedNodes.length - coreApiClusters.length}个非重复的RevelioGood聚类`);
+    console.log(`最终处理结果：共${processedNodes.length}个聚类，其中RevelioGood聚类 ${revelioGoodClusterIndex} 个`);
     
     // 收集最终被渲染的reveliogood节点的ID组，包括所有被额外加分的节点
     const finalRevelioGoodClusters = [];
     
     // 遍历已处理的节点，找出所有带有isRevelioGood标记的节点
-    // 这些节点在calculateAttentionProbability函数中会获得额外的显著性分数
     processedNodes.forEach(node => {
         if (node.isRevelioGood && node.originalNodes && node.originalNodes.length > 0) {
             // 确保不收集全部元素的总组
-            // 只收集特定类型的组，例如reveliogood_1, reveliogood_2等
             const nodeName = node.name || '';
             
             if (nodeName.includes('RevelioGood_') || 
-                // 收集特定标记的普通reveliogood组，但不收集包含所有元素的总组
                 (nodeName.includes('RevelioGood') && !nodeName.includes('All RevelioGood Elements'))) {
                 
-                // 只收集符合条件的reveliogood组
+                // 收集符合条件的reveliogood组
                 finalRevelioGoodClusters.push([...node.originalNodes]);
                 
                 // 额外记录节点信息，便于调试

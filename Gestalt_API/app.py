@@ -650,6 +650,26 @@ def top_position():
             return json_file.read(), 200, {'Content-Type': 'application/json'}
     else:
         return jsonify({'error': 'community_data_mult.json file not found'}), 404
+
+@app.route('/width_position', methods=['GET'])
+def width_position():
+    width_data_path = os.path.join(app.config['DATA_FOLDER'], 'Width_data.json')
+
+    if os.path.exists(width_data_path):
+        with open(width_data_path, 'r', encoding='utf-8') as json_file:
+            return json_file.read(), 200, {'Content-Type': 'application/json'}
+    else:
+        return jsonify({'error': 'Width_data.json file not found'}), 404
+
+@app.route('/height_position', methods=['GET'])
+def height_position():
+    height_data_path = os.path.join(app.config['DATA_FOLDER'], 'Height_data.json')
+
+    if os.path.exists(height_data_path):
+        with open(height_data_path, 'r', encoding='utf-8') as json_file:
+            return json_file.read(), 200, {'Content-Type': 'application/json'}
+    else:
+        return jsonify({'error': 'Height_data.json file not found'}), 404
     
 @app.route('/element_colors', methods=['GET'])
 def element_colors():
