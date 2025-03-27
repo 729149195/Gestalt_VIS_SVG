@@ -1360,7 +1360,57 @@ const calculateVisualSalience = () => {
             // 如果找到匹配，增加显著性分数
             if (isMatch) {
                 console.log('发现与reveliogood_n组完全匹配，增加显著性分数');
-                salienceScore += 0.4;
+                
+                // 检查当前高亮元素集合是否属于reveliogood_X_n类型
+                // 为此，我们需要获取SVG中的class信息
+                if (displaySvgContainer.value) {
+                    const svg = displaySvgContainer.value.querySelector('svg');
+                    if (svg) {
+                        // 获取所有高亮元素的class属性
+                        const classNames = [];
+                        selectedNodeIds.value.forEach(id => {
+                            const element = svg.getElementById(id);
+                            if (element && element.classList) {
+                                classNames.push(element.getAttribute('class') || '');
+                            }
+                        });
+                        
+                        // 检查是否所有元素都共享相同的reveliogood_X_n类
+                        const xTypeRegex = /\breveliogood_X_\d+\b/g;
+                        let isXType = false;
+                        
+                        // 首先从第一个元素中获取所有可能的reveliogood_X_n类
+                        if (classNames.length > 0) {
+                            const matches = classNames[0].match(xTypeRegex);
+                            if (matches && matches.length > 0) {
+                                // 遍历所有匹配的reveliogood_X_n类
+                                for (const xClass of matches) {
+                                    // 检查是否所有元素都包含这个类
+                                    const allHaveClass = classNames.every(className => 
+                                        className.includes(xClass)
+                                    );
+                                    
+                                    if (allHaveClass) {
+                                        isXType = true;
+                                        console.log(`发现所有元素都共享reveliogood_X_n类: ${xClass}, 不增加额外显著性分数`);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 只有非X类型的reveliogood聚类才增加显著性分数
+                        if (!isXType) {
+                            salienceScore += 0.4;
+                        }
+                    } else {
+                        // 如果无法确定是否为X类型，默认添加额外分数
+                        salienceScore += 0.4;
+                    }
+                } else {
+                    // 如果无法确定是否为X类型，默认添加额外分数
+                    salienceScore += 0.4;
+                }
             }
         }
 

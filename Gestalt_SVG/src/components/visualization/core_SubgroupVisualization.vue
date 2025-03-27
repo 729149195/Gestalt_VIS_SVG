@@ -971,7 +971,9 @@ function processGraphData(coreData, revelioGoodGroups = new Map(), revelioBadGro
             extensions: [],
             value: 1,
             // 标记为reveliogood聚类
-            isRevelioGood: true
+            isRevelioGood: true,
+            // 保存原始的groupKey以便识别reveliogood_X_n类型
+            groupKey: revelioCluster.groupKey
         };
         
         // 将新聚类添加到节点列表中
@@ -1595,9 +1597,24 @@ function extractRevelioGoodElements(svgContent) {
             
             // 检查所有reveliogood_n格式的类
             const matches = classAttr.match(/reveliogood_\d+/g);
+            // 检查所有reveliogood_X_n格式的类
+            const matchesX = classAttr.match(/reveliogood_X_\d+/g);
+            
+            // 处理普通的reveliogood_n格式
             if (matches && matches.length > 0) {
                 // 将元素添加到每一个匹配的reveliogood_n组
                 matches.forEach(match => {
+                    if (!revelioGoodGroups.has(match)) {
+                        revelioGoodGroups.set(match, []);
+                    }
+                    revelioGoodGroups.get(match).push(elementId);
+                });
+            }
+            
+            // 处理reveliogood_X_n格式
+            if (matchesX && matchesX.length > 0) {
+                // 将元素添加到每一个匹配的reveliogood_X_n组
+                matchesX.forEach(match => {
                     if (!revelioGoodGroups.has(match)) {
                         revelioGoodGroups.set(match, []);
                     }
@@ -1659,9 +1676,24 @@ function extractSVGElements(svgContent) {
             
             // 检查所有reveliogood_n格式的类
             const matches = classAttr.match(/reveliogood_\d+/g);
+            // 检查所有reveliogood_X_n格式的类
+            const matchesX = classAttr.match(/reveliogood_X_\d+/g);
+            
+            // 处理普通的reveliogood_n格式
             if (matches && matches.length > 0) {
                 // 将元素添加到每一个匹配的reveliogood_n组
                 matches.forEach(match => {
+                    if (!revelioGoodGroups.has(match)) {
+                        revelioGoodGroups.set(match, []);
+                    }
+                    revelioGoodGroups.get(match).push(elementId);
+                });
+            }
+            
+            // 处理reveliogood_X_n格式
+            if (matchesX && matchesX.length > 0) {
+                // 将元素添加到每一个匹配的reveliogood_X_n组
+                matchesX.forEach(match => {
                     if (!revelioGoodGroups.has(match)) {
                         revelioGoodGroups.set(match, []);
                     }
@@ -1684,9 +1716,24 @@ function extractSVGElements(svgContent) {
             
             // 检查所有reveliobad_n格式的类
             const matches = classAttr.match(/reveliobad_\d+/g);
+            // 检查所有reveliobad_X_n格式的类
+            const matchesX = classAttr.match(/reveliobad_X_\d+/g);
+            
+            // 处理普通的reveliobad_n格式
             if (matches && matches.length > 0) {
                 // 将元素添加到每一个匹配的reveliobad_n组
                 matches.forEach(match => {
+                    if (!revelioBadGroups.has(match)) {
+                        revelioBadGroups.set(match, []);
+                    }
+                    revelioBadGroups.get(match).push(elementId);
+                });
+            }
+            
+            // 处理reveliobad_X_n格式
+            if (matchesX && matchesX.length > 0) {
+                // 将元素添加到每一个匹配的reveliobad_X_n组
+                matchesX.forEach(match => {
                     if (!revelioBadGroups.has(match)) {
                         revelioBadGroups.set(match, []);
                     }
@@ -2208,7 +2255,12 @@ const calculateAttentionProbability = (node, returnRawScore = false) => {
         
         // 检查是否是reveliogood聚类，如果是则额外加5分
         if (node.isRevelioGood) {
-            salienceScore += 0.4; // 
+            // 检查是否是reveliogood_X_n类型，如果是则不额外加分
+            if (!node.groupKey || !node.groupKey.startsWith('reveliogood_X_')) {
+                salienceScore += 0.4;
+            } else {
+                console.log(`聚类 "${node.name}" 是reveliogood_X_n类型，不额外加显著性分数`);
+            }
         }
         
         // 获取所有元素的类名信息

@@ -83,16 +83,16 @@
   <circle class="reveliogood_2 reveliogood_6 reveliogood_9" cx="310" cy="450" fill="#40ff40" id="circle_28" r="7" stroke="rgb(0,0,0)" stroke-width="0.1" tag_name="svg/circle_28" />
   <circle class="reveliogood_2 reveliogood_6 reveliogood_9" cx="290" cy="380" fill="#60ff20" id="circle_27" r="10" stroke="rgb(0,0,0)" stroke-width="0.1" tag_name="svg/circle_27" />
   <circle class="reveliogood_2 reveliogood_6 reveliogood_9 reveliobad_3" cx="300" cy="320" fill="#00ff80" id="circle_26" r="8" stroke="rgb(0,0,0)" stroke-width="0.1" tag_name="svg/circle_26" />
-  <circle class="reveliogood_2 reveliogood_6 reveliogood_9" cx="330" cy="270" fill="#00ff80" id="circle_25" r="9" stroke="rgb(0,0,0)" stroke-width="0.1" tag_name="svg/circle_25" />
+  <circle class="reveliogood_2 reveliogood_6 reveliogood_9" cx="330" cy="270" fill="#20ff00" id="circle_25" r="9" stroke="rgb(0,0,0)" stroke-width="0.1" tag_name="svg/circle_25" />
   <circle class="reveliogood_7" cx="240" cy="160" fill="#4040ff" id="circle_24" r="5" tag_name="svg/circle_24" />
   <circle class="reveliogood_7" cx="200" cy="180" fill="#6060ff" id="circle_23" r="4" tag_name="svg/circle_23" />
-  <circle class="reveliogood_7" cx="170" cy="210" fill="#2020ff" id="circle_22" r="6" tag_name="svg/circle_22" />
-  <circle class="reveliogood_7 reveliobad_1" cx="150" cy="250" fill="#4040ff" id="circle_21" r="5" tag_name="svg/circle_21" />
-  <circle class="reveliogood_7 reveliobad_1" cx="140" cy="290" fill="#8080ff" id="circle_20" r="4" tag_name="svg/circle_20" />
-  <circle class="reveliogood_8 reveliobad_1" cx="160" cy="370" fill="#6060ff" id="circle_19" r="6" tag_name="svg/circle_19" />
-  <circle class="reveliogood_8" cx="180" cy="420" fill="#4040ff" id="circle_18" r="5" tag_name="svg/circle_18" />
-  <circle class="reveliogood_8" cx="210" cy="460" fill="#2020ff" id="circle_17" r="4" tag_name="svg/circle_17" />
-  <circle class="reveliogood_8" cx="250" cy="510" fill="#6060ff" id="circle_16" r="6" tag_name="svg/circle_16" />
+  <circle class="reveliogood_7" cx="170" cy="210" fill="#2020ff" id="circle_22" r="6"  tag_name="svg/circle_22" />
+  <circle class="reveliogood_7 reveliobad_1" cx="150" cy="250" fill="#4040ff" id="circle_21" r="5"  tag_name="svg/circle_21" />
+  <circle class="reveliogood_7 reveliobad_1" cx="140" cy="290" fill="#8080ff" id="circle_20" r="4"  tag_name="svg/circle_20" />
+  <circle class="reveliogood_8 reveliobad_1" cx="160" cy="370" fill="#6060ff" id="circle_19" r="6"  tag_name="svg/circle_19" />
+  <circle class="reveliogood_8" cx="180" cy="420" fill="#4040ff" id="circle_18" r="5"  tag_name="svg/circle_18" />
+  <circle class="reveliogood_8" cx="210" cy="460" fill="#2020ff" id="circle_17" r="4"  tag_name="svg/circle_17" />
+  <circle class="reveliogood_8" cx="250" cy="510" fill="#6060ff" id="circle_16" r="6"  tag_name="svg/circle_16" />
   <circle class="reveliogood_5" cx="580" cy="240" fill="#ffcc00" id="circle_15" r="7" tag_name="svg/circle_15" />
   <circle class="reveliogood_5" cx="610" cy="300" fill="#ffdd00" id="circle_14" r="6" tag_name="svg/circle_14" />
   <circle class="reveliogood_5" cx="620" cy="380" fill="#ffee00" id="circle_13" r="5" tag_name="svg/circle_13" />
@@ -119,6 +119,9 @@
   </text>
   <circle cx="620" cy="730" fill="#ffcc00" id="circle" r="6" tag_name="svg/circle" />
   <text fill="#333333" font-family="Arial" font-size="12" id="text_3" tag_name="svg/text_3" x="640" y="734">
+    Other Exoplanets
+  </text>
+  <text fill="#333333" font-family="Arial" font-size="12" id="text_2" tag_name="svg/text_2" x="640" y="834">
     Other Exoplanets
   </text>
   <text fill="#333333" font-family="Arial" font-size="24" font-weight="bold" id="text_1" tag_name="svg/text_1" text-anchor="middle" x="400" y="40">
