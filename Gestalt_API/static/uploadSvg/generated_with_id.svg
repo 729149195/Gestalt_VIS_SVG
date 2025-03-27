@@ -55,7 +55,7 @@
 <text fill="#666666" font-family="Arial" font-size="10" id="text_8" tag_name="svg/text_8" text-anchor="start" x="410" y="100">
     3 AU
   </text>
-<circle cx="400" cy="400" fill="orange" id="circle_48" r="15" tag_name="svg/circle_48">
+<circle class="reveliogood_5 reveliogood_X_2" cx="400" cy="400" fill="orange" id="circle_48" r="15" tag_name="svg/circle_48">
 <animate attributeName="r" dur="4s" id="animate" repeatCount="indefinite" tag_name="svg/circle_48/animate" values="15;17;15"/>
 </circle>
 <circle cx="400" cy="300" fill="#1E90FF" id="circle_47" r="4" stroke-width="1" tag_name="svg/circle_47"/>
@@ -72,22 +72,22 @@
 <circle class="reveliogood reveliobad_1 reveliobad_3" cx="130" cy="450" fill="#ff0000" id="circle_39" r="20" tag_name="svg/circle_39"/>
 <circle class="reveliogood reveliobad_1 reveliobad_3" cx="150" cy="320" fill="#ff3000" id="circle_38" r="19" tag_name="svg/circle_38"/>
 <circle class="reveliogood reveliobad_1 reveliobad_3" cx="230" cy="200" fill="#ff2000" id="circle_37" r="18" tag_name="svg/circle_37"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10 reveliogood_11" cx="350" cy="230" fill="#00ff80" id="circle_36" r="8" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_36"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10 reveliogood_11" cx="440" cy="250" fill="#20ff60" id="circle_35" r="7" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_35"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10 reveliogood_11" cx="480" cy="290" fill="#40ff40" id="circle_34" r="9" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_34"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10 reveliogood_11" cx="520" cy="340" fill="#60ff20" id="circle_33" r="8" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_33"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10 reveliogood_11" cx="515" cy="410" fill="#40ff40" id="circle_32" r="10" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_32"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_3 reveliobad_4 reveliogood_10 reveliogood_11" cx="480" cy="470" fill="#20ff60" id="circle_31" r="7" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_31"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_3 reveliobad_4 reveliogood_10 reveliogood_11" cx="420" cy="510" fill="#00ff80" id="circle_30" r="9" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_30"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10 reveliogood_11" cx="350" cy="490" fill="#20ff60" id="circle_29" r="8" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_29"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10 reveliogood_11" cx="310" cy="450" fill="#40ff40" id="circle_28" r="7" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_28"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10 reveliogood_11" cx="290" cy="380" fill="#60ff20" id="circle_27" r="10" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_27"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_3 reveliobad_4 reveliogood_10 reveliogood_11" cx="300" cy="320" fill="#00ff80" id="circle_26" r="8" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_26"/>
-<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliogood_10 reveliogood_11" cx="330" cy="270" fill="#20ff60" id="circle_25" r="9" stroke="rgb(135, 142, 94)" stroke-width="4.1" tag_name="svg/circle_25"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10" cx="350" cy="230" fill="#00ff80" id="circle_36" r="8" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_36"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10" cx="440" cy="250" fill="#20ff60" id="circle_35" r="7" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_35"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10" cx="480" cy="290" fill="#40ff40" id="circle_34" r="9" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_34"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10" cx="520" cy="340" fill="#60ff20" id="circle_33" r="8" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_33"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10" cx="515" cy="410" fill="#40ff40" id="circle_32" r="10" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_32"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_3 reveliobad_4 reveliogood_10" cx="480" cy="470" fill="#20ff60" id="circle_31" r="7" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_31"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_3 reveliobad_4 reveliogood_10" cx="420" cy="510" fill="#00ff80" id="circle_30" r="9" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_30"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10" cx="350" cy="490" fill="#20ff60" id="circle_29" r="8" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_29"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10" cx="310" cy="450" fill="#40ff40" id="circle_28" r="7" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_28"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_4 reveliogood_10" cx="290" cy="380" fill="#60ff20" id="circle_27" r="10" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_27"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliobad_3 reveliobad_4 reveliogood_10" cx="300" cy="320" fill="#00ff80" id="circle_26" r="8" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_26"/>
+<circle class="reveliogood_2 reveliogood_X_1 reveliogood_9 reveliogood_10" cx="330" cy="270" fill="#20ff60" id="circle_25" r="9" stroke="rgb(0,0,0)" stroke-width="4.1" tag_name="svg/circle_25"/>
 <circle class="reveliogood_7" cx="240" cy="160" fill="#4040ff" id="circle_24" r="5" tag_name="svg/circle_24"/>
 <circle class="reveliogood_7" cx="200" cy="180" fill="#6060ff" id="circle_23" r="4" tag_name="svg/circle_23"/>
 <circle class="reveliogood_7" cx="170" cy="210" fill="#2020ff" id="circle_22" r="6" tag_name="svg/circle_22"/>
-<circle class="reveliogood_7 reveliobad_1" cx="150" cy="250" fill="#4040ff" id="circle_21" r="5" tag_name="svg/circle_21"/>
+<circle class="reveliogood_7 reveliobad_1" cx="150" cy="250" fill="#8080ff" id="circle_21" r="5" tag_name="svg/circle_21"/>
 <circle class="reveliogood_7 reveliobad_1" cx="140" cy="290" fill="#8080ff" id="circle_20" r="4" tag_name="svg/circle_20"/>
 <circle class="reveliogood_8 reveliobad_1" cx="160" cy="370" fill="#6060ff" id="circle_19" r="6" tag_name="svg/circle_19"/>
 <circle class="reveliogood_8" cx="180" cy="420" fill="#4040ff" id="circle_18" r="5" tag_name="svg/circle_18"/>

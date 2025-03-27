@@ -15,6 +15,7 @@ export default createStore({
       AllVisiableNodes: [],          // 所有可见的节点 ID 列表
       ele_num_data: null,            // 元素数量数据
       visualSalience: [],            // 视觉显著性数组，存储所有卡片的显著性值
+      clickedCardSalience: null,     // 存储用户点击的特定卡片的显著性值
       copiedValue: null,             // 存储复制的值
       copiedValueType: null,         // 存储复制值的类型（color, stroke-width, area）
       copiedFeatureName: null,        // 存储复制值的特征名称
@@ -64,6 +65,9 @@ export default createStore({
     SET_VISUAL_SALIENCE(state, value) {
       state.visualSalience = value;
     },
+    SET_CLICKED_CARD_SALIENCE(state, value) {
+      state.clickedCardSalience = value;
+    },
     SET_COPIED_VALUE(state, payload) {
       state.copiedValue = payload.value;
       state.copiedValueType = payload.type;
@@ -105,6 +109,9 @@ export default createStore({
     },
     setRevelioBadClusters({ commit }, clusters) {
       commit('SET_REVELIOBAD_CLUSTERS', clusters);
+    },
+    setClickedCardSalience({ commit }, value) {
+      commit('SET_CLICKED_CARD_SALIENCE', value);
     }
   },
   getters: {
@@ -129,6 +136,23 @@ export default createStore({
     },
     getRevelioBadClusters(state) {
       return state.revelioBadClusters;
+    },
+    getClickedCardSalience(state) {
+      return state.clickedCardSalience;
+    },
+    getCurrentVisualSalience(state) {
+      // 优先返回点击卡片的显著性值
+      if (state.clickedCardSalience !== null) {
+        return state.clickedCardSalience;
+      }
+      // 如果没有点击特定卡片，才使用通用逻辑
+      if (Array.isArray(state.visualSalience) && state.visualSalience.length > 0) {
+        return state.visualSalience[0].salienceValue;
+      } 
+      else if (typeof state.visualSalience === 'number') {
+        return state.visualSalience;
+      }
+      return null;
     }
   }
 });

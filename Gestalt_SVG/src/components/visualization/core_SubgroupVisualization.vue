@@ -1297,7 +1297,13 @@ function handleCardClick(node, event) {
     // 调用原来的点击处理逻辑
     showNodeList(node);
     
-    // 移除导航相关的函数调用
+    // 计算该卡片的显著性值并存入store
+    const cardSalienceValue = calculateAttentionProbability(node);
+    // 将值格式化为百分比字符串，与SvgUploader中的显示格式保持一致
+    const formattedSalience = (cardSalienceValue * 100).toFixed(3);
+    // 将显著性值提交到Vuex store
+    store.dispatch('setClickedCardSalience', formattedSalience);
+    console.log(`已将卡片 ${node.id} 的显著性值 ${formattedSalience} 存入store`);
 }
 
 // 显示节点列表
@@ -2496,6 +2502,7 @@ const calculateAttentionProbability = (node, returnRawScore = false) => {
             if (!node.groupKey || !node.groupKey.startsWith('reveliogood_X_')) {
                 salienceScore += 0.4;
             } else {
+                // salienceScore -= 0.0;
                 console.log(`聚类 "${node.name}" 是reveliogood_X_n类型，不额外加显著性分数`);
             }
         }

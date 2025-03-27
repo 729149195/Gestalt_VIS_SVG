@@ -33,7 +33,7 @@
                         <div v-html="displaySvgContent"></div>
                         <div class="visual-salience-indicator" @click="showSalienceDetail">
                             <span class="salience-label">Visual salience</span>
-                            <span class="salience-value" v-if="selectedNodeIds.length > 0 && !fromPerceptionScope && !isNaN(visualSalience)">{{ (visualSalience * 100).toFixed(3) }}</span>
+                            <span class="salience-value" v-if="selectedNodeIds.length > 0 && !fromPerceptionScope && visualSalienceFromStore">{{ visualSalienceFromStore }}</span>
                             <span class="salience-value" v-else>--.---</span>
                         </div>
                         <v-btn class="mac-style-button submit-button" @click="analyzeSvg" :disabled="selectedElements.length === 0 || analyzing">
@@ -117,6 +117,8 @@ const controlSvgContent = ref('') // C区SVG内容
 const displaySvgContent = ref('') // S区SVG内容
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
+// 使用store中点击卡片的显著性值
+const visualSalienceFromStore = computed(() => store.getters.getClickedCardSalience);
 // 添加scopeNodes来存放Chart Preview中选中的元素
 const scopeNodes = ref([]);
 const allVisiableNodes = computed(() => store.state.AllVisiableNodes);
@@ -172,6 +174,8 @@ onUnmounted(() => {
 // 添加清除选中节点的函数
 const clearSelectedNodes = () => {
     store.dispatch('clearSelectedNodes');
+    // 清空选中节点时也重置clickedCardSalience
+    store.dispatch('setClickedCardSalience', null);
 };
 
 // 处理从CodeToSvg组件触发的上传事件
@@ -195,6 +199,8 @@ const handleSvgUploaded = async (event) => {
     
     // 清除选中的节点
     clearSelectedNodes();
+    // 重置点击卡片显著性值
+    store.dispatch('setClickedCardSalience', null);
 
     try {
         // 获取C区SVG内容 - 原始上传的SVG
@@ -347,6 +353,11 @@ const processAndSetSvgContent = async (controlSvgData, displaySvgData) => {
     await nextTick();
     updateControlNodeOpacity();
     updateDisplayNodeOpacity();
+    
+    // 如果有选中的节点，计算视觉显著性
+    if (selectedNodeIds.value && selectedNodeIds.value.length > 0) {
+        calculateVisualSalience();
+    }
 
     return nextTick();
 }
@@ -363,6 +374,9 @@ const analyzeSvg = () => {
     analyzing.value = true;
     progress.value = 0;
     currentStep.value = 'Prepare to percept...';
+    
+    // 重置点击卡片显著性值
+    store.dispatch('setClickedCardSalience', null);
     
     // 设置标记为true，这样Visual salience将显示为--.---
     fromPerceptionScope.value = true;
@@ -397,13 +411,17 @@ const analyzeSvg = () => {
                 throw new Error(response.data.error || 'Failure to analyse');
             }
         })
-        .then(() => {
+        .then(async () => {
             window.dispatchEvent(new CustomEvent('svg-content-updated', {
                 detail: {
                     filename: file.value.name,
                     type: 'analysis'
                 }
             }));
+            
+            // 立即获取最新的normalized数据
+            await fetchNormalizedData();
+            
             emit('file-uploaded');
         })
         .catch(error => {
@@ -412,10 +430,12 @@ const analyzeSvg = () => {
         .finally(async () => {
             analyzing.value = false;
             eventSource.close();
+            
+            // 立即计算显著性，不等待其他组件完成
+            fromPerceptionScope.value = false;
+            // 获取最新的normalized数据
             await fetchNormalizedData();
-            // 不再计算显著性值
-            // 添加延迟重置fromPerceptionScope，确保后续交互可以正常计算显著性
-            setTimeout(() => { fromPerceptionScope.value = false; }, 100);
+            calculateVisualSalience();
         });
 }
 
@@ -466,6 +486,9 @@ const updatePerceptionScope = () => {
 
     // 设置标记为true，表示当前是通过updatePerceptionScope传递节点的
     fromPerceptionScope.value = true;
+    
+    // 重置点击卡片显著性值
+    store.dispatch('setClickedCardSalience', null);
 
     // 如果scopeNodes为空（没有特别选择的节点），则将所有可见元素设为选中
     if (scopeNodes.value.length === 0) {
@@ -507,9 +530,16 @@ const updatePerceptionScope = () => {
     
     console.log('Update Perception Scope Complete, selectionMode:', selectionMode.value);
     
-    // 重置fromPerceptionScope，以便随后的lasso选择能正常工作
-    setTimeout(() => { fromPerceptionScope.value = false; }, 100);
-}
+    // 设置一个定时器，一段时间后将fromPerceptionScope设为false，允许再次计算视觉显著性
+    // 5秒后重置，这样用户有足够时间进行下一步操作
+    setTimeout(() => { 
+        fromPerceptionScope.value = false;
+        // 手动触发显著性计算
+        fetchNormalizedData().then(() => {
+            calculateVisualSalience();
+        });
+    }, 5000);
+};
 
 // 为两个SVG添加缩放和拖拽功能
 const addZoomEffectToDualSvgs = () => {
@@ -926,19 +956,24 @@ watch(selectedNodeIds, async () => {
     updateDisplayNodeOpacity(); // 更新显示区的节点透明度
     updateControlNodeOpacity(); // 更新控制区的节点透明度
     
-    // 当选中节点变化时，只有在不是通过updatePerceptionScope或analyzeSvg时才计算显著性
+    // 当选中节点变化时，只有在非fromPerceptionScope模式下才计算视觉显著性
     if (!fromPerceptionScope.value) {
-        // 当选中节点变化时且非fromPerceptionScope状态，先获取最新的normalized数据，再计算视觉显著性
         await fetchNormalizedData();
         calculateVisualSalience();
     }
 });
 
-// 监听fromPerceptionScope的变化，主要是跟踪用户在界面上直接对SVG的选择操作
+// 监听fromPerceptionScope的变化
 watch(fromPerceptionScope, (newValue) => {
-    // 当fromPerceptionScope从true变为false时，表示从手动选择模式进入
+    // 当fromPerceptionScope从true变为false时，表示可以开始计算视觉显著性了
     if (!newValue) {
         // 在这里可以根据需要进行其他操作
+        // 如果此时有选中节点，再次计算视觉显著性
+        if (selectedNodeIds.value && selectedNodeIds.value.length > 0) {
+            fetchNormalizedData().then(() => {
+                calculateVisualSalience();
+            });
+        }
     }
 });
 
@@ -1077,6 +1112,15 @@ const enableDisplayTrackMode = () => {
         if (isMouseDown && clickedElements.size > 0) {
             // 如果已经选中了元素，阻止事件冒泡以避免触发点击事件
             event.stopPropagation();
+            
+            // 在lasso选择结束时立即获取最新数据并计算显著性
+            nextTick(async () => {
+                // 确保fromPerceptionScope为false
+                fromPerceptionScope.value = false;
+                // 立即获取最新数据并计算显著性
+                await fetchNormalizedData();
+                calculateVisualSalience();
+            });
         }
         isMouseDown = false;
     };
@@ -1146,7 +1190,8 @@ const fetchNormalizedData = async () => {
 // 计算视觉显著性
 const calculateVisualSalience = () => {
     if (!normalizedData.value || normalizedData.value.length === 0 || selectedNodeIds.value.length === 0) {
-        visualSalience.value = 0.1;
+        // 当没有数据或没有选择节点时，设置默认值
+        store.commit('SET_VISUAL_SALIENCE', 0.1);
         return;
     }
 
@@ -1155,7 +1200,7 @@ const calculateVisualSalience = () => {
         const highlightedIds = selectedNodeIds.value;
 
         if (!highlightedIds || highlightedIds.length === 0) {
-            visualSalience.value = 0.1;
+            store.commit('SET_VISUAL_SALIENCE', 0.1);
             return;
         }
 
@@ -1200,7 +1245,7 @@ const calculateVisualSalience = () => {
         });
 
         if (highlightedFeatures.length === 0) {
-            visualSalience.value = 0.1;
+            store.commit('SET_VISUAL_SALIENCE', 0.1);
             return;
         }
 
@@ -1416,18 +1461,34 @@ const calculateVisualSalience = () => {
 
         // 将分数映射到0-1范围内用于显示
         // 使用sigmoid函数进行平滑映射，确保结果在0-1范围内
-        const normalizedScore = Math.min(Math.max(1 / (0.8 + Math.exp(-salienceScore))));
+        let normalizedScore;
+        try {
+            // 确保salienceScore不是NaN
+            if (isNaN(salienceScore)) {
+                salienceScore = 0;
+            }
+            
+            // 限制salienceScore的极端值，避免数值溢出
+            salienceScore = Math.max(Math.min(salienceScore, 100), -100);
+            
+            // 计算sigmoid值
+            normalizedScore = 1 / (0.8 + Math.exp(-salienceScore));
+            
+            // 确保最终结果在0-1范围内
+            normalizedScore = Math.min(Math.max(normalizedScore, 0), 1);
+        } catch (error) {
+            console.error('Error normalizing salience score:', error);
+            normalizedScore = 0.5; // 出错时使用默认值
+        }
 
-        // 计算并设置显著性值
-        visualSalience.value = normalizedScore;
-
-        // 将显著性值提交到Vuex store
+        // 将显著性值提交到Vuex store (将原本设置本地值的部分替换为提交到store)
         store.commit('SET_VISUAL_SALIENCE', normalizedScore);
+        
+        // 添加控制台日志便于调试
+        console.log(`视觉显著性计算完成，原始分数: ${salienceScore}, 归一化分数: ${normalizedScore}`);
     } catch (error) {
         console.error('Error calculating visual salience:', error);
-        visualSalience.value = 0.2;
-
-        // 将默认显著性值提交到Vuex store
+        // 出错时设置默认值到store
         store.commit('SET_VISUAL_SALIENCE', 0.2);
     }
 };
@@ -1435,7 +1496,7 @@ const calculateVisualSalience = () => {
 // 显示视觉显著性详情
 const showSalienceDetail = () => {
     console.log('Visual salience details:');
-    console.log(`- Current salience value: ${(visualSalience.value * 100).toFixed(3)}%`);
+    console.log(`- Current salience value: ${visualSalienceFromStore.value ? visualSalienceFromStore.value : '--.--%'}`);
     console.log(`- Selected elements count: ${selectedNodeIds.value.length}`);
 
     // 获取选中元素的类型统计
@@ -1628,6 +1689,10 @@ const handleDisplaySvgClick = (event) => {
             // 更新显示区视图
             nextTick(() => {
                 updateDisplayNodeOpacity();
+                // 在清空节点后，应将显著性值清零或设为默认值
+                store.commit('SET_VISUAL_SALIENCE', 0.1);
+                // 同时清空clickedCardSalience
+                store.dispatch('setClickedCardSalience', null);
             });
         }
         return;
@@ -1643,8 +1708,7 @@ const handleDisplaySvgClick = (event) => {
     const nodeId = target.id;
     if (!nodeId) return;
     
-    // 当在Selected elements区域直接选择元素时，将fromPerceptionScope设为false
-    // 这样可以允许计算显著性
+    // 立即重置fromPerceptionScope标记为false，确保能正确计算视觉显著性
     fromPerceptionScope.value = false;
 
     // 确保selectedNodeIds是数组
@@ -1661,6 +1725,10 @@ const handleDisplaySvgClick = (event) => {
     // 使用nextTick确保状态更新后再更新显示区视图
     nextTick(() => {
         updateDisplayNodeOpacity();
+        // 手动触发视觉显著性计算
+        fetchNormalizedData().then(() => {
+            calculateVisualSalience();
+        });
     });
 };
 
@@ -1715,6 +1783,49 @@ watch(selectionMode, (newMode) => {
         }
     });
 });
+
+// 修改enableDisplayTrackMode方法中的鼠标事件处理
+const handleMouseUp = (event) => {
+    if (isMouseDown && clickedElements.size > 0) {
+        // 如果已经选中了元素，阻止事件冒泡以避免触发点击事件
+        event.stopPropagation();
+        
+        // 在lasso选择结束时立即获取最新数据并计算显著性
+        nextTick(async () => {
+            // 确保fromPerceptionScope为false
+            fromPerceptionScope.value = false;
+            // 立即获取最新数据并计算显著性
+            await fetchNormalizedData();
+            calculateVisualSalience();
+        });
+    }
+    isMouseDown = false;
+};
+
+// 修改toggleNode方法
+const toggleNode = (nodeId) => {
+    // 立即重置fromPerceptionScope标记为false，确保能正确计算视觉显著性
+    fromPerceptionScope.value = false;
+
+    // 确保selectedNodeIds是数组
+    const currentSelectedNodes = Array.isArray(selectedNodeIds.value) ? selectedNodeIds.value : [];
+
+    if (currentSelectedNodes.includes(nodeId)) {
+        // 从selectedNodes中移除节点
+        store.dispatch('removeSelectedNode', nodeId);
+    } else {
+        // 添加节点到selectedNodes
+        store.dispatch('addSelectedNode', nodeId);
+    }
+
+    // 使用nextTick确保状态更新后再更新显示区视图和计算显著性
+    nextTick(async () => {
+        updateDisplayNodeOpacity();
+        // 立即获取最新数据并计算显著性
+        await fetchNormalizedData();
+        calculateVisualSalience();
+    });
+};
 
 </script>
 

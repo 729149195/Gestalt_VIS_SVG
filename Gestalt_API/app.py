@@ -1760,6 +1760,7 @@ def modify_and_calculate_salience():
         
         # 使用与SvgUploader.vue完全相同的sigmoid函数进行平滑映射
         normalized_score = min(max(1 / (0.8 + math.exp(-salience_score)), 0), 1)
+        # normalized_score = salience_score
         
         if debug_mode:
             debug_info['final_normalized_score'] = normalized_score
