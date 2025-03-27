@@ -3208,6 +3208,28 @@ const handleDirectColorChange = (color) => {
               
               // 更新DOM元素显示计算的显著性分值
               predSalienceElement.textContent = formattedSalience;
+              
+              // 更新父元素的data-salience属性
+              featureItem.setAttribute('data-salience', salience);
+              
+              // 获取该特征所在的容器
+              const container = featureItem.closest('.suggestions-content-cell');
+              if (container) {
+                // 获取容器中所有feature-item
+                const items = Array.from(container.querySelectorAll('.feature-item'));
+                
+                // 按照salience属性从高到低对items进行排序
+                items.sort((a, b) => {
+                  const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                  const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                  return salienceB - salienceA;
+                });
+                
+                // 重新添加排序后的元素
+                items.forEach(item => {
+                  container.appendChild(item);
+                });
+              }
             })
             .catch(error => {
               console.error('无法计算显著性:', error);
@@ -3282,6 +3304,28 @@ const handleDirectNumberChange = (value) => {
               
               // 更新DOM元素显示计算的显著性分值
               predSalienceElement.textContent = formattedSalience;
+              
+              // 更新父元素的data-salience属性
+              featureItem.setAttribute('data-salience', salience);
+              
+              // 获取该特征所在的容器
+              const container = featureItem.closest('.suggestions-content-cell');
+              if (container) {
+                // 获取容器中所有feature-item
+                const items = Array.from(container.querySelectorAll('.feature-item'));
+                
+                // 按照salience属性从高到低对items进行排序
+                items.sort((a, b) => {
+                  const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                  const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                  return salienceB - salienceA;
+                });
+                
+                // 重新添加排序后的元素
+                items.forEach(item => {
+                  container.appendChild(item);
+                });
+              }
             })
             .catch(error => {
               console.error('Unable to calculate significance:', error);
