@@ -36,13 +36,13 @@
       'eight-items': hasEightItems,
       'nine-items': hasNineItems
     }">
-      <template v-for="(component, index) in sortedComponents" :key="index">
+      <template v-for="(component, index) in sortedComponents" :key="component.id + '-' + index + '-' + sortAscending">
         <v-card v-if="component.hasData" class="position-card">
           <!-- <div class="variance-info">Diversity  {{ component.variance.toFixed(2) }}</div> -->
           <component :is="component.component" 
                     :position="component.props?.position" 
                     :title="component.props?.title" 
-                    :key="componentKey + index" />
+                    :key="component.id + '-' + sortAscending + '-' + componentKey" />
         </v-card>
       </template>
     </div>
@@ -309,6 +309,12 @@ const sortedComponents = computed(() => {
 // 切换排序顺序
 const toggleSortOrder = () => {
   sortAscending.value = !sortAscending.value;
+  
+  // 添加一个微小延迟来确保排序后组件能正确重新渲染
+  setTimeout(() => {
+    // 这个空操作会触发Vue的更新周期
+    componentsData.value = [...componentsData.value];
+  }, 50);
 };
 
 // 组件挂载时获取数据
