@@ -188,11 +188,11 @@ const featureRanges = {
   'fill_h_sin': { q1: 0.3080825490934995, q3: 0.7198673605029529 },
   'fill_s_n': { q1: 0.3767441860465117, q3: 0.9905660377358492 },
   'fill_l_n': { q1: 0.4431372549019607, q3: 0.6490196078431373 },
-  'stroke_h_cos': { q1: 0.1008768404960534, q3: 0.4 },
+  'stroke_h_cos': { q1: 0.1008768404960534, q3: 0.7 },
   'stroke_h_sin': { q1: 0.3080825490934995, q3: 0.7198673605029529 },
   'stroke_s_n': { q1: 0.40, q3: 0.80 },
   'stroke_l_n': { q1: 0.20, q3: 0.9019607843137256 },
-  'stroke_width': { q1: 1, q3: 1 },
+  'stroke_width': { q1: 1, q3: 3 },
   'bbox_left_n': { q1: 0.1700821463926025, q3: 0.7009512482895623 },
   'bbox_right_n': { q1: 0.2615399988211845, q3: 0.7912006955511051 },
   'bbox_top_n': { q1: 0.2225495009000163, q3: 0.7075862438588656 },
@@ -3006,20 +3006,33 @@ const getCompleteColorValue = (featureKey, value, normalData, selectedNodeIds) =
   // 确定使用的是q1还是q3
   let h_value, s_value, l_value;
 
+  // 为stroke颜色设置默认值的阈值
+  const isZeroSaturation = isStroke && Math.abs(s_avg) < 0.01;
+  const isZeroLightness = isStroke && (Math.abs(l_avg) < 0.01 || Math.abs(l_avg - 1) < 0.01);
+  const isZeroHue = isStroke && Math.abs(h_angle) < 0.01;
+  
+  // 为stroke颜色设置默认饱和度和亮度值，对应rgb(255, 219, 28)
+  const defaultHue = 75;        // 默认色相50度
+  const defaultSaturation = 80; // 默认饱和度100%
+  const defaultLightness = 55;  // 默认亮度55%
+
   if (featureKey.includes('_h_')) {
     // 如果是色相特征
     h_value = denormalizeColorFeatures(featureKey, value);
-    s_value = Math.round(s_avg * 100); // 使用平均饱和度
-    l_value = Math.round(l_avg * 100); // 使用平均亮度
+    // 使用默认值替代接近0的饱和度和亮度
+    s_value = isZeroSaturation ? defaultSaturation : Math.round(s_avg * 100);
+    l_value = isZeroLightness ? defaultLightness : Math.round(l_avg * 100);
   } else if (featureKey.includes('_s_')) {
     // 如果是饱和度特征
-    h_value = Math.round(h_angle); // 使用平均色相
+    h_value = isZeroHue ? defaultHue : Math.round(h_angle); // 使用默认色相或平均色相
     s_value = denormalizeColorFeatures(featureKey, value);
-    l_value = Math.round(l_avg * 100); // 使用平均亮度
+    // 使用默认值替代接近0的亮度
+    l_value = isZeroLightness ? defaultLightness : Math.round(l_avg * 100);
   } else if (featureKey.includes('_l_')) {
     // 如果是亮度特征
-    h_value = Math.round(h_angle); // 使用平均色相
-    s_value = Math.round(s_avg * 100); // 使用平均饱和度
+    h_value = isZeroHue ? defaultHue : Math.round(h_angle); // 使用默认色相或平均色相
+    // 使用默认值替代接近0的饱和度
+    s_value = isZeroSaturation ? defaultSaturation : Math.round(s_avg * 100);
     l_value = denormalizeColorFeatures(featureKey, value);
   }
 

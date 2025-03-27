@@ -1374,6 +1374,13 @@ def modify_and_calculate_salience():
                     for attr_name, attr_value in processed_attributes.items():
                         # 特殊处理stroke-width属性
                         if attr_name == 'stroke-width':
+                            # 检查元素是否有stroke属性
+                            has_stroke = element.has_attr('stroke')
+                            
+                            # 如果没有stroke属性，添加默认的黑色stroke
+                            if not has_stroke:
+                                element['stroke'] = "rgb(0,0,0)"
+                                
                             # 获取原始stroke-width值，默认为1
                             original_width = element.get('stroke-width', '1')
                             
