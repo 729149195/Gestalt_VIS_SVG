@@ -489,11 +489,248 @@ const drawConnectionLines = () => {
             }
         });
 
+        // 添加RevelioGood聚类之间的连线
+        drawRevelioGoodClusterConnections(linesGroup, coreNodeIndices, maxAvailableHeight);
+
         // 简化节点的鼠标事件处理
         d3.selectAll('.cluster-item').on('mouseover', null).on('mouseout', null);
     } catch (error) {
         console.error('Error drawing connection lines:', error);
     }
+};
+
+// 添加新函数: 绘制RevelioGood聚类之间的连线
+const drawRevelioGoodClusterConnections = (linesGroup, coreNodeIndices, maxAvailableHeight) => {
+    try {
+        // 找出所有RevelioGood相关节点，包括显式标记的和standalone聚类
+        const revelioGoodNodes = flattenedNodes.value.filter(node => 
+            node.type === 'core' && (
+                node.isRevelioGood === true || 
+                (node.id && node.id.includes('standalone')) ||
+                (node.groupKey && (
+                    node.groupKey.includes('revelioGood') || 
+                    node.groupKey.includes('reveliogood')
+                ))
+            )
+        );
+        
+        if (revelioGoodNodes.length <= 1) {
+            // 如果只有一个或没有revelioGood节点，则无需绘制连线
+            return;
+        }
+        
+        console.log(`Found ${revelioGoodNodes.length} revelioGood nodes for overlap analysis (including standalone)`);
+        
+        // 所有节点的列表
+        const allNodes = revelioGoodNodes;
+        
+        // 计算所有节点对之间的重叠关系
+        const overlaps = [];
+        for (let i = 0; i < allNodes.length; i++) {
+            for (let j = i + 1; j < allNodes.length; j++) {
+                const nodeA = allNodes[i];
+                const nodeB = allNodes[j];
+                const overlapResult = calculateNodeOverlap(nodeA, nodeB);
+                
+                // 如果重叠度达到阈值
+                if (overlapResult.overlapPercentage >= 0.8) {
+                    overlaps.push({
+                        nodeAId: nodeA.id,
+                        nodeBId: nodeB.id,
+                        overlapPercentage: overlapResult.overlapPercentage
+                    });
+                }
+            }
+        }
+        
+        console.log(`Found ${overlaps.length} node pairs with >80% overlap`);
+        
+        // 构建节点之间的连接图
+        const graph = {};
+        allNodes.forEach(node => {
+            graph[node.id] = {
+                node: node,
+                connections: []
+            };
+        });
+        
+        // 填充连接信息
+        overlaps.forEach(overlap => {
+            graph[overlap.nodeAId].connections.push(overlap.nodeBId);
+            graph[overlap.nodeBId].connections.push(overlap.nodeAId);
+        });
+        
+        // 使用BFS找出所有连通分量（重叠组）
+        const visited = new Set();
+        const overlapGroups = [];
+        
+        for (const nodeId in graph) {
+            if (visited.has(nodeId)) continue;
+            
+            // 新的连通分量
+            const group = [];
+            const queue = [nodeId];
+            visited.add(nodeId);
+            
+            // BFS遍历
+            while (queue.length > 0) {
+                const currentId = queue.shift();
+                group.push(graph[currentId].node);
+                
+                // 访问所有未访问的邻居
+                for (const neighborId of graph[currentId].connections) {
+                    if (!visited.has(neighborId)) {
+                        visited.add(neighborId);
+                        queue.push(neighborId);
+                    }
+                }
+            }
+            
+            // 只有当组内至少有两个节点时才添加
+            if (group.length >= 2) {
+                overlapGroups.push(group);
+            }
+        }
+        
+        console.log(`Identified ${overlapGroups.length} overlap groups`);
+        
+        // 为每个组确定唯一的核心
+        const relationsToDraw = [];
+        
+        overlapGroups.forEach(group => {
+            // 按原始节点数量排序，找出节点数量最少的作为核心
+            group.sort((a, b) => {
+                const aSize = a.originalNodes?.length || 0;
+                const bSize = b.originalNodes?.length || 0;
+                return aSize - bSize;
+            });
+            
+            // 组中第一个节点（节点数量最少的）作为核心
+            const coreNode = group[0];
+            
+            // 其余节点作为外延
+            for (let i = 1; i < group.length; i++) {
+                relationsToDraw.push({
+                    coreNode: coreNode,
+                    extNode: group[i]
+                });
+            }
+        });
+        
+        console.log(`Generated ${relationsToDraw.length} core-extension relations`);
+        
+        // 为每个关系绘制连线
+        relationsToDraw.forEach(relation => {
+            const coreNodeId = relation.coreNode.id;
+            const extNodeId = relation.extNode.id;
+            
+            // 获取节点在flattenedNodes中的索引
+            const coreIndex = flattenedNodes.value.findIndex(node => node.id === coreNodeId);
+            const extIndex = flattenedNodes.value.findIndex(node => node.id === extNodeId);
+            
+            if (coreIndex !== -1 && extIndex !== -1) {
+                // 计算外延节点矩形的顶部中心点
+                const extX = extIndex * (clusterItemSize + clusterItemGap) + clusterItemSize / 2;
+                const extY = 20; // 矩形的顶部y坐标
+
+                // 计算核心节点矩形的顶部中心点
+                const coreX = coreIndex * (clusterItemSize + clusterItemGap) + clusterItemSize / 2;
+                const coreY = 20; // 矩形的顶部y坐标
+
+                // 计算两点之间的距离
+                const distance = Math.abs(extX - coreX);
+                
+                // 计算垂直线段的高度，确保不会超出容器
+                const minOffset = 8;
+                const maxOffset = Math.min(25, maxAvailableHeight - 5); // 确保不超出容器
+                const normalizedDistance = Math.min(distance / 200, 1);
+                const verticalOffset = Math.min(
+                    minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset)),
+                    maxAvailableHeight - 5
+                );
+                
+                // 创建一个圆角方形路径，与API聚类连线样式完全一致
+                const pathData = createArcPath(coreX, coreY, extX, extY, verticalOffset);
+
+                // 添加路径到SVG，样式与API聚类连线相同
+                linesGroup.append('path')
+                    .attr('d', pathData)
+                    .attr('fill', 'none')
+                    .attr('stroke', '#905F29') // 相同颜色
+                    .attr('stroke-width', 1.5)
+                    .attr('stroke-opacity', 0.7) // 相同透明度
+                    .attr('data-ext-id', extNodeId)
+                    .attr('data-core-id', coreNodeId)
+                    .attr('data-reveliogood', 'true')
+                    .style('pointer-events', 'none')
+                    .style('overflow', 'visible');
+                
+                // 计算箭头位置 - 在水平线段的中点
+                const midPoint = calculateArcMidPoint(coreX, coreY, extX, extY, verticalOffset);
+                
+                // 计算箭头方向 - 从核心指向外延
+                const arrowAngle = calculateArrowAngle(coreX, coreY, extX, extY);
+                
+                // 添加箭头 - 与API聚类完全相同的样式
+                linesGroup.append('polygon')
+                    .attr('points', '0,-3 6,0 0,3') // 相同的箭头大小
+                    .attr('fill', '#905F29') // 相同颜色
+                    .attr('transform', `translate(${midPoint.x}, ${midPoint.y}) rotate(${arrowAngle})`)
+                    .attr('data-reveliogood', 'true')
+                    .style('pointer-events', 'none');
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error drawing revelioGood cluster connections:', error);
+    }
+};
+
+// 添加新函数: 计算两个节点之间的重叠度
+const calculateNodeOverlap = (nodeA, nodeB) => {
+    // 节点A和节点B的原始节点数组
+    const nodesA = nodeA.originalNodes || [];
+    const nodesB = nodeB.originalNodes || [];
+    
+    // 确保两个节点数组都有元素
+    if (nodesA.length === 0 || nodesB.length === 0) {
+        return { 
+            overlapPercentage: 0, 
+            smallerNode: nodesA.length <= nodesB.length ? nodeA : nodeB,
+            largerNode: nodesA.length <= nodesB.length ? nodeB : nodeA
+        };
+    }
+    
+    // 为了进行比较，提取每个id的最后部分（去掉路径部分）
+    const extractLastPart = (id) => {
+        // 确保id是字符串
+        if (typeof id !== 'string') {
+            return '';
+        }
+        return id.split('/').pop();
+    };
+    
+    // 处理nodeA的ID，去掉路径部分
+    const processedNodesA = nodesA.map(extractLastPart).filter(id => id);
+    
+    // 处理nodeB的ID，去掉路径部分
+    const processedNodesB = nodesB.map(extractLastPart).filter(id => id);
+    
+    // 计算交集
+    const intersection = processedNodesA.filter(id => processedNodesB.includes(id));
+    
+    // 确定节点中元素较少的作为参考
+    const referenceNodes = processedNodesA.length <= processedNodesB.length ? processedNodesA : processedNodesB;
+    
+    // 计算重叠百分比 (交集大小 / 较小节点的大小)
+    const overlapPercentage = referenceNodes.length > 0 ? intersection.length / referenceNodes.length : 0;
+    
+    return {
+        overlapPercentage,
+        // 确定哪个是核心节点（节点较少的）和外延节点（节点较多的）
+        smallerNode: processedNodesA.length <= processedNodesB.length ? nodeA : nodeB,
+        largerNode: processedNodesA.length <= processedNodesB.length ? nodeB : nodeA
+    };
 };
 
 // 创建节点的缩略图
