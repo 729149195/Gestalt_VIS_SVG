@@ -439,18 +439,21 @@ const hasNineItems = computed(() => {
   flex: 0 0 calc(33.33% - 16px);
 }
 
-/* 当有8个组件时的布局 */
+/* 当有8个组件时的布局 - 两行，每行4个 */
 .statistics-cards.eight-items .position-card {
   flex: 0 0 calc(25% - 16px);
+  max-width: calc(25% - 16px);
 }
 
-.statistics-cards.eight-items .position-card:nth-child(n+5) {
-  flex: 0 0 calc(25% - 16px);
-}
-
-/* 当有9个组件时的布局 */
+/* 当有9个组件时的布局 - 第一行4个，第二行5个 */
 .statistics-cards.nine-items .position-card {
-  flex: 0 0 calc(33.33% - 16px);
+  flex: 0 0 calc(25% - 16px);
+  max-width: calc(25% - 16px);
+}
+
+.statistics-cards.nine-items .position-card:nth-child(n+5) {
+  flex: 0 0 calc(20% - 16px);
+  max-width: calc(20% - 16px);
 }
 
 .position-card:hover {

@@ -2313,7 +2313,7 @@ watch(selectionMode, (newMode) => {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    max-width: 250px;
+    max-width: 220px;
     text-align: center;
     z-index: 100;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

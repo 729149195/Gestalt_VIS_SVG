@@ -88,7 +88,7 @@ const componentKey4 = ref(2)
 const componentKey3 = ref(3)
 
 // 区域大小设置
-const leftWidth = ref(50) // 左侧宽度百分比
+const leftWidth = ref(46) // 左侧宽度百分比
 const leftTopHeight = ref(45) // 左上区域高度百分比
 const subgroupHeight = ref(30) // 右侧子组可视化区域高度百分比
 const statisticsHeight = ref(41) // 统计区域高度百分比
