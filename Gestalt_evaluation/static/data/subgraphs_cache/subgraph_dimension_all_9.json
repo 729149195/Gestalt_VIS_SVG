@@ -2,8 +2,8 @@
   "core_clusters": [
     {
       "core_nodes": [
-        "svg/path_2",
-        "svg/path_6"
+        "svg/g_5/path_4",
+        "svg/g_5/path_7"
       ],
       "core_dimensions": [
         "1"
@@ -12,7 +12,8 @@
     },
     {
       "core_nodes": [
-        "svg/path_5"
+        "svg/g_5/path_5",
+        "svg/g_5/path_6"
       ],
       "core_dimensions": [
         "1"
@@ -21,8 +22,7 @@
     },
     {
       "core_nodes": [
-        "svg/path_4",
-        "svg/path_3"
+        "svg/g/g_4/path_3"
       ],
       "core_dimensions": [
         "1"
@@ -31,7 +31,8 @@
     },
     {
       "core_nodes": [
-        "svg/path_1"
+        "svg/g/g_3/path_2",
+        "svg/g/g_2/path_1"
       ],
       "core_dimensions": [
         "1"
@@ -40,7 +41,7 @@
     },
     {
       "core_nodes": [
-        "svg/path"
+        "svg/g/g_1/path"
       ],
       "core_dimensions": [
         "1"
@@ -49,9 +50,7 @@
     },
     {
       "core_nodes": [
-        "svg/path_2",
-        "svg/path_3",
-        "svg/path_6"
+        "svg/g_5/path_7"
       ],
       "core_dimensions": [
         "2"
@@ -60,7 +59,7 @@
     },
     {
       "core_nodes": [
-        "svg/path_4"
+        "svg/g_5/path_6"
       ],
       "core_dimensions": [
         "2"
@@ -69,9 +68,29 @@
     },
     {
       "core_nodes": [
-        "svg/path_1",
-        "svg/path",
-        "svg/path_6"
+        "svg/g_5/path_5"
+      ],
+      "core_dimensions": [
+        "2"
+      ],
+      "extensions": []
+    },
+    {
+      "core_nodes": [
+        "svg/g/g_4/path_3",
+        "svg/g_5/path_4",
+        "svg/g/g_3/path_2",
+        "svg/g/g_2/path_1"
+      ],
+      "core_dimensions": [
+        "2"
+      ],
+      "extensions": []
+    },
+    {
+      "core_nodes": [
+        "svg/g_5/path_5",
+        "svg/g_5/path_4"
       ],
       "core_dimensions": [
         "3"
@@ -80,7 +99,9 @@
     },
     {
       "core_nodes": [
-        "svg/path_3"
+        "svg/g/g_4/path_3",
+        "svg/g/g_3/path_2",
+        "svg/g/g_2/path_1"
       ],
       "core_dimensions": [
         "3"
@@ -89,58 +110,15 @@
     },
     {
       "core_nodes": [
-        "svg/path_2"
+        "path_1"
       ],
       "core_dimensions": [
-        "3"
-      ],
-      "extensions": []
-    },
-    {
-      "core_nodes": [
-        "svg/path_6"
-      ],
-      "core_dimensions": [
-        "4"
-      ],
-      "extensions": []
-    },
-    {
-      "core_nodes": [
-        "svg/path_4",
-        "svg/path_2"
-      ],
-      "core_dimensions": [
-        "4"
-      ],
-      "extensions": []
-    },
-    {
-      "core_nodes": [
-        "svg/path_1",
-        "svg/path"
-      ],
-      "core_dimensions": [
-        "4"
-      ],
-      "extensions": []
-    },
-    {
-      "core_nodes": [
-        "path_6",
-        "path_4",
-        "path_3",
-        "path_2",
-        "path_1",
-        "path"
-      ],
-      "core_dimensions": [
-        "RevelioGood_reveliogood_basic"
+        "RevelioGood_reveliogood_2"
       ],
       "extensions": [],
       "isRevelioGood": true,
-      "groupKey": "reveliogood_basic"
+      "groupKey": "reveliogood_2"
     }
   ],
-  "total_cores": 14
+  "total_cores": 12
 }

@@ -1,59 +1,10 @@
 {
-    "nodes": [
-        {
-            "id": "svg/path_6",
-            "name": "svg/path_6",
-            "cluster": 2
-        },
-        {
-            "id": "svg/path_5",
-            "name": "svg/path_5",
-            "cluster": 3
-        },
-        {
-            "id": "svg/path_4",
-            "name": "svg/path_4",
-            "cluster": 0
-        },
-        {
-            "id": "svg/path_3",
-            "name": "svg/path_3",
-            "cluster": 4
-        },
-        {
-            "id": "svg/path_2",
-            "name": "svg/path_2",
-            "cluster": 4
-        },
-        {
-            "id": "svg/path_1",
-            "name": "svg/path_1",
-            "cluster": 1
-        },
-        {
-            "id": "svg/path",
-            "name": "svg/path",
-            "cluster": 1
-        }
-    ],
-    "links": [
-        {
-            "source": "svg/path_3",
-            "target": "svg/path_2",
-            "value": 0.9845231254401253,
-            "cluster": 4
-        },
-        {
-            "source": "svg/path_1",
-            "target": "svg/path",
-            "value": 0.9704863047328256,
-            "cluster": 1
-        }
-    ],
-    "clusters": 5,
+    "nodes": [],
+    "links": [],
+    "clusters": 0,
     "dimensions": [
         3
     ],
-    "filtered": false,
-    "filter_reason": null
+    "filtered": true,
+    "filter_reason": "\u8fc7\u6ee4(\u65e0\u533a\u5206\u5ea6)"
 }
