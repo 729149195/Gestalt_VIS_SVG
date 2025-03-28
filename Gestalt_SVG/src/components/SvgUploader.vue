@@ -157,6 +157,7 @@ const formatFileSize = (bytes) => {
 // 添加事件监听
 onMounted(() => {
     window.addEventListener('svg-uploaded', handleSvgUploaded)
+    window.addEventListener('node-removed', handleNodeRemoved)
 
     // 初始化时设置默认的鼠标样式
     nextTick(() => {
@@ -169,6 +170,7 @@ onMounted(() => {
 // 在组件卸载时移除事件监听
 onUnmounted(() => {
     window.removeEventListener('svg-uploaded', handleSvgUploaded)
+    window.removeEventListener('node-removed', handleNodeRemoved)
 })
 
 // 添加清除选中节点的函数
@@ -590,16 +592,16 @@ const addZoomEffectToSvg = (svg, enableInteraction, svgType) => {
 
         // 设置初始缩放为0.9（90%的原始大小）并向右平移5%
         const width = svg.node().getBoundingClientRect().width;
-        const translateX = width * 0.05; // 向右平移5%
-        svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, 10).scale(0.9));
+        const translateX = width * 0.1; // 向右平移5%
+        svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, -50).scale(0.85));
     } else {
         // 为不可交互的SVG移除任何缩放相关监听器
         svg.on('.zoom', null);
 
         // 设置初始变换以匹配控制区SVG
         const width = svg.node().getBoundingClientRect().width;
-        const translateX = width * 0.05;
-        g.attr('transform', d3.zoomIdentity.translate(translateX, 10).scale(0.9));
+        const translateX = width * 0.1;
+        g.attr('transform', d3.zoomIdentity.translate(translateX, -50).scale(0.85));
     }
 };
 
@@ -907,8 +909,22 @@ const updateDisplayNodeOpacity = () => {
     if (!svg) return;
 
     try {
+        // 先重置所有节点样式，确保没有残留样式影响后续操作
         const allNodes = svg.querySelectorAll('*');
-
+        allNodes.forEach(node => {
+            if (!node.tagName || node.tagName.toLowerCase() === 'svg' ||
+                node.tagName.toLowerCase() === 'g') return;
+                
+            // 先清除所有样式，防止样式持久化
+            node.style.transition = '';
+            node.style.filter = '';
+            node.style.opacity = '';
+        });
+        
+        // 防止浏览器合并渲染优化，强制回流
+        svg.getBoundingClientRect();
+        
+        // 重新设置节点样式
         allNodes.forEach(node => {
             if (!node.tagName || node.tagName.toLowerCase() === 'svg' ||
                 node.tagName.toLowerCase() === 'g') return;
@@ -944,7 +960,17 @@ const updateDisplayNodeOpacity = () => {
             } else {
                 node.style.filter = 'none';
             }
+            
+            // 为元素添加或移除高亮类，便于调试和追踪
+            if (isHighlighted) {
+                node.classList.add('highlighted-element');
+            } else {
+                node.classList.remove('highlighted-element');
+            }
         });
+        
+        // 输出当前选中的节点ID，便于调试
+        console.log('当前选中的节点IDs:', selectedNodeIds.value);
     } catch (error) {
         console.error('Error updating display node opacity:', error);
     }
@@ -1717,19 +1743,36 @@ const handleDisplaySvgClick = (event) => {
     if (currentSelectedNodes.includes(nodeId)) {
         // 从selectedNodes中移除节点
         store.dispatch('removeSelectedNode', nodeId);
+        
+        // 确保元素样式完全重置，以便下次点击可以正常高亮
+        target.style.opacity = '0.1';  // 先设置为未选中状态
+        target.style.filter = 'grayscale(100%)';
+        
+        // 强制完成移除操作后的UI更新
+        nextTick(() => {
+            updateDisplayNodeOpacity();
+            // 移除节点后，重新计算视觉显著性
+            fetchNormalizedData().then(() => {
+                calculateVisualSalience();
+            });
+        });
     } else {
         // 添加节点到selectedNodes
         store.dispatch('addSelectedNode', nodeId);
-    }
-
-    // 使用nextTick确保状态更新后再更新显示区视图
-    nextTick(() => {
-        updateDisplayNodeOpacity();
-        // 手动触发视觉显著性计算
-        fetchNormalizedData().then(() => {
-            calculateVisualSalience();
+        
+        // 立即为元素应用高亮样式
+        target.style.opacity = '1';
+        target.style.filter = 'none';
+        
+        // 强制完成添加操作后的UI更新
+        nextTick(() => {
+            updateDisplayNodeOpacity();
+            // 添加节点后，重新计算视觉显著性
+            fetchNormalizedData().then(() => {
+                calculateVisualSalience();
+            });
         });
-    });
+    }
 };
 
 // 监听scopeNodes的变化
@@ -1826,6 +1869,22 @@ const toggleNode = (nodeId) => {
         calculateVisualSalience();
     });
 };
+
+// 处理节点移除事件
+const handleNodeRemoved = (event) => {
+    const { nodeId, remaining } = event.detail;
+    console.log(`节点 ${nodeId} 已被移除，剩余节点: `, remaining);
+    
+    // 强制更新显示
+    fromPerceptionScope.value = false;
+    nextTick(() => {
+        updateDisplayNodeOpacity();
+        // 重新计算视觉显著性
+        fetchNormalizedData().then(() => {
+            calculateVisualSalience();
+        });
+    });
+}
 
 </script>
 

@@ -61,6 +61,14 @@ export default createStore({
     },
     REMOVE_SELECTED_NODE(state, nodeId) {
       state.selectedNodes.nodeIds = state.selectedNodes.nodeIds.filter(id => id !== nodeId);
+      
+      setTimeout(() => {
+        if (window) {
+          window.dispatchEvent(new CustomEvent('node-removed', { 
+            detail: { nodeId, remaining: state.selectedNodes.nodeIds }
+          }));
+        }
+      }, 0);
     },
     SET_VISUAL_SALIENCE(state, value) {
       state.visualSalience = value;

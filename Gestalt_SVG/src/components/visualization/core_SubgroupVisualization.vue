@@ -430,6 +430,51 @@ const drawConnectionLines = () => {
         // 计算最大可用高度（留出一些边距）
         const maxAvailableHeight = svgHeight - 5; // 5px的安全边距
         
+        // 创建一个映射，为每个核心节点分配一个固定的垂直偏移量
+        const coreVerticalOffsets = new Map();
+        const coreNodeIdsArray = Array.from(coreNodeIndices.keys());
+        
+        // 计算偏移量步长，确保有足够的差异
+        const minOffset = 8; // 最小偏移量
+        const maxOffset = Math.min(25, maxAvailableHeight - 5); // 最大偏移量
+        
+        // 计算每个核心节点之间的高度差值
+        const offsetRange = maxOffset - minOffset;
+        const coreCount = coreNodeIdsArray.length;
+        
+        // 确保至少有1像素的差距
+        const offsetStep = Math.max(1, Math.floor(offsetRange / Math.max(1, coreCount - 1)));
+        
+        // 为每个核心节点分配一个严格不同的垂直偏移量
+        coreNodeIdsArray.forEach((coreId, index) => {
+            // 计算当前核心节点的偏移量，均匀分布在minOffset和maxOffset之间
+            const offset = index === 0 ? minOffset : 
+                           index === coreCount - 1 ? maxOffset : 
+                           minOffset + Math.round(index * offsetStep);
+            
+            coreVerticalOffsets.set(coreId, offset);
+        });
+        
+        // 确保所有核心节点的垂直偏移量都不同
+        const usedOffsets = new Set();
+        coreVerticalOffsets.forEach((offset, coreId) => {
+            // 如果当前偏移量已被使用，则稍微调整它
+            let finalOffset = offset;
+            while (usedOffsets.has(finalOffset)) {
+                finalOffset += 1;
+                // 确保不超过最大高度
+                if (finalOffset > maxOffset) {
+                    finalOffset = minOffset;
+                    // 尝试找一个未使用的值
+                    while (usedOffsets.has(finalOffset) && finalOffset <= maxOffset) {
+                        finalOffset += 1;
+                    }
+                }
+            }
+            usedOffsets.add(finalOffset);
+            coreVerticalOffsets.set(coreId, finalOffset);
+        });
+        
         // 为每个外延节点绘制连接线
         flattenedNodes.value.forEach((node, index) => {
             if (node.type === 'extension') {
@@ -446,17 +491,8 @@ const drawConnectionLines = () => {
                     const coreX = coreIndex * (clusterItemSize + clusterItemGap) + clusterItemSize / 2;
                     const coreY = 20; // 矩形的顶部y坐标
 
-                    // 计算两点之间的距离
-                    const distance = Math.abs(extX - coreX);
-                    
-                    // 计算垂直线段的高度，确保不会超出容器
-                    const minOffset = 8;
-                    const maxOffset = Math.min(25, maxAvailableHeight - 5); // 确保不超出容器
-                    const normalizedDistance = Math.min(distance / 200, 1);
-                    const verticalOffset = Math.min(
-                        minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset)),
-                        maxAvailableHeight - 5
-                    );
+                    // 使用对应核心节点的固定垂直偏移量
+                    const verticalOffset = coreVerticalOffsets.get(coreNodeId);
                     
                     // 创建一个圆角方形路径
                     const pathData = createArcPath(coreX, coreY, extX, extY, verticalOffset);
@@ -489,8 +525,8 @@ const drawConnectionLines = () => {
             }
         });
 
-        // 添加RevelioGood聚类之间的连线
-        drawRevelioGoodClusterConnections(linesGroup, coreNodeIndices, maxAvailableHeight);
+        // 为RevelioGood聚类连线传递垂直偏移映射
+        drawRevelioGoodClusterConnections(linesGroup, coreNodeIndices, maxAvailableHeight, coreVerticalOffsets);
 
         // 简化节点的鼠标事件处理
         d3.selectAll('.cluster-item').on('mouseover', null).on('mouseout', null);
@@ -500,7 +536,7 @@ const drawConnectionLines = () => {
 };
 
 // 添加新函数: 绘制RevelioGood聚类之间的连线
-const drawRevelioGoodClusterConnections = (linesGroup, coreNodeIndices, maxAvailableHeight) => {
+const drawRevelioGoodClusterConnections = (linesGroup, coreNodeIndices, maxAvailableHeight, coreVerticalOffsets) => {
     try {
         // 找出所有RevelioGood相关节点，包括显式标记的和standalone聚类
         const revelioGoodNodes = flattenedNodes.value.filter(node => 
@@ -619,6 +655,84 @@ const drawRevelioGoodClusterConnections = (linesGroup, coreNodeIndices, maxAvail
         
         console.log(`Generated ${relationsToDraw.length} core-extension relations`);
         
+        // 为RevelioGood类型连接创建独立的高度偏移量映射
+        const revelioGoodCoreOffsets = new Map();
+        
+        // 收集所有需要绘制连线的核心节点ID
+        const revelioGoodCoreIds = new Set();
+        relationsToDraw.forEach(relation => {
+            revelioGoodCoreIds.add(relation.coreNode.id);
+        });
+        
+        // 将核心节点ID转换为数组，以便按顺序分配高度
+        const revelioGoodCoreIdsArray = Array.from(revelioGoodCoreIds);
+        
+        // 为RevelioGood类型的核心节点分配高度值，确保与API类型连接有差异
+        // 根据实际可用高度动态调整高度范围
+        const minRevelioOffset = Math.min(12, maxAvailableHeight * 0.3); // 确保最小值不超过可用高度的30%
+        const maxRevelioOffset = Math.min(20, maxAvailableHeight * 0.8); // 确保最大值不超过可用高度的80%
+        
+        // 计算高度差值
+        const revelioOffsetRange = maxRevelioOffset - minRevelioOffset;
+        const revelioOffsetStep = revelioGoodCoreIdsArray.length > 1 ? 
+                                 Math.max(1, Math.floor(revelioOffsetRange / (revelioGoodCoreIdsArray.length - 1))) : 1;
+        
+        // 分配不同的高度值
+        revelioGoodCoreIdsArray.forEach((coreId, index) => {
+            let offset;
+            if (revelioGoodCoreIdsArray.length === 1) {
+                offset = minRevelioOffset;
+            } else if (index === 0) {
+                offset = minRevelioOffset;
+            } else if (index === revelioGoodCoreIdsArray.length - 1) {
+                offset = maxRevelioOffset;
+            } else {
+                offset = minRevelioOffset + Math.round(index * revelioOffsetStep);
+            }
+            
+            // 确保不超出最大可用高度
+            offset = Math.min(offset, maxAvailableHeight - 5);
+            revelioGoodCoreOffsets.set(coreId, offset);
+        });
+        
+        // 确保所有RevelioGood核心节点的垂直偏移量都不同，且与已有API类型的偏移量有差异
+        const allUsedOffsets = new Set([...coreVerticalOffsets.values()]);
+        revelioGoodCoreOffsets.forEach((offset, coreId) => {
+            let finalOffset = offset;
+            // 修改冲突解决逻辑，增加安全检查
+            let attempts = 0;
+            const maxAttempts = maxRevelioOffset - minRevelioOffset + 1; // 最大尝试次数
+            
+            while (allUsedOffsets.has(finalOffset) && attempts < maxAttempts) {
+                finalOffset += 1;
+                attempts++;
+                
+                // 确保不超出最大可用高度
+                if (finalOffset > maxRevelioOffset || finalOffset > maxAvailableHeight - 5) {
+                    finalOffset = minRevelioOffset;
+                    // 在最小值和最大值之间查找未使用的值
+                    for (let i = minRevelioOffset; i <= Math.min(maxRevelioOffset, maxAvailableHeight - 5); i++) {
+                        if (!allUsedOffsets.has(i)) {
+                            finalOffset = i;
+                            break;
+                        }
+                    }
+                    
+                    // 如果所有值都被使用了，则接受一个重复值，但确保不超出高度
+                    if (allUsedOffsets.has(finalOffset)) {
+                        finalOffset = Math.min(offset, maxAvailableHeight - 5);
+                        break;
+                    }
+                }
+            }
+            
+            // 最终的安全检查
+            finalOffset = Math.min(finalOffset, maxAvailableHeight - 5);
+            
+            allUsedOffsets.add(finalOffset);
+            revelioGoodCoreOffsets.set(coreId, finalOffset);
+        });
+        
         // 为每个关系绘制连线
         relationsToDraw.forEach(relation => {
             const coreNodeId = relation.coreNode.id;
@@ -637,17 +751,8 @@ const drawRevelioGoodClusterConnections = (linesGroup, coreNodeIndices, maxAvail
                 const coreX = coreIndex * (clusterItemSize + clusterItemGap) + clusterItemSize / 2;
                 const coreY = 20; // 矩形的顶部y坐标
 
-                // 计算两点之间的距离
-                const distance = Math.abs(extX - coreX);
-                
-                // 计算垂直线段的高度，确保不会超出容器
-                const minOffset = 8;
-                const maxOffset = Math.min(25, maxAvailableHeight - 5); // 确保不超出容器
-                const normalizedDistance = Math.min(distance / 200, 1);
-                const verticalOffset = Math.min(
-                    minOffset + Math.round(normalizedDistance * normalizedDistance * (maxOffset - minOffset)),
-                    maxAvailableHeight - 5
-                );
+                // 使用RevelioGood专用的高度偏移映射
+                const verticalOffset = revelioGoodCoreOffsets.get(coreNodeId);
                 
                 // 创建一个圆角方形路径，与API聚类连线样式完全一致
                 const pathData = createArcPath(coreX, coreY, extX, extY, verticalOffset);
