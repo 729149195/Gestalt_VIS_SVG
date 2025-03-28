@@ -3250,28 +3250,28 @@ function calculateArrowAngle(x1, y1, x2, y2) {
 .card-svg-container {
     flex: 1;
     min-height: 0;
-    padding: 0;
-    border-bottom: 1px solid #e8eaed;
+    padding: 0px;
     pointer-events: none;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    scale: 0.95;
 }
 
 .card-svg-container svg {
-    width: 100%;
-    height: 100%;
-    max-height: 100%;
+    width: 90%;
+    height: 90%;
+
     object-fit: contain;
 }
 
 .card-info {
     flex: 0 0 auto;
-    padding: 8px 12px;
+    padding: 2px 7px;
     background: #f8f9fa;
     border-bottom-left-radius: 12px;
-    max-height: 90px;
+    max-height: 80px;
     overflow-y: auto;
     position: relative;
     padding-right: 120px;

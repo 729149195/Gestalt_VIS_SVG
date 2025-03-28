@@ -319,6 +319,12 @@ const initEditors = () => {
           
           // 递归更新节点属性和内容，但保留class属性
           function updateNode(editedNode, originalNode) {
+            // 如果originalNode不存在（可能是因为ID没有找到匹配），则直接返回
+            if (!originalNode) {
+              console.warn('尝试更新不存在的节点:', editedNode)
+              return
+            }
+            
             // 更新属性
             for (const attr of editedNode.attributes) {
               if (attr.name !== 'class') {
@@ -336,6 +342,10 @@ const initEditors = () => {
             const editedChildren = Array.from(editedNode.children)
             const originalChildren = Array.from(originalNode.children)
             
+            // 使用Set来跟踪已处理的原始子节点
+            const processedOriginalChildren = new Set()
+            
+            // 处理编辑后节点的所有子节点
             for (let i = 0; i < editedChildren.length; i++) {
               const editedChild = editedChildren[i]
               const editedId = editedChild.getAttribute('id')
@@ -346,14 +356,79 @@ const initEditors = () => {
                 matchedOriginalChild = originalDoc.getElementById(editedId)
               }
               
-              // 如果通过ID没找到匹配，尝试使用相同位置的节点
-              if (!matchedOriginalChild && i < originalChildren.length) {
-                matchedOriginalChild = originalChildren[i]
+              // 如果通过ID没找到匹配，尝试使用标签类型和位置进行匹配
+              if (!matchedOriginalChild) {
+                // 找到所有相同标签类型的原始子节点
+                const sameTagOriginalChildren = originalChildren.filter(
+                  child => child.tagName === editedChild.tagName && !processedOriginalChildren.has(child)
+                )
+                
+                // 如果有多个同类型节点，尝试通过属性进行更精确匹配
+                if (sameTagOriginalChildren.length > 1) {
+                  // 计算属性相似度最高的节点
+                  let bestMatch = null
+                  let maxMatchScore = -1
+                  
+                  for (const candidate of sameTagOriginalChildren) {
+                    let matchScore = 0
+                    // 遍历编辑节点的所有非class属性
+                    for (const attr of editedChild.attributes) {
+                      if (attr.name !== 'class' && attr.name !== 'id') {
+                        // 如果原始节点也有这个属性并且值相同，增加匹配分数
+                        if (candidate.hasAttribute(attr.name) && candidate.getAttribute(attr.name) === attr.value) {
+                          matchScore++
+                        }
+                      }
+                    }
+                    
+                    if (matchScore > maxMatchScore) {
+                      maxMatchScore = matchScore
+                      bestMatch = candidate
+                    }
+                  }
+                  
+                  if (bestMatch && maxMatchScore > 0) {
+                    matchedOriginalChild = bestMatch
+                  }
+                }
+                
+                // 如果还是没找到匹配，尝试使用相同位置的节点
+                if (!matchedOriginalChild && i < originalChildren.length) {
+                  matchedOriginalChild = originalChildren[i]
+                }
               }
               
               // 如果找到了匹配节点，递归更新
               if (matchedOriginalChild) {
+                // 确保保留原始节点的class属性
+                const originalClass = matchedOriginalChild.getAttribute('class')
+                
                 updateNode(editedChild, matchedOriginalChild)
+                
+                // 递归更新后重新设置class属性，确保不丢失
+                if (originalClass) {
+                  matchedOriginalChild.setAttribute('class', originalClass)
+                }
+                
+                // 标记此原始节点已被处理
+                processedOriginalChildren.add(matchedOriginalChild)
+              } else {
+                // 如果没有找到匹配的节点，说明这是一个新增的节点
+                // 将新节点克隆并添加到原始节点中
+                console.log('添加新节点:', editedChild.tagName, editedId || '无ID')
+                const newNode = editedChild.cloneNode(true)
+                originalNode.appendChild(newNode)
+              }
+            }
+            
+            // 识别并删除不再存在于编辑后文档中的节点
+            // 从后向前移除，避免索引变化影响结果
+            for (let i = originalChildren.length - 1; i >= 0; i--) {
+              const originalChild = originalChildren[i]
+              if (!processedOriginalChildren.has(originalChild)) {
+                // 该节点在编辑后的文档中不存在，应该被删除
+                console.log('删除节点:', originalChild.tagName, originalChild.getAttribute('id') || '无ID')
+                originalNode.removeChild(originalChild)
               }
             }
           }
@@ -520,7 +595,7 @@ watch([copiedValue, selectedNodeIds], async ([newCopiedValue, newSelectedNodeIds
         if (currentWidth !== null && currentWidth !== '') {
           // 已有stroke-width值，在现有基础上累加
           currentWidth = parseFloat(currentWidth);
-          const addWidth = parseFloat(newCopiedValue.value.replace('px', '')) + 1;
+          const addWidth = parseFloat(newCopiedValue.value.replace('px', ''));
           newWidth = currentWidth + addWidth;
         } else {
           // 没有stroke-width值，设置新值

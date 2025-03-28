@@ -90,9 +90,9 @@ const componentKey3 = ref(3)
 // 区域大小设置
 const leftWidth = ref(46) // 左侧宽度百分比
 const leftTopHeight = ref(45) // 左上区域高度百分比
-const subgroupHeight = ref(30) // 右侧子组可视化区域高度百分比
-const statisticsHeight = ref(41) // 统计区域高度百分比
-const analysisHeight = ref(29) // 分析文字区域高度百分比
+const subgroupHeight = ref(32.5) // 右侧子组可视化区域高度百分比
+const statisticsHeight = ref(40) // 统计区域高度百分比
+const analysisHeight = ref(27.5) // 分析文字区域高度百分比
 
 // 记录调整状态 - 改回普通变量，避免响应式问题
 let isResizing = false;

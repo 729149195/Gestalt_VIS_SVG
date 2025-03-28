@@ -76,7 +76,7 @@ const allComponents = [
   { 
     id: 'top-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'top', title: 'top' },
+    props: { position: 'top', title: 'Top' },
     dataUrl: 'http://127.0.0.1:5000/top_position',
     hasData: false,
     variance: 0
@@ -84,7 +84,7 @@ const allComponents = [
   { 
     id: 'bottom-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'bottom', title: 'bottom' },
+    props: { position: 'bottom', title: 'Bottom' },
     dataUrl: 'http://127.0.0.1:5000/bottom_position',
     hasData: false,
     variance: 0
@@ -92,7 +92,7 @@ const allComponents = [
   { 
     id: 'right-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'right', title: 'right' },
+    props: { position: 'right', title: 'Right' },
     dataUrl: 'http://127.0.0.1:5000/right_position',
     hasData: false,
     variance: 0
@@ -100,7 +100,7 @@ const allComponents = [
   { 
     id: 'left-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'left', title: 'left' },
+    props: { position: 'left', title: 'Left' },
     dataUrl: 'http://127.0.0.1:5000/left_position',
     hasData: false,
     variance: 0
@@ -108,7 +108,7 @@ const allComponents = [
   { 
     id: 'width-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'width', title: 'width' },
+    props: { position: 'width', title: 'Width' },
     dataUrl: 'http://127.0.0.1:5000/width_position',
     hasData: false,
     variance: 0
@@ -116,7 +116,7 @@ const allComponents = [
   { 
     id: 'height-position', 
     component: markRaw(PositionStatistics), 
-    props: { position: 'height', title: 'height' },
+    props: { position: 'height', title: 'Height' },
     dataUrl: 'http://127.0.0.1:5000/height_position',
     hasData: false,
     variance: 0
@@ -360,7 +360,7 @@ const hasNineItems = computed(() => {
   padding: 10px;
   height: 100%;
   overflow-y: auto;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .title {

@@ -31,9 +31,9 @@
         </div>
       </div>
 
-      <!-- 添加复制成功提示 -->
-      <div v-if="copyTooltip.visible" class="copy-tooltip" :style="{ left: copyTooltip.x + 'px', top: (copyTooltip.y - 30) + 'px' }">
-        {{ copyTooltip.text }}
+      <!-- 添加选择操作提示 -->
+      <div v-if="selectionTooltip.visible" class="selection-tooltip" :style="{ left: selectionTooltip.x + 'px', top: (selectionTooltip.y - 30) + 'px' }">
+        {{ selectionTooltip.text }}
       </div>
 
     </div>
@@ -192,7 +192,7 @@ const featureRanges = {
   'stroke_h_sin': { q1: 0.3080825490934995, q3: 0.7198673605029529 },
   'stroke_s_n': { q1: 0.40, q3: 0.80 },
   'stroke_l_n': { q1: 0.20, q3: 0.9019607843137256 },
-  'stroke_width': { q1: 1, q3: 3 },
+  'stroke_width': { q1: 1, q3: 4 },
   'bbox_left_n': { q1: 0.1700821463926025, q3: 0.7009512482895623 },
   'bbox_right_n': { q1: 0.2615399988211845, q3: 0.7912006955511051 },
   'bbox_top_n': { q1: 0.2225495009000163, q3: 0.7075862438588656 },
@@ -484,8 +484,8 @@ const isMiddleSectionScrollable = ref(false);
 const isFeatureSectionScrolledToBottom = ref(true);
 const isMiddleSectionScrolledToBottom = ref(true);
 
-// 添加复制成功提示的状态
-const copyTooltip = ref({ visible: false, text: '', x: 0, y: 0 });
+// 添加选择操作提示的状态
+const selectionTooltip = ref({ visible: false, text: '', x: 0, y: 0 });
 
 // 添加编辑工具提示状态
 const editTooltip = ref({
@@ -529,7 +529,7 @@ const globalMouseOverHandler = (event) => {
   const analysisContent = event.target.closest('.analysis-content');
   if (!analysisContent) return;
 
-  // 检查是否悬停在可复制值上
+  // 检查是否悬停在可选择值上
   const copyableValue = event.target.closest('.copyable-value');
   if (copyableValue) {
     // 检查是否是颜色类型
@@ -584,11 +584,11 @@ const globalMouseOverHandler = (event) => {
 
 // 全局鼠标离开事件处理函数
 const globalMouseOutHandler = (event) => {
-  // 检查是否是从可复制值移出
+  // 检查是否是从可选择值移出
   const fromElement = event.target.closest('.copyable-value');
   const toElement = event.relatedTarget;
 
-  // 如果不是从可复制值移出，不处理
+  // 如果不是从可选择值移出，不处理
   if (!fromElement) return;
 
   // 检查是否移动到编辑工具提示或其子元素上
@@ -677,7 +677,7 @@ const globalClickHandler = (event) => {
     const isColor = copyableValue.getAttribute('data-type') === 'color';
     const textToCopy = copyableValue.getAttribute('data-value');
     
-    // 不再区分颜色值和数值，直接执行复制功能，因为颜色选择器只能通过点击色块打开
+    // 不再区分颜色值和数值，直接处理功能，因为颜色选择器只能通过点击色块打开
     if (textToCopy) {
       // 进行二次处理
       let finalTextToCopy = textToCopy;
@@ -716,105 +716,33 @@ const globalClickHandler = (event) => {
         }
       }
 
-      // 执行复制操作
-      if (navigator && navigator.clipboard) {
-        navigator.clipboard.writeText(finalTextToCopy).then(() => {
-          // 更新到 store
-          if (valueType) {
-            store.dispatch('setCopiedValue', {
-              value: textToCopy,
-              type: valueType,
-              featureName: featureName
-            });
-          }
-          
-          // 显示复制成功提示
-          copyTooltip.value = {
-            visible: true,
-            text: `已复制: ${finalTextToCopy}`,
-            x: event.clientX,
-            y: event.clientY
-          };
-
-          // 1.5秒后隐藏提示
-          setTimeout(() => {
-            copyTooltip.value.visible = false;
-          }, 1500);
-
-          ElMessage({
-            message: '复制成功',
-            type: 'success',
-            duration: 1500
-          });
-        }).catch(err => {
-          console.error('复制失败:', err);
-          ElMessage({
-            message: '复制失败',
-            type: 'error',
-            duration: 1500
-          });
+      // 更新到 store
+      if (valueType) {
+        store.dispatch('setCopiedValue', {
+          value: textToCopy,
+          type: valueType,
+          featureName: featureName
         });
-      } else {
-        // 备用复制方法
-        try {
-          // 创建临时文本区域
-          const textArea = document.createElement('textarea');
-          textArea.value = finalTextToCopy;
-          
-          // 确保文本区域在屏幕外
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-999999px';
-          textArea.style.top = '-999999px';
-          document.body.appendChild(textArea);
-          
-          // 选择并复制文本
-          textArea.focus();
-          textArea.select();
-          const successful = document.execCommand('copy');
-          
-          // 移除临时元素
-          document.body.removeChild(textArea);
-          
-          if (successful) {
-            // 更新到 store
-            if (valueType) {
-              store.dispatch('setCopiedValue', {
-                value: textToCopy,
-                type: valueType,
-                featureName: featureName
-              });
-            }
-            
-            // 显示复制成功提示
-            copyTooltip.value = {
-              visible: true,
-              text: `已复制: ${finalTextToCopy}`,
-              x: event.clientX,
-              y: event.clientY
-            };
-
-            // 1.5秒后隐藏提示
-            setTimeout(() => {
-              copyTooltip.value.visible = false;
-            }, 1500);
-
-            ElMessage({
-              message: '复制成功',
-              type: 'success',
-              duration: 1500
-            });
-          } else {
-            throw new Error('复制操作失败');
-          }
-        } catch (err) {
-          console.error('复制失败:', err);
-          ElMessage({
-            message: '复制失败',
-            type: 'error',
-            duration: 1500
-          });
-        }
       }
+      
+      // 显示操作成功提示
+      selectionTooltip.value = {
+        visible: true,
+        text: `已选择: ${finalTextToCopy}`,
+        x: event.clientX,
+        y: event.clientY
+      };
+
+      // 1.5秒后隐藏提示
+      setTimeout(() => {
+        selectionTooltip.value.visible = false;
+      }, 1500);
+
+      ElMessage({
+        message: '已选择该值',
+        type: 'success',
+        duration: 1500
+      });
     }
   }
 };
@@ -831,7 +759,7 @@ const handleColorChange = (color) => {
       }
     }
 
-    // 更新可复制的值
+    // 更新可选择的值
     editTooltip.value.currentValue = rgbColor;
     editTooltip.value.targetElement.setAttribute('data-value', rgbColor);
     editTooltip.value.targetElement.textContent = rgbColor;
@@ -847,7 +775,7 @@ const handleNumberChange = (value) => {
       formattedValue = `${value}${editTooltip.value.unit}`;
     }
 
-    // 更新可复制的值
+    // 更新可选择的值
     editTooltip.value.currentValue = value;
     editTooltip.value.targetElement.setAttribute('data-value', formattedValue);
 
@@ -868,7 +796,7 @@ const handleUnitChange = (unit) => {
     const value = editTooltip.value.currentValue;
     const formattedValue = `${value}${unit}`;
 
-    // 更新可复制的值
+    // 更新可选择的值
     editTooltip.value.unit = unit;
     editTooltip.value.targetElement.setAttribute('data-value', formattedValue);
 
@@ -2027,7 +1955,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               analysis += `
                 <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
                     <span class="feature-tag all-elements-tag">
-                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
+                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${(feature.usedValue).toFixed(2)}${unit}</span></span>
                         <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
                     </span>
                 </div>
@@ -3013,8 +2941,8 @@ const getCompleteColorValue = (featureKey, value, normalData, selectedNodeIds) =
   
   // 为stroke颜色设置默认饱和度和亮度值，对应rgb(255, 219, 28)
   const defaultHue = 75;        // 默认色相50度
-  const defaultSaturation = 80; // 默认饱和度100%
-  const defaultLightness = 55;  // 默认亮度55%
+  const defaultSaturation = 20; // 默认饱和度100%
+  const defaultLightness = 15;  // 默认亮度55%
 
   if (featureKey.includes('_h_')) {
     // 如果是色相特征
@@ -3430,7 +3358,6 @@ const calculateSuggestionSalience = async (ids, attributes) => {
   color: #1d1d1f;
   letter-spacing: -0.01em;
   opacity: 0.8;
-  margin-bottom: 8px;
   /* 减小底部边距 */
 }
 
@@ -4687,7 +4614,7 @@ const calculateSuggestionSalience = async (ids, attributes) => {
 }
 
 /* 添加复制提示样式 */
-.copy-tooltip {
+.selection-tooltip {
   position: fixed;
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
@@ -5094,16 +5021,12 @@ const calculateSuggestionSalience = async (ids, attributes) => {
   color: #606266;
   border-color: #dcdfe6;
 }
-</style>
 
-<style scoped>
-/* 分析词容器的基础样式 */
 .analysis-words-container {
   display: flex;
   flex-direction: column;
   height: 100%;
   width: 100%;
-  gap: 16px;
   color: var(--gray800);
   position: relative;
   overflow: hidden;
