@@ -10,7 +10,6 @@ import matplotlib
 import queue
 import time
 
-# from Gestalt_API.static.modules.batch_evaluation import BatchEvaluator
 matplotlib.use('Agg')  # 在导入 pyplot 之前设置后端
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,7 +26,6 @@ from static.modules import normalized_features_liner_mds_2 as normalized_feature
 from static.modules.cluster import main as run_clustering
 from static.modules.average_equivalent_mapping import EquivalentWeightsCalculator
 from static.modules.subgraph_detection import main as run_subgraph_detection
-from static.modules import posandprop
 
 # 创建一个全局的进度队列
 progress_queue = queue.Queue()
@@ -126,15 +124,6 @@ def process_svg_file(file_path):
         send_progress_update(35, "Data format being processed...")
         featureCSV.process_csv_to_json(output_paths['csv'], output_paths['init_json'])
         featureCSV.process_csv_to_json(output_paths['normalized_csv'], output_paths['normalized_init_json'])
-        
-        # 处理位置和属性信息
-        print("Location and property information being processed...")
-        send_progress_update(45, "Location and property information being processed...")
-        posandprop.process_position_and_properties(
-            output_paths['init_json'],
-            file_path,
-            app.config['DATA_FOLDER']
-        )
         
         print("计算等价权重...")
         send_progress_update(60, "Equivalent weights being calculated...")

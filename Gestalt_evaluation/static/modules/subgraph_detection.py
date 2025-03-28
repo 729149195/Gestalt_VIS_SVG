@@ -321,8 +321,7 @@ def analyze_cluster_overlaps(subgraphs_dir):
                     core_clusters.append({
                         'core_nodes': list(nodes),
                         'core_dimensions': [dimension_str],
-                        'extensions': [],
-                        'links': [link for link in graph_data['links'] if link['cluster'] == cluster_id]
+                        'extensions': []
                     })
     
     # 如果没有有效的核心聚类，返回空结果
@@ -387,37 +386,54 @@ def analyze_cluster_overlaps(subgraphs_dir):
                         
                         if overlap_ratio1 > 0.8 and overlap_ratio2 > 0.8:
                             overlapping_found = True
+                            
+                            # 检查是否完全一致
+                            is_identical = (cluster1_nodes == cluster2_nodes)
+                            
                             # 创建新的核心聚类（重叠部分）
                             new_core = {
                                 'core_nodes': list(intersection),
                                 'core_dimensions': [min(cluster1['core_dimensions'][0], cluster2['core_dimensions'][0])],
-                                'extensions': [],
-                                'links': []  # 将在后面更新
+                                'extensions': []
                             }
                             
-                            # 创建外延（非重叠部分）
-                            ext1_nodes = cluster1_nodes - intersection
-                            ext2_nodes = cluster2_nodes - intersection
-                            
-                            if ext1_nodes:
+                            # 如果不完全一致，则将A和B作为C的外延，并且保留A和B作为独立的核心聚类
+                            if not is_identical:
+                                # 将整个聚类A作为C的外延
                                 new_core['extensions'].append({
-                                    'dimension': f"z_{cluster1['core_dimensions'][0]}",
-                                    'nodes': list(ext1_nodes)
+                                    'dimension': f"cluster_A_{cluster1['core_dimensions'][0]}",
+                                    'nodes': list(cluster1_nodes)
                                 })
-                            
-                            if ext2_nodes:
+                                
+                                # 将整个聚类B作为C的外延
                                 new_core['extensions'].append({
-                                    'dimension': f"z_{cluster2['core_dimensions'][0]}",
-                                    'nodes': list(ext2_nodes)
+                                    'dimension': f"cluster_B_{cluster2['core_dimensions'][0]}",
+                                    'nodes': list(cluster2_nodes)
                                 })
+                                
+                                # 添加核心聚类C
+                                final_core_clusters.append(new_core)
+                                
+                                # 保留A和B作为独立的核心聚类
+                                # 复制A和B，避免修改原始对象
+                                cluster1_copy = {
+                                    'core_nodes': list(cluster1_nodes),
+                                    'core_dimensions': cluster1['core_dimensions'].copy(),
+                                    'extensions': []
+                                }
+                                
+                                cluster2_copy = {
+                                    'core_nodes': list(cluster2_nodes),
+                                    'core_dimensions': cluster2['core_dimensions'].copy(),
+                                    'extensions': []
+                                }
+                                
+                                final_core_clusters.append(cluster1_copy)
+                                final_core_clusters.append(cluster2_copy)
+                            else:
+                                # 如果完全一致，只添加一个核心聚类
+                                final_core_clusters.append(new_core)
                             
-                            # 更新连接信息
-                            new_core['links'] = [
-                                link for link in cluster1['links'] + cluster2['links']
-                                if (link['source'] in intersection and link['target'] in intersection)
-                            ]
-                            
-                            final_core_clusters.append(new_core)
                             processed_clusters.add(id(cluster1))
                             processed_clusters.add(id(cluster2))
                             break
@@ -443,55 +459,291 @@ def analyze_cluster_overlaps(subgraphs_dir):
         
         cluster['extensions'] = unique_extensions
     
-    # 生成可视化数据结构
-    nodes = []
-    links = []
-    
-    # 添加所有节点
-    for i, cluster in enumerate(final_core_clusters):
-        core_id = f"core_{i}"
-        nodes.append({
-            "id": core_id,
-            "name": f"核心聚类 {i+1}",
-            "type": "core",
-            "dimensions": cluster['core_dimensions'],
-            "size": len(cluster['core_nodes'])
-        })
-        
-        # 添加外延节点
-        for j, ext in enumerate(cluster['extensions']):
-            ext_id = f"ext_{i}_{j}"
-            nodes.append({
-                "id": ext_id,
-                "name": f"外延({ext['dimension']})",
-                "type": "extension",
-                "dimension": ext['dimension'],
-                "size": len(ext['nodes'])
-            })
-            
-            # 添加核心到外延的连接
-            links.append({
-                "source": core_id,
-                "target": ext_id,
-                "value": 1
-            })
+    # 新增：第五步，添加revelioGood聚类
+    revelio_clusters = extract_revelio_clusters_from_svg()
+    if revelio_clusters and len(revelio_clusters) > 0:
+        # 添加到最终核心聚类列表中
+        final_core_clusters.extend(revelio_clusters)
+        print(f"从SVG中提取并添加了 {len(revelio_clusters)} 个revelioGood聚类")
     
     # 保存结果
     final_graph_data = {
         'core_clusters': final_core_clusters,
-        'total_cores': len(final_core_clusters),
-        'visualization': {
-            'nodes': nodes,
-            'links': links
-        }
+        'total_cores': len(final_core_clusters)
     }
     
     output_file = os.path.join(subgraphs_dir, 'subgraph_dimension_all.json')
     with open(output_file, 'w') as f:
         json.dump(final_graph_data, f, indent=4)
     
-    print(f"The core clustering analysis was completed, finding a total of {len(final_core_clusters)} Core clusters")
+    print(f"核心聚类分析完成，共找到 {len(final_core_clusters)} 个核心聚类")
     return final_graph_data
+
+def extract_revelio_clusters_from_svg():
+    """从SVG文件中提取revelioGood聚类信息"""
+    try:
+        # 查找SVG文件路径，尝试多个可能的位置
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        
+        # 打印调试信息
+        print(f"当前基础目录: {base_dir}")
+        print(f"当前工作目录: {os.getcwd()}")
+        print(f"查找SVG文件路径...")
+        
+        # 可能的SVG文件路径列表
+        possible_paths = []
+        
+        # 0. 直接检查用户提到的特定路径
+        user_specific_path = 'C:\\Users\\zxx72\\Desktop\\Projects\\Gestalt\\Gestalt_VIS_SVG\\Gestalt_evaluation\\static\\uploadSvg'
+        if os.path.exists(user_specific_path):
+            try:
+                for filename in os.listdir(user_specific_path):
+                    if filename.endswith('.svg'):
+                        possible_paths.append(os.path.join(user_specific_path, filename))
+                        print(f"添加用户指定路径下的SVG文件: {os.path.join(user_specific_path, filename)}")
+            except Exception as e:
+                print(f"读取用户指定路径时出错: {e}")
+        
+        # 1. 标准上传目录
+        upload_folder = os.path.join(base_dir, 'static', 'uploads')
+        possible_paths.append(os.path.join(upload_folder, 'svg_with_ids.svg'))
+        possible_paths.append(os.path.join(upload_folder, 'generated_with_id.svg'))
+        possible_paths.append(os.path.join(upload_folder, 'generated_width_id.svg'))
+        
+        # 2. 项目根目录
+        possible_paths.append(os.path.join(base_dir, 'svg_with_ids.svg'))
+        
+        # 3. 数据目录
+        data_folder = os.path.join(base_dir, 'static', 'data')
+        possible_paths.append(os.path.join(data_folder, 'svg_with_ids.svg'))
+        
+        # 4. 临时目录
+        temp_folder = os.path.join(base_dir, 'static', 'temp')
+        possible_paths.append(os.path.join(temp_folder, 'svg_with_ids.svg'))
+        
+        # 5. 缓存目录
+        cache_folder = os.path.join(base_dir, 'static', 'cache')
+        possible_paths.append(os.path.join(cache_folder, 'svg_with_ids.svg'))
+        
+        # 6. 当前工作目录
+        possible_paths.append(os.path.join(os.getcwd(), 'svg_with_ids.svg'))
+        possible_paths.append(os.path.join(os.getcwd(), 'generated_with_id.svg'))
+        
+        # 7. App根目录
+        app_root = os.path.dirname(base_dir)
+        possible_paths.append(os.path.join(app_root, 'svg_with_ids.svg'))
+        possible_paths.append(os.path.join(app_root, 'static', 'uploads', 'svg_with_ids.svg'))
+        
+        # 8. Gestalt_SVG目录 
+        possible_paths.append(os.path.join(os.path.dirname(app_root), 'Gestalt_SVG', 'svg_with_ids.svg'))
+        possible_paths.append(os.path.join(os.path.dirname(app_root), 'Gestalt_SVG', 'svg.svg'))
+        
+        # 9. 跨模块查找
+        gestalt_root = os.path.dirname(app_root)
+        for module_name in ['Gestalt_API', 'Gestalt_SVG', 'Gestalt_evaluation']:
+            module_path = os.path.join(gestalt_root, module_name)
+            if os.path.exists(module_path):
+                for svg_name in ['svg_with_ids.svg', 'generated_with_id.svg', 'svg.svg']:
+                    # 检查不同可能的位置
+                    possible_paths.append(os.path.join(module_path, svg_name))
+                    possible_paths.append(os.path.join(module_path, 'static', 'uploads', svg_name))
+                    possible_paths.append(os.path.join(module_path, 'static', 'data', svg_name))
+        
+        # 10. 查找上传文件夹中的任何SVG文件
+        search_folders = [
+            upload_folder,
+            os.path.join(app_root, 'static', 'uploads'),
+            os.path.join(gestalt_root, 'Gestalt_SVG'),
+            os.path.join(gestalt_root, 'Gestalt_SVG', 'static', 'uploads')
+        ]
+        
+        for folder in search_folders:
+            if os.path.exists(folder):
+                try:
+                    for filename in os.listdir(folder):
+                        if filename.endswith('.svg'):
+                            possible_paths.append(os.path.join(folder, filename))
+                except Exception as e:
+                    print(f"读取目录 {folder} 时出错: {e}")
+        
+        # 找到第一个存在的文件
+        svg_file_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                svg_file_path = path
+                print(f"找到SVG文件: {svg_file_path}")
+                break
+            else:
+                print(f"未找到文件: {path}")
+        
+        # 如果仍然找不到SVG文件，返回空列表
+        if not svg_file_path:
+            print("未找到SVG文件，无法提取revelioGood聚类")
+            print(f"已尝试以下路径: {possible_paths}")
+            return []
+        
+        # 读取SVG文件内容
+        with open(svg_file_path, 'r', encoding='utf-8') as f:
+            svg_content = f.read()
+        
+        # 解析SVG获取revelioGood元素
+        import xml.etree.ElementTree as ET
+        import re
+        
+        try:
+            # 解析SVG
+            ET.register_namespace('', "http://www.w3.org/2000/svg")
+            root = ET.fromstring(svg_content)
+            
+            # 创建一个Map来存储不同类型的revelioGood元素组
+            revelio_good_groups = {}
+            
+            # 初始化一个普通的revelioGood组
+            revelio_good_groups['reveliogood_basic'] = []
+            
+            # 查找所有包含class="reveliogood"的元素
+            for element in root.findall(".//*[@class]"):
+                class_attr = element.get('class', '')
+                element_id = element.get('id')
+                
+                if not element_id:
+                    continue
+                
+                # 检查是否包含普通的reveliogood类（不带数字）
+                if re.search(r'\breveliogood\b', class_attr):
+                    revelio_good_groups['reveliogood_basic'].append(element_id)
+                
+                # 检查所有reveliogood_n格式的类
+                matches = re.findall(r'reveliogood_\d+', class_attr)
+                # 检查所有reveliogood_X_n格式的类
+                matches_x = re.findall(r'reveliogood_X_\d+', class_attr)
+                
+                # 处理普通的reveliogood_n格式
+                if matches:
+                    for match in matches:
+                        if match not in revelio_good_groups:
+                            revelio_good_groups[match] = []
+                        revelio_good_groups[match].append(element_id)
+                
+                # 处理reveliogood_X_n格式
+                if matches_x:
+                    for match in matches_x:
+                        if match not in revelio_good_groups:
+                            revelio_good_groups[match] = []
+                        revelio_good_groups[match].append(element_id)
+            
+            # 移除空组
+            revelio_good_groups = {k: v for k, v in revelio_good_groups.items() if v}
+            
+            # 打印收集到的组信息
+            print("收集到的revelioGood组：")
+            for key, elements in revelio_good_groups.items():
+                print(f"- {key}: {len(elements)}个元素")
+            
+            # 将收集到的组转换为与核心聚类相同的格式
+            revelio_clusters = []
+            revelio_index = 0
+            
+            for group_key, element_ids in revelio_good_groups.items():
+                # 跳过基础组，如果有其他具体的组
+                if group_key == 'reveliogood_basic' and len(revelio_good_groups) > 1:
+                    continue
+                
+                # 跳过reveliogood_X_n格式的组
+                if 'reveliogood_X_' in group_key:
+                    continue
+                
+                # 创建一个新的核心聚类
+                revelio_cluster = {
+                    'core_nodes': element_ids,
+                    'core_dimensions': [f"RevelioGood_{group_key}"],
+                    'extensions': [],
+                    'isRevelioGood': True,
+                    'groupKey': group_key
+                }
+                
+                revelio_clusters.append(revelio_cluster)
+                revelio_index += 1
+            
+            return revelio_clusters
+            
+        except ET.ParseError as e:
+            print(f"解析SVG文件时出错: {e}")
+            
+            # 尝试使用正则表达式提取信息
+            revelio_good_groups = {}
+            revelio_good_groups['reveliogood_basic'] = []
+            
+            # 查找所有具有class属性的元素
+            class_pattern = r'<([^ >]+)[^>]*class="([^"]*)"[^>]*id="([^"]*)"[^>]*>'
+            matches = re.finditer(class_pattern, svg_content)
+            
+            for match in matches:
+                tag, class_attr, element_id = match.groups()
+                
+                # 检查是否包含普通的reveliogood类（不带数字）
+                if re.search(r'\breveliogood\b', class_attr):
+                    revelio_good_groups['reveliogood_basic'].append(element_id)
+                
+                # 检查所有reveliogood_n格式的类
+                revelio_matches = re.findall(r'reveliogood_\d+', class_attr)
+                # 检查所有reveliogood_X_n格式的类
+                revelio_matches_x = re.findall(r'reveliogood_X_\d+', class_attr)
+                
+                # 处理普通的reveliogood_n格式
+                if revelio_matches:
+                    for r_match in revelio_matches:
+                        if r_match not in revelio_good_groups:
+                            revelio_good_groups[r_match] = []
+                        revelio_good_groups[r_match].append(element_id)
+                
+                # 处理reveliogood_X_n格式
+                if revelio_matches_x:
+                    for r_match in revelio_matches_x:
+                        if r_match not in revelio_good_groups:
+                            revelio_good_groups[r_match] = []
+                        revelio_good_groups[r_match].append(element_id)
+            
+            # 移除空组
+            revelio_good_groups = {k: v for k, v in revelio_good_groups.items() if v}
+            
+            # 打印收集到的组信息
+            print("通过正则表达式收集到的revelioGood组：")
+            for key, elements in revelio_good_groups.items():
+                print(f"- {key}: {len(elements)}个元素")
+            
+            # 将收集到的组转换为与核心聚类相同的格式
+            revelio_clusters = []
+            revelio_index = 0
+            
+            for group_key, element_ids in revelio_good_groups.items():
+                # 跳过基础组，如果有其他具体的组
+                if group_key == 'reveliogood_basic' and len(revelio_good_groups) > 1:
+                    continue
+                
+                # 跳过reveliogood_X_n格式的组
+                if 'reveliogood_X_' in group_key:
+                    continue
+                
+                # 创建一个新的核心聚类
+                revelio_cluster = {
+                    'core_nodes': element_ids,
+                    'core_dimensions': [f"RevelioGood_{group_key}"],
+                    'extensions': [],
+                    'isRevelioGood': True,
+                    'groupKey': group_key
+                }
+                
+                revelio_clusters.append(revelio_cluster)
+                revelio_index += 1
+            
+            return revelio_clusters
+            
+    except Exception as e:
+        print(f"提取revelioGood聚类时出错: {e}")
+        import traceback
+        print(traceback.format_exc())
+        return []
 
 def main(features_json_path, output_dir, clustering_method, subgraph_dimensions, progress_callback=None):
     """主函数"""
