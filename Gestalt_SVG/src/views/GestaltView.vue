@@ -79,7 +79,7 @@ import CodeToSvg from '@/components/visualization/CodeToSvg.vue';
 import StatisticsContainer from '@/components/statistics/StatisticsContainer.vue';
 
 // 添加 dialog 控制变量
-const dialogVisible = ref(true)
+const dialogVisible = ref(false)
 
 const file = ref(null)
 const componentKey = ref(0)
