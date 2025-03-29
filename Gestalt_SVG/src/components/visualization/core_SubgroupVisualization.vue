@@ -62,7 +62,7 @@
                         </div>
                         <div class="encodings-wrapper">
                             <div class="visual-encodings">
-                                Used visual encodings:
+                                Used visual effects:
                             </div>
                             <div class="analysis-content" v-html="generateAnalysis(node)"></div>
                         </div>

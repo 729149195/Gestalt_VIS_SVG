@@ -1,6 +1,6 @@
 <template>
   <div class="statistics-container">
-    <span class="title">Visual Effect Distribution</span>
+    <span class="title">Visual Effects Distribution</span>
     
     <!-- 添加排序按钮 -->
     <button class="sort-button" @click="toggleSortOrder">

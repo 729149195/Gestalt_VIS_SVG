@@ -2,7 +2,7 @@
   <div>
     <div class="analysis-words-container">
       <!-- 保持大标题在顶部 -->
-      <div class="title">Visual Encodings Assessment</div>
+      <div class="title">Visual Effects Assessment</div>
 
       <div class="sections-container">
         <div class="section-wrapper">
@@ -1073,7 +1073,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       })
       .slice(0, 20); // 最多显示20个
 
-    // 处理冲突关系，筛选出不冲突的特征（used encodings
+    // 处理冲突关系，筛选出不冲突的特征（used effects
     const processedSignificantFeatures = [];
     const usedSignificantConflictGroups = new Set(); // 用于记录已使用的冲突组
 
@@ -1175,7 +1175,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
     // 正差异特征（选中元素特有的特征）- Used Features
     analysis += '<div class="feature-column positive selected-elements">';
-    analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">Distinct<br>values</span></span></div>`;
+    analysis += `<div class="column-title all-elements-title">Used effects <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">Distinct<br>values</span></span></div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     if (processedSignificantFeatures.length > 0) {
@@ -1195,7 +1195,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
       analysis += `</div>`;
     } else {
-      analysis += `<div class="no-selection"><span>No visual encodings found</span></div>`;
+      analysis += `<div class="no-selection"><span>No visual effects found</span></div>`;
     }
 
     analysis += `</div>`; // 关闭内容容器
@@ -1229,7 +1229,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       const addFeaturesList = [];
       const resetFeaturesList = [];
 
-      // 获取All elements中的Available encodings
+      // 获取All elements中的Available effects
       // 筛选出方差较小的特征，作为可用但未充分利用的特征
       const availableEncodings = featureArray
         .filter(feature =>
@@ -1337,17 +1337,17 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
         }
       }
 
-      // 创建一个共享容器，包含add visual encodings、reset visual encodings和add annotations
+      // 创建一个共享容器，包含add visual effects visual effects annotations
       analysis += `<div class="suggestions-shared-container">`;
       // 移除总表头
       // analysis += `<div class="suggestions-table-header">Suggestions</div>`;
 
-      // 1. Add Visual Encodings 区域 - 修改为表格式行布局
+      // 1. Add Visual effects 区域 - 修改为表格式行布局
       analysis += `<div class="suggestions-table-row">`;
       analysis += `<div class="suggestions-section-title">Add</div>`;
       analysis += `<div class="suggestions-content-cell">`;
 
-      // 合并Available encodings和多样性为1且值为0的编码，并去重
+      // 合并Available effects
       const combinedAddFeatures = [...processedAvailableEncodings];
 
       // 添加多样性为1且值为0的编码，并去重
@@ -1499,12 +1499,11 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             if (isColorFeature(featureKey)) {
               const rgbValue = getCompleteColorValue(featureKey, feature.usedValue, normalData, selectedNodeIds);
               
-              // 生成HTML元素，初始显示"wait..."
+              // 生成HTML元素，整个feature-item显示"wait..."
               analysis += `
-                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0" id="${featureUniqueId}">
                     <span class="feature-tag all-elements-tag">
-                        <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
-                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                        <span>wait...</span>
                     </span>
                 </div>
               `;
@@ -1524,43 +1523,50 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     // 格式化显著性分值
                     const formattedSalience = (salience * 100).toFixed(1);
                     
-                    // 更新DOM元素显示计算的显著性分值
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = formattedSalience;
+                    // 更新整个feature-item元素
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.setAttribute('data-salience', salience);
                       
-                      // 更新父元素的data-salience属性
-                      const featureItem = predSalienceElement.closest('.feature-item');
-                      if (featureItem) {
-                        featureItem.setAttribute('data-salience', salience);
+                      // 替换整个内容
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
+                            <span class="predicted-salience">${formattedSalience}</span>
+                        </span>
+                      `;
+                      
+                      // 获取该特征所在的容器
+                      const container = featureItem.closest('.suggestions-content-cell');
+                      if (container) {
+                        // 获取容器中所有feature-item
+                        const items = Array.from(container.querySelectorAll('.feature-item'));
                         
-                        // 获取该特征所在的容器
-                        const container = featureItem.closest('.suggestions-content-cell');
-                        if (container) {
-                          // 获取容器中所有feature-item
-                          const items = Array.from(container.querySelectorAll('.feature-item'));
-                          
-                          // 按照salience属性从高到低对items进行排序
-                          items.sort((a, b) => {
-                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
-                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
-                            return salienceB - salienceA;
-                          });
-                          
-                          // 重新添加排序后的元素
-                          items.forEach(item => {
-                            container.appendChild(item);
-                          });
-                        }
+                        // 按照salience属性从高到低对items进行排序
+                        items.sort((a, b) => {
+                          const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                          const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                          return salienceB - salienceA;
+                        });
+                        
+                        // 重新添加排序后的元素
+                        items.forEach(item => {
+                          container.appendChild(item);
+                        });
                       }
                     }
                   })
                   .catch(error => {
                     console.error('无法计算显著性:', error);
                     // 更新DOM元素显示错误信息
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = "计算失败";
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
+                            <span class="predicted-salience">计算失败</span>
+                        </span>
+                      `;
                     }
                   });
               }, 10); // 短暂延迟确保DOM已更新
@@ -1570,12 +1576,11 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
               
-              // 生成HTML元素，初始显示"wait..."
+              // 生成HTML元素，整个feature-item显示"wait..."
               analysis += `
-                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0" id="${featureUniqueId}">
                     <span class="feature-tag all-elements-tag">
-                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
-                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                        <span>wait...</span>
                     </span>
                 </div>
               `;
@@ -1595,43 +1600,50 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     // 格式化显著性分值
                     const formattedSalience = (salience * 100).toFixed(1);
                     
-                    // 更新DOM元素显示计算的显著性分值
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = formattedSalience;
+                    // 更新整个feature-item元素
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.setAttribute('data-salience', salience);
                       
-                      // 更新父元素的data-salience属性
-                      const featureItem = predSalienceElement.closest('.feature-item');
-                      if (featureItem) {
-                        featureItem.setAttribute('data-salience', salience);
+                      // 替换整个内容
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
+                            <span class="predicted-salience">${formattedSalience}</span>
+                        </span>
+                      `;
+                      
+                      // 获取该特征所在的容器
+                      const container = featureItem.closest('.suggestions-content-cell');
+                      if (container) {
+                        // 获取容器中所有feature-item
+                        const items = Array.from(container.querySelectorAll('.feature-item'));
                         
-                        // 获取该特征所在的容器
-                        const container = featureItem.closest('.suggestions-content-cell');
-                        if (container) {
-                          // 获取容器中所有feature-item
-                          const items = Array.from(container.querySelectorAll('.feature-item'));
-                          
-                          // 按照salience属性从高到低对items进行排序
-                          items.sort((a, b) => {
-                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
-                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
-                            return salienceB - salienceA;
-                          });
-                          
-                          // 重新添加排序后的元素
-                          items.forEach(item => {
-                            container.appendChild(item);
-                          });
-                        }
+                        // 按照salience属性从高到低对items进行排序
+                        items.sort((a, b) => {
+                          const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                          const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                          return salienceB - salienceA;
+                        });
+                        
+                        // 重新添加排序后的元素
+                        items.forEach(item => {
+                          container.appendChild(item);
+                        });
                       }
                     }
                   })
                   .catch(error => {
                     console.error('无法计算显著性:', error);
                     // 更新DOM元素显示错误信息
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = "计算失败";
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
+                            <span class="predicted-salience">计算失败</span>
+                        </span>
+                      `;
                     }
                   });
               }, 10); // 短暂延迟确保DOM已更新
@@ -1640,12 +1652,11 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
               
-              // 生成HTML元素，初始显示"wait..."
+              // 生成HTML元素，整个feature-item显示"wait..."
               analysis += `
-                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0" id="${featureUniqueId}">
                     <span class="feature-tag all-elements-tag">
-                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
-                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                        <span>wait...</span>
                     </span>
                 </div>
               `;
@@ -1667,43 +1678,50 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     // 格式化显著性分值
                     const formattedSalience = (salience * 100).toFixed(1);
                     
-                    // 更新DOM元素显示计算的显著性分值
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = formattedSalience;
+                    // 更新整个feature-item元素
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.setAttribute('data-salience', salience);
                       
-                      // 更新父元素的data-salience属性
-                      const featureItem = predSalienceElement.closest('.feature-item');
-                      if (featureItem) {
-                        featureItem.setAttribute('data-salience', salience);
+                      // 替换整个内容
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
+                            <span class="predicted-salience">${formattedSalience}</span>
+                        </span>
+                      `;
+                      
+                      // 获取该特征所在的容器
+                      const container = featureItem.closest('.suggestions-content-cell');
+                      if (container) {
+                        // 获取容器中所有feature-item
+                        const items = Array.from(container.querySelectorAll('.feature-item'));
                         
-                        // 获取该特征所在的容器
-                        const container = featureItem.closest('.suggestions-content-cell');
-                        if (container) {
-                          // 获取容器中所有feature-item
-                          const items = Array.from(container.querySelectorAll('.feature-item'));
-                          
-                          // 按照salience属性从高到低对items进行排序
-                          items.sort((a, b) => {
-                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
-                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
-                            return salienceB - salienceA;
-                          });
-                          
-                          // 重新添加排序后的元素
-                          items.forEach(item => {
-                            container.appendChild(item);
-                          });
-                        }
+                        // 按照salience属性从高到低对items进行排序
+                        items.sort((a, b) => {
+                          const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                          const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                          return salienceB - salienceA;
+                        });
+                        
+                        // 重新添加排序后的元素
+                        items.forEach(item => {
+                          container.appendChild(item);
+                        });
                       }
                     }
                   })
                   .catch(error => {
                     console.error('无法计算显著性:', error);
                     // 更新DOM元素显示错误信息
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = "计算失败";
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
+                            <span class="predicted-salience">计算失败</span>
+                        </span>
+                      `;
                     }
                   });
               }, 10); // 短暂延迟确保DOM已更新
@@ -1722,22 +1740,22 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             }
           });
         } else {
-          analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No additional visual encodings found</span></div>`;
+          analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No additional visual effects found</span></div>`;
         }
       } else {
-        analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No suitable visual encodings found</span></div>`;
+        analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No suitable visual effects found</span></div>`;
       }
 
       analysis += `</div>`; // 关闭内容单元格
       analysis += `</div>`; // 关闭表格行
 
-      // 2. Modify Visual Encodings 区域 - 修改为表格式行布局
+      // 2. Modify Visual effects 区域 - 修改为表格式行布局
       analysis += `<div class="suggestions-table-row">`;
       analysis += `<div class="suggestions-section-title">Modify</div>`;
       analysis += `<div class="suggestions-content-cell">`;
 
-      // 从selected elements的used encodings中找多样性为1的编码
-      // 获取used encodings中的编码
+      // 从selected elements的used effects
+      // 获取used effects
       const usedEncodings = processedSignificantFeatures.filter(feature => {
         // 首先检查是否为需要排除的特征名称
         if (
@@ -1880,12 +1898,11 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             if (isColorFeature(featureKey)) {
               const rgbValue = getCompleteColorValue(featureKey, feature.usedValue, normalData, selectedNodeIds);
               
-              // 生成HTML元素，初始显示"wait..."
+              // 生成HTML元素，整个feature-item显示"wait..."
               analysis += `
-                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0" id="${featureUniqueId}">
                     <span class="feature-tag all-elements-tag">
-                        <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
-                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                        <span>wait...</span>
                     </span>
                 </div>
               `;
@@ -1905,43 +1922,50 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     // 格式化显著性分值
                     const formattedSalience = (salience * 100).toFixed(1);
                     
-                    // 更新DOM元素显示计算的显著性分值
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = formattedSalience;
+                    // 更新整个feature-item元素
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.setAttribute('data-salience', salience);
                       
-                      // 更新父元素的data-salience属性
-                      const featureItem = predSalienceElement.closest('.feature-item');
-                      if (featureItem) {
-                        featureItem.setAttribute('data-salience', salience);
+                      // 替换整个内容
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
+                            <span class="predicted-salience">${formattedSalience}</span>
+                        </span>
+                      `;
+                      
+                      // 获取该特征所在的容器
+                      const container = featureItem.closest('.suggestions-content-cell');
+                      if (container) {
+                        // 获取容器中所有feature-item
+                        const items = Array.from(container.querySelectorAll('.feature-item'));
                         
-                        // 获取该特征所在的容器
-                        const container = featureItem.closest('.suggestions-content-cell');
-                        if (container) {
-                          // 获取容器中所有feature-item
-                          const items = Array.from(container.querySelectorAll('.feature-item'));
-                          
-                          // 按照salience属性从高到低对items进行排序
-                          items.sort((a, b) => {
-                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
-                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
-                            return salienceB - salienceA;
-                          });
-                          
-                          // 重新添加排序后的元素
-                          items.forEach(item => {
-                            container.appendChild(item);
-                          });
-                        }
+                        // 按照salience属性从高到低对items进行排序
+                        items.sort((a, b) => {
+                          const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                          const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                          return salienceB - salienceA;
+                        });
+                        
+                        // 重新添加排序后的元素
+                        items.forEach(item => {
+                          container.appendChild(item);
+                        });
                       }
                     }
                   })
                   .catch(error => {
                     console.error('无法计算显著性:', error);
                     // 更新DOM元素显示错误信息
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = "计算失败";
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <div class="color-preview-inline" style="background-color: ${rgbValue};"></div><span class="copyable-value" data-value="${rgbValue}" data-type="color">${rgbValue}</span></span>
+                            <span class="predicted-salience">计算失败</span>
+                        </span>
+                      `;
                     }
                   });
               }, 10); // 短暂延迟确保DOM已更新
@@ -1951,12 +1975,11 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
               
-              // 生成HTML元素，初始显示"wait..."
+              // 生成HTML元素，整个feature-item显示"wait..."
               analysis += `
-                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0" id="${featureUniqueId}">
                     <span class="feature-tag all-elements-tag">
-                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${(feature.usedValue).toFixed(2)}${unit}</span></span>
-                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                        <span>wait...</span>
                     </span>
                 </div>
               `;
@@ -1976,43 +1999,50 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     // 格式化显著性分值
                     const formattedSalience = (salience * 100).toFixed(1);
                     
-                    // 更新DOM元素显示计算的显著性分值
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = formattedSalience;
+                    // 更新整个feature-item元素
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.setAttribute('data-salience', salience);
                       
-                      // 更新父元素的data-salience属性
-                      const featureItem = predSalienceElement.closest('.feature-item');
-                      if (featureItem) {
-                        featureItem.setAttribute('data-salience', salience);
+                      // 替换整个内容
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
+                            <span class="predicted-salience">${formattedSalience}</span>
+                        </span>
+                      `;
+                      
+                      // 获取该特征所在的容器
+                      const container = featureItem.closest('.suggestions-content-cell');
+                      if (container) {
+                        // 获取容器中所有feature-item
+                        const items = Array.from(container.querySelectorAll('.feature-item'));
                         
-                        // 获取该特征所在的容器
-                        const container = featureItem.closest('.suggestions-content-cell');
-                        if (container) {
-                          // 获取容器中所有feature-item
-                          const items = Array.from(container.querySelectorAll('.feature-item'));
-                          
-                          // 按照salience属性从高到低对items进行排序
-                          items.sort((a, b) => {
-                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
-                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
-                            return salienceB - salienceA;
-                          });
-                          
-                          // 重新添加排序后的元素
-                          items.forEach(item => {
-                            container.appendChild(item);
-                          });
-                        }
+                        // 按照salience属性从高到低对items进行排序
+                        items.sort((a, b) => {
+                          const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                          const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                          return salienceB - salienceA;
+                        });
+                        
+                        // 重新添加排序后的元素
+                        items.forEach(item => {
+                          container.appendChild(item);
+                        });
                       }
                     }
                   })
                   .catch(error => {
                     console.error('无法计算显著性:', error);
                     // 更新DOM元素显示错误信息
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = "计算失败";
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">+${value}</span></span>
+                            <span class="predicted-salience">计算失败</span>
+                        </span>
+                      `;
                     }
                   });
               }, 10); // 短暂延迟确保DOM已更新
@@ -2021,12 +2051,11 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
               const unit = isWidthFeature(featureKey) ? 'px' : '';
               const value = `${feature.usedValue.toFixed(2)}${unit}`;
               
-              // 生成HTML元素，初始显示"wait..."
+              // 生成HTML元素，整个feature-item显示"wait..."
               analysis += `
-                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0">
+                <div class="feature-item" data-feature-key="${featureKey}" data-salience="0" id="${featureUniqueId}">
                     <span class="feature-tag all-elements-tag">
-                        <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
-                        <span class="predicted-salience" id="${featureUniqueId}">wait...</span>
+                        <span>wait...</span>
                     </span>
                 </div>
               `;
@@ -2048,43 +2077,50 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
                     // 格式化显著性分值
                     const formattedSalience = (salience * 100).toFixed(1);
                     
-                    // 更新DOM元素显示计算的显著性分值
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = formattedSalience;
+                    // 更新整个feature-item元素
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.setAttribute('data-salience', salience);
                       
-                      // 更新父元素的data-salience属性
-                      const featureItem = predSalienceElement.closest('.feature-item');
-                      if (featureItem) {
-                        featureItem.setAttribute('data-salience', salience);
+                      // 替换整个内容
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
+                            <span class="predicted-salience">${formattedSalience}</span>
+                        </span>
+                      `;
+                      
+                      // 获取该特征所在的容器
+                      const container = featureItem.closest('.suggestions-content-cell');
+                      if (container) {
+                        // 获取容器中所有feature-item
+                        const items = Array.from(container.querySelectorAll('.feature-item'));
                         
-                        // 获取该特征所在的容器
-                        const container = featureItem.closest('.suggestions-content-cell');
-                        if (container) {
-                          // 获取容器中所有feature-item
-                          const items = Array.from(container.querySelectorAll('.feature-item'));
-                          
-                          // 按照salience属性从高到低对items进行排序
-                          items.sort((a, b) => {
-                            const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
-                            const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
-                            return salienceB - salienceA;
-                          });
-                          
-                          // 重新添加排序后的元素
-                          items.forEach(item => {
-                            container.appendChild(item);
-                          });
-                        }
+                        // 按照salience属性从高到低对items进行排序
+                        items.sort((a, b) => {
+                          const salienceA = parseFloat(a.getAttribute('data-salience') || '0');
+                          const salienceB = parseFloat(b.getAttribute('data-salience') || '0');
+                          return salienceB - salienceA;
+                        });
+                        
+                        // 重新添加排序后的元素
+                        items.forEach(item => {
+                          container.appendChild(item);
+                        });
                       }
                     }
                   })
                   .catch(error => {
                     console.error('无法计算显著性:', error);
                     // 更新DOM元素显示错误信息
-                    const predSalienceElement = document.getElementById(featureUniqueId);
-                    if (predSalienceElement) {
-                      predSalienceElement.textContent = "计算失败";
+                    const featureItem = document.getElementById(featureUniqueId);
+                    if (featureItem) {
+                      featureItem.innerHTML = `
+                        <span class="feature-tag all-elements-tag">
+                            <span class="feature-name-container">${feature.name} → <span class="copyable-value" data-value="${value}">${value}</span></span>
+                            <span class="predicted-salience">计算失败</span>
+                        </span>
+                      `;
                     }
                   });
               }, 10); // 短暂延迟确保DOM已更新
@@ -2103,10 +2139,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             }
           });
         } else {
-          analysis += `<div class="no-selection"><span>No Modify feature found</span></div>`;
+          analysis += `<div class="no-selection"><span>No modify visual effect found</span></div>`;
         }
       } else {
-        analysis += `<div class="no-selection"><span>No Modify feature found</span></div>`;
+        analysis += `<div class="no-selection"><span>No modify visual effect found</span></div>`;
       }
 
       analysis += `</div>`; // 关闭内容单元格
@@ -2267,7 +2303,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
     const processedLeastDistinctive = [];
     const usedConflictGroups = new Set(); // 用于记录已使用的冲突组
 
-    // 处理多样性高的特征（Used encodings
+    // 处理多样性高的特征（Used effects
     // 修改：只统计 selectedNodeIds 中的元素而不是所有元素
     if (selectedNodeIds && selectedNodeIds.length > 0) {
       // 过滤出仅存在于 selectedNodeIds 中的元素
@@ -2425,10 +2461,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       }
     }
 
-    // 重置冲突组记录，为Available encodings
+    // 重置冲突组记录，为Available effects
     usedConflictGroups.clear();
 
-    // 处理多样性低的特征（Available encodings
+    // 处理多样性低的特征（Available effects
     for (const feature of leastDistinctive) {
       const featureKey = feature.featureKeys[0];
       const group = getConflictGroup(featureKey);
@@ -2456,10 +2492,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       }
     }
 
-    // 重置冲突组记录，为Available encodings
+    // 重置冲突组记录，为Available effects
     usedConflictGroups.clear();
 
-    // 处理多样性低的特征（Available encodings
+    // 处理多样性低的特征（Available effects
     const featuresWithSalience = [];
 
     for (const feature of leastDistinctive) {
@@ -2536,7 +2572,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
     // 最突出的特征 - Used Features
     analysis += '<div class="feature-column negative all-elements">';
-    analysis += `<div class="column-title all-elements-title">Used encodings <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">Distinct<br>values</span></span></div>`;
+    analysis += `<div class="column-title all-elements-title">Used effects <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">Distinct<br>values</span></span></div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     if (finalDiverseFeatures.length > 0) {
@@ -2564,7 +2600,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
     // 最不突出的特征 - Available Features
     analysis += '<div class="feature-column positive all-elements">';
-    analysis += `<div class="column-title all-elements-title">Available encodings</div>`;
+    analysis += `<div class="column-title all-elements-title">Available effects</div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     if (finalLeastDistinctive.length > 0) {
@@ -3845,7 +3881,7 @@ const calculateSuggestionSalience = async (ids, attributes) => {
   background-color: rgba(0, 0, 0, 0.02);
 }
 
-/* 为 All elements 部分的 Used visual encodings 添加特殊的 feature-item 样式 */
+/* 为 All elements 部分的 Used visual effects 添加特殊的 feature-item 样式 */
 :deep(.feature-column.negative .feature-item),
 :deep(.feature-column.positive .feature-item) {
   padding: 3px 6px;
@@ -4027,7 +4063,7 @@ const calculateSuggestionSalience = async (ids, attributes) => {
   opacity: 0.9;
 }
 
-/* 添加 All elements 部分的 Used visual encodings 下的 tag 特殊样式 */
+/* 添加 All elements 部分的 Used visual effects 下的 tag 特殊样式 */
 :deep(.all-elements-tag) {
   width: 100%;
   min-width: 100%;
@@ -4065,7 +4101,7 @@ const calculateSuggestionSalience = async (ids, attributes) => {
   color: #333 !important;
 }
 
-/* 添加 All elements 部分的 Used visual encodings 标题样式 */
+/* 添加 All elements 部分的 Used visual effects 标题样式 */
 :deep(.all-elements-title) {
   font-size: 1.3em;
   /* 增大字体大小，从1.1em改为1.3em */
@@ -4348,18 +4384,18 @@ const calculateSuggestionSalience = async (ids, attributes) => {
 /* 修改左右两侧区域的宽度比例 - All elements部分 */
 :deep(.feature-column.positive.all-elements) {
   flex: 1;
-  /* 增加Available encodings区域的比例 */
+  /* 增加Available effects */
 }
 
 :deep(.feature-column.negative.all-elements) {
   flex: 1.1;
-  /* 减少Used encodings区域的比例 */
+  /* 减少Used effects */
 }
 
 /* 修改左右两侧区域的宽度比例 - Selected elements部分 */
 :deep(.feature-column.positive.selected-elements) {
   flex: 1;
-  /* Used encodings区域的比例 */
+  /* Used effects */
 }
 
 :deep(.feature-column.negative.selected-elements) {
