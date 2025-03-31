@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg width="900" height="340" viewBox="0,20,1100,300" style="max-width: 100%; height: auto; font: 10px sans-serif;" id="svg">
+  <style>.st0 {max-width: 100%; height: auto; font: 10px sans-serif;}
+.st1 {fill:#c7e9c0;}
+.st2 {fill:#fdae6b;}
+.st3 {fill:#fb6a4a;}
+.st4 {fill:red;}
+.st5 {stroke:#800000; stroke-width:2;}</style>
+  <rect x="150" y="40" width="800" height="40" class="st1"/>
+  <rect x="150" y="40" width="600" height="40" class="st2"/>
+  <rect x="150" y="40" width="400" height="40" class="st3"/>
+  <rect x="150" y="140" width="800" height="40" class="st1"/>
+  <rect x="150" y="140" width="600" height="40" class="st2"/>
+  <rect x="150" y="140" width="400" height="40" class="st3"/>
+  <rect x="150" y="240" width="800" height="40" class="st1"/>
+  <rect x="150" y="240" width="600" height="40" class="st2"/>
+  <rect x="150" y="240" width="400" height="40" class="st3"/>
+  <rect x="150" y="50" width="400" height="20" class="st4"/>
+  <rect x="150" y="150" width="600" height="20" class="st4"/>
+  <rect x="150" y="250" width="500" height="20" class="st4"/>
+  <line x1="500" y1="30" x2="500" y2="90" class="st5"/>
+  <line x1="800" y1="130" x2="800" y2="190" class="st5"/>
+  <line x1="700" y1="230" x2="700" y2="290" class="st5"/>
+  <text x="120" y="70" font-size="16" text-anchor="end">工人</text>
+  <text x="120" y="170" font-size="16" text-anchor="end">经理</text>
+  <text x="120" y="270" font-size="16" text-anchor="end">工程师</text>
+  <text x="150" y="350" font-size="12">0</text>
+  <text x="350" y="350" font-size="12">2000</text>
+  <text x="550" y="350" font-size="12">4000</text>
+  <text x="750" y="350" font-size="12">6000</text>
+  <text x="950" y="350" font-size="12">8000</text>
+  <text x="1150" y="350" font-size="12">10000</text>
+</svg>

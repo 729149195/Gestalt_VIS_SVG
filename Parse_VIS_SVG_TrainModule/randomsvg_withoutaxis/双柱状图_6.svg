@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg height="340" id="svg" style="max-width: 100%; height: auto; font: 10px sans-serif;" viewBox="-550,-100,900,300" width="900" xmlns="http://www.w3.org/2000/svg">
+<style>.st0 {
+    max-width: 100%;
+    height: auto;
+    font: 10px sans-serif;
+}
+
+.st1 {
+    stroke: hsl(0, 0%, 0%);
+    stroke-width: 2;
+}
+
+.st2 {
+    fill: hsl(213, 70%, 54%);
+}
+
+.st3 {
+    fill: hsl(0, 0%, 0%);
+}
+
+.st4 {
+    fill: hsl(5, 79%, 55%);
+}
+
+.st5 {
+    fill: hsl(0, 0%, 20%);
+}</style>
+<line class="st1" x1="-400" x2="250" y1="180" y2="180" />
+<line class="st1" x1="-400" x2="-400" y1="180" y2="-40" />
+<rect class="st2" height="100" width="20" x="-350" y="80" />
+<text class="st3" text-anchor="middle" x="-340" y="60">20</text>
+<rect class="st4" height="80" width="20" x="-325" y="100" />
+<text class="st3" text-anchor="middle" x="-315" y="80">18</text>
+<text class="st5" text-anchor="middle" x="-337.5" y="200">Product A</text>
+<rect class="st2" height="150" width="20" x="-250" y="30" />
+<text class="st3" text-anchor="middle" x="-240" y="10">35</text>
+<rect class="st4" height="120" width="20" x="-225" y="60" />
+<text class="st3" text-anchor="middle" x="-215" y="40">32</text>
+<text class="st5" text-anchor="middle" x="-237.5" y="200">Product B</text>
+<rect class="st2" height="200" width="20" x="-150" y="-20" />
+<text class="st3" text-anchor="middle" x="-140" y="-40">50</text>
+<rect class="st4" height="160" width="20" x="-125" y="20" />
+<text class="st3" text-anchor="middle" x="-115" y="0">45</text>
+<text class="st5" text-anchor="middle" x="-137.5" y="200">Product C</text>
+<rect class="st2" height="130" width="20" x="-50" y="50" />
+<text class="st3" text-anchor="middle" x="-40" y="30">28</text>
+<rect class="st4" height="110" width="20" x="-25" y="70" />
+<text class="st3" text-anchor="middle" x="-15" y="50">22</text>
+<text class="st5" text-anchor="middle" x="-37.5" y="200">Product D</text>
+<rect class="st2" height="170" width="20" x="50" y="10" />
+<text class="st3" text-anchor="middle" x="60" y="-10">38</text>
+<rect class="st4" height="140" width="20" x="75" y="40" />
+<text class="st3" text-anchor="middle" x="85" y="20">34</text>
+<text class="st5" text-anchor="middle" x="62.5" y="200">Product E</text>
+<rect class="st2" height="210" width="20" x="150" y="-30" />
+<text class="st3" text-anchor="middle" x="160" y="-50">42</text>
+<rect class="st4" height="190" width="20" x="175" y="-10" />
+<text class="st3" text-anchor="middle" x="185" y="-30">40</text>
+<text class="st5" text-anchor="middle" x="162.5" y="200">Product F</text>
+</svg>

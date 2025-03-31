@@ -2,7 +2,7 @@
   <div>
     <div class="analysis-words-container">
       <!-- 保持大标题在顶部 -->
-      <div class="title">Visual Effects Assessment</div>
+      <div class="title">Visual Effect Assessment</div>
 
       <div class="sections-container">
         <div class="section-wrapper">
@@ -91,9 +91,6 @@ import {
   ElMessage,
   ElColorPicker,
   ElInputNumber,
-  ElSelect,
-  ElOption,
-  ElInput
 } from 'element-plus'
 import axios from 'axios'
 import maxstic from '../visualization/maxstic.vue'
@@ -1175,7 +1172,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
     // 正差异特征（选中元素特有的特征）- Used Features
     analysis += '<div class="feature-column positive selected-elements">';
-    analysis += `<div class="column-title all-elements-title">Used effects <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">Distinct<br>values</span></span></div>`;
+    analysis += `<div class="column-title all-elements-title">Used dimensions <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">Distinct<br>effects</span></span></div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     if (processedSignificantFeatures.length > 0) {
@@ -1195,7 +1192,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
       analysis += `</div>`;
     } else {
-      analysis += `<div class="no-selection"><span>No visual effects found</span></div>`;
+      analysis += `<div class="no-selection"><span>No dimensions found</span></div>`;
     }
 
     analysis += `</div>`; // 关闭内容容器
@@ -1740,10 +1737,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             }
           });
         } else {
-          analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No additional visual effects found</span></div>`;
+          analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No additional visual dimension found</span></div>`;
         }
       } else {
-        analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No suitable visual effects found</span></div>`;
+        analysis += `<div class="no-selection" style="width: 100%; margin: 10px 0;"><span>No suitable dimension found</span></div>`;
       }
 
       analysis += `</div>`; // 关闭内容单元格
@@ -1754,8 +1751,8 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
       analysis += `<div class="suggestions-section-title">Modify</div>`;
       analysis += `<div class="suggestions-content-cell">`;
 
-      // 从selected elements的used effects
-      // 获取used effects
+      // 从selected elements的used dimensions
+      // 获取used dimensions
       const usedEncodings = processedSignificantFeatures.filter(feature => {
         // 首先检查是否为需要排除的特征名称
         if (
@@ -2139,10 +2136,10 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
             }
           });
         } else {
-          analysis += `<div class="no-selection"><span>No modify visual effect found</span></div>`;
+          analysis += `<div class="no-selection"><span>No modify visual dimension found</span></div>`;
         }
       } else {
-        analysis += `<div class="no-selection"><span>No modify visual effect found</span></div>`;
+        analysis += `<div class="no-selection"><span>No modify visual dimension found</span></div>`;
       }
 
       analysis += `</div>`; // 关闭内容单元格
@@ -2303,7 +2300,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
     const processedLeastDistinctive = [];
     const usedConflictGroups = new Set(); // 用于记录已使用的冲突组
 
-    // 处理多样性高的特征（Used effects
+    // 处理多样性高的特征（Used dimensions
     // 修改：只统计 selectedNodeIds 中的元素而不是所有元素
     if (selectedNodeIds && selectedNodeIds.length > 0) {
       // 过滤出仅存在于 selectedNodeIds 中的元素
@@ -2572,7 +2569,7 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
 
     // 最突出的特征 - Used Features
     analysis += '<div class="feature-column negative all-elements">';
-    analysis += `<div class="column-title all-elements-title">Used effects <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">Distinct<br>values</span></span></div>`;
+    analysis += `<div class="column-title all-elements-title">Used dimensions <span class="distinct-values-label"><span class="hash-symbol">#</span><span class="label-text">Distinct<br>effects</span></span></div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     if (finalDiverseFeatures.length > 0) {
@@ -2598,9 +2595,9 @@ const generateAnalysis = (normalData, isSelectedNodes = false, selectedNodeIds =
     analysis += `</div>`; // 关闭内容容器
     analysis += '</div>';
 
-    // 最不突出的特征 - Available Features
+    // 最不突出的特征 - Available dimensions
     analysis += '<div class="feature-column positive all-elements">';
-    analysis += `<div class="column-title all-elements-title">Available effects</div>`;
+    analysis += `<div class="column-title all-elements-title">Available dimensions</div>`;
     analysis += `<div class="column-content">`; // 添加内容容器
 
     if (finalLeastDistinctive.length > 0) {
@@ -2975,7 +2972,7 @@ const getCompleteColorValue = (featureKey, value, normalData, selectedNodeIds) =
   const isZeroLightness = isStroke && (Math.abs(l_avg) < 0.01 || Math.abs(l_avg - 1) < 0.01);
   const isZeroHue = isStroke && Math.abs(h_angle) < 0.01;
   
-  // 为stroke颜色设置默认饱和度和亮度值，对应rgb(255, 219, 28)
+  // 为stroke颜色设置默认饱和度和亮度值，
   const defaultHue = 75;        // 默认色相50度
   const defaultSaturation = 20; // 默认饱和度100%
   const defaultLightness = 15;  // 默认亮度55%
@@ -3003,7 +3000,8 @@ const getCompleteColorValue = (featureKey, value, normalData, selectedNodeIds) =
   // 将HSL转换为RGB
   const rgb = hslToRgb(h_value, s_value, l_value);
 
-  return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  // return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  return `rgb(110, 90, 50)`;
 };
 
 // 检查特征是否为颜色相关特征
@@ -4389,34 +4387,25 @@ const calculateSuggestionSalience = async (ids, attributes) => {
 
 :deep(.feature-column.negative.all-elements) {
   flex: 1.1;
-  /* 减少Used effects */
 }
 
 /* 修改左右两侧区域的宽度比例 - Selected elements部分 */
 :deep(.feature-column.positive.selected-elements) {
   flex: 1;
-  /* Used effects */
 }
 
 :deep(.feature-column.negative.selected-elements) {
   flex: 2;
-  /* Suggestions区域的比例 */
 }
 
-/* 为All elements部分添加特定样式 */
 .section-wrapper:first-child {
   flex: 1;
-  /* 缩小All elements部分的宽度占比 */
 }
 
-/* 为Selected elements部分添加特定样式 */
 .section-wrapper:last-child {
   flex: 1.5;
-  /* 增加Selected elements部分的宽度占比 */
 }
 
-
-/* 添加新的样式，确保编码名和预估显著性评分横向居中对齐 */
 :deep(.feature-tag) {
   display: flex;
   align-items: center;
