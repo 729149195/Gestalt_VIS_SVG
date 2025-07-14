@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="false" aria-label="Interactive chart" viewBox="0 0 600 400" height="400" width="600" version="1.1" font-family="-apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, sans-serif" font-size="1rem">
-  <desc aria-hidden="true">Created with Highcharts 12.1.2</desc>
-  <defs aria-hidden="true">
+z  <defs aria-hidden="true">
     <filter id="highcharts-drop-shadow-1">
       <fedropshadow stdDeviation="2.5" flood-opacity="0.75" flood-color="#000000" dy="1" dx="1"/>
     </filter>
@@ -9,11 +8,8 @@
       <rect height="317" width="580" y="0" x="0" fill="none"/>
     </clipPath>
   </defs>
-  <rect aria-hidden="true" ry="0" rx="0" height="400" width="600" y="0" x="0" filter="none" fill="#ffffff"/>
-  <rect aria-hidden="true" filter="none" height="317" width="580" y="68" x="10" fill="none"/>
   <g aria-hidden="true" data-z-index="1" class="highcharts-grid highcharts-xaxis-grid"/>
   <g aria-hidden="true" data-z-index="1" class="highcharts-grid highcharts-yaxis-grid"/>
-  <rect aria-hidden="true" height="317" width="580" y="68" x="10" data-z-index="1" fill="none" stroke="#cccccc" stroke-width="0"/>
   <g aria-hidden="true" data-z-index="2" class="highcharts-axis highcharts-xaxis">
     <path d="M 10 385 L 590 385" data-z-index="7" fill="none" stroke="#333333" stroke-width="0"/>
   </g>
@@ -34,13 +30,6 @@
         <rect aria-label="Oslo, value: 454." role="img" tabindex="-1" ry="6" rx="6" height="1" width="377" y="141" x="203" outline="none" fill="#E7ECEF" stroke="#fff" stroke-width="2"/>
         <rect aria-label="Vestfold og Telemark, value: 15,925." role="img" tabindex="-1" ry="6" rx="6" height="25" width="377" y="116" x="203" outline="none" fill="#E7ECEF" stroke="#fff" stroke-width="2"/>
         <rect aria-label="Agder, value: 14,981." role="img" tabindex="-1" ry="6" rx="6" height="48" width="188" y="269" x="392" outline="none" fill="#A9B4C2" stroke="#fff" stroke-width="2"/>
-      </g>
-      <g aria-hidden="false" data-z-index="999" class="highcharts-level-group-1">
-        <rect aria-label="Nord-Norge, value: 106,682." role="img" tabindex="-1" ry="6" rx="6" height="317" width="203" y="0" x="0" outline="none" fill="none" stroke="#fff" stroke-width="2"/>
-        <rect aria-label="Trøndelag, value: 39,494." role="img" tabindex="-1" ry="6" rx="6" height="127" width="188" y="142" x="392" outline="none" fill="none" stroke="#fff" stroke-width="2"/>
-        <rect aria-label="Vestlandet, value: 54,385." role="img" tabindex="-1" ry="6" rx="6" height="175" width="189" y="142" x="203" outline="none" fill="none" stroke="#fff" stroke-width="2"/>
-        <rect aria-label="Østlandet, value: 88,538." role="img" tabindex="-1" ry="6" rx="6" height="142" width="377" y="0" x="203" outline="none" fill="none" stroke="#fff" stroke-width="2"/>
-        <rect aria-label="Sørlandet, value: 14,981." role="img" tabindex="-1" ry="6" rx="6" height="48" width="188" y="269" x="392" outline="none" fill="none" stroke="#fff" stroke-width="2"/>
       </g>
     </g>
     <g aria-hidden="true" clip-path="none" transform="translate(10,68) scale(1 1)" data-z-index="0.1" class="highcharts-markers highcharts-series-0 highcharts-treemap-series highcharts-color-0"/>

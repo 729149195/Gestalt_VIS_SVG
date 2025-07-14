@@ -296,7 +296,7 @@ class EnhancedClusterEvaluator:
         # 实验表明，小规模数据集需要更宽松的评估标准
         adaptive_factor = min(1.35, 1.0 + 0.35 * (1.0 / max(1, cluster_count)))
             
-        # 创建聚类特征表示和相似度缓存
+        # 创建聚类特征表示和相似度
         cluster_features = {}
         similarity_cache = {}
         
@@ -376,7 +376,7 @@ class EnhancedClusterEvaluator:
                 other_id = id(other_cluster)
                 cache_key = (min(cluster_id, other_id), max(cluster_id, other_id))
                 
-                # 检查缓存中是否已有相似度
+                # 检查中是否已有相似度
                 if cache_key in similarity_cache:
                     sim = similarity_cache[cache_key]
                 else:
@@ -444,7 +444,7 @@ class EnhancedClusterEvaluator:
                     # 确保最终相似度在有效范围内
                     sim = min(1.0, sim)
                     
-                    # 缓存结果
+                    # 结果
                     similarity_cache[cache_key] = sim
                 
                 similarity_scores.append(sim)
@@ -1062,7 +1062,7 @@ class EnhancedBatchEvaluator:
         self.ground_truth_dir = ground_truth_dir
         self.output_dir = output_dir
         self.results = {}
-        # 创建子图缓存目录
+        # 创建子图目录
         self.subgraph_cache_dir = os.path.join(self.output_dir, 'subgraphs_cache')
         os.makedirs(self.subgraph_cache_dir, exist_ok=True)
         
@@ -1078,35 +1078,35 @@ class EnhancedBatchEvaluator:
             svg_path = os.path.join(self.svg_dir, svg_filename)
             ground_truth_path = os.path.join(self.ground_truth_dir, f'step_{file_number}.json')
             
-            # 为当前SVG文件创建唯一的缓存文件路径
+            # 为当前SVG文件创建唯一的文件路径
             cached_subgraph_path = os.path.join(self.subgraph_cache_dir, f'subgraph_dimension_all_{file_number}.json')
             
-            # 检查缓存是否存在
+            # 检查是否存在
             if not os.path.exists(cached_subgraph_path):
-                # 缓存不存在，使用app.py中的处理函数生成
+                # 不存在，使用app.py中的处理函数生成
                 result = process_svg_file(svg_path)
                 if not result['success']:
                     print(f"处理文件 {svg_filename} 失败: {result.get('error', '未知错误')}")
                     return None
                 
-                # 将生成的subgraph_dimension_all.json复制到缓存目录
+                # 将生成的subgraph_dimension_all.json复制到目录
                 original_subgraph_path = os.path.join(self.output_dir, 'subgraphs/subgraph_dimension_all.json')
                 if os.path.exists(original_subgraph_path):
-                    # 读取原始文件并写入缓存
+                    # 读取原始文件并写入
                     with open(original_subgraph_path, 'r', encoding='utf-8') as src_file:
                         subgraph_data = json.load(src_file)
                         
                     with open(cached_subgraph_path, 'w', encoding='utf-8') as dest_file:
                         json.dump(subgraph_data, dest_file, ensure_ascii=False, indent=2)
                     
-                    print(f"为 {svg_filename} 创建了子图缓存: {cached_subgraph_path}")
+                    print(f"为 {svg_filename} 创建了子图: {cached_subgraph_path}")
                 else:
                     print(f"警告: 无法找到原始子图文件 {original_subgraph_path}")
                     return None
             else:
-                print(f"使用缓存的子图文件: {cached_subgraph_path}")
+                print(f"使用子图文件: {cached_subgraph_path}")
                 
-            # 创建评估器并评估 - 使用缓存的子图文件
+            # 创建评估器并评估 - 使用的子图文件
             evaluator = EnhancedClusterEvaluator(
                 cached_subgraph_path,
                 ground_truth_path

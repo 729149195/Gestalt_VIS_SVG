@@ -8,66 +8,61 @@ from torch.nn.functional import normalize
 import numpy as np
 
 # 模型路径
-model_path = ("./static/modules/model_feature_dim_4_batch_64.tar")
+model_path = ("./static/modules/best_model_mds211_v2.tar")
 
-# 定义模型类
-class ModifiedNetwork(nn.Module):
-    def __init__(self, input_dim, feature_dim):
-        super(ModifiedNetwork, self).__init__()
-        self.input_dim = input_dim
+# 定义模型类 - 使用PyramidNetwork架构来匹配best_model_mds211_v2.tar
+class PyramidNetwork(nn.Module):
+    """专为SVG视觉特征优化的金字塔网络架构"""
+    def __init__(self, input_dim, feature_dim, dropout_rate=0.2):
+        super(PyramidNetwork, self).__init__()
         self.feature_dim = feature_dim
-        # self.instance_projector = nn.Sequential(
-        #     # 第一层：20 -> 32
-        #     nn.Linear(input_dim, 32),
-        #     nn.BatchNorm1d(32),
-        #     nn.ReLU(),
-        #     # 第二层：32 -> 16
-        #     nn.Linear(32, 16),
-        #     nn.BatchNorm1d(16),
-        #     nn.ReLU(),
-        #     # 第三层：16 -> feature_dim
-        #     nn.Linear(16, self.feature_dim),
-        #     nn.Tanh()
-        # )
-        self.instance_projector = nn.Sequential(
-            # 第一层：input_dim -> 32（适度扩大特征维度）
-            nn.Linear(input_dim, 32),
-            nn.BatchNorm1d(32),
-            nn.ReLU(),
-            # 第二层：32 -> 16（平缓降维）
-            nn.Linear(32, 16),
+        
+        # 第一层 - 22维到16维
+        self.layer1 = nn.Sequential(
+            nn.Linear(input_dim, 16),
             nn.BatchNorm1d(16),
             nn.ReLU(),
-            # 第三层：16 -> 8（继续降维）
-            nn.Linear(16, 8),
+            nn.Dropout(dropout_rate)
+        )
+        
+        # 第二层 - 16维到12维
+        self.layer2 = nn.Sequential(
+            nn.Linear(16, 12),
+            nn.BatchNorm1d(12),
+            nn.ReLU(),
+            nn.Dropout(dropout_rate)
+        )
+        
+        # 第三层 - 12维到8维
+        self.layer3 = nn.Sequential(
+            nn.Linear(12, 8),
             nn.BatchNorm1d(8),
             nn.ReLU(),
-            # 最后一层：8 -> 4（最终输出维度）
-            nn.Linear(8, self.feature_dim),
-            # 保持最终归一化层
-            nn.BatchNorm1d(self.feature_dim, affine=False)
-        ) 
-        self._initialize_weights()
-
-    def _initialize_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight)
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-
+            nn.Dropout(dropout_rate)
+        )
+        
+        # 融合层 - 将所有特征连接并降至目标维度
+        self.fusion = nn.Sequential(
+            nn.Linear(16 + 12 + 8, feature_dim),
+            nn.BatchNorm1d(feature_dim, affine=False)
+        )
+    
     def forward(self, x):
-        outputs = {}
-        x = self.instance_projector[0:3](x)  # 第一层Linear+BN+ReLU
-        outputs['layer1_output'] = x
-        x = self.instance_projector[3:6](x)  # 第二层Linear+BN+ReLU
-        outputs['layer2_output'] = x
-        x = self.instance_projector[6:9](x)  # 第三层Linear+BN+ReLU
-        outputs['layer3_output'] = x
-        x = self.instance_projector[9:](x)   # 最后一层Linear+BN
-        z = normalize(x, dim=1)
-        outputs['normalized_output'] = z
-        return z, outputs
+        # 第一层编码
+        x1 = self.layer1(x)
+        
+        # 第二层编码
+        x2 = self.layer2(x1)
+        
+        # 第三层编码
+        x3 = self.layer3(x2)
+        
+        # 特征融合（连接所有层次的特征）
+        fusion = torch.cat([x1, x2, x3], dim=1)
+        
+        # 输出最终降维结果
+        z = self.fusion(fusion)
+        return z, z
 
 # 定义数据集类
 class FeatureVectorDataset(Dataset):
@@ -85,7 +80,7 @@ class FeatureVectorDataset(Dataset):
 # 定义聚类预测类
 class ClusterPredictor:
     def __init__(self, model_save_path, dataset_path, output_file_mult_path, features_file_path,
-                 distance_threshold_ratio, input_dim=20, feature_dim=4):  
+                 distance_threshold_ratio, input_dim=22, feature_dim=4):  
         self.model_save_path = model_save_path
         self.dataset_path = dataset_path
         self.output_file_mult_path = output_file_mult_path
@@ -94,7 +89,7 @@ class ClusterPredictor:
         self.feature_dim = feature_dim
         self.distance_threshold_ratio = distance_threshold_ratio
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = ModifiedNetwork(self.input_dim, self.feature_dim).to(self.device)
+        self.model = PyramidNetwork(self.input_dim, self.feature_dim).to(self.device)
         self.load_model()
 
     def load_model(self):

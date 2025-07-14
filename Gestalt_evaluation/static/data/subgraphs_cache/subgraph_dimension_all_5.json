@@ -2,7 +2,7 @@
   "core_clusters": [
     {
       "core_nodes": [
-        "svg/path_2",
+        "svg/path",
         "svg/path_6"
       ],
       "core_dimensions": [
@@ -21,8 +21,17 @@
     },
     {
       "core_nodes": [
-        "svg/path_4",
-        "svg/path_3"
+        "svg/path_4"
+      ],
+      "core_dimensions": [
+        "1"
+      ],
+      "extensions": []
+    },
+    {
+      "core_nodes": [
+        "svg/path_3",
+        "svg/path_2"
       ],
       "core_dimensions": [
         "1"
@@ -40,17 +49,6 @@
     },
     {
       "core_nodes": [
-        "svg/path"
-      ],
-      "core_dimensions": [
-        "1"
-      ],
-      "extensions": []
-    },
-    {
-      "core_nodes": [
-        "svg/path_2",
-        "svg/path_3",
         "svg/path_6"
       ],
       "core_dimensions": [
@@ -60,6 +58,7 @@
     },
     {
       "core_nodes": [
+        "svg/path_1",
         "svg/path_4"
       ],
       "core_dimensions": [
@@ -69,49 +68,20 @@
     },
     {
       "core_nodes": [
+        "svg/path"
+      ],
+      "core_dimensions": [
+        "2"
+      ],
+      "extensions": []
+    },
+    {
+      "core_nodes": [
         "svg/path_1",
-        "svg/path",
         "svg/path_6"
       ],
       "core_dimensions": [
         "3"
-      ],
-      "extensions": []
-    },
-    {
-      "core_nodes": [
-        "svg/path_3"
-      ],
-      "core_dimensions": [
-        "3"
-      ],
-      "extensions": []
-    },
-    {
-      "core_nodes": [
-        "svg/path_2"
-      ],
-      "core_dimensions": [
-        "3"
-      ],
-      "extensions": []
-    },
-    {
-      "core_nodes": [
-        "svg/path_6"
-      ],
-      "core_dimensions": [
-        "4"
-      ],
-      "extensions": []
-    },
-    {
-      "core_nodes": [
-        "svg/path_4",
-        "svg/path_2"
-      ],
-      "core_dimensions": [
-        "4"
       ],
       "extensions": []
     },
@@ -124,23 +94,7 @@
         "4"
       ],
       "extensions": []
-    },
-    {
-      "core_nodes": [
-        "path_6",
-        "path_4",
-        "path_3",
-        "path_2",
-        "path_1",
-        "path"
-      ],
-      "core_dimensions": [
-        "RevelioGood_reveliogood_basic"
-      ],
-      "extensions": [],
-      "isRevelioGood": true,
-      "groupKey": "reveliogood_basic"
     }
   ],
-  "total_cores": 14
+  "total_cores": 10
 }
