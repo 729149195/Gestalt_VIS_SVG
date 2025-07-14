@@ -1104,7 +1104,7 @@ class EnhancedBatchEvaluator:
                     print(f"警告: 无法找到原始子图文件 {original_subgraph_path}")
                     return None
             else:
-                print(f"使用子图文件: {cached_subgraph_path}")
+                print(f"使用的子图文件: {cached_subgraph_path}")
                 
             # 创建评估器并评估 - 使用的子图文件
             evaluator = EnhancedClusterEvaluator(
