@@ -415,7 +415,6 @@ const initEditors = () => {
               } else {
                 // 如果没有找到匹配的节点，说明这是一个新增的节点
                 // 将新节点克隆并添加到原始节点中
-                console.log('添加新节点:', editedChild.tagName, editedId || '无ID')
                 const newNode = editedChild.cloneNode(true)
                 originalNode.appendChild(newNode)
               }
@@ -427,7 +426,6 @@ const initEditors = () => {
               const originalChild = originalChildren[i]
               if (!processedOriginalChildren.has(originalChild)) {
                 // 该节点在编辑后的文档中不存在，应该被删除
-                console.log('删除节点:', originalChild.tagName, originalChild.getAttribute('id') || '无ID')
                 originalNode.removeChild(originalChild)
               }
             }

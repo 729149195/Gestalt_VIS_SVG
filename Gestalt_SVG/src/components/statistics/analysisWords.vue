@@ -105,7 +105,6 @@ onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has('debug') && urlParams.get('debug') === 'true') {
     isDebugMode.value = true;
-    console.log('已开启调试模式');
   }
 });
 
@@ -3336,7 +3335,6 @@ const calculateSuggestionSalience = async (ids, attributes) => {
       debug: true
     };
 
-    console.log('发送显著性预测请求:', requestData);
 
     // 发送请求到预测API
     const response = await fetch(SALIENCE_API_URL, {
@@ -3352,7 +3350,6 @@ const calculateSuggestionSalience = async (ids, attributes) => {
     }
 
     const result = await response.json();
-    console.log('获取显著性预测结果:', result);
     
     // 返回计算的显著性分值
     return result.salience;

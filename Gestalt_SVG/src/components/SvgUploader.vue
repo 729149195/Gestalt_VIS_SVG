@@ -530,7 +530,6 @@ const updatePerceptionScope = () => {
         duration: 3000
     });
     
-    console.log('Update Perception Scope Complete, selectionMode:', selectionMode.value);
     
     // 设置一个定时器，一段时间后将fromPerceptionScope设为false，允许再次计算视觉显著性
     // 5秒后重置，这样用户有足够时间进行下一步操作
@@ -970,7 +969,6 @@ const updateDisplayNodeOpacity = () => {
         });
         
         // 输出当前选中的节点ID，便于调试
-        console.log('当前选中的节点IDs:', selectedNodeIds.value);
     } catch (error) {
         console.error('Error updating display node opacity:', error);
     }
@@ -1026,19 +1024,15 @@ const selectionMode = ref('click'); // 默认为点击选择模式
 const setSelectionMode = (mode) => {
     const oldMode = selectionMode.value;
     selectionMode.value = mode;
-    console.log(`切换选择模式: ${oldMode} -> ${mode}`);
 
     try {
         if (mode === 'lasso') {
-            console.log('启用lasso选择模式');
             // 启用控制区的多选模式
             if (!isTracking.value) {
-                console.log('为控制区启用lasso模式');
                 toggleTrackMode();
             }
             // 启用显示区的多选模式
             if (!isDisplayTracking.value) {
-                console.log('为显示区启用lasso模式');
                 toggleDisplayTrackMode();
             }
             // 添加lasso模式的鼠标样式
@@ -1053,15 +1047,12 @@ const setSelectionMode = (mode) => {
                 }
             });
         } else {
-            console.log('禁用lasso选择模式');
             // 禁用控制区的多选模式
             if (isTracking.value) {
-                console.log('为控制区禁用lasso模式');
                 toggleTrackMode();
             }
             // 禁用显示区的多选模式
             if (isDisplayTracking.value) {
-                console.log('为显示区禁用lasso模式');
                 toggleDisplayTrackMode();
             }
             // 添加clicking模式的鼠标样式
@@ -1388,7 +1379,6 @@ const calculateVisualSalience = () => {
                 
                 // 如果同时满足这两个条件，显著性减10
                 if (allHighlightedHaveClass && noNonHighlightedHaveClass) {
-                    console.log(`发现所有高亮元素都包含类 ${downClass}，且其他元素都不包含该类，显著性减10`);
                     salienceScore -= 10;
                     break; // 只要找到一个满足条件的类就可以了
                 }
@@ -1397,7 +1387,6 @@ const calculateVisualSalience = () => {
         
         // 检查当前选中元素是否与store中的reveliogood_n组完全匹配
         const reveliogoodClusters = store.getters.getRevelioGoodClusters || [];
-        console.log('当前store中的reveliogood_n组：', reveliogoodClusters);
         if (reveliogoodClusters.length > 0) {
             // 提取当前高亮元素的ID，并排序以便比较
             const currentHighlightIds = [...highlightedIds].sort();
@@ -1430,7 +1419,6 @@ const calculateVisualSalience = () => {
             
             // 如果找到匹配，增加显著性分数
             if (isMatch) {
-                console.log('发现与reveliogood_n组完全匹配，增加显著性分数');
                 
                 // 检查当前高亮元素集合是否属于reveliogood_X_n类型
                 // 为此，我们需要获取SVG中的class信息
@@ -1463,7 +1451,6 @@ const calculateVisualSalience = () => {
                                     
                                     if (allHaveClass) {
                                         isXType = true;
-                                        console.log(`发现所有元素都共享reveliogood_X_n类: ${xClass}, 不增加额外显著性分数`);
                                         break;
                                     }
                                 }
@@ -1510,8 +1497,6 @@ const calculateVisualSalience = () => {
         // 将显著性值提交到Vuex store (将原本设置本地值的部分替换为提交到store)
         store.commit('SET_VISUAL_SALIENCE', normalizedScore);
         
-        // 添加控制台日志便于调试
-        console.log(`视觉显著性计算完成，原始分数: ${salienceScore}, 归一化分数: ${normalizedScore}`);
     } catch (error) {
         console.error('Error calculating visual salience:', error);
         // 出错时设置默认值到store
@@ -1873,7 +1858,6 @@ const toggleNode = (nodeId) => {
 // 处理节点移除事件
 const handleNodeRemoved = (event) => {
     const { nodeId, remaining } = event.detail;
-    console.log(`节点 ${nodeId} 已被移除，剩余节点: `, remaining);
     
     // 强制更新显示
     fromPerceptionScope.value = false;
