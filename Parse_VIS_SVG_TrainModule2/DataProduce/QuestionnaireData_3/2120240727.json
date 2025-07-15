@@ -1,0 +1,618 @@
+{
+  "formData": {
+    "studentid": "2120240727",
+    "age": "22",
+    "gender": "male",
+    "visualimpairment": "no",
+    "visualizationExperience": "no",
+    "id": "727774"
+  },
+  "startTime": "2024-12-21 16:23:13",
+  "endTime": "2024-12-21 16:30:58",
+  "duration": "7 minutes 44 seconds",
+  "steps": [
+    {
+      "stepId": 17,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": ["path_1", "path_9", "path_4", "path_8", "path_11"],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        },
+        {
+          "group": "组合2",
+          "nodes": ["path_1", "path_7", "path_10"],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 3
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 32,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": ["rect_9", "rect", "rect_2", "rect_6"],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 3
+          }
+        },
+        {
+          "group": "组合2",
+          "nodes": ["rect_8", "rect_5"],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 2
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 20,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "path_77",
+            "path_68",
+            "path_67",
+            "path_65",
+            "path_63",
+            "path_64"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 2
+          }
+        },
+        {
+          "group": "组合2",
+          "nodes": [
+            "path_73",
+            "path_32",
+            "path_19",
+            "path_8",
+            "path_20",
+            "path_6",
+            "path_4",
+            "path_3",
+            "path_5",
+            "path_7",
+            "path_9",
+            "path_12",
+            "path_13",
+            "path_14",
+            "path_15",
+            "path_10",
+            "path_11"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 2
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 37,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "polygon_46",
+            "polygon_45",
+            "polygon_44",
+            "polygon_43",
+            "polygon_42",
+            "polygon_41",
+            "polygon_40",
+            "polygon_39",
+            "polygon_21",
+            "polygon_20",
+            "polygon_19",
+            "polygon_18",
+            "polygon_17",
+            "polygon_16",
+            "polygon_15",
+            "polygon_14"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 2,
+            "exclusionary_force": 2
+          }
+        },
+        {
+          "group": "组合2",
+          "nodes": [
+            "polygon_38",
+            "polygon_37",
+            "polygon_36",
+            "polygon_35",
+            "polygon_34",
+            "polygon_13",
+            "polygon_12",
+            "polygon_11",
+            "polygon_10",
+            "polygon_9",
+            "polygon_8",
+            "polygon_7",
+            "polygon_6",
+            "polygon_5",
+            "polygon_4",
+            "polygon_3",
+            "polygon_2",
+            "polygon_1",
+            "polygon"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 2,
+            "exclusionary_force": 2
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 15,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": ["text_76", "text_78", "text_77", "text_75"],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 1,
+            "exclusionary_force": 2
+          }
+        },
+        {
+          "group": "组合2",
+          "nodes": [
+            "text_29",
+            "text_46",
+            "text_72",
+            "text_27",
+            "text_57",
+            "text_55",
+            "text_56",
+            "text_43",
+            "text_30",
+            "text_45",
+            "text_32",
+            "text_66",
+            "text_64",
+            "text_35",
+            "text_49",
+            "text_50",
+            "text_40",
+            "text_51",
+            "text_42",
+            "text_10",
+            "text_28"
+          ],
+          "ratings": {
+            "attention": 2,
+            "correlation_strength": 2,
+            "exclusionary_force": 1
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 1,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "circle_19",
+            "circle_11",
+            "circle_9",
+            "circle_8",
+            "circle_7",
+            "circle_6",
+            "circle_5",
+            "circle_4",
+            "circle_3",
+            "circle_72",
+            "circle_71",
+            "circle_31",
+            "circle_30",
+            "circle_29",
+            "circle_28",
+            "circle_27",
+            "circle_26",
+            "circle_18",
+            "circle_17",
+            "circle_16",
+            "circle_2",
+            "circle_1",
+            "circle"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 2
+          }
+        },
+        {
+          "group": "组合2",
+          "nodes": [
+            "circle_80",
+            "circle_75",
+            "circle_73",
+            "circle_79",
+            "circle_74",
+            "circle_77",
+            "circle_76",
+            "circle_78"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 2
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 9,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "path_22",
+            "path_29",
+            "path_4",
+            "path_26",
+            "path_10",
+            "path_12",
+            "path_18",
+            "path_11",
+            "path_33",
+            "path_7",
+            "path_9",
+            "path_8",
+            "path_2",
+            "path_17"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 2
+          }
+        },
+        {
+          "group": "组合2",
+          "nodes": [
+            "path_30",
+            "path_15",
+            "path_19",
+            "path_31",
+            "path_27",
+            "path_13",
+            "path_16",
+            "path_24",
+            "path",
+            "path_23",
+            "path_6",
+            "path_3",
+            "path_14"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 2,
+            "exclusionary_force": 2
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 12,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "rect_30",
+            "rect_28",
+            "rect_24",
+            "rect_23",
+            "rect_22",
+            "rect_21",
+            "rect_20",
+            "rect_19",
+            "rect_18",
+            "rect_17",
+            "rect_16",
+            "rect_14",
+            "rect_13",
+            "rect_12",
+            "rect_11",
+            "rect_10",
+            "rect_9",
+            "rect_8",
+            "rect_7",
+            "rect_6",
+            "rect_5",
+            "rect_4",
+            "rect_3",
+            "rect_2",
+            "rect"
+          ],
+          "ratings": {
+            "attention": 1,
+            "correlation_strength": 1,
+            "exclusionary_force": 1
+          }
+        },
+        {
+          "group": "组合2",
+          "nodes": [
+            "rect_78",
+            "rect_77",
+            "rect_75",
+            "rect_74",
+            "rect_73",
+            "rect_72",
+            "rect_71",
+            "rect_70",
+            "rect_67",
+            "rect_65",
+            "rect_63",
+            "rect_61",
+            "rect_60",
+            "rect_58",
+            "rect_50",
+            "rect_48",
+            "rect_47",
+            "rect_46",
+            "rect_45",
+            "rect_44",
+            "rect_43",
+            "rect_42",
+            "rect_33",
+            "rect_32",
+            "rect_31"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 3
+          }
+        },
+        {
+          "group": "组合3",
+          "nodes": [
+            "rect_162",
+            "rect_160",
+            "rect_156",
+            "rect_154",
+            "rect_153",
+            "rect_152",
+            "rect_151",
+            "rect_150",
+            "rect_149",
+            "rect_148",
+            "rect_147",
+            "rect_146",
+            "rect_145",
+            "rect_144",
+            "rect_143",
+            "rect_142",
+            "rect_139",
+            "rect_137",
+            "rect_136",
+            "rect_135",
+            "rect_133",
+            "rect_132",
+            "rect_130",
+            "rect_128",
+            "rect_127",
+            "rect_125",
+            "rect_123",
+            "rect_119",
+            "rect_117",
+            "rect_115",
+            "rect_114",
+            "rect_110",
+            "rect_109",
+            "rect_108",
+            "rect_107",
+            "rect_105",
+            "rect_101",
+            "rect_99",
+            "rect_98",
+            "rect_97",
+            "rect_96",
+            "rect_88",
+            "rect_87",
+            "rect_86",
+            "rect_85",
+            "rect_83",
+            "rect_82",
+            "rect_81",
+            "rect_80",
+            "rect_285",
+            "rect_276",
+            "rect_244",
+            "rect_241",
+            "rect_232",
+            "rect_202",
+            "rect_178"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 3
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 27,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "path_44",
+            "path_43",
+            "path_54",
+            "path_32",
+            "path_33",
+            "path_22",
+            "path_21",
+            "path_10",
+            "path_11",
+            "path_64",
+            "path_63",
+            "path_62",
+            "path_61",
+            "path_58",
+            "path_57",
+            "path_59",
+            "path_60",
+            "path_50",
+            "path_49",
+            "path_47",
+            "path_48",
+            "path_46",
+            "path_45",
+            "path_51",
+            "path_41",
+            "path_42",
+            "path_30",
+            "path_29",
+            "path_28",
+            "path_38",
+            "path_37",
+            "path_36",
+            "path_35",
+            "path_34",
+            "path_23",
+            "path_24",
+            "path_12",
+            "path_25",
+            "path_15",
+            "path_16",
+            "path_17",
+            "path_18",
+            "path_19",
+            "path_20",
+            "path_31",
+            "path_6",
+            "path_5",
+            "path_4",
+            "path_3"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 3
+          }
+        },
+        {
+          "group": "组合2",
+          "nodes": [
+            "path_65",
+            "path_66",
+            "path_55",
+            "path_53",
+            "path_52",
+            "path_40",
+            "path_39",
+            "path_27",
+            "path_26",
+            "path_14",
+            "path_13",
+            "path_1",
+            "path_7",
+            "path_8",
+            "path_9",
+            "path_2"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 3
+          }
+        }
+      ]
+    },
+    {
+      "stepId": 30,
+      "groups": [
+        {
+          "group": "组合1",
+          "nodes": [
+            "rect_2",
+            "rect_1",
+            "polygon_5",
+            "polygon_4",
+            "polygon_3",
+            "polygon_21",
+            "polygon_1",
+            "polygon",
+            "polygon_2",
+            "polygon_20",
+            "polygon_6",
+            "polygon_11",
+            "polygon_19",
+            "polygon_15",
+            "rect",
+            "polygon_16",
+            "polygon_9",
+            "polygon_12",
+            "polygon_8",
+            "polygon_17",
+            "polygon_7",
+            "polygon_18",
+            "polygon_14",
+            "polygon_10"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 3
+          }
+        },
+        {
+          "group": "组合2",
+          "nodes": [
+            "polygon_22",
+            "rect_5",
+            "rect_4",
+            "polygon_23",
+            "polygon_24",
+            "rect_3",
+            "polygon_25",
+            "polygon_33",
+            "polygon_28",
+            "polygon_27",
+            "polygon_30",
+            "polygon_29",
+            "polygon_26",
+            "rect_6",
+            "polygon_35",
+            "polygon_31"
+          ],
+          "ratings": {
+            "attention": 3,
+            "correlation_strength": 3,
+            "exclusionary_force": 3
+          }
+        }
+      ]
+    }
+  ]
+}
