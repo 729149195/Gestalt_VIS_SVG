@@ -1,5 +1,5 @@
 # PatternSight: A Perceptual Grouping Effectiveness Assessment Approach for Graphical Patterns in Charts
-> This project is under continuous improvement. During the optimization process, some model parameters may experience slight fluctuations.
+> This project is under continuous improvement.
 ## How to Run the Code
 
 ### Frontend Setup
