@@ -1,0 +1,18 @@
+@import './base.css';
+a,
+.green {
+  text-decoration: none;
+  color: #885F35;
+  transition: 0.4s;
+  padding: 3px;
+}
+
+/* main.css 或 App.vue */
+body {
+  overflow-y: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 0px;  /* 对于 Webkit 内核的浏览器 */
+  background: transparent;  /* 使滚动条背景透明 */
+}
