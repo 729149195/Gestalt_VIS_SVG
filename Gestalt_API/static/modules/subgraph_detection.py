@@ -39,7 +39,7 @@ def calculate_gmm(features):
     
     # 检查数据是否都相同
     if np.all(scaled_features == scaled_features[0]):
-        print("所有数据点相同，归为一个聚类")
+        # print("所有数据点相同，归为一个聚类")
         return None, [], True, scaled_features
     
     # 根据数据量动态调整最大聚类数
@@ -102,16 +102,17 @@ def calculate_metrics(features):
     # 如果所有数据点相同，聚集性为1
     if is_single_cluster:
         return dispersion, 1.0
-    
-    # 计算局部聚集性 (使用GMM组件的方差)
-    variances = best_gmm.covariances_.reshape(-1)  # 展平协方差矩阵
-    weights = 1 / (variances + 1e-6)  # 避免除以零
-    total_weight = np.sum(weights)
-    normalized_weights = weights / total_weight
-    
-    clustering = np.sum(normalized_weights * (1 - np.sqrt(variances)))
-    
-    return dispersion, clustering
+    # 增加健壮性判断，避免best_gmm为None时报错
+    if best_gmm is None:
+        return dispersion, 1.0
+    else:
+        # 计算局部聚集性 (使用GMM组件的方差)
+        variances = best_gmm.covariances_.reshape(-1)  # 展平协方差矩阵
+        weights = 1 / (variances + 1e-6)  # 避免除以零
+        total_weight = np.sum(weights)
+        normalized_weights = weights / total_weight
+        clustering = np.sum(normalized_weights * (1 - np.sqrt(variances)))
+        return dispersion, clustering
 
 def evaluate_dimension_combination(features):
     """评估维度组合的适用性
@@ -149,9 +150,9 @@ def evaluate_dimension_combination(features):
 
 def generate_subgraph(identifiers, features, dimensions, clustering_method):
     """为指定维度生成子图"""
-    print(f"\n=== 开始生成子图 ===")
-    print(f"使用维度: {dimensions}")
-    print(f"聚类方法: {clustering_method}")
+    # print(f"\n=== 开始生成子图 ===")
+    # print(f"使用维度: {dimensions}")
+    # print(f"聚类方法: {clustering_method}")
     
     selected_features = features[:, dimensions]
     
@@ -178,13 +179,14 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
         # 计算聚集性
         if is_single_cluster:
             clustering = 1.0
-        else:
+        elif best_gmm is not None:
             variances = best_gmm.covariances_.reshape(-1)  # 展平协方差矩阵
             weights = 1 / (variances + 1e-6)  # 避免除以零
             total_weight = np.sum(weights)
             normalized_weights = weights / total_weight
-            
             clustering = np.sum(normalized_weights * (1 - np.sqrt(variances)))
+        else:
+            clustering = 1.0
     else:
         # 对于非GMM方法，使用原有的评估方式
         evaluation_result, metrics = evaluate_dimension_combination(selected_features)
@@ -213,12 +215,12 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
         else:
             evaluation_result = "过滤(无区分度)"
     
-    print(f"维度评估结果: {evaluation_result}")
-    print(f"分散度: {dispersion:.3f}, 聚集性: {clustering:.3f}")
+    # print(f"维度评估结果: {evaluation_result}")
+    # print(f"分散度: {dispersion:.3f}, 聚集性: {clustering:.3f}")
     
     # 如果评估结果包含"过滤"，则返回空的图数据结构而不是None
     if "过滤" in evaluation_result:
-        print("该维度组合被过滤，跳过聚类")
+        # print("该维度组合被过滤，跳过聚类")
         return {
             "nodes": [],
             "links": [],
@@ -251,13 +253,17 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
         if is_single_cluster:
             communities = {identifiers[i]: 0 for i in range(len(identifiers))}
         else:
-            # 已经有了之前计算的结果，直接使用
-            cluster_labels = best_gmm.predict(scaled_features)
-            # 转换为与Louvain方法相同的格式
-            communities = {identifiers[i]: int(cluster_labels[i]) for i in range(len(identifiers))}
+            # 增加健壮性判断，避免best_gmm为None时报错
+            if best_gmm is not None:
+                # 已经有了之前计算的结果，直接使用
+                cluster_labels = best_gmm.predict(scaled_features)
+                # 转换为与Louvain方法相同的格式
+                communities = {identifiers[i]: int(cluster_labels[i]) for i in range(len(identifiers))}
+            else:
+                communities = {identifiers[i]: 0 for i in range(len(identifiers))}
     
-    print(f"聚类完成，社区数量: {len(set(communities.values()))}")
-    print(f"社区分布: {sorted(Counter(communities.values()).items())}")
+    # print(f"聚类完成，社区数量: {len(set(communities.values()))}")
+    # print(f"社区分布: {sorted(Counter(communities.values()).items())}")
 
     # 构建边列表
     edges = []
@@ -301,12 +307,12 @@ def analyze_cluster_overlaps(subgraphs_dir):
                 
                 # 跳过被过滤的维度组合
                 if graph_data.get('filtered', False):
-                    print(f"维度组合 {dimension} 被过滤: {graph_data.get('filter_reason')}")
+                    # print(f"维度组合 {dimension} 被过滤: {graph_data.get('filter_reason')}")
                     continue
                 
                 # 确保图数据包含必要的字段
                 if not graph_data.get('nodes') or not graph_data.get('links'):
-                    print(f"维度组合 {dimension} 的图数据结构不完整，跳过")
+                    # print(f"维度组合 {dimension} 的图数据结构不完整，跳过")
                     continue
                 
                 # 收集该维度下的所有聚类
@@ -326,7 +332,7 @@ def analyze_cluster_overlaps(subgraphs_dir):
     
     # 如果没有有效的核心聚类，返回空结果
     if not core_clusters:
-        print("没有找到有效的核心聚类")
+        # print("没有找到有效的核心聚类")
         return {
             'core_clusters': [],
             'overlap_matrix': [],
@@ -469,14 +475,14 @@ def analyze_cluster_overlaps(subgraphs_dir):
     with open(output_file, 'w') as f:
         json.dump(final_graph_data, f, indent=4)
     
-    print(f"核心聚类分析完成，共找到 {len(final_core_clusters)} 个核心聚类")
+    # print(f"核心聚类分析完成，共找到 {len(final_core_clusters)} 个核心聚类")
     return final_graph_data
 
 def main(features_json_path, output_dir, clustering_method, subgraph_dimensions, progress_callback=None):
     """主函数"""
-    print(f"Start processing subgraph detection...")
-    print(f"Using clustering methods: {clustering_method}")
-    print(f"Dimension combinations: {subgraph_dimensions}")
+    # print(f"Start processing subgraph detection...")
+    # print(f"Using clustering methods: {clustering_method}")
+    # print(f"Dimension combinations: {subgraph_dimensions}")
 
     if progress_callback:
         progress_callback(85, "Start subgraph detection...")
@@ -496,7 +502,7 @@ def main(features_json_path, output_dir, clustering_method, subgraph_dimensions,
             current_progress = 85 + (idx / total_dimensions) * 10
             progress_callback(current_progress, f"Dimension combinations being processed: {dimensions}")
             
-        print(f"\nHandling of dimension combinations: {dimensions}")
+        # print(f"\nHandling of dimension combinations: {dimensions}")
         # 生成子图数据
         graph_data = generate_subgraph(identifiers, features, dimensions, clustering_method)
         
@@ -531,7 +537,7 @@ if __name__ == '__main__':
     
     # 对每种聚类方法运行主函数
     for method in clustering_config['method']:
-        print(f"\n使用聚类方法: {method}")
+        # print(f"\n使用聚类方法: {method}")
         output_subdir = os.path.join(output_dir, f'results_{method}')
         if not os.path.exists(output_subdir):
             os.makedirs(output_subdir)

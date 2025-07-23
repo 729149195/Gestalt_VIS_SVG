@@ -32,9 +32,9 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
             for element in soup.find_all(lambda tag: tag.get('tag_name')):
                 filtered_element_ids.add(element.get('tag_name'))
         
-        print(f"过滤后的SVG文件中找到 {len(filtered_element_ids)} 个元素")
+        # print(f"过滤后的SVG文件中找到 {len(filtered_element_ids)} 个元素")
     except Exception as e:
-        print(f"读取过滤后的SVG文件时出错: {str(e)}")
+        # print(f"读取过滤后的SVG文件时出错: {str(e)}")
         filtered_element_ids = set()  # 如果出错，使用空集合
 
     # 只处理在过滤后SVG中存在的元素
@@ -55,10 +55,10 @@ def process_position_and_properties(init_json_path, svg_file_path, output_dir):
     
     # 如果没有找到匹配的元素，使用所有元素（回退策略）
     if not filtered_init_data and init_data:
-        print("警告: 没有找到与过滤后SVG匹配的元素，将使用所有元素")
+        # print("警告: 没有找到与过滤后SVG匹配的元素，将使用所有元素")
         filtered_init_data = init_data
     
-    print(f"处理 {len(filtered_init_data)} 个元素（共 {len(init_data)} 个）")
+    # print(f"处理 {len(filtered_init_data)} 个元素（共 {len(init_data)} 个）")
     
     # 获取过滤后元素的边界值范围
     all_tops = [item['features'][10] for item in filtered_init_data]

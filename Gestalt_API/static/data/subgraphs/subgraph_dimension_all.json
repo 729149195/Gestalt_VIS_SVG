@@ -12,15 +12,15 @@
         },
         {
             "core_nodes": [
-                "svg/rect_3",
-                "svg/rect_9",
-                "svg/rect",
                 "svg/rect_2",
-                "svg/rect_5",
                 "svg/rect_4",
                 "svg/rect_6",
-                "svg/rect_8",
                 "svg/rect_1",
+                "svg/rect_8",
+                "svg/rect_9",
+                "svg/rect_5",
+                "svg/rect_3",
+                "svg/rect",
                 "svg/rect_7"
             ],
             "core_dimensions": [
@@ -49,8 +49,8 @@
         },
         {
             "core_nodes": [
-                "svg/rect_8",
-                "svg/rect_6"
+                "svg/rect_6",
+                "svg/rect_8"
             ],
             "core_dimensions": [
                 "2"
@@ -68,12 +68,12 @@
         },
         {
             "core_nodes": [
-                "svg/rect_3",
-                "svg/rect",
                 "svg/rect_2",
-                "svg/rect_5",
                 "svg/rect_4",
-                "svg/rect_1"
+                "svg/rect_1",
+                "svg/rect_5",
+                "svg/rect_3",
+                "svg/rect"
             ],
             "core_dimensions": [
                 "2"
@@ -82,9 +82,9 @@
         },
         {
             "core_nodes": [
-                "svg/rect",
                 "svg/rect_11",
-                "svg/rect_1"
+                "svg/rect_1",
+                "svg/rect"
             ],
             "core_dimensions": [
                 "3"
@@ -93,13 +93,13 @@
         },
         {
             "core_nodes": [
-                "svg/rect_3",
                 "svg/rect_2",
-                "svg/rect_5",
                 "svg/rect_4",
                 "svg/rect_6",
+                "svg/rect_10",
                 "svg/rect_8",
-                "svg/rect_10"
+                "svg/rect_5",
+                "svg/rect_3"
             ],
             "core_dimensions": [
                 "3"
@@ -117,13 +117,13 @@
         },
         {
             "core_nodes": [
+                "svg/rect_2",
+                "svg/rect_4",
+                "svg/rect_1",
+                "svg/rect_11",
+                "svg/rect_5",
                 "svg/rect_3",
                 "svg/rect",
-                "svg/rect_2",
-                "svg/rect_5",
-                "svg/rect_4",
-                "svg/rect_11",
-                "svg/rect_1",
                 "svg/rect_7"
             ],
             "core_dimensions": [
@@ -133,9 +133,9 @@
         },
         {
             "core_nodes": [
-                "svg/rect_8",
                 "svg/rect_6",
-                "svg/rect_9"
+                "svg/rect_9",
+                "svg/rect_8"
             ],
             "core_dimensions": [
                 "4"

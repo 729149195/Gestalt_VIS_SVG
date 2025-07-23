@@ -818,19 +818,19 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
             if element.name in selected_elements:
                 element_id = element.get('id')
                 # 印调试信息
-                print(f"检查元素: {element.name}, ID: {element_id}")
+                # print(f"检查元素: {element.name}, ID: {element_id}")
                 
                 # 如果有选中的ID列表且不为空
                 if selected_ids and len(selected_ids) > 0:
                     # 保元素有ID且在选中列表中
                     if element_id and element_id in selected_ids:
-                        print(f"保留元素: {element_id}")
+                        # print(f"保留元素: {element_id}")
                         return element
-                    print(f"过滤掉元素: {element_id}")
+                    # print(f"过滤掉元素: {element_id}")
                     return None
                 else:
                     # 没有选中的ID列表，保留所有选中类型的元素
-                    print(f"保留元素(按类型): {element.name}")
+                    # print(f"保留元素(按类型): {element.name}")      
                     return element
             
             return None
@@ -856,14 +856,14 @@ def filter_svg_elements(svg_content, selected_elements, selected_ids=None):
                     new_svg.append(processed)
 
         # 打印保留的元素数量
-        print(f"保留的元素数量: {len(preserved_elements)}")
+        # print(f"保留的元素数量: {len(preserved_elements)}")
         
         # 替换原始的svg元素
         svg.replace_with(new_svg)
         
-        print(f"过滤完成，保留的元素类型: {selected_elements}")
-        if selected_ids:
-            print(f"保留的元素ID: {selected_ids}")
+        # print(f"过滤完成，保留的元素类型: {selected_elements}")
+        # if selected_ids:
+            # print(f"保留的元素ID: {selected_ids}")
             
         result = str(soup)
         
@@ -1150,7 +1150,7 @@ def clear_upload_folder():
             try:
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
-                    print(f"已删除文件: {filename}")
+                    # print(f"已删除文件: {filename}")
             except Exception as e:
                 print(f"删除文件 {filename} 时出错: {str(e)}")
                 

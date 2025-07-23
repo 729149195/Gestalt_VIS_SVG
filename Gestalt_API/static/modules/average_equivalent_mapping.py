@@ -157,7 +157,7 @@ class EquivalentWeightsCalculator:
         with open(output_file_avg, 'w') as f:
             json.dump(output_mapping_avg, f, indent=4)
 
-        print(f"Average equivalent mapping weights have been saved to '{output_file_avg}'")
+        # print(f"Average equivalent mapping weights have been saved to '{output_file_avg}'")
 
         # Prepare equivalent weights for each tag
         output_mapping_all = {}
@@ -168,7 +168,7 @@ class EquivalentWeightsCalculator:
         with open(output_file_all, 'w') as f:
             json.dump(output_mapping_all, f, indent=4)
 
-        print(f"All equivalent weights have been saved to '{output_file_all}'")
+        # print(f"All equivalent weights have been saved to '{output_file_all}'")
 
     def compute_batch_equivalent_weights(self, input_data, W1, b1, W2, b2, W3, b3, W4, b4, batch_size=512):
         num_samples = input_data.shape[0]

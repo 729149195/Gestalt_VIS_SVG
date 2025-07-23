@@ -119,20 +119,20 @@ class ClusterPredictor:
     # 保存特征到 JSON 文件
     def save_features_to_json(self, identifiers, features):
         data = []
-        print(f"准备序列化数据，特征类型: {type(features)}")
+        # print(f"准备序列化数据，特征类型: {type(features)}")
         
         try:
             for i, (identifier, feature) in enumerate(zip(identifiers, features)):
                 try:
                     # 更详细地处理各种类型
                     if isinstance(feature, torch.Tensor):
-                        print(f"处理Tensor类型的特征: {i}")
+                        # print(f"处理Tensor类型的特征: {i}")
                         feature_list = feature.cpu().numpy().tolist()
                     elif isinstance(feature, np.ndarray):
-                        print(f"处理numpy.ndarray类型的特征: {i}")
+                        # print(f"处理numpy.ndarray类型的特征: {i}")
                         feature_list = feature.tolist()
                     else:
-                        print(f"处理其他类型的特征: {i}, 类型: {type(feature)}")
+                        # print(f"处理其他类型的特征: {i}, 类型: {type(feature)}")
                         # 如果是列表，确保其中没有非基本类型
                         if isinstance(feature, list):
                             # 递归检查列表中的每个元素
