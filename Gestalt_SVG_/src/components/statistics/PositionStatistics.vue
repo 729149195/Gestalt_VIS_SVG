@@ -55,7 +55,7 @@ const eleURL = computed(() => {
         'width': 'width_position',
         'height': 'height_position'
     };
-    return `http://127.0.0.1:5000/${positionMap[props.position]}`;
+    return `http://127.0.0.1:8000/${positionMap[props.position]}`;
 });
 
 onMounted(async () => {

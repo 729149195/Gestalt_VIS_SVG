@@ -1373,7 +1373,7 @@ onUnmounted(() => {
 // 处理从SvgUploader接收到的新SVG内容
 const handleSvgContentUpdated = async (event) => {
   try {
-    const response = await fetch('http://127.0.0.1:5000/get_upload_svg', {
+    const response = await fetch('http://127.0.0.1:8000/get_upload_svg', {
       responseType: 'text',
       headers: {
         'Accept': 'image/svg+xml'
@@ -1441,7 +1441,7 @@ const handleSvgContentUpdated = async (event) => {
 const generateAndUpload = async () => {
   try {
     // 先清除原有文件
-    await axios.post('http://127.0.0.1:5000/clear_upload_folder')
+    await axios.post('http://127.0.0.1:8000/clear_upload_folder')
       .then(response => {
         if (response.data.success) {
           console.log('Upload folder cleared successfully')
@@ -1483,7 +1483,7 @@ const generateAndUpload = async () => {
     formData.append('file', file)
 
     // 发送上传请求
-    const response = await fetch('http://127.0.0.1:5000/upload', {
+    const response = await fetch('http://127.0.0.1:8000/upload', {
       method: 'POST',
       body: formData
     })
@@ -1700,7 +1700,7 @@ const uploadFile = () => {
   if (!file.value) return
   
   // 先清除原有文件
-  axios.post('http://127.0.0.1:5000/clear_upload_folder')
+  axios.post('http://127.0.0.1:8000/clear_upload_folder')
     .then(response => {
       if (response.data.success) {
         console.log('Upload folder cleared successfully')
@@ -1734,7 +1734,7 @@ const proceedWithUpload = () => {
   store.dispatch('clearSelectedNodes')
 
   // 连接进度事件源
-  const eventSource = new EventSource('http://127.0.0.1:5000/progress')
+  const eventSource = new EventSource('http://127.0.0.1:8000/progress')
   
   // 监听进度更新
   eventSource.onmessage = (event) => {
@@ -1749,7 +1749,7 @@ const proceedWithUpload = () => {
   }
 
   // 上传文件
-  axios.post('http://127.0.0.1:5000/upload', formData, {
+  axios.post('http://127.0.0.1:8000/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

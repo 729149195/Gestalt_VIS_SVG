@@ -77,7 +77,7 @@ const allComponents = [
     id: 'top-position', 
     component: markRaw(PositionStatistics), 
     props: { position: 'top', title: 'Top' },
-    dataUrl: 'http://127.0.0.1:5000/top_position',
+    dataUrl: 'http://127.0.0.1:8000/top_position',
     hasData: false,
     variance: 0
   },
@@ -85,7 +85,7 @@ const allComponents = [
     id: 'bottom-position', 
     component: markRaw(PositionStatistics), 
     props: { position: 'bottom', title: 'Bottom' },
-    dataUrl: 'http://127.0.0.1:5000/bottom_position',
+    dataUrl: 'http://127.0.0.1:8000/bottom_position',
     hasData: false,
     variance: 0
   },
@@ -93,7 +93,7 @@ const allComponents = [
     id: 'right-position', 
     component: markRaw(PositionStatistics), 
     props: { position: 'right', title: 'Right' },
-    dataUrl: 'http://127.0.0.1:5000/right_position',
+    dataUrl: 'http://127.0.0.1:8000/right_position',
     hasData: false,
     variance: 0
   },
@@ -101,7 +101,7 @@ const allComponents = [
     id: 'left-position', 
     component: markRaw(PositionStatistics), 
     props: { position: 'left', title: 'Left' },
-    dataUrl: 'http://127.0.0.1:5000/left_position',
+    dataUrl: 'http://127.0.0.1:8000/left_position',
     hasData: false,
     variance: 0
   },
@@ -109,7 +109,7 @@ const allComponents = [
     id: 'width-position', 
     component: markRaw(PositionStatistics), 
     props: { position: 'width', title: 'Width' },
-    dataUrl: 'http://127.0.0.1:5000/width_position',
+    dataUrl: 'http://127.0.0.1:8000/width_position',
     hasData: false,
     variance: 0
   },
@@ -117,28 +117,28 @@ const allComponents = [
     id: 'height-position', 
     component: markRaw(PositionStatistics), 
     props: { position: 'height', title: 'Height' },
-    dataUrl: 'http://127.0.0.1:5000/height_position',
+    dataUrl: 'http://127.0.0.1:8000/height_position',
     hasData: false,
     variance: 0
   },
   { 
     id: 'fill-statistics', 
     component: markRaw(FillStatistician),
-    dataUrl: 'http://127.0.0.1:5000/fill_num',
+    dataUrl: 'http://127.0.0.1:8000/fill_num',
     hasData: false,
     variance: 0
   },
   { 
     id: 'stroke-statistics', 
     component: markRaw(strokeStatistician),
-    dataUrl: 'http://127.0.0.1:5000/stroke_num',
+    dataUrl: 'http://127.0.0.1:8000/stroke_num',
     hasData: false,
     variance: 0
   },
   { 
     id: 'element-statistics', 
     component: markRaw(HisEleProportions),
-    dataUrl: 'http://127.0.0.1:5000/ele_num_data',
+    dataUrl: 'http://127.0.0.1:8000/ele_num_data',
     hasData: false,
     variance: 0
   }

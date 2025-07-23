@@ -23,10 +23,10 @@ const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 const emit = defineEmits(['update-analysis']);
 
 // 数据源URL
-const NORMAL_DATA_URL = "http://127.0.0.1:5000/normalized_init_json";
-const INIT_DATA_URL = "http://127.0.0.1:5000/cluster_features";
-const MAPPING_DATA_URL = "http://127.0.0.1:5000/average_equivalent_mapping";
-const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag"; // 新的数据源
+const NORMAL_DATA_URL = "http://127.0.0.1:8000/normalized_init_json";
+const INIT_DATA_URL = "http://127.0.0.1:8000/cluster_features";
+const MAPPING_DATA_URL = "http://127.0.0.1:8000/average_equivalent_mapping";
+const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:8000/equivalent_weights_by_tag"; // 新的数据源
 
 // 引用
 const parentContainer = ref(null);
@@ -1604,7 +1604,7 @@ async function fitGMM(data) {
         }
 
         // 调用后端API计算GMM
-        const response = await fetch('http://127.0.0.1:5000/calculate_gmm', {
+        const response = await fetch('http://127.0.0.1:8000/calculate_gmm', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

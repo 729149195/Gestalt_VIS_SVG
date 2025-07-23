@@ -120,7 +120,7 @@ onMounted(() => {
   }
 });
 
-const NORMAL_DATA_URL = "http://127.0.0.1:5000/normalized_init_json";
+const NORMAL_DATA_URL = "http://127.0.0.1:8000/normalized_init_json";
 
 // 添加normalData引用
 const normalData = ref([]);
@@ -360,7 +360,7 @@ const calculateVisualSalience = (selectedNodes, allNodes) => {
 };
 
 // 在script setup部分合适的位置添加新的API URL常量
-const SALIENCE_API_URL = "http://127.0.0.1:5000/modify_and_calculate_salience";
+const SALIENCE_API_URL = "http://127.0.0.1:8000/modify_and_calculate_salience";
 
 // 修改计算预测显著性的函数，使用API替代本地计算
 const predictVisualSalience = async (selectedNodes, allNodes, featureKey, newValue = null) => {

@@ -2,8 +2,8 @@
     "core_clusters": [
         {
             "core_nodes": [
-                "svg/rect_10",
-                "svg/rect_11"
+                "svg/rect_11",
+                "svg/rect_10"
             ],
             "core_dimensions": [
                 "1"
@@ -12,16 +12,16 @@
         },
         {
             "core_nodes": [
-                "svg/rect_5",
                 "svg/rect_3",
+                "svg/rect_8",
+                "svg/rect_2",
+                "svg/rect_9",
+                "svg/rect_6",
+                "svg/rect_7",
+                "svg/rect",
                 "svg/rect_4",
                 "svg/rect_1",
-                "svg/rect_2",
-                "svg/rect_7",
-                "svg/rect_8",
-                "svg/rect",
-                "svg/rect_6",
-                "svg/rect_9"
+                "svg/rect_5"
             ],
             "core_dimensions": [
                 "1"
@@ -30,8 +30,8 @@
         },
         {
             "core_nodes": [
-                "svg/rect_9",
-                "svg/rect_11"
+                "svg/rect_11",
+                "svg/rect_9"
             ],
             "core_dimensions": [
                 "2"
@@ -68,12 +68,12 @@
         },
         {
             "core_nodes": [
-                "svg/rect_5",
                 "svg/rect_3",
-                "svg/rect_1",
                 "svg/rect_2",
                 "svg/rect",
-                "svg/rect_4"
+                "svg/rect_4",
+                "svg/rect_1",
+                "svg/rect_5"
             ],
             "core_dimensions": [
                 "2"
@@ -82,9 +82,9 @@
         },
         {
             "core_nodes": [
+                "svg/rect_11",
                 "svg/rect",
-                "svg/rect_1",
-                "svg/rect_11"
+                "svg/rect_1"
             ],
             "core_dimensions": [
                 "3"
@@ -93,13 +93,13 @@
         },
         {
             "core_nodes": [
-                "svg/rect_5",
                 "svg/rect_10",
                 "svg/rect_3",
-                "svg/rect_2",
                 "svg/rect_8",
+                "svg/rect_2",
                 "svg/rect_6",
-                "svg/rect_4"
+                "svg/rect_4",
+                "svg/rect_5"
             ],
             "core_dimensions": [
                 "3"
@@ -117,14 +117,14 @@
         },
         {
             "core_nodes": [
-                "svg/rect_5",
-                "svg/rect_11",
                 "svg/rect_3",
-                "svg/rect_1",
                 "svg/rect_2",
                 "svg/rect_7",
                 "svg/rect",
-                "svg/rect_4"
+                "svg/rect_11",
+                "svg/rect_4",
+                "svg/rect_1",
+                "svg/rect_5"
             ],
             "core_dimensions": [
                 "4"
@@ -133,9 +133,9 @@
         },
         {
             "core_nodes": [
-                "svg/rect_6",
                 "svg/rect_9",
-                "svg/rect_8"
+                "svg/rect_8",
+                "svg/rect_6"
             ],
             "core_dimensions": [
                 "4"

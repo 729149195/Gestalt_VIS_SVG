@@ -206,7 +206,7 @@ const handleSvgUploaded = async (event) => {
 
     try {
         // 获取C区SVG内容 - 原始上传的SVG
-        const controlResponse = await fetch('http://127.0.0.1:5000/get_upload_svg', {
+        const controlResponse = await fetch('http://127.0.0.1:8000/get_upload_svg', {
             responseType: 'text',
             headers: {
                 'Accept': 'image/svg+xml'
@@ -216,7 +216,7 @@ const handleSvgUploaded = async (event) => {
         const controlSvgData = await controlResponse.text()
 
         // 获取S区SVG内容 - 处理后的SVG
-        const displayResponse = await fetch('http://127.0.0.1:5000/get_svg', {
+        const displayResponse = await fetch('http://127.0.0.1:8000/get_svg', {
             responseType: 'text',
             headers: {
                 'Accept': 'image/svg+xml'
@@ -236,7 +236,7 @@ const handleSvgUploaded = async (event) => {
         await processAndSetSvgContent(controlSvgData, displaySvgData)
 
         // 获取可见元素列表
-        const elementsResponse = await axios.post('http://127.0.0.1:5000/get_visible_elements', {
+        const elementsResponse = await axios.post('http://127.0.0.1:8000/get_visible_elements', {
             filename: filename
         })
 
@@ -387,7 +387,7 @@ const analyzeSvg = () => {
     const nodeIds = Array.isArray(selectedNodeIds.value) ? selectedNodeIds.value : [];
 
     // 创建 EventSource 连接
-    const eventSource = new EventSource('http://127.0.0.1:5000/progress');
+    const eventSource = new EventSource('http://127.0.0.1:8000/progress');
 
     // 监听进度更新
     eventSource.onmessage = (event) => {
@@ -401,7 +401,7 @@ const analyzeSvg = () => {
         eventSource.close();
     };
 
-    axios.post('http://127.0.0.1:5000/filter_and_process', {
+    axios.post('http://127.0.0.1:8000/filter_and_process', {
         filename: file.value.name,
         selectedElements: selectedElements.value,
         selectedNodeIds: nodeIds
@@ -447,7 +447,7 @@ const refreshSvgContent = async () => {
 
     try {
         // 获取C区SVG内容 - 原始上传的SVG
-        const controlResponse = await fetch('http://127.0.0.1:5000/get_upload_svg', {
+        const controlResponse = await fetch('http://127.0.0.1:8000/get_upload_svg', {
             responseType: 'text',
             headers: {
                 'Accept': 'image/svg+xml'
@@ -457,7 +457,7 @@ const refreshSvgContent = async () => {
         const controlSvgData = await controlResponse.text();
 
         // 获取S区SVG内容 - 处理后的SVG
-        const displayResponse = await fetch('http://127.0.0.1:5000/get_svg', {
+        const displayResponse = await fetch('http://127.0.0.1:8000/get_svg', {
             responseType: 'text',
             headers: {
                 'Accept': 'image/svg+xml'
@@ -539,7 +539,7 @@ const updatePerceptionScope = () => {
         fetchNormalizedData().then(() => {
             calculateVisualSalience();
         });
-    }, 5000);
+    }, 8000);
 };
 
 // 为两个SVG添加缩放和拖拽功能
@@ -1192,7 +1192,7 @@ const disableDisplayTrackMode = () => {
 // 获取normalized数据
 const fetchNormalizedData = async () => {
     try {
-        const response = await fetch('http://127.0.0.1:5000/normalized_init_json');
+        const response = await fetch('http://127.0.0.1:8000/normalized_init_json');
         if (response.ok) {
             const data = await response.json();
             normalizedData.value = data;

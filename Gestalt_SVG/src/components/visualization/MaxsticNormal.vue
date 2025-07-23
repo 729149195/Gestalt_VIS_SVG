@@ -10,7 +10,7 @@ import { useStore } from 'vuex';
 const store = useStore();
 const selectedNodeIds = computed(() => store.state.selectedNodes.nodeIds);
 
-const eleURL = "http://127.0.0.1:5000/normalized_init_json";
+const eleURL = "http://127.0.0.1:8000/normalized_init_json";
 const normal_chartContainer = ref(null);
 const margin = { top: 10, right: 10, bottom: 60, left: 120 };
 

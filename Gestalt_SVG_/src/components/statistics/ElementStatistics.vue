@@ -14,8 +14,8 @@ import * as d3 from 'd3';
 import { useStore } from 'vuex';
 const store = useStore();
 
-const eleURL = "http://127.0.0.1:5000/ele_num_data"
-const svgURL = "http://127.0.0.1:5000/get_svg"
+const eleURL = "http://127.0.0.1:8000/ele_num_data"
+const svgURL = "http://127.0.0.1:8000/get_svg"
 const chartContainer = ref(null);
 const hasData = ref(false);
 const rawJsonData = ref(null);

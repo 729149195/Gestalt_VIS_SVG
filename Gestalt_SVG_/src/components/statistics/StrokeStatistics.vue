@@ -15,8 +15,8 @@ import { useStore } from 'vuex';
 const store = useStore();
 
 // 更新了数据接口地址
-const eleURL = "http://127.0.0.1:5000/stroke_num";
-const elementStrokeColorsURL = "http://127.0.0.1:5000/element_stroke_colors"; // 新增元素描边颜色接口
+const eleURL = "http://127.0.0.1:8000/stroke_num";
+const elementStrokeColorsURL = "http://127.0.0.1:8000/element_stroke_colors"; // 新增元素描边颜色接口
 const chartContainer = ref(null);
 const hasData = ref(false);
 const rawJsonData = ref(null);

@@ -65,7 +65,7 @@ function updateSalienceData() {
 // 获取原始SVG内容的函数
 async function fetchOriginalSvg() {
     try {
-        const response = await fetch('http://127.0.0.1:5000/get_svg');
+        const response = await fetch('http://127.0.0.1:8000/get_svg');
         const svgContent = await response.text();
         originalSvgContent.value = svgContent;
     } catch (error) {

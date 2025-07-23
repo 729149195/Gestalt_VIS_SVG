@@ -833,7 +833,7 @@ const next = async () => {
     ElMessage({
       type: 'warning',
       message: '目前所有组合的三个评分都为低，请确保已评分',
-      duration: 5000,
+      duration: 8000,
       showClose: true
     });
     return;

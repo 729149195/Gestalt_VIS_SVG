@@ -1411,9 +1411,9 @@ function renderGraph(container, graphData, useCache = false) {
 }
 
 // 添加数据源URL
-const MAPPING_DATA_URL = "http://127.0.0.1:5000/average_equivalent_mapping";
-const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:5000/equivalent_weights_by_tag";
-const NORMAL_DATA_URL = "http://127.0.0.1:5000/normalized_init_json";
+const MAPPING_DATA_URL = "http://127.0.0.1:8000/average_equivalent_mapping";
+const EQUIVALENT_WEIGHTS_URL = "http://127.0.0.1:8000/equivalent_weights_by_tag";
+const NORMAL_DATA_URL = "http://127.0.0.1:8000/normalized_init_json";
 
 // 特征名称映射
 const featureNameMap = {
@@ -1616,9 +1616,9 @@ async function loadAndRenderGraph() {
 
         // 移除fetchAnalysisData()调用，不再需要获取这些数据
         const [svgResponse, graphResponse, featuresResponse, normalDataResponse] = await Promise.all([
-            fetch('http://127.0.0.1:5000/get_svg'),
-            fetch('http://127.0.0.1:5000/static/data/subgraphs/subgraph_dimension_all.json'),
-            fetch('http://127.0.0.1:5000/cluster_features'),
+            fetch('http://127.0.0.1:8000/get_svg'),
+            fetch('http://127.0.0.1:8000/static/data/subgraphs/subgraph_dimension_all.json'),
+            fetch('http://127.0.0.1:8000/cluster_features'),
             fetch(NORMAL_DATA_URL)
         ]);
 
