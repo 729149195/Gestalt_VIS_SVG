@@ -111,6 +111,7 @@ def calculate_metrics(features):
         weights = 1 / (variances + 1e-6)  # 避免除以零
         total_weight = np.sum(weights)
         normalized_weights = weights / total_weight
+        variances = np.where(variances < 0, 0, variances)
         clustering = np.sum(normalized_weights * (1 - np.sqrt(variances)))
         return dispersion, clustering
 
