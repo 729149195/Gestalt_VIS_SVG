@@ -2,7 +2,7 @@
 
 > This project is under continuous improvement.
 >
-> The complete program and a more detailed manual will be fully open source after the paper is accepted.
+> The more detailed manual will be fully open source after the paper is accepted.
 
 ## How to Run the Code
 
