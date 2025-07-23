@@ -1,41 +1,20 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="340" viewBox="-600,-270,1300,520">
-  <g stroke="white">
-    <path d="M0,-249A249,249,0,0,1,95.881,-229.8L0,0Z" fill="rgb(66, 136, 181)">
-    </path>
-    <path d="M95.881,-229.8A249,249,0,0,1,179.014,-173.075L0,0Z" fill="rgb(77, 163, 177)">
-    </path>
-    <path d="M179.014,-173.075A249,249,0,0,1,233.212,-87.253L0,0Z" fill="rgb(101, 186, 170)">
-    </path>
-    <path d="M233.212,-87.253A249,249,0,0,1,248.46,16.396L0,0Z" fill="rgb(131, 204, 165)">
-    </path>
-    <path d="M248.46,16.396A249,249,0,0,1,216.75,122.558L0,0Z" fill="rgb(162, 217, 163)">
-    </path>
-    <path d="M216.75,122.558A249,249,0,0,1,145.78,201.864L0,0Z" fill="rgb(191, 229, 160)">
-    </path>
-    <path d="M145.78,201.864A249,249,0,0,1,50.671,243.79L0,0Z" fill="rgb(216, 239, 159)">
-    </path>
-    <path d="M50.671,243.79A249,249,0,0,1,-46.837,244.555L0,0Z" fill="rgb(235, 247, 166)">
-    </path>
-    <path d="M-46.837,244.555A249,249,0,0,1,-141.018,205.219L0,0Z" fill="rgb(247, 250, 175)">
-    </path>
-    <path d="M-141.018,205.219A249,249,0,0,1,-212.989,128.983L0,0Z" fill="rgb(253, 245, 172)">
-    </path>
-    <path d="M-212.989,128.983A249,249,0,0,1,-247.821,24.204L0,0Z" fill="rgb(254, 232, 154)">
-    </path>
-    <path d="M-247.821,24.204A249,249,0,0,1,-236.394,-78.222L0,0Z" fill="rgb(254, 213, 133)">
-    </path>
-    <path d="M-236.394,-78.222A249,249,0,0,1,-192.81,-157.56L0,0Z" fill="rgb(253, 191, 112)">
-    </path>
-    <path d="M-192.81,-157.56A249,249,0,0,1,-139.955,-205.946L0,0Z" fill="rgb(251, 165, 95)">
-    </path>
-    <path d="M-139.955,-205.946A249,249,0,0,1,-93.908,-230.613L0,0Z" fill="rgb(247, 136, 81)">
-    </path>
-    <path d="M-93.908,-230.613A249,249,0,0,1,-57.555,-242.257L0,0Z" fill="rgb(239, 109, 74)">
-    </path>
-    <path d="M-57.555,-242.257A249,249,0,0,1,-29.287,-247.272L0,0Z" fill="rgb(227, 84, 73)">
-    </path>
-    <path d="M-29.287,-247.272A249,249,0,0,1,0,-249L0,0Z" fill="rgb(209, 60, 75)">
-    </path>
-  </g>
+<?xml version="1.0" encoding="utf-8"?><svg xmlns="http://www.w3.org/2000/svg" height="340" id="svg" tag_name="svg" viewBox="0,0,850,400" width="900">
+<g aria-hidden="false" aria-label="BPL, bar series 1 of 3 with 4 bars." clip-path="url(#highcharts-bbwxnuf-14-)" data-z-index="0.1" id="g_2" opacity="1" outline="none" role="region" tabindex="-1" tag_name="svg/g_2" transform="translate(66,51) scale(1 1)">
+<path aria-label="x, 0, 3. BPL." d="M 54.5 112.5 L 134.5 112.5 A 3 3 0 0 1 137.5 115.5 L 137.5 138.5 A 0 0 0 0 1 137.5 138.5 L 51.5 138.5 A 0 0 0 0 1 51.5 138.5 L 51.5 115.5 A 3 3 0 0 1 54.5 112.5 Z" fill="#2caffe" filter="none" id="path_11" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1" tabindex="-1" tag_name="svg/g_2/path_11"/>
+<path aria-label="x, 1, 5. BPL." d="M 233.5 130.5 L 313.5 130.5 A 3 3 0 0 1 316.5 133.5 L 316.5 173.5 A 0 0 0 0 1 316.5 173.5 L 230.5 173.5 A 0 0 0 0 1 230.5 173.5 L 230.5 133.5 A 3 3 0 0 1 233.5 130.5 Z" fill="#2caffe" filter="none" id="path_10" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1" tabindex="-1" tag_name="svg/g_2/path_10"/>
+<path aria-label="x, 2, 1. BPL." d="M 411.5 130.5 L 491.5 130.5 A 3 3 0 0 1 494.5 133.5 L 494.5 138.5 A 0 0 0 0 1 494.5 138.5 L 408.5 138.5 A 0 0 0 0 1 408.5 138.5 L 408.5 133.5 A 3 3 0 0 1 411.5 130.5 Z" fill="#2caffe" filter="none" id="path_9" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1" tabindex="-1" tag_name="svg/g_2/path_9"/>
+<path aria-label="x, 3, 13. BPL." d="M 589.5 17.5 L 669.5 17.5 A 3 3 0 0 1 672.5 20.5 L 672.5 130.5 A 0 0 0 0 1 672.5 130.5 L 586.5 130.5 A 0 0 0 0 1 586.5 130.5 L 586.5 20.5 A 3 3 0 0 1 589.5 17.5 Z" fill="#2caffe" filter="none" id="path_8" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1" tabindex="-1" tag_name="svg/g_2/path_8"/>
+</g>
+<g aria-hidden="false" aria-label="FA Cup, bar series 2 of 3 with 4 bars." clip-path="url(#highcharts-bbwxnuf-14-)" data-z-index="0.1" id="g_1" opacity="1" outline="none" role="region" tabindex="-1" tag_name="svg/g_1" transform="translate(66,51) scale(1 1)">
+<path aria-label="x, 0, 14. FA Cup." class="reveliogood" d="M 51.5 138.5 L 137.5 138.5 A 0 0 0 0 1 137.5 138.5 L 137.5 260.5 A 0 0 0 0 1 137.5 260.5 L 51.5 260.5 A 0 0 0 0 1 51.5 260.5 L 51.5 138.5 A 0 0 0 0 1 51.5 138.5 Z" fill="#544fc5" filter="none" id="path_7" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1.1" tabindex="-1" tag_name="svg/g_1/path_7"/>
+<path aria-label="x, 1, 8. FA Cup." class="reveliogood" d="M 230.5 173.5 L 316.5 173.5 A 0 0 0 0 1 316.5 173.5 L 316.5 242.5 A 0 0 0 0 1 316.5 242.5 L 230.5 242.5 A 0 0 0 0 1 230.5 242.5 L 230.5 173.5 A 0 0 0 0 1 230.5 173.5 Z" fill="#544fc5" filter="none" id="path_6" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1.1" tabindex="-1" tag_name="svg/g_1/path_6"/>
+<path aria-label="x, 2, 8. FA Cup." class="reveliogood" d="M 408.5 138.5 L 494.5 138.5 A 0 0 0 0 1 494.5 138.5 L 494.5 208.5 A 0 0 0 0 1 494.5 208.5 L 408.5 208.5 A 0 0 0 0 1 408.5 208.5 L 408.5 138.5 A 0 0 0 0 1 408.5 138.5 Z" fill="#544fc5" filter="none" id="path_5" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1.1" tabindex="-1" tag_name="svg/g_1/path_5"/>
+<path aria-label="x, 3, 12. FA Cup." class="reveliogood" d="M 586.5 130.5 L 672.5 130.5 A 0 0 0 0 1 672.5 130.5 L 672.5 234.5 A 0 0 0 0 1 672.5 234.5 L 586.5 234.5 A 0 0 0 0 1 586.5 234.5 L 586.5 130.5 A 0 0 0 0 1 586.5 130.5 Z" fill="#544fc5" filter="none" id="path_4" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1.1" tabindex="-1" tag_name="svg/g_1/path_4"/>
+</g>
+<g aria-hidden="false" aria-label="CL, bar series 3 of 3 with 4 bars." clip-path="url(#highcharts-bbwxnuf-14-)" data-z-index="0.1" id="g" opacity="1" outline="none" role="region" tabindex="-1" tag_name="svg/g" transform="translate(66,51) scale(1 1)">
+<path aria-label="x, 0, 0. CL." d="M 51.5 260.5 L 137.5 260.5 A 0 0 0 0 1 137.5 260.5 L 137.5 260.5 A 0 0 0 0 1 137.5 260.5 L 51.5 260.5 A 0 0 0 0 1 51.5 260.5 L 51.5 260.5 A 0 0 0 0 1 51.5 260.5 Z" fill="#00e272" filter="none" id="path_3" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1" tabindex="-1" tag_name="svg/g/path_3"/>
+<path aria-label="x, 1, 2. CL." d="M 230.5 242.5 L 316.5 242.5 A 0 0 0 0 1 316.5 242.5 L 316.5 260.5 A 0 0 0 0 1 316.5 260.5 L 230.5 260.5 A 0 0 0 0 1 230.5 260.5 L 230.5 242.5 A 0 0 0 0 1 230.5 242.5 Z" fill="#00e272" filter="none" id="path_2" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1" tabindex="-1" tag_name="svg/g/path_2"/>
+<path aria-label="x, 2, 6. CL." d="M 408.5 208.5 L 494.5 208.5 A 0 0 0 0 1 494.5 208.5 L 494.5 260.5 A 0 0 0 0 1 494.5 260.5 L 408.5 260.5 A 0 0 0 0 1 408.5 260.5 L 408.5 208.5 A 0 0 0 0 1 408.5 208.5 Z" fill="#00e272" filter="none" id="path_1" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1" tabindex="-1" tag_name="svg/g/path_1"/>
+<path aria-label="x, 3, 3. CL." d="M 586.5 234.5 L 672.5 234.5 A 0 0 0 0 1 672.5 234.5 L 672.5 260.5 A 0 0 0 0 1 672.5 260.5 L 586.5 260.5 A 0 0 0 0 1 586.5 260.5 L 586.5 234.5 A 0 0 0 0 1 586.5 234.5 Z" fill="#00e272" filter="none" id="path" opacity="1" outline="none" role="img" stroke="#ffffff" stroke-width="1" tabindex="-1" tag_name="svg/g/path"/>
+</g>
 </svg>

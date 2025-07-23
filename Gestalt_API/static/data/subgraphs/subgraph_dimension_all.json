@@ -2,52 +2,15 @@
     "core_clusters": [
         {
             "core_nodes": [
-                "svg/circle_34",
-                "svg/circle_33",
-                "svg/circle_35",
-                "svg/circle_4",
-                "svg/circle_36",
-                "svg/circle_28",
-                "svg/circle_27",
-                "svg/circle_37",
-                "svg/circle_3",
-                "svg/circle",
-                "svg/circle_32",
-                "svg/circle_31",
-                "svg/circle_25",
-                "svg/circle_30",
-                "svg/circle_2",
-                "svg/circle_24",
-                "svg/circle_29",
-                "svg/circle_1",
-                "svg/circle_26"
-            ],
-            "core_dimensions": [
-                "1"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/circle_5",
-                "svg/circle_12",
-                "svg/circle_15",
-                "svg/circle_17",
-                "svg/circle_16",
-                "svg/circle_14",
-                "svg/circle_18",
-                "svg/circle_20",
-                "svg/circle_11",
-                "svg/circle_23",
-                "svg/circle_9",
-                "svg/circle_6",
-                "svg/circle_19",
-                "svg/circle_7",
-                "svg/circle_8",
-                "svg/circle_21",
-                "svg/circle_13",
-                "svg/circle_22",
-                "svg/circle_10"
+                "svg/g/g_1/g_2/path",
+                "svg/g/g_1/g_2/path_9",
+                "svg/g/g_1/g_2/path_7",
+                "svg/g/g_1/g_2/path_6",
+                "svg/g/g_1/g_2/path_14",
+                "svg/g/g_1/g_2/path_13",
+                "svg/g/g_1/g_2/path_1",
+                "svg/g/g_1/g_2/path_12",
+                "svg/g/g_1/g_2/path_11"
             ],
             "core_dimensions": [
                 "1"
@@ -56,76 +19,48 @@
                 {
                     "dimension": "cluster_A_1",
                     "nodes": [
-                        "svg/circle_5",
-                        "svg/circle_12",
-                        "svg/circle_15",
-                        "svg/circle_17",
-                        "svg/circle_16",
-                        "svg/circle_14",
-                        "svg/circle_18",
-                        "svg/circle_20",
-                        "svg/circle_11",
-                        "svg/circle_23",
-                        "svg/circle_9",
-                        "svg/circle_6",
-                        "svg/circle_7",
-                        "svg/circle_19",
-                        "svg/circle_8",
-                        "svg/circle_21",
-                        "svg/circle_13",
-                        "svg/circle_22",
-                        "svg/circle_10"
+                        "svg/g/g_1/g_2/path",
+                        "svg/g/g_1/g_2/path_9",
+                        "svg/g/g_1/g_2/path_2",
+                        "svg/g/g_1/g_2/path_7",
+                        "svg/g/g_1/g_2/path_6",
+                        "svg/g/g_1/g_2/path_14",
+                        "svg/g/g_1/g_2/path_15",
+                        "svg/g/g_1/g_2/path_1",
+                        "svg/g/g_1/g_2/path_12",
+                        "svg/g/g_1/g_2/path_11",
+                        "svg/g/g_1/g_2/path_13"
                     ]
                 },
                 {
-                    "dimension": "cluster_B_12",
+                    "dimension": "cluster_B_24",
                     "nodes": [
-                        "svg/circle_5",
-                        "svg/circle_12",
-                        "svg/circle_15",
-                        "svg/circle_17",
-                        "svg/circle_16",
-                        "svg/circle_14",
-                        "svg/circle_18",
-                        "svg/circle_20",
-                        "svg/circle_27",
-                        "svg/circle_11",
-                        "svg/circle_25",
-                        "svg/circle_23",
-                        "svg/circle_9",
-                        "svg/circle_6",
-                        "svg/circle_7",
-                        "svg/circle_19",
-                        "svg/circle_8",
-                        "svg/circle_21",
-                        "svg/circle_13",
-                        "svg/circle_22",
-                        "svg/circle_10"
+                        "svg/g/g_1/g_2/path",
+                        "svg/g/g_1/g_2/path_9",
+                        "svg/g/g_1/g_2/path_7",
+                        "svg/g/g_1/g_2/path_6",
+                        "svg/g/g_1/g_2/path_14",
+                        "svg/g/g_1/g_2/path_13",
+                        "svg/g/g_1/g_2/path_1",
+                        "svg/g/g_1/g_2/path_12",
+                        "svg/g/g_1/g_2/path_11"
                     ]
                 }
             ]
         },
         {
             "core_nodes": [
-                "svg/circle_5",
-                "svg/circle_12",
-                "svg/circle_15",
-                "svg/circle_17",
-                "svg/circle_16",
-                "svg/circle_14",
-                "svg/circle_18",
-                "svg/circle_20",
-                "svg/circle_11",
-                "svg/circle_23",
-                "svg/circle_9",
-                "svg/circle_6",
-                "svg/circle_7",
-                "svg/circle_19",
-                "svg/circle_8",
-                "svg/circle_21",
-                "svg/circle_13",
-                "svg/circle_22",
-                "svg/circle_10"
+                "svg/g/g_1/g_2/path",
+                "svg/g/g_1/g_2/path_9",
+                "svg/g/g_1/g_2/path_2",
+                "svg/g/g_1/g_2/path_7",
+                "svg/g/g_1/g_2/path_6",
+                "svg/g/g_1/g_2/path_14",
+                "svg/g/g_1/g_2/path_15",
+                "svg/g/g_1/g_2/path_1",
+                "svg/g/g_1/g_2/path_12",
+                "svg/g/g_1/g_2/path_11",
+                "svg/g/g_1/g_2/path_13"
             ],
             "core_dimensions": [
                 "1"
@@ -134,212 +69,42 @@
         },
         {
             "core_nodes": [
-                "svg/circle_5",
-                "svg/circle_12",
-                "svg/circle_15",
-                "svg/circle_17",
-                "svg/circle_16",
-                "svg/circle_14",
-                "svg/circle_18",
-                "svg/circle_20",
-                "svg/circle_27",
-                "svg/circle_11",
-                "svg/circle_25",
-                "svg/circle_23",
-                "svg/circle_9",
-                "svg/circle_6",
-                "svg/circle_7",
-                "svg/circle_19",
-                "svg/circle_8",
-                "svg/circle_21",
-                "svg/circle_13",
-                "svg/circle_22",
-                "svg/circle_10"
+                "svg/g/g_1/g_2/path",
+                "svg/g/g_1/g_2/path_9",
+                "svg/g/g_1/g_2/path_7",
+                "svg/g/g_1/g_2/path_6",
+                "svg/g/g_1/g_2/path_14",
+                "svg/g/g_1/g_2/path_13",
+                "svg/g/g_1/g_2/path_1",
+                "svg/g/g_1/g_2/path_12",
+                "svg/g/g_1/g_2/path_11"
             ],
             "core_dimensions": [
-                "12"
+                "24"
             ],
             "extensions": []
         },
         {
             "core_nodes": [
-                "svg/circle_4",
-                "svg/circle_1",
-                "svg/circle_3",
-                "svg/circle_2",
-                "svg/circle"
+                "svg/g/g_1/g_2/path_4",
+                "svg/g/g_1/g_2/path_10",
+                "svg/g/g_1/g_2/path_3",
+                "svg/g/g_1/g_2/path_5",
+                "svg/g/g_1/g_2/path_8"
             ],
             "core_dimensions": [
-                "12"
+                "1"
             ],
             "extensions": []
         },
         {
             "core_nodes": [
-                "svg/circle_35",
-                "svg/circle_37",
-                "svg/circle_36"
-            ],
-            "core_dimensions": [
-                "12"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/circle_34",
-                "svg/circle_24",
-                "svg/circle_31",
-                "svg/circle_28",
-                "svg/circle_29",
-                "svg/circle_30",
-                "svg/circle_33",
-                "svg/circle_32",
-                "svg/circle_26"
-            ],
-            "core_dimensions": [
-                "12"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/circle_31",
-                "svg/circle_28",
-                "svg/circle_29",
-                "svg/circle_27",
-                "svg/circle_30",
-                "svg/circle_33",
-                "svg/circle_32",
-                "svg/circle_26"
-            ],
-            "core_dimensions": [
-                "124"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/circle_20",
-                "svg/circle_24",
-                "svg/circle_25",
-                "svg/circle_19",
-                "svg/circle_23",
-                "svg/circle_17",
-                "svg/circle_16",
-                "svg/circle_21",
-                "svg/circle_14",
-                "svg/circle_18",
-                "svg/circle_22"
-            ],
-            "core_dimensions": [
-                "124"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/circle_5",
-                "svg/circle_12",
-                "svg/circle_8",
-                "svg/circle_15",
-                "svg/circle_9",
-                "svg/circle_7",
-                "svg/circle_6",
-                "svg/circle_11",
-                "svg/circle_13",
-                "svg/circle_10"
-            ],
-            "core_dimensions": [
-                "124"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/circle_35",
-                "svg/circle_37",
-                "svg/circle_34",
-                "svg/circle_36"
-            ],
-            "core_dimensions": [
-                "14"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/circle_4",
-                "svg/circle_31",
-                "svg/circle_29",
-                "svg/circle_30",
-                "svg/circle_1",
-                "svg/circle_3",
-                "svg/circle_2",
-                "svg/circle_33",
-                "svg/circle",
-                "svg/circle_32"
-            ],
-            "core_dimensions": [
-                "14"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/circle_20",
-                "svg/circle_24",
-                "svg/circle_25",
-                "svg/circle_28",
-                "svg/circle_27",
-                "svg/circle_19",
-                "svg/circle_10",
-                "svg/circle_23",
-                "svg/circle_17",
-                "svg/circle_15",
-                "svg/circle_16",
-                "svg/circle_21",
-                "svg/circle_18",
-                "svg/circle_13",
-                "svg/circle_22",
-                "svg/circle_26"
-            ],
-            "core_dimensions": [
-                "14"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/circle_5",
-                "svg/circle_8",
-                "svg/circle_12",
-                "svg/circle_7",
-                "svg/circle_9",
-                "svg/circle_6",
-                "svg/circle_11",
-                "svg/circle_14"
-            ],
-            "core_dimensions": [
-                "14"
-            ],
-            "extensions": []
-        },
-        {
-            "core_nodes": [
-                "svg/circle_34",
-                "svg/circle_36",
-                "svg/circle_24",
-                "svg/circle_31",
-                "svg/circle_28",
-                "svg/circle_29",
-                "svg/circle_27",
-                "svg/circle_37",
-                "svg/circle_30",
-                "svg/circle_33",
-                "svg/circle_32",
-                "svg/circle_35",
-                "svg/circle_26"
+                "svg/g/g_1/g_2/path",
+                "svg/g/g_1/g_2/path_9",
+                "svg/g/g_1/g_2/path_7",
+                "svg/g/g_1/g_2/path_6",
+                "svg/g/g_1/g_2/path_15",
+                "svg/g/g_1/g_2/path_1"
             ],
             "core_dimensions": [
                 "2"
@@ -348,31 +113,10 @@
         },
         {
             "core_nodes": [
-                "svg/circle_5",
-                "svg/circle_12",
-                "svg/circle_15",
-                "svg/circle_17",
-                "svg/circle_16",
-                "svg/circle_14",
-                "svg/circle_18",
-                "svg/circle_20",
-                "svg/circle_4",
-                "svg/circle_3",
-                "svg/circle_11",
-                "svg/circle",
-                "svg/circle_25",
-                "svg/circle_23",
-                "svg/circle_9",
-                "svg/circle_6",
-                "svg/circle_2",
-                "svg/circle_1",
-                "svg/circle_8",
-                "svg/circle_7",
-                "svg/circle_19",
-                "svg/circle_21",
-                "svg/circle_13",
-                "svg/circle_22",
-                "svg/circle_10"
+                "svg/g/g_1/g_2/path_13",
+                "svg/g/g_1/g_2/path_12",
+                "svg/g/g_1/g_2/path_11",
+                "svg/g/g_1/g_2/path_14"
             ],
             "core_dimensions": [
                 "2"
@@ -381,28 +125,49 @@
         },
         {
             "core_nodes": [
-                "svg/circle_34",
-                "svg/circle_5",
-                "svg/circle_12",
-                "svg/circle_16",
-                "svg/circle_33",
-                "svg/circle_35",
-                "svg/circle_20",
-                "svg/circle_36",
-                "svg/circle_28",
-                "svg/circle_37",
-                "svg/circle_11",
-                "svg/circle_32",
-                "svg/circle_31",
-                "svg/circle_30",
-                "svg/circle_6",
-                "svg/circle_9",
-                "svg/circle_26",
-                "svg/circle_24",
-                "svg/circle_29",
-                "svg/circle_8",
-                "svg/circle_7",
-                "svg/circle_10"
+                "svg/g/g_1/g_2/path_10",
+                "svg/g/g_1/g_2/path_2",
+                "svg/g/g_1/g_2/path_8"
+            ],
+            "core_dimensions": [
+                "2"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g/g_1/g_2/path_5",
+                "svg/g/g_1/g_2/path_3"
+            ],
+            "core_dimensions": [
+                "2"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g/g_1/g_2/path_4"
+            ],
+            "core_dimensions": [
+                "2"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g/g_1/g_2/path_15",
+                "svg/g/g_1/g_2/path_10",
+                "svg/g/g_1/g_2/path_2",
+                "svg/g/g_1/g_2/path_8"
+            ],
+            "core_dimensions": [
+                "24"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g/g_1/g_2/path_15"
             ],
             "core_dimensions": [
                 "3"
@@ -411,22 +176,16 @@
         },
         {
             "core_nodes": [
-                "svg/circle_4",
-                "svg/circle_25",
-                "svg/circle_27",
-                "svg/circle_1",
-                "svg/circle_19",
-                "svg/circle_23",
-                "svg/circle_17",
-                "svg/circle_15",
-                "svg/circle_3",
-                "svg/circle_2",
-                "svg/circle_21",
-                "svg/circle_14",
-                "svg/circle_18",
-                "svg/circle_13",
-                "svg/circle_22",
-                "svg/circle"
+                "svg/g/g_1/g_2/path",
+                "svg/g/g_1/g_2/path_9",
+                "svg/g/g_1/g_2/path_2",
+                "svg/g/g_1/g_2/path_7",
+                "svg/g/g_1/g_2/path_6",
+                "svg/g/g_1/g_2/path_14",
+                "svg/g/g_1/g_2/path_13",
+                "svg/g/g_1/g_2/path_1",
+                "svg/g/g_1/g_2/path_12",
+                "svg/g/g_1/g_2/path_11"
             ],
             "core_dimensions": [
                 "3"
@@ -435,20 +194,27 @@
         },
         {
             "core_nodes": [
-                "svg/circle_34",
-                "svg/circle_36",
-                "svg/circle_4",
-                "svg/circle_31",
-                "svg/circle_29",
-                "svg/circle_37",
-                "svg/circle_30",
-                "svg/circle_1",
-                "svg/circle_3",
-                "svg/circle_2",
-                "svg/circle_33",
-                "svg/circle_32",
-                "svg/circle",
-                "svg/circle_35"
+                "svg/g/g_1/g_2/path_10"
+            ],
+            "core_dimensions": [
+                "3"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g/g_1/g_2/path_3",
+                "svg/g/g_1/g_2/path_5",
+                "svg/g/g_1/g_2/path_8"
+            ],
+            "core_dimensions": [
+                "3"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g/g_1/g_2/path_5"
             ],
             "core_dimensions": [
                 "4"
@@ -457,30 +223,36 @@
         },
         {
             "core_nodes": [
-                "svg/circle_5",
-                "svg/circle_12",
-                "svg/circle_15",
-                "svg/circle_17",
-                "svg/circle_16",
-                "svg/circle_14",
-                "svg/circle_18",
-                "svg/circle_20",
-                "svg/circle_28",
-                "svg/circle_27",
-                "svg/circle_11",
-                "svg/circle_25",
-                "svg/circle_23",
-                "svg/circle_9",
-                "svg/circle_6",
-                "svg/circle_26",
-                "svg/circle_24",
-                "svg/circle_19",
-                "svg/circle_8",
-                "svg/circle_7",
-                "svg/circle_21",
-                "svg/circle_13",
-                "svg/circle_22",
-                "svg/circle_10"
+                "svg/g/g_1/g_2/path_3"
+            ],
+            "core_dimensions": [
+                "4"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g/g_1/g_2/path_10",
+                "svg/g/g_1/g_2/path_9",
+                "svg/g/g_1/g_2/path_2",
+                "svg/g/g_1/g_2/path_8",
+                "svg/g/g_1/g_2/path_15"
+            ],
+            "core_dimensions": [
+                "4"
+            ],
+            "extensions": []
+        },
+        {
+            "core_nodes": [
+                "svg/g/g_1/g_2/path",
+                "svg/g/g_1/g_2/path_7",
+                "svg/g/g_1/g_2/path_6",
+                "svg/g/g_1/g_2/path_14",
+                "svg/g/g_1/g_2/path_13",
+                "svg/g/g_1/g_2/path_1",
+                "svg/g/g_1/g_2/path_12",
+                "svg/g/g_1/g_2/path_11"
             ],
             "core_dimensions": [
                 "4"
@@ -488,5 +260,5 @@
             "extensions": []
         }
     ],
-    "total_cores": 20
+    "total_cores": 18
 }

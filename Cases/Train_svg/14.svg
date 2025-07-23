@@ -1,18 +1,17 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="340" viewBox="0,20,1100,300" id="svg">
-  <rect x="150" y="40" width="800" height="40" fill="#c7e9c0"/>
-  <rect x="150" y="40" width="600" height="40" fill="#fdae6b"/>
-  <rect x="150" y="40" width="400" height="40" fill="#fb6a4a"/>
-  <rect x="150" y="140" width="800" height="40" fill="#c7e9c0"/>
-  <rect x="150" y="140" width="600" height="40" fill="#fdae6b"/>
-  <rect x="150" y="140" width="400" height="40" fill="#fb6a4a"/>
-  <rect x="150" y="240" width="800" height="40" fill="#c7e9c0"/>
-  <rect x="150" y="240" width="600" height="40" fill="#fdae6b"/>
-  <rect x="150" y="240" width="400" height="40" fill="#fb6a4a"/>
-  <rect x="150" y="50" width="400" height="20" fill="red"/>
-  <rect x="150" y="150" width="600" height="20" fill="red"/>
-  <rect x="150" y="250" width="500" height="20" fill="red"/>
-  <line x1="500" y1="30" x2="500" y2="90" stroke="#800000" stroke-width="2"/>
-  <line x1="800" y1="130" x2="800" y2="190" stroke="#800000" stroke-width="2"/>
-  <line x1="700" y1="230" x2="700" y2="290" stroke="#800000" stroke-width="2"/>
+<?xml version="1.0" encoding="utf-8"?><svg xmlns="http://www.w3.org/2000/svg" height="340" id="svg" tag_name="svg" viewBox="0,20,1100,300" width="900">
+<rect class="reveliogood_2" fill="#c7e9c0" height="40" id="rect_11" tag_name="svg/rect_11" width="800" x="150" y="40"/>
+<rect class="reveliogood reveliogood_3" fill="#fdae6b" height="40" id="rect_10" stroke="rgb(110, 90, 50)" tag_name="svg/rect_10" width="600" x="150" y="40"/>
+<rect class="reveliogood reveliogood_3" fill="#fb6a4a" height="40" id="rect_9" stroke="rgb(110, 90, 50)" tag_name="svg/rect_9" width="400" x="150" y="40"/>
+<rect class="reveliogood_2" fill="#c7e9c0" height="40" id="rect_8" tag_name="svg/rect_8" width="800" x="150" y="140"/>
+<rect class="reveliogood reveliogood_3" fill="#fdae6b" height="40" id="rect_7" stroke="rgb(110, 90, 50)" tag_name="svg/rect_7" width="600" x="150" y="140"/>
+<rect class="reveliogood reveliogood_3" fill="#fb6a4a" height="40" id="rect_6" stroke="rgb(110, 90, 50)" tag_name="svg/rect_6" width="400" x="150" y="140"/>
+<rect class="reveliogood_2 reveliobad_1" fill="#c7e9c0" height="40" id="rect_5" tag_name="svg/rect_5" width="800" x="150" y="240"/>
+<rect class="reveliogood reveliogood_3" fill="#fdae6b" height="40" id="rect_4" stroke="rgb(110, 90, 50)" tag_name="svg/rect_4" width="600" x="150" y="240"/>
+<rect class="reveliogood reveliogood_3" fill="#fb6a4a" height="40" id="rect_3" stroke="rgb(110, 90, 50)" tag_name="svg/rect_3" width="400" x="150" y="240"/>
+<rect class="reveliogood reveliogood_3" fill="red" height="20" id="rect_2" stroke="rgb(110, 90, 50)" tag_name="svg/rect_2" width="400" x="150" y="50"/>
+<rect class="reveliogood reveliogood_3" fill="red" height="20" id="rect_1" stroke="rgb(110, 90, 50)" tag_name="svg/rect_1" width="600" x="150" y="150"/>
+<rect class="reveliogood reveliogood_3" fill="red" height="20" id="rect" stroke="rgb(110, 90, 50)" tag_name="svg/rect" width="500" x="150" y="250"/>
+<line id="line_2" stroke="#800000" stroke-width="2" tag_name="svg/line_2" x1="500" x2="500" y1="30" y2="90"/>
+<line id="line_1" stroke="#800000" stroke-width="2" tag_name="svg/line_1" x1="800" x2="800" y1="130" y2="190"/>
+<line id="line" stroke="#800000" stroke-width="2" tag_name="svg/line" x1="700" x2="700" y1="230" y2="290"/>
 </svg>
