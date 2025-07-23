@@ -288,7 +288,7 @@ def generate_subgraph(identifiers, features, dimensions, clustering_method):
 
 def analyze_cluster_overlaps(subgraphs_dir):
     """分析所有子图中聚类的重叠情况，生成核心聚类和外延"""
-    print("\n=== 开始分析聚类重叠 ===")
+    # print("\n=== 开始分析聚类重叠 ===")
     
     # 第一步：收集所有维度的聚类，每个聚类都视为核心聚类
     core_clusters = []

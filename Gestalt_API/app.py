@@ -98,7 +98,7 @@ def progress_stream():
 def process_svg_file(file_path):
     """处理上传的SVG文件的核心逻辑"""
     try:
-        print(f"开始处理SVG文件: {file_path}")
+        # print(f"开始处理SVG文件: {file_path}")
         send_progress_update(5, "开始处理SVG文件...")
         
         # 设置输出路径
@@ -119,23 +119,23 @@ def process_svg_file(file_path):
             raise ValueError(f"输入文件为空: {file_path}")
 
         # 处理步骤
-        print("Start extracting features...")
+        # print("Start extracting features...")
         send_progress_update(10, "Feature extraction in progress...")
         # 不添加新ID和tag_name属性，只提取特征
         featureCSV.process_and_save_features(file_path, output_paths['csv'], output_paths['svg_with_ids'], 
                                            add_ids=False, add_tag_names=False)
         
-        print("Starting to standardise features...")
+        # print("Starting to standardise features...")
         send_progress_update(25, "Being standardised features...")
         normalized_features.normalize_features(output_paths['csv'], output_paths['normalized_csv'])
         
-        print("Data format being processed...")
+        # print("Data format being processed...")
         send_progress_update(35, "Data format being processed...")
         featureCSV.process_csv_to_json(output_paths['csv'], output_paths['init_json'])
         featureCSV.process_csv_to_json(output_paths['normalized_csv'], output_paths['normalized_init_json'])
         
         # 处理位置和属性信息
-        print("Location and property information being processed...")
+        # print("Location and property information being processed...")
         send_progress_update(45, "Location and property information being processed...")
         posandprop.process_position_and_properties(
             output_paths['init_json'],
@@ -143,7 +143,7 @@ def process_svg_file(file_path):
             app.config['DATA_FOLDER']
         )
         
-        print("计算等价权重...")
+        # print("计算等价权重...")
         send_progress_update(60, "Equivalent weights being calculated...")
         calculator = EquivalentWeightsCalculator(model_path="static/modules/model_feature_dim_4_batch_64.tar")
         calculator.compute_and_save_equivalent_weights(
@@ -153,7 +153,7 @@ def process_svg_file(file_path):
         )
 
         # 运行聚类
-        print("开始运行对比学习模型，输出特征表示...")
+        # print("开始运行对比学习模型，输出特征表示...")
         send_progress_update(75, "Comparative learning model being run...")
         run_clustering(
             output_paths['normalized_csv'],
@@ -162,7 +162,7 @@ def process_svg_file(file_path):
         )
 
         # 运行子图检测
-        print("开始运行子图检测...")
+        # print("开始运行子图检测...")
         send_progress_update(85, "Subgraph detection in progress...")
         run_subgraph_detection(
             features_json_path=output_paths['features_data'],
@@ -175,7 +175,7 @@ def process_svg_file(file_path):
         )
 
         send_progress_update(100, "Processing completed")
-        print("Processing completed")
+        # print("Processing completed")
         return {
             'success': True,
             'data': {
@@ -202,7 +202,7 @@ def process_svg_styles(svg_content):
     # 处理style标签
     style_tag = soup.find('style')
     if style_tag:
-        print("style标签，开始理样式...")
+        # print("style标签，开始理样式...")
         # 解析CSS样式
         style_content = style_tag.string
         style_rules = {}
@@ -250,18 +250,18 @@ def upload_file():
         return jsonify({'error': 'No selected file'}), 400
     if file and file.filename.endswith('.svg'):
         try:
-            print(f"开始处理上传文件: {file.filename}")
+            # print(f"开始处理上传文件: {file.filename}")
             
             # 读取SVG内容
             svg_content = file.read().decode('utf-8')
             
             # 添加详细的日志
-            print("SVG内容读取成功，长度:", len(svg_content))
+            # print("SVG内容读取成功，长度:", len(svg_content))
             
             try:
                 # 处理样式
                 processed_svg = process_svg_styles(svg_content)
-                print("样式处理成功")
+                # print("样式处理成功")
             except Exception as style_error:
                 print(f"样式处理失败: {str(style_error)}")
                 return jsonify({'error': f'Error processing styles: {str(style_error)}'}), 500
@@ -271,7 +271,7 @@ def upload_file():
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(processed_svg)
                 
-            print(f"文件已保存到: {file_path}")
+            # print(f"文件已保存到: {file_path}")
 
             try:
                 # 使用featureCSV处理SVG，添加ID和tag_name属性
@@ -279,14 +279,14 @@ def upload_file():
                 output_svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
                 
                 # 添加详细的参数检查
-                print(f"处理参数检查:")
-                print(f"- 输入文件存在: {os.path.exists(file_path)}")
-                print(f"- 输入文件大小: {os.path.getsize(file_path)}")
+                # print(f"处理参数检查:")
+                # print(f"- 输入文件存在: {os.path.exists(file_path)}")
+                # print(f"- 输入文件大小: {os.path.getsize(file_path)}")
                 
                 # 上传时需要添加ID和tag_name属性
                 featureCSV.process_and_save_features(file_path, temp_csv_path, output_svg_with_ids_path, 
                                                    add_ids=True, add_tag_names=True)
-                print("SVG处理完成")
+                # print("SVG处理完成")
                 
             except Exception as process_error:
                 print(f"SVG处理失败: {str(process_error)}")
@@ -346,10 +346,10 @@ def get_svg():
     try:
         # 修改为从uploadSvg目录读取文件
         svg_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
-        print(f"尝试读取SVG文件: {svg_file_path}")
+        # print(f"尝试读取SVG文件: {svg_file_path}")
 
         if not os.path.exists(svg_file_path):
-            print("SVG文件不存在")
+            # print("SVG文件不存在")
             return jsonify({'error': 'SVG file not found'}), 404
 
         with open(svg_file_path, 'r', encoding='utf-8') as svg_file:
@@ -363,7 +363,7 @@ def get_svg():
             if 'xmlns=' not in svg_content:
                 svg_content = svg_content.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
                 
-        print("SVG文件读取成功")
+        # print("SVG文件读取成功")
         return svg_content, 200, {
             'Content-Type': 'image/svg+xml; charset=utf-8',
             'Cache-Control': 'no-cache'
@@ -389,11 +389,11 @@ def get_upload_svg():
         # 遍历所有可能的文件名
         for filename in possible_filenames:
             temp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            print(f"尝试读取SVG文件: {temp_path}")
+            # print(f"尝试读取SVG文件: {temp_path}")
             if os.path.exists(temp_path):
                 svg_file_path = temp_path
                 found_file = filename
-                print(f"找到SVG文件: {found_file}")
+                # print(f"找到SVG文件: {found_file}")
                 
                 # 读取找到的文件
                 with open(svg_file_path, 'r', encoding='utf-8') as svg_file:
@@ -401,7 +401,7 @@ def get_upload_svg():
                     
                     # 检查文件内容是否为有效的SVG
                     if '<parsererror' in svg_content or svg_content.strip().startswith('<html>'):
-                        print(f"文件内容包含错误，不是有效的SVG: {found_file}")
+                        # print(f"文件内容包含错误，不是有效的SVG: {found_file}")
                         # 继续尝试下一个文件
                         continue
                     
@@ -413,14 +413,14 @@ def get_upload_svg():
                     if 'xmlns=' not in svg_content:
                         svg_content = svg_content.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
                     
-                    print(f"SVG文件读取成功: {found_file}")
+                    # print(f"SVG文件读取成功: {found_file}")
                     return svg_content, 200, {
                         'Content-Type': 'image/svg+xml; charset=utf-8',
                         'Cache-Control': 'no-cache'
                     }
                 
         # 如果所有文件都不存在或都无效
-        print("所有可能的SVG文件都不存在或无效")
+        # print("所有可能的SVG文件都不存在或无效")
         
         # 检查是否能通过get_svg的逻辑生成文件
         svg_with_ids_path = os.path.join(app.config['UPLOAD_FOLDER'], 'svg_with_ids.svg')
@@ -430,7 +430,7 @@ def get_upload_svg():
                           if f.endswith('.svg') and (f.startswith('uploaded_') or not any(f.startswith(p) for p in ['generated_', 'svg_with_ids', 'filtered_']))]
         
         if uploaded_files:
-            print(f"发现上传的文件，尝试处理: {uploaded_files[0]}")
+            # print(f"发现上传的文件，尝试处理: {uploaded_files[0]}")
             original_file_path = os.path.join(app.config['UPLOAD_FOLDER'], uploaded_files[0])
             
             # 尝试生成带ID的SVG文件
@@ -464,7 +464,7 @@ def get_upload_svg():
                     if 'xmlns=' not in svg_content:
                         svg_content = svg_content.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
                     
-                    print(f"成功生成并读取SVG文件: generated_with_id.svg")
+                    # print(f"成功生成并读取SVG文件: generated_with_id.svg")
                     return svg_content, 200, {
                         'Content-Type': 'image/svg+xml; charset=utf-8',
                         'Cache-Control': 'no-cache'
@@ -474,7 +474,7 @@ def get_upload_svg():
                 print(f"自动生成SVG文件失败: {str(gen_error)}")
         
         # 如果没有找到或无法生成有效的SVG文件
-        print("无法找到或生成有效的SVG文件")
+        # print("无法找到或生成有效的SVG文件")
         return jsonify({
             'error': 'SVG file not found or invalid. Try calling /get_svg endpoint first.',
             'suggestion': '请先调用/get_svg接口以生成必要的文件'
@@ -886,9 +886,9 @@ def filter_and_process():
         selected_elements = data.get('selectedElements', [])
         selected_node_ids = data.get('selectedNodeIds', [])  # 获取选中的节点ID
         
-        print(f"开始处理文件: {original_filename}")
-        print(f"选中的元素类型: {selected_elements}")
-        print(f"选中的节点ID: {selected_node_ids}")
+        # print(f"开始处理文件: {original_filename}")
+        # print(f"选中的元素类型: {selected_elements}")
+        # print(f"选中的节点ID: {selected_node_ids}")
         
         if not original_filename or not selected_elements:
             return jsonify({
@@ -924,12 +924,12 @@ def filter_and_process():
                     'error': 'Could not find SVG with IDs. Please upload the file first.'
                 }), 404
                 
-        print(f"使用带ID的SVG文件: {svg_with_ids_path}")
+        # print(f"使用带ID的SVG文件: {svg_with_ids_path}")
         
         # 首先处理原始文件生成带ID的SVG
         output_csv_path = os.path.join(app.config['DATA_FOLDER'], 'temp_features.csv')
         
-        print("处理SVG文件以提取特征...")
+        # print("处理SVG文件以提取特征...")
         # 不添加新ID和tag_name属性，使用已有的
         featureCSV.process_and_save_features(original_file_path, output_csv_path, svg_with_ids_path, 
                                            add_ids=False, add_tag_names=False)
@@ -939,34 +939,34 @@ def filter_and_process():
             os.remove(output_csv_path)
             
         # 读取带ID的SVG文件
-        print(f"读取带ID的SVG文件: {svg_with_ids_path}")
+        # print(f"读取带ID的SVG文件: {svg_with_ids_path}")
         with open(svg_with_ids_path, 'r', encoding='utf-8') as f:
             svg_content = f.read()
         
         # 过滤SVG内容
-        print("开始过滤SVG内容")
+        # print("开始过滤SVG内容")
         filtered_svg = filter_svg_elements(svg_content, selected_elements, selected_node_ids)
         
         # 保存过滤后的SVG文件
         filtered_filename = f'filtered_{original_filename}'
         filtered_file_path = os.path.join(app.config['UPLOAD_FOLDER'], filtered_filename)
-        print(f"保存过滤后的文件: {filtered_file_path}")
+        # print(f"保存过滤后的文件: {filtered_file_path}")
         with open(filtered_file_path, 'w', encoding='utf-8') as f:
             f.write(filtered_svg)
         
         # 处理过滤后的文件
-        print("开始处理过滤后的文件")
+        # print("开始处理过滤后的文件")
         result = process_svg_file(filtered_file_path)
         
         if result['success']:
-            print("文件处理成功")
+            # print("文件处理成功")
             return jsonify({
                 'success': True,
                 'message': 'File filtered and processed successfully',
                 **result['data']
             }), 200
         else:
-            print(f"文件处理失败: {result.get('error', 'Unknown error')}")
+            # print(f"文件处理失败: {result.get('error', 'Unknown error')}")
             return jsonify({
                 'success': False,
                 'error': result.get('error', 'Unknown error')
@@ -988,7 +988,7 @@ def get_visible_elements():
     try:
         data = request.json
         filename = data.get('filename')
-        print(f"开始获取可见元素，文件名: {filename}")
+        # print(f"开始获取可见元素，文件名: {filename}")
         
         if not filename:
             return jsonify({'error': 'No filename provided'}), 400
@@ -998,7 +998,7 @@ def get_visible_elements():
             filename = f'uploaded_{filename}'
             
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        print(f"查找文件路径: {file_path}")
+        # print(f"查找文件路径: {file_path}")
         
         if not os.path.exists(file_path):
             print(f"文件不存在: {file_path}")
@@ -1035,9 +1035,9 @@ def get_visible_elements():
                     'count': count
                 })
         
-        print("找到的可见元素类型及数量:")
-        for element_type, count in element_counts.items():
-            print(f"{element_type}: {count}")
+        # print("找到的可见元素类型及数量:")
+        # for element_type, count in element_counts.items():
+        #     print(f"{element_type}: {count}")
         
         return jsonify({
             'success': True,
@@ -1327,7 +1327,7 @@ def modify_and_calculate_salience():
             if not scope_elements:
                 return jsonify({'success': False, 'error': 'No elements with ID found in SVG'}), 400
                 
-            print(f"从SVG中提取的感知范围元素数量: {len(scope_elements)}")
+            # print(f"从SVG中提取的感知范围元素数量: {len(scope_elements)}")
             if debug_mode:
                 debug_info['scope_elements_count'] = len(scope_elements)
                 debug_info['scope_elements'] = scope_elements
