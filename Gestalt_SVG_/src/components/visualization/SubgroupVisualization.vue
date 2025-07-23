@@ -17,7 +17,7 @@
                 </div>
                 <div class="salience-legend">
                     <span class="legend-label">Salience：</span>
-                    <span class="legend-text">1</span>
+                    <span class="legend-text">0</span>
                     <div class="legend-gradient"></div>
                     <span class="legend-text">{{ maxSalienceValue }}</span>
                 </div>
