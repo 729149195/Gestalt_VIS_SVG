@@ -4,24 +4,19 @@ z  <defs aria-hidden="true">
     <filter id="highcharts-drop-shadow-1">
       <fedropshadow stdDeviation="2.5" flood-opacity="0.75" flood-color="#000000" dy="1" dx="1"/>
     </filter>
-    <clipPath id="highcharts-x0dc6qq-35-">
-      <rect height="317" width="580" y="0" x="0" fill="none"/>
-    </clipPath>
+
   </defs>
   <g aria-hidden="true" data-z-index="1" class="highcharts-grid highcharts-xaxis-grid"/>
   <g aria-hidden="true" data-z-index="1" class="highcharts-grid highcharts-yaxis-grid"/>
   <g aria-hidden="true" data-z-index="2" class="highcharts-axis highcharts-xaxis">
-    <path d="M 10 385 L 590 385" data-z-index="7" fill="none" stroke="#333333" stroke-width="0"/>
   </g>
   <g aria-hidden="true" data-z-index="2" class="highcharts-axis highcharts-yaxis">
-    <path d="M 10 68 L 10 385" data-z-index="7" fill="none" stroke="#333333" stroke-width="0"/>
   </g>
   <g aria-hidden="false" filter="none" data-z-index="3" class="highcharts-series-group">
     <g aria-hidden="false" clip-path="url(#highcharts-x0dc6qq-35-)" transform="translate(10,68) scale(1 1)" data-z-index="0.1" class="highcharts-series highcharts-series-0 highcharts-treemap-series highcharts-color-0">
       <g aria-hidden="true" data-z-index="998" class="highcharts-level-group-2">
         <rect aria-label="Troms og Finnmark, value: 70,923." role="img" tabindex="-1" ry="6" rx="6" height="211" width="203" y="0" x="0" outline="none" fill="#50FFB1" stroke="#fff" stroke-width="2"/>
         <rect aria-label="Nordland, value: 35,759." role="img" tabindex="-1" ry="6" rx="6" height="106" width="203" y="211" x="0" outline="none" fill="#50FFB1" stroke="#fff" stroke-width="2"/>
-        <rect aria-label="Trøndelag, value: 39,494." role="img" tabindex="-1" ry="6" rx="6" height="127" width="188" y="142" x="392" outline="none" fill="#F5FBEF" stroke="#fff" stroke-width="2"/>
         <rect aria-label="Møre og Romsdal, value: 13,840." role="img" tabindex="-1" ry="6" rx="6" height="44" width="189" y="245" x="203" outline="none" fill="#A09FA8" stroke="#fff" stroke-width="2"/>
         <rect aria-label="Vestland, value: 31,969." role="img" tabindex="-1" ry="6" rx="6" height="103" width="189" y="142" x="203" outline="none" fill="#A09FA8" stroke="#fff" stroke-width="2"/>
         <rect aria-label="Rogaland, value: 8,576." role="img" tabindex="-1" ry="6" rx="6" height="28" width="189" y="289" x="203" outline="none" fill="#A09FA8" stroke="#fff" stroke-width="2"/>
@@ -88,7 +83,6 @@ z  <defs aria-hidden="true">
     </g>
   </g>
   <g aria-hidden="true" visibility="hidden" data-z-index="7" class="highcharts-legend highcharts-no-tooltip">
-    <rect height="8" width="8" y="0" x="0" filter="none" ry="0" rx="0" fill="none" stroke="#999999" stroke-width="0"/>
     <g data-z-index="1">
       <g/>
     </g>
